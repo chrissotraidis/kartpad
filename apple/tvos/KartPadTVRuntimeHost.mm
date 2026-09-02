@@ -7,8 +7,11 @@
 
 #import <CommonCrypto/CommonDigest.h>
 
+#include "kartpad_retro_rewind_release.h"
+
 #include <algorithm>
 #include <atomic>
+#include <string>
 
 namespace {
 
@@ -18,6 +21,7 @@ constexpr char kStaticRelSHA256[] =
     "16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d";
 
 std::atomic_bool gInstalled = false;
+std::string gSelectedRuntimeProfile = "base";
 
 NSString *SHA256ForURL(NSURL *url, NSError **error) {
   NSData *data = [NSData dataWithContentsOfURL:url
@@ -35,16 +39,29 @@ NSString *SHA256ForURL(NSURL *url, NSError **error) {
   return hex;
 }
 
-bool ValidateFile(NSURL *url, NSString *expectedHash) {
-  NSNumber *regular = nil;
+bool ValidateFile(NSURL *url, NSString *expectedHash,
+                  NSNumber *expectedBytes = nil) {
+  BOOL isDirectory = NO;
   NSError *error = nil;
-  if (![url getResourceValue:&regular
-                      forKey:NSURLIsRegularFileKey
-                       error:&error] ||
-      !regular.boolValue) {
+  if (![NSFileManager.defaultManager fileExistsAtPath:url.path
+                                           isDirectory:&isDirectory] ||
+      isDirectory) {
     NSLog(@"[KartPad] required game file is unavailable: %@ (%@)", url.path,
           error.localizedDescription);
     return false;
+  }
+
+  if (expectedBytes != nil) {
+    NSNumber *actualBytes = nil;
+    if (![url getResourceValue:&actualBytes
+                        forKey:NSURLFileSizeKey
+                         error:&error] ||
+        actualBytes.unsignedLongLongValue != expectedBytes.unsignedLongLongValue) {
+      NSLog(@"[KartPad] required game file size mismatch: %@ expected=%llu actual=%llu error=%@",
+            url.path, expectedBytes.unsignedLongLongValue,
+            actualBytes.unsignedLongLongValue, error.localizedDescription);
+      return false;
+    }
   }
 
   NSString *actualHash = SHA256ForURL(url, &error);
@@ -54,6 +71,46 @@ bool ValidateFile(NSURL *url, NSString *expectedHash) {
     return false;
   }
   return true;
+}
+
+bool ValidateTextFile(NSURL *url, NSString *expected) {
+  NSError *error = nil;
+  NSData *data = [NSData dataWithContentsOfURL:url
+                                      options:NSDataReadingMappedIfSafe
+                                        error:&error];
+  NSData *withoutNewline = [expected dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *withNewline =
+      [[expected stringByAppendingString:@"\n"]
+          dataUsingEncoding:NSUTF8StringEncoding];
+  if (data == nil ||
+      (![data isEqualToData:withoutNewline] &&
+       ![data isEqualToData:withNewline])) {
+    NSLog(@"[KartPad] required Retro Rewind text mismatch: %@ error=%@",
+          url.path, error.localizedDescription);
+    return false;
+  }
+  return true;
+}
+
+NSString *ReadRuntimeProfile(NSURL *root) {
+  NSURL *marker = [root URLByAppendingPathComponent:@"RuntimeProfile"];
+  if (![NSFileManager.defaultManager fileExistsAtPath:marker.path]) {
+    return @"base";
+  }
+
+  NSError *error = nil;
+  NSData *data = [NSData dataWithContentsOfURL:marker
+                                      options:NSDataReadingMappedIfSafe
+                                        error:&error];
+  NSData *base = [@"base\n" dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *retroRewind =
+      [@"retro_rewind\n" dataUsingEncoding:NSUTF8StringEncoding];
+  if ([data isEqualToData:base]) return @"base";
+  if ([data isEqualToData:retroRewind]) return @"retro_rewind";
+
+  NSLog(@"[KartPad] invalid tvOS RuntimeProfile marker: %@ error=%@",
+        marker.path, error.localizedDescription);
+  return nil;
 }
 
 NSURL *KartPadCachesURL() {
@@ -70,6 +127,33 @@ extern "C" bool KartPadMobileEnsureGameDataAvailable() {
   if (root == nil) {
     NSLog(@"[KartPad] tvOS caches directory is unavailable");
     return false;
+  }
+
+  NSString *selectedProfile = ReadRuntimeProfile(root);
+  if (selectedProfile == nil) return false;
+  const bool retroProfile = [selectedProfile isEqualToString:@"retro_rewind"];
+  NSURL *retroRoot = nil;
+  if (retroProfile) {
+    retroRoot = [[root URLByAppendingPathComponent:@"RetroRewind"
+                                       isDirectory:YES]
+        URLByAppendingPathComponent:
+            [NSString stringWithUTF8String:KARTPAD_RR_ROOT]
+                          isDirectory:YES];
+    if (!ValidateTextFile(
+            [retroRoot URLByAppendingPathComponent:@"version.txt"],
+            [NSString stringWithUTF8String:KARTPAD_RR_VERSION]) ||
+        !ValidateFile(
+            [retroRoot URLByAppendingPathComponent:
+                          [NSString stringWithUTF8String:KARTPAD_RR_CODE_PUL_PATH]],
+            [NSString stringWithUTF8String:KARTPAD_RR_CODE_PUL_SHA256],
+            @(KARTPAD_RR_CODE_PUL_BYTES)) ||
+        !ValidateFile(
+            [retroRoot URLByAppendingPathComponent:
+                          [NSString stringWithUTF8String:KARTPAD_RR_XML_PATH]],
+            [NSString stringWithUTF8String:KARTPAD_RR_XML_SHA256],
+            @(KARTPAD_RR_XML_BYTES))) {
+      return false;
+    }
   }
 
   NSURL *gameData =
@@ -100,6 +184,12 @@ extern "C" bool KartPadMobileEnsureGameDataAvailable() {
           error.localizedDescription);
     return false;
   }
+  NSString *networkConfig =
+      retroProfile ? @"enabled = true\n\n" : @"enabled = false\n\n";
+  NSString *retroRootConfig = retroRoot == nil
+      ? @""
+      : [NSString stringWithFormat:@"retro_rewind_root = \"%@\"\n",
+                                   retroRoot.path];
   NSString *config = [NSString stringWithFormat:
       @"[video]\n"
        "widescreen = true\n"
@@ -112,11 +202,12 @@ extern "C" bool KartPadMobileEnsureGameDataAvailable() {
        "volume = 1.0\n"
        "muted = false\n\n"
        "[network]\n"
-       "enabled = false\n\n"
+       "%@"
        "[paths]\n"
        "dvd_root = \"%@\"\n"
-       "nand_root = \"%@\"\n",
-      gameData.path, nand.path];
+       "nand_root = \"%@\"\n"
+       "%@",
+      networkConfig, gameData.path, nand.path, retroRootConfig];
   NSURL *configURL = [root URLByAppendingPathComponent:@"Config.toml"];
   if (![config writeToURL:configURL
                atomically:YES
@@ -127,12 +218,13 @@ extern "C" bool KartPadMobileEnsureGameDataAvailable() {
     return false;
   }
 
+  gSelectedRuntimeProfile = [selectedProfile UTF8String];
   NSLog(@"[KartPad] validated tvOS GameData at %@", gameData.path);
   return true;
 }
 
 extern "C" const char *KartPadMobileSelectedRuntimeProfile() {
-  return "base";
+  return gSelectedRuntimeProfile.c_str();
 }
 
 extern "C" void KartPadMobileRuntimeHostInstall(void *sdlWindow) {

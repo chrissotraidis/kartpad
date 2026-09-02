@@ -43,7 +43,7 @@ diff --git a/cmake/PublicProducts.cmake b/cmake/PublicProducts.cmake
          _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION TARGET_PC)
      target_compile_features(${target} PRIVATE cxx_std_20)
      mkw_apply_common_compile_options(${target})
-@@ -386,6 +386,55 @@
+@@ -386,6 +386,70 @@
          XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "iphonesimulator iphoneos"
          XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
          XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
@@ -68,34 +68,49 @@ diff --git a/cmake/PublicProducts.cmake b/cmake/PublicProducts.cmake
 +        endif()
 +    endforeach()
 +
-+    target_sources(WiiCompiled PRIVATE ${MKW_KARTPAD_TVOS_SOURCES}
-+        "${MKW_KARTPAD_TVOS_PRIVACY}")
-+    target_include_directories(WiiCompiled PRIVATE
-+        "${MKW_KARTPAD_TVOS_DIR}"
-+        "${MKW_KARTPAD_MOBILE_DIR}"
-+        "${MKW_KARTPAD_SUNPAD_DIR}"
-+        "${MKW_KARTPAD_REPO_ROOT}/runtime/include")
-+    set_source_files_properties(${MKW_KARTPAD_TVOS_SOURCES}
-+        PROPERTIES COMPILE_OPTIONS "-fobjc-arc" SKIP_PRECOMPILE_HEADERS TRUE)
-+    set_source_files_properties("${MKW_KARTPAD_TVOS_PRIVACY}"
-+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-+    target_link_options(WiiCompiled PRIVATE "-ObjC")
-+    target_link_libraries(WiiCompiled PRIVATE
-+        "-framework Foundation" "-framework UIKit" "-framework GameController"
-+        "-lz")
-+    set_target_properties(WiiCompiled PROPERTIES
-+        OUTPUT_NAME KartPadTV
-+        MACOSX_BUNDLE TRUE
-+        MACOSX_BUNDLE_INFO_PLIST "${MKW_KARTPAD_TVOS_DIR}/RuntimeInfo.plist"
-+        XCODE_ATTRIBUTE_ARCHS arm64
-+        XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++20"
-+        XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION 4
-+        XCODE_ATTRIBUTE_GENERATE_INFOPLIST_FILE NO
-+        XCODE_ATTRIBUTE_MARKETING_VERSION 0.2.0
-+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER dev.kartpad.app
-+        XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "appletvsimulator appletvos"
-+        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3"
-+        XCODE_ATTRIBUTE_TVOS_DEPLOYMENT_TARGET 17.0)
++    function(mkw_configure_tvos_target target)
++        if(NOT MKW_KARTPAD_TVOS_ASSETS OR
++           NOT EXISTS "${MKW_KARTPAD_TVOS_ASSETS}")
++            message(FATAL_ERROR "Missing generated KartPad tvOS banner assets: ${MKW_KARTPAD_TVOS_ASSETS}")
++        endif()
++        target_sources(${target} PRIVATE ${MKW_KARTPAD_TVOS_SOURCES}
++            "${MKW_KARTPAD_TVOS_PRIVACY}" "${MKW_KARTPAD_TVOS_ASSETS}")
++        target_include_directories(${target} PRIVATE
++            "${MKW_KARTPAD_TVOS_DIR}"
++            "${MKW_KARTPAD_MOBILE_DIR}"
++            "${MKW_KARTPAD_SUNPAD_DIR}"
++            "${MKW_KARTPAD_REPO_ROOT}/runtime/include"
++            "${CMAKE_CURRENT_LIST_DIR}/../third_party/kartpad-profile")
++        set_source_files_properties(${MKW_KARTPAD_TVOS_SOURCES}
++            PROPERTIES COMPILE_OPTIONS "-fobjc-arc" SKIP_PRECOMPILE_HEADERS TRUE)
++        set_source_files_properties("${MKW_KARTPAD_TVOS_PRIVACY}"
++            PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
++        set_source_files_properties("${MKW_KARTPAD_TVOS_ASSETS}"
++            PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
++        target_link_options(${target} PRIVATE "-ObjC")
++        target_link_libraries(${target} PRIVATE
++            "-framework Foundation" "-framework UIKit" "-framework GameController"
++            "-lz")
++        set_target_properties(${target} PROPERTIES
++            OUTPUT_NAME KartPadTV
++            MACOSX_BUNDLE TRUE
++            MACOSX_BUNDLE_INFO_PLIST "${MKW_KARTPAD_TVOS_DIR}/RuntimeInfo.plist"
++            XCODE_ATTRIBUTE_ARCHS arm64
++            XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++20"
++            XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION 4
++            XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "App Icon"
++            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES
++            XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED YES
++            XCODE_ATTRIBUTE_CODE_SIGN_STYLE Automatic
++            XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Apple Development"
++            XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${MKW_KARTPAD_DEVELOPMENT_TEAM}"
++            XCODE_ATTRIBUTE_GENERATE_INFOPLIST_FILE NO
++            XCODE_ATTRIBUTE_MARKETING_VERSION 0.2.0
++            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER dev.kartpad.app
++            XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "appletvsimulator appletvos"
++            XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3"
++            XCODE_ATTRIBUTE_TVOS_DEPLOYMENT_TARGET 17.0)
++    endfunction()
  endif()
  
  if(MKW_HAVE_RETRO_REWIND)
@@ -301,7 +316,21 @@ diff --git a/src/settings_overlay.cpp b/src/settings_overlay.cpp
 diff --git a/cmake/PublicProducts.cmake b/cmake/PublicProducts.cmake
 --- a/cmake/PublicProducts.cmake
 +++ b/cmake/PublicProducts.cmake
-@@ -574,7 +574,8 @@
+@@ -532,11 +532,22 @@
+     add_dependencies(mkw_release KartPadDual)
+ endif()
+ 
++if(CMAKE_SYSTEM_NAME STREQUAL "tvOS" AND MKW_KARTPAD_REPO_ROOT)
++    if(NOT MKW_KARTPAD_TVOS_TARGET)
++        message(FATAL_ERROR "MKW_KARTPAD_TVOS_TARGET must select the tvOS product")
++    elseif(NOT TARGET ${MKW_KARTPAD_TVOS_TARGET})
++        message(FATAL_ERROR "Requested tvOS target does not exist: ${MKW_KARTPAD_TVOS_TARGET}")
++    else()
++        mkw_configure_tvos_target(${MKW_KARTPAD_TVOS_TARGET})
++    endif()
++endif()
++
+ set(MKW_ALL_BUILD_TARGETS
      mkw_runtime_common mkw_base_shared mkw_base_sensitive mkw_retro_sensitive
      mkw_retro_rewind_functions WiiCompiled RetroRewind KartPadDual)
  foreach(target IN LISTS MKW_ALL_BUILD_TARGETS)

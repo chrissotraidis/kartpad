@@ -19,6 +19,18 @@ iPadOS. The production PNG's SHA-256 is
 Xcode applies the system-generated dark and tinted treatments from that single
 high-resolution icon.
 
+## tvOS Wii banner icon
+
+The tvOS app icon is intentionally the Wii game banner requested for the
+Apple TV port. `scripts/generate-tvos-banner-assets.py` reads the private,
+user-supplied `opening.bnr` during a local build, decodes its banner logo and
+kart artwork, and emits the tvOS `App Icon.brandassets` Small/Large image
+stacks plus the Top Shelf image. Xcode compiles those generated assets into
+`Assets.car`.
+
+The banner source, extracted game files, and intermediate PNGs stay outside
+the repository and are never copied into the app bundle as raw game data.
+
 ## Original abstract and macOS icon
 
 The KartPad icon is original project artwork created on 2026-08-28. OpenAI's built-in image-generation tool produced the initial concept at `branding/KartPadIcon-concept-ai.png`; its SHA-256 is `9e0b4a62d1be64e5108b2b5d9fa2a5611683c0709b1d5baf2c8685afd383ed60`.

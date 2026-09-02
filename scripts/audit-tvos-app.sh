@@ -36,11 +36,31 @@ esac
 plist="${app}/Info.plist"
 binary="${app}/KartPadTV"
 profile="${app}/embedded.mobileprovision"
+assets_car="${app}/Assets.car"
 test -d "${app}"
 test -x "${binary}"
 test -f "${plist}"
 test -f "${app}/PrivacyInfo.xcprivacy"
+test -f "${assets_car}"
 plutil -lint "${plist}" "${app}/PrivacyInfo.xcprivacy" >/dev/null
+
+if ! assetutil_path="$(xcrun --find assetutil 2>/dev/null)" ||
+   [[ ! -x "${assetutil_path:-}" ]]; then
+  echo "ERROR: xcrun assetutil is required to audit Assets.car" >&2
+  exit 66
+fi
+if ! asset_info="$(xcrun assetutil --info "${assets_car}" 2>&1)"; then
+  echo "ERROR: xcrun assetutil --info failed for ${assets_car}" >&2
+  printf '%s\n' "${asset_info}" >&2
+  exit 65
+fi
+if ! rg -a -q \
+  -e '"Name"[[:space:]]*:[[:space:]]*"App Icon - (Small|Large)(/[^"]*)?"' \
+  -e '"Name"[[:space:]]*=[[:space:]]*"App Icon - (Small|Large)(/[^"]*)?"' \
+  <<<"${asset_info}"; then
+  echo "ERROR: Assets.car does not contain the App Icon catalog asset" >&2
+  exit 65
+fi
 
 test "$(plutil -extract CFBundleIdentifier raw "${plist}")" = "dev.kartpad.app"
 test "$(plutil -extract CFBundleExecutable raw "${plist}")" = "KartPadTV"
@@ -168,7 +188,8 @@ fi
 
 for forbidden in \
   '*.iso' '*.wbfs' '*.rvz' '*.wia' '*.gcz' '*.provisionprofile' \
-  'GameData' 'NAND' 'main.dol' 'StaticR.rel' 'rksys.dat' 'Config.toml'; do
+  'GameData' 'NAND' 'main.dol' 'StaticR.rel' 'rksys.dat' 'Config.toml' \
+  'opening.bnr' 'banner.bin' 'icon.bin' 'sound.bin'; do
   forbidden_path="$(find "${app}" -iname "${forbidden}" -print -quit)"
   if [[ -n "${forbidden_path}" ]]; then
     echo "tvOS app contains forbidden private or signing data: ${forbidden}" >&2
@@ -213,6 +234,10 @@ required_contracts=(
   'Config.toml'
   'KartPadMobileEnsureGameDataAvailable'
   'KartPadMobileReadClassicInputForPlayer'
+  'retro_rewind'
+  'KartPadMobileSelectedRuntimeProfile'
+  'retro_rewind_root'
+  'network'
 )
 for required_contract in "${required_contracts[@]}"; do
   if ! rg -a -F -q "${required_contract}" "${binary}"; then

@@ -20,6 +20,8 @@ discio_build="${KARTPAD_DISCIO_BUILD_DIR:-${repo_root}/build/dolphin-ios-discio-
 sse2neon_url="https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
 sse2neon_sha256="44b9fa3dec3a52ea473246e04b9f692a4e5b0ed654299eef7fe7ec3049e223e0"
 prepare_only="${KARTPAD_PREPARE_ONLY:-0}"
+tvos_banner_source=""
+tvos_assets=""
 
 case "${product}" in
   base) product_target="WiiCompiled" ;;
@@ -44,7 +46,7 @@ case "${platform}" in
     system_name="tvOS"
     deployment_target="17.0"
     require_discio=0
-    binary_relative="KartPadTV.app/KartPadTV"
+    binary_relative="Release-appletvsimulator/KartPadTV.app/KartPadTV"
     macho_platform="TVOSSIMULATOR"
     ;;
   appletvos)
@@ -66,8 +68,8 @@ case "${platform}" in
     ;;
 esac
 
-if [[ "${platform}" == appletv* && "${product}" != "base" ]]; then
-  echo "ERROR: tvOS supports only product=base" >&2
+if [[ "${platform}" == appletv* && "${product}" == "retro-rewind" ]]; then
+  echo "ERROR: tvOS does not support standalone product=retro-rewind; use product=dual" >&2
   exit 64
 fi
 
@@ -85,6 +87,12 @@ if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
   exit 1
 fi
 if [[ "${platform}" == appletv* ]]; then
+  tvos_banner_source="${KARTPAD_WII_BANNER_SOURCE:-${repo_root}/private/self-build/disc/files/opening.bnr}"
+  tvos_assets="${runtime_source}/third_party/kartpad-tvos-assets/Assets.xcassets"
+  if [[ ! -f "${tvos_banner_source}" ]]; then
+    echo "ERROR: missing private Wii banner source: ${tvos_banner_source}" >&2
+    exit 1
+  fi
   save_completion_shard="$(
     rg -l -F 'extern "C" void func_80672CC8(CpuContext* MKW_RESTRICT ctx)' \
       "${translation_root}/build_shards" || true
@@ -121,6 +129,10 @@ fi
 
 mkdir -p "$(dirname "${runtime_source}")"
 cp -R "${runtime_ref}" "${runtime_source}"
+if [[ "${platform}" == appletv* ]]; then
+  python3 "${repo_root}/scripts/generate-tvos-banner-assets.py" \
+    "${tvos_banner_source}" "${tvos_assets}"
+fi
 PYTHONPATH="${repo_root}/builder" python3 -m kartpad_builder.release_header \
   "${repo_root}/builder/profiles/mkwii-rmcp01-rev0.json" \
   "${runtime_source}/third_party/kartpad-profile/kartpad_retro_rewind_release.h"
@@ -228,15 +240,18 @@ generator="Ninja"
 configuration_args=(-DCMAKE_BUILD_TYPE=Release)
 signing_args=()
 build_args=(--parallel 2)
-if [[ "${platform}" == "appletvos" ]]; then
+if [[ "${platform}" == appletv* ]]; then
   generator="Xcode"
   configuration_args=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release)
+  build_args=(--config Release --parallel 2)
+fi
+if [[ "${platform}" == "appletvos" ]]; then
   signing_args=(
     -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_STYLE=Automatic
     -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=Apple\ Development
-    -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}"
-    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=YES
-    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=YES
+    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO
+    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO
+    -DMKW_KARTPAD_DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}"
   )
   build_args=(
     --config Release
@@ -247,22 +262,31 @@ if [[ "${platform}" == "appletvos" ]]; then
   )
 fi
 
-cmake -S "${runtime_source}" -B "${runtime_build}" -G "${generator}" \
-  "${configuration_args[@]}" \
-  -DCMAKE_SYSTEM_NAME="${system_name}" \
-  -DCMAKE_SYSTEM_PROCESSOR=arm64 \
-  -DCMAKE_OSX_SYSROOT="${platform}" \
-  -DCMAKE_OSX_ARCHITECTURES=arm64 \
-  -DCMAKE_OSX_DEPLOYMENT_TARGET="${deployment_target}" \
-  -DMKW_AURORA_DIR="${runtime_source}/aurora-main" \
-  -DAURORA_DAWN_PACKAGE_URL="file://${dawn_archive}" \
-  -DMKW_TRANSLATED_SHARD_MANIFEST="${translation_root}/build_shards/shards.cmake" \
-  -DMKW_KARTPAD_RUNTIME_INCLUDE="${repo_root}/runtime/include" \
-  -DMKW_KARTPAD_REPO_ROOT="${repo_root}" \
-  -DMKW_KARTPAD_DISCIO_SOURCE_DIR="${discio_source}" \
-  -DMKW_KARTPAD_DISCIO_BUILD_DIR="${discio_build}" \
-  -DMKW_TRANSLATED_COMPILE_JOBS=2 \
-  "${signing_args[@]}"
+cmake_args=(
+  -S "${runtime_source}" -B "${runtime_build}" -G "${generator}"
+  "${configuration_args[@]}"
+  -DCMAKE_SYSTEM_NAME="${system_name}"
+  -DCMAKE_SYSTEM_PROCESSOR=arm64
+  -DCMAKE_OSX_SYSROOT="${platform}"
+  -DCMAKE_OSX_ARCHITECTURES=arm64
+  -DCMAKE_OSX_DEPLOYMENT_TARGET="${deployment_target}"
+  -DMKW_AURORA_DIR="${runtime_source}/aurora-main"
+  -DAURORA_DAWN_PACKAGE_URL="file://${dawn_archive}"
+  -DMKW_TRANSLATED_SHARD_MANIFEST="${translation_root}/build_shards/shards.cmake"
+  -DMKW_KARTPAD_RUNTIME_INCLUDE="${repo_root}/runtime/include"
+  -DMKW_KARTPAD_REPO_ROOT="${repo_root}"
+  -DMKW_KARTPAD_TVOS_TARGET="${product_target}"
+  -DMKW_KARTPAD_DISCIO_SOURCE_DIR="${discio_source}"
+  -DMKW_KARTPAD_DISCIO_BUILD_DIR="${discio_build}"
+  -DMKW_TRANSLATED_COMPILE_JOBS=2
+)
+if [[ "${platform}" == appletv* ]]; then
+  cmake_args+=("-DMKW_KARTPAD_TVOS_ASSETS=${tvos_assets}")
+fi
+if [[ "${platform}" == "appletvos" ]]; then
+  cmake_args+=("${signing_args[@]}")
+fi
+cmake "${cmake_args[@]}"
 cmake --build "${runtime_build}" --target "${product_target}" "${build_args[@]}"
 
 binary="${runtime_build}/${binary_relative}"
@@ -273,7 +297,7 @@ fi
 if [[ "${platform}" == "appletvsimulator" ]]; then
   plutil -replace CFBundleSupportedPlatforms -xml \
     '<array><string>AppleTVSimulator</string></array>' \
-    "${runtime_build}/KartPadTV.app/Info.plist"
+    "${runtime_build}/Release-appletvsimulator/KartPadTV.app/Info.plist"
 fi
 if ! xcrun vtool -show-build "${binary}" | rg -q "platform ${macho_platform}"; then
   echo "ERROR: linked runtime is not a ${platform} Mach-O" >&2
