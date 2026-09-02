@@ -16,6 +16,10 @@ case "${expected_platform}" in
   TVOS)
     sdk="appletvos"
     expected_bundle_platform="AppleTVOS"
+    if [[ -z "${DEVELOPMENT_TEAM:-}" ]]; then
+      echo "ERROR: DEVELOPMENT_TEAM must be explicitly set for a device audit" >&2
+      exit 64
+    fi
     required_developer_dir="/Applications/Xcode-27-beta-5.app/Contents/Developer"
     if [[ ! -d "${required_developer_dir}" ]] || ! command -v codesign >/dev/null 2>&1; then
       echo "ERROR: required Xcode 27 developer directory is missing: ${required_developer_dir}" >&2
@@ -98,8 +102,8 @@ if [[ "${expected_platform}" == "TVOS" ]]; then
   signature_team="$(sed -n 's/^TeamIdentifier=//p' <<<"${signature_details}" | head -n 1)"
   if ! rg -q '^Authority=Apple Development:' <<<"${signature_details}" ||
      [[ "${signature_identifier}" != "dev.kartpad.app" ]] ||
-     [[ "${signature_team}" != "HFHZAHV482" ]]; then
-    echo "tvOS app is not signed by Apple Development for HFHZAHV482/dev.kartpad.app" >&2
+     [[ "${signature_team}" != "${DEVELOPMENT_TEAM}" ]]; then
+    echo "tvOS app is not signed by Apple Development for ${DEVELOPMENT_TEAM}/dev.kartpad.app" >&2
     exit 65
   fi
 
@@ -113,11 +117,11 @@ if [[ "${expected_platform}" == "TVOS" ]]; then
       'Print :Entitlements:com.apple.developer.team-identifier' "${profile_plist}"
   )"
   profile_app_identifier="$(plutil -extract Entitlements.application-identifier raw "${profile_plist}")"
-  if [[ "${profile_team}" != "HFHZAHV482" ]] ||
-     [[ "${profile_developer_team}" != "HFHZAHV482" ]] ||
-     [[ "${profile_app_identifier}" != "HFHZAHV482.dev.kartpad.app" &&
-        "${profile_app_identifier}" != "HFHZAHV482.*" ]]; then
-    echo "embedded provisioning profile does not match HFHZAHV482/dev.kartpad.app" >&2
+  if [[ "${profile_team}" != "${DEVELOPMENT_TEAM}" ]] ||
+     [[ "${profile_developer_team}" != "${DEVELOPMENT_TEAM}" ]] ||
+     [[ "${profile_app_identifier}" != "${DEVELOPMENT_TEAM}.dev.kartpad.app" &&
+        "${profile_app_identifier}" != "${DEVELOPMENT_TEAM}.*" ]]; then
+    echo "embedded provisioning profile does not match ${DEVELOPMENT_TEAM}/dev.kartpad.app" >&2
     exit 65
   fi
   codesign --display --entitlements :- "${app}" >"${entitlements_plist}" 2>/dev/null
@@ -126,9 +130,9 @@ if [[ "${expected_platform}" == "TVOS" ]]; then
     /usr/libexec/PlistBuddy -c \
       'Print :com.apple.developer.team-identifier' "${entitlements_plist}"
   )"
-  if [[ "${signed_app_identifier}" != "HFHZAHV482.dev.kartpad.app" ]] ||
-     [[ "${signed_developer_team}" != "HFHZAHV482" ]]; then
-    echo "signed tvOS entitlements do not match HFHZAHV482/dev.kartpad.app" >&2
+  if [[ "${signed_app_identifier}" != "${DEVELOPMENT_TEAM}.dev.kartpad.app" ]] ||
+     [[ "${signed_developer_team}" != "${DEVELOPMENT_TEAM}" ]]; then
+    echo "signed tvOS entitlements do not match ${DEVELOPMENT_TEAM}/dev.kartpad.app" >&2
     exit 65
   fi
   printf 'embedded profile: %s (team=%s app-id=%s)\n' \

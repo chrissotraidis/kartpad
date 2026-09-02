@@ -125,6 +125,8 @@ class TVOSRuntimeContractTests(unittest.TestCase):
         self.assertIn("Library/Caches/KartPad/GameData", stage)
         self.assertIn("KartPadMobileEnsureGameDataAvailable", audit)
         self.assertNotIn("first-launch", audit)
+        self.assertIn("DEVELOPMENT_TEAM", audit)
+        self.assertNotIn("HFHZAHV482", audit)
         for forbidden in (
             "GameData",
             "NAND",
