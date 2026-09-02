@@ -23,6 +23,11 @@
         "format": "wbfs",
         "sha256": "fc035e60610842da6860d23d4a30c1f1c0f019d492469deb8a2ac25ef5822331",
         "note": "Current verified development image"
+      },
+      {
+        "format": "iso",
+        "sha256": "2fc548bad45f373bad953d410a32e042e7efeef86a90f9ff63ddc5b62f9e6971",
+        "note": "Verified lossless/decrypted ISO image"
       }
     ]
   },
@@ -61,7 +66,8 @@
       {"function": "func_80846C1C.cpp", "script": "scripts/inject-online-rkg-selection-hooks.py"},
       {"function": "func_8084E388.cpp", "script": "scripts/inject-online-rkg-selection-hooks.py"},
       {"function": "func_80643F48.cpp", "script": "scripts/inject-online-rkg-selection-hooks.py"},
-      {"function": "func_805A1A8C.cpp", "script": "scripts/inject-g10-camera-lifecycle-guard.py"}
+      {"function": "func_805A1A8C.cpp", "script": "scripts/inject-g10-camera-lifecycle-guard.py"},
+      {"function": "func_80672CC8.cpp", "script": "scripts/inject-tvos-offline-save-completion.py"}
     ],
     "expectedGeneratedFunctions": 29637,
     "expectedBaseFunctions": 29065,

@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 image="${1:-${repo_root}/ref/Mario Kart Wii.wbfs}"
 output="${2:-${repo_root}/private/self-build/disc}"
-expected_image_sha256="fc035e60610842da6860d23d4a30c1f1c0f019d492469deb8a2ac25ef5822331"
+profile="${repo_root}/builder/profiles/mkwii-rmcp01-rev0.json"
 expected_dol_sha256="80d18895b39c63bd80f457398bfcbb91b7d16ac116a41a88967e954080155b05"
 expected_rel_sha256="16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d"
 
@@ -63,10 +63,23 @@ validate_output() {
 }
 
 image_sha256="$(shasum -a 256 "${image}" | awk '{print $1}')"
-[[ "${image_sha256}" == "${expected_image_sha256}" ]] || {
+if ! PYTHONPATH="${repo_root}/builder${PYTHONPATH:+:${PYTHONPATH}}" \
+    python3 - "${profile}" "${image_sha256}" <<'PY'
+import sys
+from pathlib import Path
+
+from kartpad_builder.profiles import ProfileError, load_profiles, select_profile
+
+profile_path = Path(sys.argv[1])
+try:
+    select_profile(load_profiles(profile_path.parent), sys.argv[2], profile_path.stem)
+except ProfileError:
+    raise SystemExit(1)
+PY
+then
   echo "ERROR: disc-image SHA-256 is unsupported: ${image_sha256}" >&2
   exit 65
-}
+fi
 
 if [[ -d "${output}" ]]; then
   validate_output "${output}"
@@ -85,10 +98,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# This exact WBFS is independently pinned by a full SHA-256. nodtool's H0
-# validation rejects its first block despite the extracted DOL/REL matching the
-# supported profile, so extraction is read-only and followed by strict output
-# identity checks instead of weakening acceptance to a partial container hash.
+# Accepted images are independently pinned by full SHA-256. nodtool's H0
+# validation rejects the verified WBFS's first block despite the extracted
+# DOL/REL matching the supported profile, so extraction remains read-only and
+# is followed by strict output identity checks.
 "${nodtool}" extract --quiet "${image}" "${stage}"
 validate_output "${stage}"
 mv "${stage}" "${output}"

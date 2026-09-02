@@ -92,6 +92,11 @@
       "name": "Dawn prebuilt",
       "repository": "https://github.com/encounter/dawn-build",
       "version": "v20260603.191052",
+      "sourceRepository": "https://github.com/google/dawn.git",
+      "sourceCommit": "13abc3bc8ea2d3c2050f9e77a12d012108ceee24",
+      "sourceArchive": "dawn-13abc3bc8ea2d3c2050f9e77a12d012108ceee24.tar.gz",
+      "sourceArchiveUrl": "https://github.com/google/dawn/archive/13abc3bc8ea2d3c2050f9e77a12d012108ceee24.tar.gz",
+      "sourceArchiveSha256": "713bea5b92d4f6c5175752fd7cbf1c3c5ce36598ff5dd98685d8a1216614ebba",
       "darwinArm64Artifact": "dawn-darwin-arm64.tar.gz",
       "darwinArm64Sha256": "084ffd2ef500d614e443e3d494738272134628867bad3270d67ee8b0fb5f0838",
       "iosArm64Artifact": "dawn-ios-arm64.tar.gz",
@@ -101,6 +106,15 @@
       "iosSimulatorArm64Sha256": "feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf",
       "declaredAt": "ref/upstream/Wiicompiled/aurora-main/CMakeLists.txt",
       "role": "Pinned WebGPU implementation used by vendored Aurora; macOS and iOS artifacts are hash-verified at configure time"
+    },
+    {
+      "name": "SDL 3",
+      "repository": "https://github.com/libsdl-org/SDL.git",
+      "version": "3.4.4",
+      "sourceArchive": "SDL3-3.4.4.tar.gz",
+      "sourceArchiveUrl": "https://github.com/libsdl-org/SDL/releases/download/release-3.4.4/SDL3-3.4.4.tar.gz",
+      "sourceArchiveSha256": "ee712dbe6a89bb140bbfc2ce72358fb5ee5cc2240abeabd54855012db30b3864",
+      "role": "Pinned SDL source used by the Apple runtime; source archive is hash-verified before tvOS dependency builds"
     },
     {
       "name": "sse2neon",

@@ -1,7 +1,7 @@
 # KartPad
 
 <p align="center">
-  <strong>Mario Kart Wii and Retro Rewind on Apple Silicon Mac, iPhone, and iPad.</strong><br>
+  <strong>Mario Kart Wii on Apple Silicon Mac, iPhone, iPad, and Apple TV; Retro Rewind on Mac, iPhone, and iPad.</strong><br>
   Native static recompilation through Metal, with touch controls, motion steering, controllers, and optional Retro Rewind content.
 </p>
 
@@ -42,7 +42,7 @@
 | Does online play work? | The online-capable build passes login, matchmaking, a two-player race, results, ratings, and lobby return against a compatible isolated WFC server. As of 1 September 2026, the public Retro WFC service is in maintenance, so live public online play is temporarily unavailable. That external outage does not block Retro Rewind installation or offline play. |
 | Do touch, tilt, and controllers work? | Touch, motion steering, and ordinary GameController-compatible pads are implemented, with general physical acceptance on iPhone and iPad. Direct Wii Remote/Nunchuk pairing is a separate experimental, macOS-only path that still needs external hardware testing. |
 | Can I use a custom Mii? | **Experimentally.** On Mac, iPhone, or iPad, open **Game Data & Saves → Manage Miis…** and import a standard 74-byte `.mii` file. Restart KartPad, then select it in **License Settings → Change Mii**. KartPad does not yet create Miis. |
-| Are Android and Apple TV supported? | Not currently. Apple TV is a possible target once the current build is stable. Android may be investigated later. |
+| Are Android and Apple TV supported? | Apple TV supports the base game as a local self-build for tvOS 17 or newer. Retro Rewind, online play, and a distributable tvOS artifact are not included. Android is not currently supported. |
 | How much storage does it need? | The app is about 80 MiB and extracted Mario Kart Wii data uses about 2.5 GiB. Retro Rewind downloads an additional 1.72 GiB archive and needs temporary installation space. Keeping the WBFS/ISO on the device requires more space. |
 
 ## Original Mario Kart Wii or Retro Rewind
@@ -339,6 +339,88 @@ or non-system dynamic dependencies enter the app bundle. Installation and
 signing remain local development steps; this repository does not publish a
 playable app artifact.
 
+### Apple TV base-game self-build
+
+The tvOS target is intentionally base-game only. It uses the existing private
+RMCP01 translation and extracted `GameData`; neither is copied into the signed
+app. Build the pinned Dawn archive for the target you need:
+
+```sh
+mkdir -p build/dependency-cache
+
+./scripts/build-dawn-tvos.sh \
+  appletvsimulator \
+  /tmp/kartpad-dawn-tvos-simulator \
+  /tmp/dawn-tvos-simulator-arm64-v20260603.191052.tar.gz
+install -m 0644 \
+  /tmp/dawn-tvos-simulator-arm64-v20260603.191052.tar.gz \
+  build/dependency-cache/dawn-tvos-simulator-arm64-v20260603.191052.tar.gz
+
+./scripts/build-dawn-tvos.sh \
+  appletvos \
+  /tmp/kartpad-dawn-tvos-device \
+  /tmp/dawn-tvos-arm64-v20260603.191052.tar.gz
+install -m 0644 \
+  /tmp/dawn-tvos-arm64-v20260603.191052.tar.gz \
+  build/dependency-cache/dawn-tvos-arm64-v20260603.191052.tar.gz
+```
+
+Build, install, stage, and launch the Simulator app:
+
+```sh
+TVOS_SIMULATOR_ID="<simulator-udid>"
+
+./scripts/prepare-ios-game-runtime.sh \
+  private/self-build/translation \
+  /tmp/kartpad-tvos-simulator-source \
+  /tmp/kartpad-tvos-simulator-build \
+  base appletvsimulator
+xcrun simctl install "${TVOS_SIMULATOR_ID}" \
+  /tmp/kartpad-tvos-simulator-build/KartPadTV.app
+./scripts/stage-tvos-game-data.sh \
+  "${TVOS_SIMULATOR_ID}" \
+  "$PWD/private/self-build/disc"
+./scripts/audit-tvos-app.sh \
+  /tmp/kartpad-tvos-simulator-build/KartPadTV.app \
+  TVOSSIMULATOR
+xcrun simctl launch "${TVOS_SIMULATOR_ID}" dev.kartpad.app
+```
+
+For a paired physical Apple TV, use Xcode 27 and your development team:
+
+```sh
+export DEVELOPER_DIR=/Applications/Xcode-27-beta-5.app/Contents/Developer
+export DEVELOPMENT_TEAM="<apple-development-team-id>"
+APPLE_TV_ID="<coredevice-id>"
+
+./scripts/prepare-ios-game-runtime.sh \
+  private/self-build/translation \
+  /tmp/kartpad-tvos-device-source \
+  /tmp/kartpad-tvos-device-build \
+  base appletvos
+./scripts/audit-tvos-app.sh \
+  /tmp/kartpad-tvos-device-build/Release-appletvos/KartPadTV.app \
+  TVOS
+xcrun devicectl device install app \
+  --device "${APPLE_TV_ID}" \
+  /tmp/kartpad-tvos-device-build/Release-appletvos/KartPadTV.app
+xcrun devicectl device process launch \
+  --device "${APPLE_TV_ID}" dev.kartpad.app
+sleep 2
+xcrun devicectl device copy to \
+  --device "${APPLE_TV_ID}" \
+  --domain-type appDataContainer \
+  --domain-identifier dev.kartpad.app \
+  --source "$PWD/private/self-build/disc" \
+  --destination Library/Caches/KartPad/GameData
+xcrun devicectl device process launch \
+  --device "${APPLE_TV_ID}" dev.kartpad.app
+```
+
+The first device launch creates the private app-data destination and exits
+until the validated files are staged. The runtime writes saves only inside its
+tvOS data container and keeps networking disabled.
+
 See [`docs/GOAL-LOOP.md`](docs/GOAL-LOOP.md) for the execution rules and
 [`docs/JOURNAL.md`](docs/JOURNAL.md) for reproducible commands and dated
 results.
@@ -550,9 +632,9 @@ iPhone or iPad.
 
 ### Are Android or Apple TV supported?
 
-Not currently. The supported targets are Apple Silicon Mac, iPhone, and iPad.
-Apple TV is a possible next target once the current build is stable. Android
-may be investigated later.
+Apple TV supports a local base-game self-build on tvOS 17 or newer. The tvOS
+target does not include Retro Rewind, online play, or a published app artifact.
+Android is not currently supported.
 
 ### How much storage does KartPad use?
 

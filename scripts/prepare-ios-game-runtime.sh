@@ -13,9 +13,8 @@ translation_root="$(absolute_from_repo "${1:-private/g8-full-translation}")"
 runtime_source="$(absolute_from_repo "${2:-build/g14-ios-game-runtime-source}")"
 runtime_build="$(absolute_from_repo "${3:-build/g14-ios-game-runtime-build}")"
 product="${4:-base}"
+platform="${5:-iphonesimulator}"
 runtime_ref="${repo_root}/ref/upstream/Wiicompiled/runtime"
-dawn_archive="${repo_root}/build/dependency-cache/dawn-ios-simulator-arm64-v20260603.191052.tar.gz"
-dawn_sha256="feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf"
 discio_source="${KARTPAD_DISCIO_SOURCE_DIR:-${repo_root}/build/dolphin-ios-discio-iphonesimulator-source}"
 discio_build="${KARTPAD_DISCIO_BUILD_DIR:-${repo_root}/build/dolphin-ios-discio-iphonesimulator-build}"
 sse2neon_url="https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
@@ -28,6 +27,49 @@ case "${product}" in
   dual) product_target="KartPadDual" ;;
   *) echo "ERROR: product must be base, retro-rewind, or dual" >&2; exit 64 ;;
 esac
+
+case "${platform}" in
+  iphonesimulator)
+    dawn_archive="${repo_root}/build/dependency-cache/dawn-ios-simulator-arm64-v20260603.191052.tar.gz"
+    dawn_sha256="feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf"
+    system_name="iOS"
+    deployment_target="16.0"
+    require_discio=1
+    binary_relative="KartPad.app/KartPad"
+    macho_platform="IOSSIMULATOR"
+    ;;
+  appletvsimulator)
+    dawn_archive="${repo_root}/build/dependency-cache/dawn-tvos-simulator-arm64-v20260603.191052.tar.gz"
+    dawn_sha256="0f85c31e7aecebe517c305b9a7cfb4408628ef684b7950533d4cc002e7cebd65"
+    system_name="tvOS"
+    deployment_target="17.0"
+    require_discio=0
+    binary_relative="KartPadTV.app/KartPadTV"
+    macho_platform="TVOSSIMULATOR"
+    ;;
+  appletvos)
+    dawn_archive="${repo_root}/build/dependency-cache/dawn-tvos-arm64-v20260603.191052.tar.gz"
+    dawn_sha256="3b2e1b5536a0d677fe3b932db0c4b4b0aa43172d0350cf76243edc131ba1d7d3"
+    system_name="tvOS"
+    deployment_target="17.0"
+    require_discio=0
+    binary_relative="Release-appletvos/KartPadTV.app/KartPadTV"
+    macho_platform="TVOS"
+    if [[ -z "${DEVELOPMENT_TEAM:-}" ]]; then
+      echo "ERROR: DEVELOPMENT_TEAM must be explicitly set for a device build" >&2
+      exit 64
+    fi
+    ;;
+  *)
+    echo "ERROR: platform must be iphonesimulator, appletvsimulator, or appletvos" >&2
+    exit 64
+    ;;
+esac
+
+if [[ "${platform}" == appletv* && "${product}" != "base" ]]; then
+  echo "ERROR: tvOS supports only product=base" >&2
+  exit 64
+fi
 
 if [[ "${prepare_only}" != "0" && "${prepare_only}" != "1" ]]; then
   echo "ERROR: KARTPAD_PREPARE_ONLY must be 0 or 1" >&2
@@ -42,6 +84,18 @@ if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
   echo "ERROR: missing real-title translation: ${translation_root}" >&2
   exit 1
 fi
+if [[ "${platform}" == appletv* ]]; then
+  save_completion_shard="$(
+    rg -l -F 'extern "C" void func_80672CC8(CpuContext* MKW_RESTRICT ctx)' \
+      "${translation_root}/build_shards" || true
+  )"
+  if [[ -z "${save_completion_shard}" || "${save_completion_shard}" == *$'\n'* ]]; then
+    echo "ERROR: expected exactly one translated tvOS save-completion function" >&2
+    exit 1
+  fi
+  "${repo_root}/scripts/inject-tvos-offline-save-completion.py" \
+    "${save_completion_shard}"
+fi
 if [[ -e "${runtime_source}" || -e "${runtime_build}" ]]; then
   echo "ERROR: output already exists; choose fresh output paths" >&2
   exit 1
@@ -50,7 +104,7 @@ if [[ "${prepare_only}" == "0" && ! -f "${dawn_archive}" ]]; then
   echo "ERROR: missing pinned Simulator Dawn archive; run scripts/build-dawn-ios-simulator.sh" >&2
   exit 1
 fi
-if [[ "${prepare_only}" == "0" ]]; then
+if [[ "${prepare_only}" == "0" && "${require_discio}" == "1" ]]; then
   if [[ ! -f "${discio_source}/Source/Core/DiscIO/DiscExtractor.h" ||
         ! -f "${discio_build}/Source/Core/DiscIO/libdiscio.a" ]]; then
     echo "ERROR: missing iOS Simulator DiscIO dependency; run scripts/build-ios-discio-probe.sh" >&2
@@ -82,6 +136,8 @@ patch --batch -p1 -d "${runtime_source}/aurora-main" < \
   "${repo_root}/patches/aurora-ios-opaque-letterbox.patch"
 patch --batch -p1 -d "${runtime_source}/aurora-main" < \
   "${repo_root}/patches/aurora-ios-simulator-single-pipeline-worker.patch"
+patch --batch -p1 -d "${runtime_source}/aurora-main" < \
+  "${repo_root}/patches/aurora-tvos-package-discovery.patch"
 patch --batch -p1 -d "${runtime_source}" < "${repo_root}/patches/wiicompiled-apple-runtime.patch"
 patch --batch -p1 -d "${runtime_source}" < \
   "${repo_root}/patches/wiicompiled-experimental-wiimote-preset.patch"
@@ -113,6 +169,8 @@ for dual_patch in \
     wiicompiled-dual-product-target.patch; do
   patch --batch -p1 -d "${runtime_source}" < "${repo_root}/patches/${dual_patch}"
 done
+patch --batch -p1 -d "${runtime_source}" < \
+  "${repo_root}/patches/wiicompiled-tvos-runtime.patch"
 
 mkdir -p "${runtime_source}/third_party/sse2neon"
 cached_sse2neon="${repo_root}/build/dependency-cache/sse2neon-${sse2neon_sha256}.h"
@@ -166,13 +224,36 @@ restore_generated_link() {
 trap restore_generated_link EXIT
 ln -sfn "${translation_root}" "${generated_link}"
 
-cmake -S "${runtime_source}" -B "${runtime_build}" -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_SYSTEM_NAME=iOS \
+generator="Ninja"
+configuration_args=(-DCMAKE_BUILD_TYPE=Release)
+signing_args=()
+build_args=(--parallel 2)
+if [[ "${platform}" == "appletvos" ]]; then
+  generator="Xcode"
+  configuration_args=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES=Release)
+  signing_args=(
+    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_STYLE=Automatic
+    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY=Apple\ Development
+    -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}"
+    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=YES
+    -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=YES
+  )
+  build_args=(
+    --config Release
+    --parallel 2
+    --
+    -allowProvisioningUpdates
+    DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}"
+  )
+fi
+
+cmake -S "${runtime_source}" -B "${runtime_build}" -G "${generator}" \
+  "${configuration_args[@]}" \
+  -DCMAKE_SYSTEM_NAME="${system_name}" \
   -DCMAKE_SYSTEM_PROCESSOR=arm64 \
-  -DCMAKE_OSX_SYSROOT=iphonesimulator \
+  -DCMAKE_OSX_SYSROOT="${platform}" \
   -DCMAKE_OSX_ARCHITECTURES=arm64 \
-  -DCMAKE_OSX_DEPLOYMENT_TARGET=16.0 \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET="${deployment_target}" \
   -DMKW_AURORA_DIR="${runtime_source}/aurora-main" \
   -DAURORA_DAWN_PACKAGE_URL="file://${dawn_archive}" \
   -DMKW_TRANSLATED_SHARD_MANIFEST="${translation_root}/build_shards/shards.cmake" \
@@ -180,16 +261,22 @@ cmake -S "${runtime_source}" -B "${runtime_build}" -G Ninja \
   -DMKW_KARTPAD_REPO_ROOT="${repo_root}" \
   -DMKW_KARTPAD_DISCIO_SOURCE_DIR="${discio_source}" \
   -DMKW_KARTPAD_DISCIO_BUILD_DIR="${discio_build}" \
-  -DMKW_TRANSLATED_COMPILE_JOBS=2
-cmake --build "${runtime_build}" --target "${product_target}" --parallel 2
+  -DMKW_TRANSLATED_COMPILE_JOBS=2 \
+  "${signing_args[@]}"
+cmake --build "${runtime_build}" --target "${product_target}" "${build_args[@]}"
 
-binary="${runtime_build}/KartPad.app/KartPad"
+binary="${runtime_build}/${binary_relative}"
 if [[ ! -x "${binary}" ]]; then
   echo "ERROR: missing linked Simulator runtime: ${binary}" >&2
   exit 1
 fi
-if ! xcrun vtool -show-build "${binary}" | rg -q 'platform IOSSIMULATOR'; then
-  echo "ERROR: linked runtime is not an iOS Simulator Mach-O" >&2
+if [[ "${platform}" == "appletvsimulator" ]]; then
+  plutil -replace CFBundleSupportedPlatforms -xml \
+    '<array><string>AppleTVSimulator</string></array>' \
+    "${runtime_build}/KartPadTV.app/Info.plist"
+fi
+if ! xcrun vtool -show-build "${binary}" | rg -q "platform ${macho_platform}"; then
+  echo "ERROR: linked runtime is not a ${platform} Mach-O" >&2
   exit 1
 fi
 if otool -L "${binary}" | rg -q '/opt/homebrew|/usr/local'; then
@@ -197,5 +284,5 @@ if otool -L "${binary}" | rg -q '/opt/homebrew|/usr/local'; then
   exit 1
 fi
 
-echo "Built full translated iOS Simulator runtime: ${binary}"
+echo "Built full translated ${platform} runtime: ${binary}"
 shasum -a 256 "${binary}"

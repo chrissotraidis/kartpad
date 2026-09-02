@@ -1,0 +1,313 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -122,7 +122,16 @@
+     set(AURORA_DAWN_PACKAGE_URL "" CACHE STRING
+         "file:// URL for the pinned Dawn Darwin arm64 archive")
+     string(TOLOWER "${CMAKE_OSX_SYSROOT}" MKW_APPLE_SYSROOT_LOWER)
+-    if(CMAKE_SYSTEM_NAME STREQUAL "iOS" AND
++    if(CMAKE_SYSTEM_NAME STREQUAL "tvOS" AND
++       MKW_APPLE_SYSROOT_LOWER MATCHES "appletvsimulator")
++        set(AURORA_DAWN_PACKAGE_URL_HASH
++            "SHA256=0f85c31e7aecebe517c305b9a7cfb4408628ef684b7950533d4cc002e7cebd65"
++            CACHE STRING "" FORCE)
++    elseif(CMAKE_SYSTEM_NAME STREQUAL "tvOS")
++        set(AURORA_DAWN_PACKAGE_URL_HASH
++            "SHA256=3b2e1b5536a0d677fe3b932db0c4b4b0aa43172d0350cf76243edc131ba1d7d3"
++            CACHE STRING "" FORCE)
++    elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS" AND
+        MKW_APPLE_SYSROOT_LOWER MATCHES "iphonesimulator")
+         set(AURORA_DAWN_PACKAGE_URL_HASH
+             "SHA256=feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf"
+diff --git a/cmake/PublicProducts.cmake b/cmake/PublicProducts.cmake
+--- a/cmake/PublicProducts.cmake
++++ b/cmake/PublicProducts.cmake
+@@ -72,9 +72,9 @@
+ mkw_configure_object_target(mkw_runtime_common)
+ target_compile_features(mkw_runtime_common PRIVATE cxx_std_20)
+ target_compile_definitions(mkw_runtime_common PRIVATE
+-    $<$<NOT:$<PLATFORM_ID:iOS>>:SDL_MAIN_HANDLED>
++    $<$<NOT:$<PLATFORM_ID:iOS,tvOS>>:SDL_MAIN_HANDLED>
+     _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION
+-    $<$<PLATFORM_ID:Darwin,iOS>:_XOPEN_SOURCE>)
++    $<$<PLATFORM_ID:Darwin,iOS,tvOS>:_XOPEN_SOURCE>)
+ target_link_libraries(mkw_runtime_common PRIVATE
+     aurora::gx aurora::pad aurora::si aurora::vi aurora::mtx)
+ target_link_libraries(mkw_runtime_common PRIVATE mkw::pugixml mkw::toml11 mkw::cryptopp)
+@@ -180,7 +180,7 @@
+         "${MKW_RUNTIME_SOURCE_DIR}/.."
+         "${MKW_RUNTIME_SOURCE_DIR}/../aurora-main/include")
+     target_compile_definitions(${target} PRIVATE
+-        $<$<NOT:$<PLATFORM_ID:iOS>>:SDL_MAIN_HANDLED>
++        $<$<NOT:$<PLATFORM_ID:iOS,tvOS>>:SDL_MAIN_HANDLED>
+         _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION TARGET_PC)
+     target_compile_features(${target} PRIVATE cxx_std_20)
+     mkw_apply_common_compile_options(${target})
+@@ -386,6 +386,55 @@
+         XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "iphonesimulator iphoneos"
+         XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
+         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
++endif()
++
++if(CMAKE_SYSTEM_NAME STREQUAL "tvOS" AND MKW_KARTPAD_REPO_ROOT)
++    set(MKW_KARTPAD_TVOS_DIR "${MKW_KARTPAD_REPO_ROOT}/apple/tvos")
++    set(MKW_KARTPAD_MOBILE_DIR "${MKW_KARTPAD_REPO_ROOT}/apple/mobile")
++    set(MKW_KARTPAD_SUNPAD_DIR "${MKW_KARTPAD_REPO_ROOT}/apple/third_party/sunpad")
++    set(MKW_KARTPAD_TVOS_SOURCES
++        "${MKW_KARTPAD_TVOS_DIR}/KartPadTVRuntimeHost.mm"
++        "${MKW_KARTPAD_MOBILE_DIR}/KartPadClassicInput.mm"
++        "${MKW_KARTPAD_MOBILE_DIR}/KartPadPhysicalControllers.mm"
++        "${MKW_KARTPAD_SUNPAD_DIR}/SunPadControllerMapping.mm"
++        "${MKW_KARTPAD_SUNPAD_DIR}/SunPadDiagnostics.mm"
++        "${MKW_KARTPAD_SUNPAD_DIR}/SunPadInputMixer.mm")
++    set(MKW_KARTPAD_TVOS_PRIVACY
++        "${MKW_KARTPAD_REPO_ROOT}/apple/ios/PrivacyInfo.xcprivacy")
++    foreach(source IN LISTS MKW_KARTPAD_TVOS_SOURCES)
++        if(NOT EXISTS "${source}")
++            message(FATAL_ERROR "Missing KartPad tvOS host source: ${source}")
++        endif()
++    endforeach()
++
++    target_sources(WiiCompiled PRIVATE ${MKW_KARTPAD_TVOS_SOURCES}
++        "${MKW_KARTPAD_TVOS_PRIVACY}")
++    target_include_directories(WiiCompiled PRIVATE
++        "${MKW_KARTPAD_TVOS_DIR}"
++        "${MKW_KARTPAD_MOBILE_DIR}"
++        "${MKW_KARTPAD_SUNPAD_DIR}"
++        "${MKW_KARTPAD_REPO_ROOT}/runtime/include")
++    set_source_files_properties(${MKW_KARTPAD_TVOS_SOURCES}
++        PROPERTIES COMPILE_OPTIONS "-fobjc-arc" SKIP_PRECOMPILE_HEADERS TRUE)
++    set_source_files_properties("${MKW_KARTPAD_TVOS_PRIVACY}"
++        PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
++    target_link_options(WiiCompiled PRIVATE "-ObjC")
++    target_link_libraries(WiiCompiled PRIVATE
++        "-framework Foundation" "-framework UIKit" "-framework GameController"
++        "-lz")
++    set_target_properties(WiiCompiled PROPERTIES
++        OUTPUT_NAME KartPadTV
++        MACOSX_BUNDLE TRUE
++        MACOSX_BUNDLE_INFO_PLIST "${MKW_KARTPAD_TVOS_DIR}/RuntimeInfo.plist"
++        XCODE_ATTRIBUTE_ARCHS arm64
++        XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++20"
++        XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION 4
++        XCODE_ATTRIBUTE_GENERATE_INFOPLIST_FILE NO
++        XCODE_ATTRIBUTE_MARKETING_VERSION 0.2.0
++        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER dev.kartpad.app
++        XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "appletvsimulator appletvos"
++        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "3"
++        XCODE_ATTRIBUTE_TVOS_DEPLOYMENT_TARGET 17.0)
+ endif()
+ 
+ if(MKW_HAVE_RETRO_REWIND)
+diff --git a/include/runtime_config.h b/include/runtime_config.h
+--- a/include/runtime_config.h
++++ b/include/runtime_config.h
+@@ -19,6 +19,7 @@
+ #include <vector>
+ #include <toml.hpp>
+ #ifdef __APPLE__
++#include <TargetConditionals.h>
+ #include <mach-o/dyld.h>
+ #include <pwd.h>
+ #include <unistd.h>
+@@ -213,6 +214,11 @@
+         return directory;
+     }
+ #elif defined(__APPLE__)
++#if TARGET_OS_TV
++    if (const char* home = std::getenv("HOME"); home && *home) {
++        return std::filesystem::path(home) / "Library" / "Caches" / "KartPad";
++    }
++#else
+     // A normal app bundle must never write saves, caches, configuration, or
+     // logs into its signed resources. HOME is container-aware for a future
+     // sandboxed build; the account database is a defensive non-sandboxed
+@@ -225,6 +231,7 @@
+         return std::filesystem::path(account->pw_dir) / "Library" / "Application Support" / "KartPad";
+     }
+ #endif
++#endif
+     return std::filesystem::current_path() / kApplicationDirectoryName;
+ }
+ 
+diff --git a/src/main.cpp b/src/main.cpp
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -63,7 +63,7 @@
+ #include <dolphin/gx/GXAurora.h>
+ #include <dolphin/vi.h>
+ 
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+ #include <SDL3/SDL_main.h>
+ #include "kartpad_mobile_runtime_host.h"
+ #endif
+@@ -1178,7 +1178,7 @@
+         if (argc != 1) {
+             throw std::invalid_argument("The game runtime does not accept command-line options; use Config.toml through the installed host.");
+         }
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         if (!KartPadMobileEnsureGameDataAvailable()) {
+             SetRuntimeExitCodeImpl(0);
+             ShutdownProcessTranscript();
+@@ -1187,7 +1187,7 @@
+         RuntimeConfigFile::Reload();
+ #endif
+         RuntimeConfigFile::LogLoadedConfig();
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         if (const char* requestedProfile = KartPadMobileSelectedRuntimeProfile()) {
+             const bool selected = std::string_view(requestedProfile) == "retro_rewind"
+                 ? RuntimeProduct::Select(RuntimeProduct::Kind::RetroRewind)
+@@ -1235,7 +1235,7 @@
+         bool configWidescreen = RuntimeConfigFile::WidescreenEnabled(false);
+         int mobileAspectMode = configWidescreen ? 2 : 0;
+         float resolutionMultiplier = RuntimeConfigFile::ResolutionMultiplier(1.0f);
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         KartPadMobileRuntimeSettings mobileSettings{};
+         if (KartPadMobileReadRuntimeSettings(&mobileSettings)) {
+             mobileAspectMode = std::clamp(mobileSettings.aspectRatioMode, 0, 2);
+@@ -1261,7 +1261,7 @@
+                                          RuntimeConfigFile::TextureDumps(false);
+         // No vsync knob: aurora always configures a non-blocking present mode.
+         auroraConfig.desiredBackend = BACKEND_AUTO;
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         ConfigureMkwMobileAspectMode(mobileAspectMode, auroraConfig.windowWidth,
+                                      auroraConfig.windowHeight);
+ #else
+@@ -1298,7 +1298,7 @@
+         const AuroraBackend requestedBackend = auroraConfig.desiredBackend;
+ 
+         const AuroraInfo auroraInfo = aurora_initialize(0, nullptr, &auroraConfig);
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         KartPadMobileRuntimeHostInstall(auroraInfo.window);
+ #endif
+         if (requestedBackend != BACKEND_AUTO && auroraInfo.backend != requestedBackend) {
+@@ -1318,12 +1318,12 @@
+         settings_overlay::InitializeRuntimeSettings();
+         const char *viewportPolicy = g_dynamicAspectRatioEnabled ? "stretch" : "fit";
+         const char *presentAspect = configWidescreen ? "surface (dynamic EGG canvas)" : "4:3";
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         presentAspect = mobileAspectMode == 2 ? "surface (dynamic EGG canvas)" :
+                         mobileAspectMode == 1 ? "16:9" : "4:3";
+ #endif
+         RT_LOG(RT_TAG_CONFIG) << "video.widescreen=" << (configWidescreen ? "true" : "false")
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+                   << " mobileAspectMode=" << mobileAspectMode
+ #endif
+                   << " SCGetAspectRatio=" << (configWidescreen ? 1 : 0)
+@@ -1363,7 +1363,7 @@
+         Fiber::GuestFiberManager::Shutdown();
+         WindowPlacementPersistence::Flush(true);
+         Wup028Adapter::Shutdown();
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         KartPadMobileRuntimeHostUninstall();
+ #endif
+         aurora_shutdown();
+@@ -1384,7 +1384,7 @@
+         Fiber::GuestFiberManager::Shutdown();
+         WindowPlacementPersistence::Flush(true);
+         Wup028Adapter::Shutdown();
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         KartPadMobileRuntimeHostUninstall();
+ #endif
+         aurora_shutdown();
+@@ -1399,7 +1399,7 @@
+         Fiber::GuestFiberManager::Shutdown();
+         WindowPlacementPersistence::Flush(true);
+         Wup028Adapter::Shutdown();
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         KartPadMobileRuntimeHostUninstall();
+ #endif
+         aurora_shutdown();
+diff --git a/src/hle/input/kpad.cpp b/src/hle/input/kpad.cpp
+--- a/src/hle/input/kpad.cpp
++++ b/src/hle/input/kpad.cpp
+@@ -9,7 +9,7 @@
+ #if defined(__APPLE__)
+ #include <TargetConditionals.h>
+ #endif
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+ #include "kartpad_mobile_runtime_host.h"
+ #endif
+ 
+@@ -784,7 +784,7 @@
+     }
+     EnsureKeyboardWatch();
+ 
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     KartPadMobileClassicInputSnapshot mobileInput{};
+     const bool mobileConnected =
+         KartPadMobileReadClassicInputForPlayer(chan, &mobileInput) &&
+@@ -815,7 +815,7 @@
+         (ReadClassicButtons(chan) | pendingClassic);
+     auto stick = fixtureActive ? ClassicStickForGhost(ghost) :
+                                  ReadClassicLeftStick(chan);
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     if (!fixtureActive && mobileConnected) {
+         classicHold |= mobileInput.buttons;
+         hold |= CoreButtonsForClassic(mobileInput.buttons);
+@@ -868,7 +868,7 @@
+             // Racedata is not constructed during the earliest boot reads.
+         }
+     }
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     KartPadMobileClassicInputSnapshot mobileInput{};
+     const bool mobileConnected =
+         KartPadMobileReadClassicInputForPlayer(chan, &mobileInput) &&
+@@ -896,7 +896,7 @@
+             (ReadClassicButtons(chan) | pendingClassic);
+         auto stick = fixtureActive ? ClassicStickForGhost(ghost) :
+                                           ReadClassicLeftStick(chan);
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         if (!fixtureActive && mobileConnected) {
+             classicButtons |= mobileInput.buttons;
+             coreButtons |= CoreButtonsForClassic(mobileInput.buttons);
+diff --git a/src/settings_overlay.cpp b/src/settings_overlay.cpp
+--- a/src/settings_overlay.cpp
++++ b/src/settings_overlay.cpp
+@@ -7,7 +7,7 @@
+ #include "runtime_config.h"
+ #if defined(__APPLE__)
+ #include <TargetConditionals.h>
+-#if TARGET_OS_IOS
++#if TARGET_OS_IOS || TARGET_OS_TV
+ #include "aurora_events.h"
+ #include "kartpad_mobile_runtime_host.h"
+ #include <dolphin/gx/GXAurora.h>
+@@ -948,7 +948,7 @@
+ }
+ 
+ void RefreshHostSettings() noexcept {
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     KartPadMobileRuntimeSettings settings{};
+     if (KartPadMobileReadRuntimeSettings(&settings)) {
+         g_showFps = settings.showFps != 0;
+diff --git a/cmake/PublicProducts.cmake b/cmake/PublicProducts.cmake
+--- a/cmake/PublicProducts.cmake
++++ b/cmake/PublicProducts.cmake
+@@ -574,7 +574,8 @@
+     mkw_runtime_common mkw_base_shared mkw_base_sensitive mkw_retro_sensitive
+     mkw_retro_rewind_functions WiiCompiled RetroRewind KartPadDual)
+ foreach(target IN LISTS MKW_ALL_BUILD_TARGETS)
+-    if(TARGET ${target})
++    if(TARGET ${target} AND
++       NOT CMAKE_SYSTEM_NAME STREQUAL "tvOS")
+         target_compile_options(${target} PRIVATE -mcpu=apple-m2)
+     endif()
+ endforeach()
