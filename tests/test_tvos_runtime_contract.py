@@ -157,6 +157,15 @@ class TVOSRuntimeContractTests(unittest.TestCase):
                     "mkw_configure_tvos_target(${MKW_KARTPAD_TVOS_TARGET})"
                 ),
             )
+            self.assertIn(
+                'if(CMAKE_SYSTEM_NAME STREQUAL "tvOS")\n'
+                "        target_precompile_headers(KartPadDual PRIVATE\n"
+                '            "${MKW_RUNTIME_SOURCE_DIR}/include/mkw_pch.h")\n'
+                "    else()\n"
+                "        target_precompile_headers(KartPadDual REUSE_FROM WiiCompiled)\n"
+                "    endif()",
+                patched_products,
+            )
             self.assertIn("MKW_KARTPAD_TVOS_ASSETS", patched_products)
             self.assertIn(
                 'XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "App Icon"',
