@@ -28,6 +28,47 @@ class TvOSContractTests(unittest.TestCase):
         self.assertIn("MINIZIP::minizip", patch)
         self.assertIn("KARTPAD_TVOS_BUNDLE_IDENTIFIER", patch)
 
+    def test_tvos_audio_preserves_the_ax_dpl2_surround_bed(self):
+        patch = (ROOT / "patches/wiicompiled-tvos-runtime.patch").read_text()
+        route = (ROOT / "apple/tvos/KartPadTVAudioRoute.mm").read_text()
+        mapping = (
+            ROOT / "runtime/include/kartpad/audio/ax_surround_bed.h"
+        ).read_text()
+
+        self.assertIn(
+            "uploadAuxC ? FindSurroundBedSlot(lrAddr) : nullptr", patch
+        )
+        self.assertIn("std::array<SurroundBed, 3>", patch)
+        self.assertIn("kAxSamplesPerFrame * 2 * sizeof(int16_t)", patch)
+        self.assertIn("bed.valid = false;", patch)
+        self.assertIn("Called after JoinMixWorker.", patch)
+        self.assertIn("const bool hasSurround = AxDspHle::ConsumeSurroundBed(", patch)
+        self.assertIn("output[0] =", mapping)
+        self.assertIn("output[1] =", mapping)
+        self.assertIn("output[2] = 0;", mapping)
+        self.assertIn("output[3] = 0;", mapping)
+        self.assertIn("output[4] =", mapping)
+        self.assertIn("output[5] =", mapping)
+        self.assertIn("setSupportsMultichannelContent", route)
+        self.assertIn("setPreferredOutputNumberOfChannels", route)
+        self.assertIn("outputNumberOfChannels", route)
+        self.assertIn("CanReuseTVAudioStream", patch)
+        self.assertIn(
+            "+    if (m_initialized && m_stream && m_sampleRate == sampleRate &&\n"
+            "+        m_requestedChannels == channels &&\n"
+            "+        kartpad::audio::CanReuseTVAudioStream(",
+            patch,
+        )
+        self.assertIn("actualChannels < 6", patch)
+        self.assertIn('kSoundModeName[] = "IPL.SND"', patch)
+        self.assertIn("kSoundModeItem = 17", patch)
+        self.assertIn("InstallSurroundSoundMode();", patch)
+        self.assertIn("kSoundModeEntryOffset + sizeof(kSoundModeName), 2", patch)
+        self.assertNotIn("PPC_NATIVE_OVERRIDE(801B1E2C", patch)
+        self.assertIn("AX Dolby Pro Logic II output active", patch)
+        self.assertIn("DPL2 six-channel PCM reached host playback", patch)
+        self.assertNotIn("FreeSurround", patch)
+
     def test_tvos_host_uses_purgeable_cache_storage(self):
         host = (ROOT / "apple/tvos/KartPadTVRuntimeHost.mm").read_text()
         self.assertIn("NSCachesDirectory", host)

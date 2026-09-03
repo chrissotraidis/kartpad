@@ -284,6 +284,15 @@ if(MKW_BUILD_IOS_SIMULATOR OR MKW_BUILD_IOS_DEVICE)
 endif()
 
 if(BUILD_TESTING)
+  add_executable(kartpad_ax_surround_bed_tests
+    runtime/tests/ax_surround_bed_tests.cpp)
+  target_include_directories(kartpad_ax_surround_bed_tests PRIVATE runtime/include)
+  target_compile_features(kartpad_ax_surround_bed_tests PRIVATE cxx_std_20)
+  target_compile_options(kartpad_ax_surround_bed_tests PRIVATE
+    -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME kartpad.audio.ax-surround-bed
+    COMMAND kartpad_ax_surround_bed_tests)
+
   add_executable(kartpad_mii_database_tests runtime/tests/mii_database_tests.cpp)
   target_include_directories(kartpad_mii_database_tests PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/runtime/include")

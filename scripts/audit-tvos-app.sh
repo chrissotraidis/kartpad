@@ -72,6 +72,8 @@ for required in \
   _KartPadMobileSelectedRuntimeProfile \
   _KartPadMobileRuntimeHostInstall \
   _KartPadMobileReadClassicInputForPlayer \
+  _KartPadTVPrepareAudioRoute \
+  _KartPadTVActualAudioOutputChannels \
   '_OBJC_CLASS_$_KartPadPhysicalControllers' \
   '_OBJC_CLASS_$_SDLUIKitSceneDelegate'; do
   rg -F -q "${required}" <<<"${symbols}" || {
@@ -82,6 +84,9 @@ done
 for contract in \
   'KartPad for Apple TV' \
   'The Siri Remote can operate setup screens, but it is not a supported racing controller.' \
+  'host playback active: ' \
+  'DPL2 six-channel PCM reached host playback' \
+  'non-silent DPL2 rear PCM reached host playback: peak=' \
   'Download Official Pack' \
   'The pack may be purged by tvOS and can be downloaded again.'; do
   rg -a -F -q "${contract}" "${binary}" || {

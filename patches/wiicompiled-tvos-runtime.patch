@@ -1,6 +1,6 @@
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -130,6 +130,14 @@
+@@ -131,6 +131,14 @@ else()
          set(AURORA_DAWN_PACKAGE_URL_HASH
              "SHA256=a361fcca75929fa5c766cfcde979c010a6da7d805e5db8e15c75e73fd8260e78"
              CACHE STRING "" FORCE)
@@ -17,7 +17,7 @@
              "SHA256=084ffd2ef500d614e443e3d494738272134628867bad3270d67ee8b0fb5f0838"
 --- a/cmake/PublicProducts.cmake
 +++ b/cmake/PublicProducts.cmake
-@@ -72,7 +72,7 @@
+@@ -72,9 +72,9 @@ add_library(mkw_runtime_common OBJECT ${SOURCES})
  mkw_configure_object_target(mkw_runtime_common)
  target_compile_features(mkw_runtime_common PRIVATE cxx_std_20)
  target_compile_definitions(mkw_runtime_common PRIVATE
@@ -27,7 +27,9 @@
 -    $<$<PLATFORM_ID:Darwin,iOS>:_XOPEN_SOURCE>)
 +    $<$<PLATFORM_ID:Darwin,iOS,tvOS>:_XOPEN_SOURCE>)
  target_link_libraries(mkw_runtime_common PRIVATE
-@@ -180,7 +180,7 @@
+     aurora::gx aurora::pad aurora::si aurora::vi aurora::mtx)
+ target_link_libraries(mkw_runtime_common PRIVATE mkw::pugixml mkw::toml11 mkw::cryptopp)
+@@ -180,7 +180,7 @@ function(mkw_configure_product target)
          "${MKW_RUNTIME_SOURCE_DIR}/.."
          "${MKW_RUNTIME_SOURCE_DIR}/../aurora-main/include")
      target_compile_definitions(${target} PRIVATE
@@ -36,11 +38,10 @@
          _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION TARGET_PC)
      target_compile_features(${target} PRIVATE cxx_std_20)
      mkw_apply_common_compile_options(${target})
-@@ -390,7 +390,104 @@
-         XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
+@@ -391,6 +391,107 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS" AND MKW_KARTPAD_REPO_ROOT)
          XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
  endif()
-+
+ 
 +set(MKW_KARTPAD_MINIZIP_SOURCE_DIR "" CACHE PATH
 +    "Pinned minizip-ng source used by KartPad's tvOS Retro Rewind installer")
 +set(KARTPAD_TVOS_MARKETING_VERSION "0.4.1" CACHE STRING
@@ -49,7 +50,7 @@
 +    "KartPad tvOS bundle build number")
 +set(KARTPAD_TVOS_BUNDLE_IDENTIFIER "dev.kartpad.tv" CACHE STRING
 +    "KartPad tvOS product bundle identifier")
- 
++
 +if(CMAKE_SYSTEM_NAME STREQUAL "tvOS" AND MKW_KARTPAD_REPO_ROOT)
 +    set(MKW_KARTPAD_TVOS_DIR "${MKW_KARTPAD_REPO_ROOT}/apple/tvos")
 +    set(MKW_KARTPAD_IOS_DIR "${MKW_KARTPAD_REPO_ROOT}/apple/ios")
@@ -82,6 +83,7 @@
 +        "${CMAKE_BINARY_DIR}/kartpad-minizip" EXCLUDE_FROM_ALL)
 +
 +    set(MKW_KARTPAD_TVOS_SOURCES
++        "${MKW_KARTPAD_TVOS_DIR}/KartPadTVAudioRoute.mm"
 +        "${MKW_KARTPAD_TVOS_DIR}/KartPadTVRuntimeHost.mm"
 +        "${MKW_KARTPAD_IOS_DIR}/KartPadRetroRewindInstaller.mm"
 +        "${MKW_KARTPAD_MOBILE_DIR}/KartPadClassicInput.mm"
@@ -95,6 +97,8 @@
 +            message(FATAL_ERROR "Missing KartPad tvOS host source: ${source}")
 +        endif()
 +    endforeach()
++    target_include_directories(mkw_runtime_common PRIVATE
++        "${MKW_KARTPAD_REPO_ROOT}/runtime/include")
 +
 +    function(mkw_configure_kartpad_tvos target output_name)
 +        target_sources(${target} PRIVATE ${MKW_KARTPAD_TVOS_SOURCES}
@@ -115,6 +119,7 @@
 +            PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 +        target_link_options(${target} PRIVATE "-ObjC")
 +        target_link_libraries(${target} PRIVATE MINIZIP::minizip
++            "-framework AVFAudio"
 +            "-framework UIKit" "-framework CoreGraphics"
 +            "-framework QuartzCore" "-framework Metal"
 +            "-framework GameController" "-framework Foundation")
@@ -141,7 +146,7 @@
  if(MKW_HAVE_RETRO_REWIND)
      add_executable(RetroRewind "${MKW_RETRO_REWIND_PRODUCT_SOURCE}" ${MKW_RETRO_REGISTRATION_SOURCES})
      mkw_configure_product(RetroRewind)
-@@ -455,6 +544,10 @@
+@@ -455,6 +556,10 @@ if(MKW_HAVE_RETRO_REWIND)
              XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
              XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
      endif()
@@ -152,7 +157,7 @@
      add_custom_target(mkw_release DEPENDS WiiCompiled RetroRewind)
  else()
      add_custom_target(mkw_release DEPENDS WiiCompiled)
-@@ -529,6 +622,10 @@
+@@ -529,6 +634,10 @@ if(MKW_HAVE_RETRO_REWIND)
              XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
              XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
      endif()
@@ -163,6 +168,32 @@
      add_dependencies(mkw_release KartPadDual)
  endif()
  
+--- a/include/audio_backend.h
++++ b/include/audio_backend.h
+@@ -18,6 +18,8 @@ public:
+     // native-endian interleaved left, right samples.
+     bool PushWiiAiSamplesBE16(const uint8_t* data, size_t bytes);
+     bool PushSamplesLE16(const int16_t* samples, size_t sampleCount);
++    bool PushSurroundSamplesLE16(const int16_t* samples, size_t sampleCount);
++    uint32_t OutputChannels() const;
+ 
+     // Applied to the final host output, covering both AX and direct AI DMA.
+     void SetMasterVolume(float volume);
+@@ -41,11 +43,14 @@ private:
+     SDL_AudioSpec m_spec{};
+     uint32_t m_sampleRate = 0;
+     uint32_t m_channels = 0;
++    uint32_t m_requestedChannels = 0;
+     bool m_initialized = false;
+     float m_masterVolume = 1.0f;
+     bool m_muted = false;
+     bool m_reportedDroppedBlock = false;
+     bool m_reportedAudibleBlock = false;
++    bool m_reportedSurroundBlock = false;
++    bool m_reportedRearBlock = false;
+     uint64_t m_queueChecks = 0;
+     uint64_t m_emptyQueueChecks = 0;
+     uint64_t m_droppedBlocks = 0;
 --- a/include/runtime_config.h
 +++ b/include/runtime_config.h
 @@ -21,6 +21,7 @@
@@ -173,7 +204,7 @@
  #include <unistd.h>
  #endif
  #ifdef _WIN32
-@@ -217,12 +218,18 @@
+@@ -217,12 +218,18 @@ inline std::filesystem::path ApplicationDataDirectory() {
      // logs into its signed resources. HOME is container-aware for a future
      // sandboxed build; the account database is a defensive non-sandboxed
      // fallback for unusual launch environments that omit HOME.
@@ -194,6 +225,555 @@
      }
  #endif
      return std::filesystem::current_path() / kApplicationDirectoryName;
+--- a/src/audio_backend.cpp
++++ b/src/audio_backend.cpp
+@@ -1,6 +1,7 @@
+ #include "audio_backend.h"
+ 
+ #include "runtime_log.h"
++#include "kartpad/audio/tvos_audio_route.h"
+ 
+ #include <algorithm>
+ #include <cstdint>
+@@ -37,7 +38,10 @@ void AudioBackend::SetMuted(bool muted) {
+ }
+ 
+ bool AudioBackend::EnsureInitializedLocked(uint32_t sampleRate, uint32_t channels) {
+-    if (m_initialized && m_sampleRate == sampleRate && m_channels == channels) {
++    if (m_initialized && m_stream && m_sampleRate == sampleRate &&
++        m_requestedChannels == channels &&
++        kartpad::audio::CanReuseTVAudioStream(
++            channels, m_channels, KartPadTVActualAudioOutputChannels())) {
+         return true;
+     }
+ 
+@@ -51,12 +55,34 @@ bool AudioBackend::EnsureInitializedLocked(uint32_t sampleRate, uint32_t channel
+         return false;
+     }
+ 
++    const uint32_t requestedChannels = channels >= 6 ? 6u : 2u;
++    const uint32_t preparedChannels =
++        KartPadTVPrepareAudioRoute(requestedChannels);
++    uint32_t streamChannels =
++        requestedChannels == 6 && preparedChannels >= 6 ? 6u : 2u;
++
+     SDL_AudioSpec spec{};
+     spec.format = SDL_AUDIO_S16LE;
+-    spec.channels = static_cast<int>(channels);
++    spec.channels = static_cast<int>(streamChannels);
+     spec.freq = static_cast<int>(sampleRate);
+ 
+-    SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
++    SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(
++        SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
++    uint32_t actualChannels =
++        stream ? KartPadTVActualAudioOutputChannels() : 0;
++    if (stream && streamChannels == 6 && actualChannels < 6) {
++        SDL_DestroyAudioStream(stream);
++        stream = nullptr;
++    }
++    if (!stream && streamChannels == 6) {
++        streamChannels = 2;
++        KartPadTVPrepareAudioRoute(streamChannels);
++        spec.channels = static_cast<int>(streamChannels);
++        stream = SDL_OpenAudioDeviceStream(
++            SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
++        actualChannels =
++            stream ? KartPadTVActualAudioOutputChannels() : 0;
++    }
+     if (!stream) {
+         RT_LOG(RT_TAG_AUDIO) << "SDL_OpenAudioDeviceStream failed: " << SDL_GetError() << std::endl;
+         return false;
+@@ -77,11 +103,15 @@ bool AudioBackend::EnsureInitializedLocked(uint32_t sampleRate, uint32_t channel
+     m_stream = stream;
+     m_spec = spec;
+     m_sampleRate = sampleRate;
+-    m_channels = channels;
++    m_channels = streamChannels;
++    m_requestedChannels = requestedChannels;
+     m_initialized = true;
+-    RT_LOG(RT_TAG_AUDIO) << "host playback active: " << sampleRate << " Hz, "
+-                         << channels << " channels, gain=" << EffectiveGainLocked()
+-                         << std::endl;
++    RT_LOG(RT_TAG_AUDIO) << "host playback active: " << sampleRate
++                         << " Hz, requested=" << requestedChannels
++                         << " channels, prepared=" << preparedChannels
++                         << ", actual=" << actualChannels
++                         << ", opened=" << streamChannels
++                         << ", gain=" << EffectiveGainLocked() << std::endl;
+     return true;
+ }
+ 
+@@ -106,8 +136,11 @@ void AudioBackend::Shutdown() {
+     m_initialized = false;
+     m_sampleRate = 0;
+     m_channels = 0;
++    m_requestedChannels = 0;
+     m_reportedDroppedBlock = false;
+     m_reportedAudibleBlock = false;
++    m_reportedSurroundBlock = false;
++    m_reportedRearBlock = false;
+     m_queueChecks = 0;
+     m_emptyQueueChecks = 0;
+     m_droppedBlocks = 0;
+@@ -194,11 +227,11 @@ bool AudioBackend::PushWiiAiSamplesBE16(const uint8_t* data, size_t bytes) {
+         return false;
+     }
+ 
+-    if (m_convertBuffer.size() < sampleCount) {
+-        m_convertBuffer.resize(sampleCount);
+-    }
+-
+     const size_t frameCount = sampleCount / 2;
++    const size_t outputSampleCount = frameCount * m_channels;
++    if (m_convertBuffer.size() < outputSampleCount) {
++        m_convertBuffer.resize(outputSampleCount);
++    }
+     for (size_t frame = 0; frame < frameCount; ++frame) {
+         const size_t rightOffset = frame * 4;
+         const size_t leftOffset = rightOffset + 2;
+@@ -206,11 +239,15 @@ bool AudioBackend::PushWiiAiSamplesBE16(const uint8_t* data, size_t bytes) {
+                                static_cast<uint16_t>(data[rightOffset + 1]);
+         const uint16_t left = static_cast<uint16_t>(data[leftOffset]) << 8 |
+                               static_cast<uint16_t>(data[leftOffset + 1]);
+-        m_convertBuffer[frame * 2] = static_cast<int16_t>(left);
+-        m_convertBuffer[frame * 2 + 1] = static_cast<int16_t>(right);
++        const size_t output = frame * m_channels;
++        m_convertBuffer[output] = static_cast<int16_t>(left);
++        m_convertBuffer[output + 1] = static_cast<int16_t>(right);
++        if (m_channels == 6) {
++            std::fill_n(m_convertBuffer.begin() + output + 2, 4, 0);
++        }
+     }
+ 
+-    const int lenBytes = static_cast<int>(frameCount * 2 * sizeof(int16_t));
++    const int lenBytes = static_cast<int>(outputSampleCount * sizeof(int16_t));
+     if (!QueueHasCapacityLocked(lenBytes)) {
+         return true;
+     }
+@@ -221,9 +258,9 @@ bool AudioBackend::PushWiiAiSamplesBE16(const uint8_t* data, size_t bytes) {
+     m_submittedBytes += static_cast<uint64_t>(lenBytes);
+     if (!m_reportedAudibleBlock) {
+         const auto peak = std::max_element(
+-            m_convertBuffer.begin(), m_convertBuffer.begin() + sampleCount,
++            m_convertBuffer.begin(), m_convertBuffer.begin() + outputSampleCount,
+             [](int16_t a, int16_t b) { return std::abs(static_cast<int>(a)) < std::abs(static_cast<int>(b)); });
+-        if (peak != m_convertBuffer.begin() + sampleCount && *peak != 0) {
++        if (peak != m_convertBuffer.begin() + outputSampleCount && *peak != 0) {
+             m_reportedAudibleBlock = true;
+             RT_LOG(RT_TAG_AUDIO) << "non-silent PCM reached host playback: peak="
+                                  << std::abs(static_cast<int>(*peak))
+@@ -245,19 +282,35 @@ bool AudioBackend::PushSamplesLE16(const int16_t* samples, size_t sampleCount) {
+         return false;
+     }
+ 
+-    const int lenBytes = static_cast<int>(sampleCount * sizeof(int16_t));
++    const int16_t* output = samples;
++    size_t outputSampleCount = sampleCount;
++    if (m_channels == 6) {
++        const size_t frameCount = sampleCount / 2;
++        outputSampleCount = frameCount * 6;
++        if (m_convertBuffer.size() < outputSampleCount) {
++            m_convertBuffer.resize(outputSampleCount);
++        }
++        for (size_t frame = 0; frame < frameCount; ++frame) {
++            m_convertBuffer[frame * 6] = samples[frame * 2];
++            m_convertBuffer[frame * 6 + 1] = samples[frame * 2 + 1];
++            std::fill_n(m_convertBuffer.begin() + frame * 6 + 2, 4, 0);
++        }
++        output = m_convertBuffer.data();
++    }
++
++    const int lenBytes = static_cast<int>(outputSampleCount * sizeof(int16_t));
+     if (!QueueHasCapacityLocked(lenBytes)) {
+         return true;
+     }
+-    if (!SDL_PutAudioStreamData(m_stream, samples, lenBytes)) {
++    if (!SDL_PutAudioStreamData(m_stream, output, lenBytes)) {
+         RT_LOG(RT_TAG_AUDIO) << "SDL_PutAudioStreamData failed: " << SDL_GetError() << std::endl;
+         return false;
+     }
+     m_submittedBytes += static_cast<uint64_t>(lenBytes);
+     if (!m_reportedAudibleBlock) {
+         int peak = 0;
+-        for (size_t i = 0; i < sampleCount; ++i) {
+-            peak = std::max(peak, std::abs(static_cast<int>(samples[i])));
++        for (size_t i = 0; i < outputSampleCount; ++i) {
++            peak = std::max(peak, std::abs(static_cast<int>(output[i])));
+         }
+         if (peak != 0) {
+             m_reportedAudibleBlock = true;
+@@ -270,3 +323,50 @@ bool AudioBackend::PushSamplesLE16(const int16_t* samples, size_t sampleCount) {
+ 
+     return true;
+ }
++
++bool AudioBackend::PushSurroundSamplesLE16(const int16_t* samples,
++                                            size_t sampleCount) {
++    if (!samples || sampleCount == 0 || sampleCount % 6 != 0) {
++        return false;
++    }
++    std::lock_guard<std::mutex> lock(m_mutex);
++    if (!m_initialized || !m_stream || m_channels != 6) {
++        return false;
++    }
++
++    const int lenBytes = static_cast<int>(sampleCount * sizeof(int16_t));
++    if (!QueueHasCapacityLocked(lenBytes)) {
++        return true;
++    }
++    if (!SDL_PutAudioStreamData(m_stream, samples, lenBytes)) {
++        RT_LOG(RT_TAG_AUDIO) << "SDL_PutAudioStreamData failed: "
++                             << SDL_GetError() << std::endl;
++        return false;
++    }
++    m_submittedBytes += static_cast<uint64_t>(lenBytes);
++    if (!m_reportedSurroundBlock) {
++        m_reportedSurroundBlock = true;
++        RT_LOG(RT_TAG_AUDIO)
++            << "DPL2 six-channel PCM reached host playback" << std::endl;
++    }
++    if (!m_reportedRearBlock) {
++        int rearPeak = 0;
++        for (size_t i = 0; i < sampleCount; i += 6) {
++            rearPeak = std::max(rearPeak,
++                std::abs(static_cast<int>(samples[i + 4])));
++            rearPeak = std::max(rearPeak,
++                std::abs(static_cast<int>(samples[i + 5])));
++        }
++        if (rearPeak != 0) {
++            m_reportedRearBlock = true;
++            RT_LOG(RT_TAG_AUDIO) << "non-silent DPL2 rear PCM reached host playback: peak="
++                                 << rearPeak << std::endl;
++        }
++    }
++    return true;
++}
++
++uint32_t AudioBackend::OutputChannels() const {
++    std::lock_guard<std::mutex> lock(m_mutex);
++    return m_channels;
++}
+--- a/src/hle/audio/audio.cpp
++++ b/src/hle/audio/audio.cpp
+@@ -8,6 +8,7 @@
+ #include "runtime_log.h"
+ 
+ #include <algorithm>
++#include <array>
+ #include <cstdint>
+ #include <chrono>
+ #include <cstdio>
+@@ -57,7 +58,7 @@ void ReportAudioProblem(const char* who, const char* what) {
+ }
+ 
+ bool EnsureAudioBackend(uint32_t sampleRate) {
+-    return AudioBackend::Instance().Init(sampleRate, kAudioChannels);
++    return AudioBackend::Instance().Init(sampleRate, 6);
+ }
+ 
+ uint32_t EncodeAIDmaStartRegister(uint32_t startAddr) {
+@@ -73,6 +74,13 @@ bool PushAudioBlock(uint32_t startAddr, uint32_t length) {
+         return false;
+     }
+     const uint32_t bytes = length;
++    std::array<int16_t, 96 * 6> surround{};
++    const bool hasSurround = AxDspHle::ConsumeSurroundBed(
++        startAddr, length, surround.data(), surround.size());
++    if (hasSurround && AudioBackend::Instance().OutputChannels() == 6) {
++        return AudioBackend::Instance().PushSurroundSamplesLE16(
++            surround.data(), surround.size());
++    }
+     const uint8_t* src = nullptr;
+     try {
+         src = static_cast<const uint8_t*>(Memory::GetPointer(startAddr, bytes));
+--- a/src/hle/audio/ax_dsp.h
++++ b/src/hle/audio/ax_dsp.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <cstddef>
+ #include <cstdint>
+ 
+ struct CpuContext;
+@@ -25,6 +26,11 @@ void ServiceDeferredCallbacks();
+ // Cheap when the mix already finished (the normal case).
+ void JoinMixWorker();
+ 
++// Called after JoinMixWorker. The DPL2 bed is tied to the exact AI DMA block
++// that AX filled and is consumed at most once.
++bool ConsumeSurroundBed(uint32_t aiAddress, uint32_t aiBytes,
++                        int16_t* samples, size_t sampleCount);
++
+ // Joins and tears down the mix worker thread. Call before the guest memory map
+ // is destroyed or re-created.
+ void ShutdownMixWorker();
+--- a/src/hle/audio/ax_mix.cpp
++++ b/src/hle/audio/ax_mix.cpp
+@@ -10,6 +10,7 @@
+ #include "ppc_runtime.h"
+ #include "runtime_config.h"
+ #include "runtime_log.h"
++#include "kartpad/audio/ax_surround_bed.h"
+ 
+ #include <algorithm>
+ #include <array>
+@@ -87,6 +88,7 @@ public:
+         m_auxOutCount = 0;
+         m_auxInCount = 0;
+         m_deferredAux = false;
++        InvalidateSurroundBeds();
+         LoadResamplingCoefficients();
+         PushMail(kDspInit);
+     }
+@@ -102,6 +104,7 @@ public:
+         m_compressorPos = 0;
+         m_deferredResumeCallbacks = 0;
+         m_ucodeCrc = 0;
++        InvalidateSurroundBeds();
+     }
+ 
+     void ConfigureFromTask(uint32_t taskPtr) {
+@@ -161,6 +164,25 @@ public:
+         }
+     }
+ 
++    bool ConsumeSurroundBed(uint32_t aiAddress, uint32_t aiBytes,
++                            int16_t* samples, size_t sampleCount) {
++        constexpr size_t kSurroundSampleCount = kAxSamplesPerFrame * 6;
++        if (!samples || aiBytes != kAxSamplesPerFrame * 2 * sizeof(int16_t) ||
++            sampleCount != kSurroundSampleCount) {
++            InvalidateSurroundBeds();
++            return false;
++        }
++        for (SurroundBed& bed : m_surroundBeds) {
++            if (bed.valid && bed.aiAddress == aiAddress) {
++                std::copy(bed.samples.begin(), bed.samples.end(), samples);
++                bed.valid = false;
++                return true;
++            }
++        }
++        InvalidateSurroundBeds();
++        return false;
++    }
++
+     uint32_t CheckMailToDSP() const {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         return m_toDspBusy ? 1u : 0u;
+@@ -196,6 +218,12 @@ private:
+         std::array<int32_t, kAxSamplesPerFrame> data{};
+     };
+ 
++    struct SurroundBed {
++        uint32_t aiAddress = 0;
++        bool valid = false;
++        std::array<int16_t, kAxSamplesPerFrame * 6> samples{};
++    };
++
+     enum Cmd : uint16_t {
+         CMD_SETUP = 0x00,
+         CMD_ADD_TO_LR = 0x01,
+@@ -522,6 +550,11 @@ private:
+                 volume = OutputCarriesVolume(layout) ? m_cmdList[idx++] : 0x8000u;
+                 addr = ReadAddress(idx);
+                 addr2 = ReadAddress(idx);
++                if (decoded.cmd == CMD_OUTPUT_DPL2 &&
++                    !m_reportedDpl2Output.exchange(true, std::memory_order_relaxed)) {
++                    RT_LOGF(RT_TAG_AUDIO, "AX Dolby Pro Logic II output active\n");
++                    std::fflush(stderr);
++                }
+                 OutputSamples(addr2, addr, volume, decoded.cmd == CMD_OUTPUT_DPL2);
+                 break;
+             case CMD_WM_OUTPUT: {
+@@ -1237,16 +1270,28 @@ private:
+             WriteGuestS32Buffer(surroundAddr + kAxSamplesPerFrame * sizeof(int32_t),
+                                 m_bus[kBusAuxCL].data(), kAxSamplesPerFrame);
+         }
++        SurroundBed* surroundBed = uploadAuxC ? FindSurroundBedSlot(lrAddr) : nullptr;
++        if (!surroundBed) {
++            InvalidateSurroundBeds();
++        }
+         std::array<int16_t, kAxSamplesPerFrame * 2> pcm{};
+         for (uint32_t i = 0; i < kAxSamplesPerFrame; ++i) {
+-            const int16_t left = ClampS16((static_cast<int64_t>(m_bus[kBusMainL][i]) * ramp[i]) >> 15);
+-            const int16_t right = ClampS16((static_cast<int64_t>(m_bus[kBusMainR][i]) * ramp[i]) >> 15);
++            std::array<int16_t, 6> frame{};
++            kartpad::audio::ConvertAxSurroundBedFrameToS16(
++                m_bus[kBusMainL][i], m_bus[kBusMainR][i],
++                m_bus[kBusMainS][i], m_bus[kBusAuxCL][i], ramp[i], frame);
++            const int16_t left = frame[0];
++            const int16_t right = frame[1];
+             // OUTPUT is destructive on the DSP: the main buses are left holding the ramped,
+             // clamped result (not the wide accumulator) so any mixing after it sees that value.
+             m_bus[kBusMainL][i] = left;
+             m_bus[kBusMainR][i] = right;
+             pcm[i * 2] = right;
+             pcm[i * 2 + 1] = left;
++            if (surroundBed) {
++                std::copy(frame.begin(), frame.end(),
++                          surroundBed->samples.begin() + i * frame.size());
++            }
+         }
+         // The AI frame (contiguous right/left interleaved) lands in guest memory directly
+         // even from the worker: its only reader, PushAudioBlock, runs after Audio_HLE_Tick
+@@ -1261,6 +1306,35 @@ private:
+                 MixWrite16(lrAddr + i * 4 + 2, static_cast<uint16_t>(pcm[i * 2 + 1]));
+             }
+         }
++        if (surroundBed) {
++            surroundBed->aiAddress = lrAddr;
++            surroundBed->valid = true;
++        }
++    }
++
++    SurroundBed* FindSurroundBedSlot(uint32_t aiAddress) {
++        for (SurroundBed& bed : m_surroundBeds) {
++            if (bed.aiAddress == aiAddress) {
++                bed.valid = false;
++                return &bed;
++            }
++        }
++        for (SurroundBed& bed : m_surroundBeds) {
++            if (!bed.valid) {
++                bed.valid = false;
++                return &bed;
++            }
++        }
++        SurroundBed& bed = m_surroundBeds[m_nextSurroundBed++ % m_surroundBeds.size()];
++        bed.valid = false;
++        return &bed;
++    }
++
++    void InvalidateSurroundBeds() {
++        for (SurroundBed& bed : m_surroundBeds) {
++            bed.valid = false;
++        }
++        m_nextSurroundBed = 0;
+     }
+ 
+     void OutputWMSamples(uint32_t* addresses) {
+@@ -1413,6 +1487,9 @@ private:
+     std::array<std::array<int, kAxWiimoteSamplesPerFrame>, kAxWiimoteBusCount> m_wmBus{};
+     uint16_t m_lastMainVolume = 0x8000;
+     std::array<uint16_t, 3> m_lastAuxVolumes{};
++    std::array<SurroundBed, 3> m_surroundBeds{};
++    size_t m_nextSurroundBed = 0;
++    std::atomic<bool> m_reportedDpl2Output{false};
+ 
+     // Mix worker handshake.
+     std::thread m_mixThread;
+@@ -1558,6 +1635,11 @@ void JoinMixWorker() {
+     Instance().JoinMix();
+ }
+ 
++bool ConsumeSurroundBed(uint32_t aiAddress, uint32_t aiBytes,
++                        int16_t* samples, size_t sampleCount) {
++    return Instance().ConsumeSurroundBed(aiAddress, aiBytes, samples, sampleCount);
++}
++
+ void ShutdownMixWorker() {
+     Instance().ShutdownMixWorker();
+ }
+--- a/src/hle/input/kpad.cpp
++++ b/src/hle/input/kpad.cpp
+@@ -9,7 +9,7 @@
+ #if defined(__APPLE__)
+ #include <TargetConditionals.h>
+ #endif
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+ #include "kartpad_mobile_runtime_host.h"
+ #endif
+ 
+@@ -784,7 +784,7 @@ extern "C" int32_t KPAD__Read_HLE(uint32_t chan, uint32_t statusPtr, uint32_t co
+     }
+     EnsureKeyboardWatch();
+ 
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     KartPadMobileClassicInputSnapshot mobileInput{};
+     const bool mobileConnected =
+         KartPadMobileReadClassicInputForPlayer(chan, &mobileInput) &&
+@@ -815,7 +815,7 @@ extern "C" int32_t KPAD__Read_HLE(uint32_t chan, uint32_t statusPtr, uint32_t co
+         (ReadClassicButtons(chan) | pendingClassic);
+     auto stick = fixtureActive ? ClassicStickForGhost(ghost) :
+                                  ReadClassicLeftStick(chan);
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     if (!fixtureActive && mobileConnected) {
+         classicHold |= mobileInput.buttons;
+         hold |= CoreButtonsForClassic(mobileInput.buttons);
+@@ -868,7 +868,7 @@ extern "C" int32_t KPAD__GetUnifiedWpadStatus_HLE(uint32_t chan, uint32_t status
+             // Racedata is not constructed during the earliest boot reads.
+         }
+     }
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+     KartPadMobileClassicInputSnapshot mobileInput{};
+     const bool mobileConnected =
+         KartPadMobileReadClassicInputForPlayer(chan, &mobileInput) &&
+@@ -896,7 +896,7 @@ extern "C" int32_t KPAD__GetUnifiedWpadStatus_HLE(uint32_t chan, uint32_t status
+             (ReadClassicButtons(chan) | pendingClassic);
+         auto stick = fixtureActive ? ClassicStickForGhost(ghost) :
+                                           ReadClassicLeftStick(chan);
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+         if (!fixtureActive && mobileConnected) {
+             classicButtons |= mobileInput.buttons;
+             coreButtons |= CoreButtonsForClassic(mobileInput.buttons);
+--- a/src/hle/sc.cpp
++++ b/src/hle/sc.cpp
+@@ -13,6 +13,42 @@
+ namespace {
+ 
+ constexpr uint32_t kPalProductRegion = 2;
++constexpr uint32_t kSysconfBase = 0x80348400u;
++constexpr uint32_t kSysconfItemCountAddress = 0x803869D4u;
++constexpr uint32_t kSysconfItemIndexAddress = 0x803869D8u;
++constexpr uint16_t kSysconfItemCount = 36;
++constexpr uint16_t kSysconfItemIndexEndOffset = 0x3FFAu;
++constexpr uint16_t kSoundModeItem = 17;
++constexpr uint16_t kSoundModeOffsetSlot = 6;
++constexpr uint16_t kSoundModeEntryOffset = 8;
++
++void InstallSurroundSoundMode()
++{
++    constexpr char kSoundModeName[] = "IPL.SND";
++    constexpr size_t kSysconfSize = 0x4000;
++    if (!Memory::Contains(kSysconfBase, kSysconfSize) ||
++        !Memory::Contains(kSysconfItemCountAddress, sizeof(uint32_t) * 2)) {
++        return;
++    }
++
++    // SCFindByteArrayItem uses a reversed item-to-entry-offset table at the
++    // end of the SDK's SYSCONF buffer. Seed only IPL.SND; other absent settings
++    // continue to use their existing SDK defaults.
++    Memory::Write32(kSysconfItemCountAddress, kSysconfItemCount);
++    Memory::Write32(kSysconfItemIndexAddress, kSysconfItemIndexEndOffset);
++    Memory::Write16(
++        kSysconfBase + kSysconfItemIndexEndOffset - kSoundModeItem * 2,
++        kSoundModeOffsetSlot);
++    Memory::Write16(kSysconfBase + kSoundModeOffsetSlot,
++                    kSoundModeEntryOffset);
++    Memory::Write8(kSysconfBase + kSoundModeEntryOffset, 0x66);
++    std::memcpy(Memory::GetPointer(
++                    kSysconfBase + kSoundModeEntryOffset + 1,
++                    sizeof(kSoundModeName) - 1),
++                kSoundModeName, sizeof(kSoundModeName) - 1);
++    Memory::Write8(
++        kSysconfBase + kSoundModeEntryOffset + sizeof(kSoundModeName), 2);
++}
+ 
+ } // namespace
+ 
+@@ -23,6 +59,7 @@ constexpr uint32_t kPalProductRegion = 2;
+ // Returns: 0 = success, 1 = busy, 2 = error
+ extern "C" uint32_t SCCheckStatus_HLE()
+ {
++    InstallSurroundSoundMode();
+     // Return 0 (success) immediately to avoid infinite busy-wait in OSInit
+     return 0;
+ }
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -63,7 +63,7 @@
@@ -205,7 +785,7 @@
  #include <SDL3/SDL_main.h>
  #include "kartpad_mobile_runtime_host.h"
  #endif
-@@ -1178,7 +1178,7 @@
+@@ -1178,7 +1178,7 @@ int RuntimeMain(int argc, char** argv) {
          if (argc != 1) {
              throw std::invalid_argument("The game runtime does not accept command-line options; use Config.toml through the installed host.");
          }
@@ -214,7 +794,7 @@
          if (!KartPadMobileEnsureGameDataAvailable()) {
              SetRuntimeExitCodeImpl(0);
              ShutdownProcessTranscript();
-@@ -1187,7 +1187,7 @@
+@@ -1187,7 +1187,7 @@ int RuntimeMain(int argc, char** argv) {
          RuntimeConfigFile::Reload();
  #endif
          RuntimeConfigFile::LogLoadedConfig();
@@ -223,7 +803,7 @@
          if (const char* requestedProfile = KartPadMobileSelectedRuntimeProfile()) {
              const bool selected = std::string_view(requestedProfile) == "retro_rewind"
                  ? RuntimeProduct::Select(RuntimeProduct::Kind::RetroRewind)
-@@ -1235,7 +1235,7 @@
+@@ -1235,7 +1235,7 @@ int RuntimeMain(int argc, char** argv) {
          bool configWidescreen = RuntimeConfigFile::WidescreenEnabled(false);
          int mobileAspectMode = configWidescreen ? 2 : 0;
          float resolutionMultiplier = RuntimeConfigFile::ResolutionMultiplier(1.0f);
@@ -232,7 +812,7 @@
          KartPadMobileRuntimeSettings mobileSettings{};
          if (KartPadMobileReadRuntimeSettings(&mobileSettings)) {
              mobileAspectMode = std::clamp(mobileSettings.aspectRatioMode, 0, 2);
-@@ -1261,7 +1261,7 @@
+@@ -1261,7 +1261,7 @@ int RuntimeMain(int argc, char** argv) {
                                           RuntimeConfigFile::TextureDumps(false);
          // No vsync knob: aurora always configures a non-blocking present mode.
          auroraConfig.desiredBackend = BACKEND_AUTO;
@@ -241,7 +821,7 @@
          ConfigureMkwMobileAspectMode(mobileAspectMode, auroraConfig.windowWidth,
                                       auroraConfig.windowHeight);
  #else
-@@ -1298,7 +1298,7 @@
+@@ -1298,7 +1298,7 @@ int RuntimeMain(int argc, char** argv) {
          const AuroraBackend requestedBackend = auroraConfig.desiredBackend;
  
          const AuroraInfo auroraInfo = aurora_initialize(0, nullptr, &auroraConfig);
@@ -250,7 +830,7 @@
          KartPadMobileRuntimeHostInstall(auroraInfo.window);
  #endif
          if (requestedBackend != BACKEND_AUTO && auroraInfo.backend != requestedBackend) {
-@@ -1318,12 +1318,12 @@
+@@ -1318,12 +1318,12 @@ int RuntimeMain(int argc, char** argv) {
          settings_overlay::InitializeRuntimeSettings();
          const char *viewportPolicy = g_dynamicAspectRatioEnabled ? "stretch" : "fit";
          const char *presentAspect = configWidescreen ? "surface (dynamic EGG canvas)" : "4:3";
@@ -265,7 +845,7 @@
                    << " mobileAspectMode=" << mobileAspectMode
  #endif
                    << " SCGetAspectRatio=" << (configWidescreen ? 1 : 0)
-@@ -1363,7 +1363,7 @@
+@@ -1363,7 +1363,7 @@ int RuntimeMain(int argc, char** argv) {
          Fiber::GuestFiberManager::Shutdown();
          WindowPlacementPersistence::Flush(true);
          Wup028Adapter::Shutdown();
@@ -274,7 +854,7 @@
          KartPadMobileRuntimeHostUninstall();
  #endif
          aurora_shutdown();
-@@ -1384,7 +1384,7 @@
+@@ -1384,7 +1384,7 @@ int RuntimeMain(int argc, char** argv) {
          Fiber::GuestFiberManager::Shutdown();
          WindowPlacementPersistence::Flush(true);
          Wup028Adapter::Shutdown();
@@ -283,7 +863,7 @@
          KartPadMobileRuntimeHostUninstall();
  #endif
          aurora_shutdown();
-@@ -1399,7 +1399,7 @@
+@@ -1399,7 +1399,7 @@ int RuntimeMain(int argc, char** argv) {
          Fiber::GuestFiberManager::Shutdown();
          WindowPlacementPersistence::Flush(true);
          Wup028Adapter::Shutdown();
@@ -292,50 +872,3 @@
          KartPadMobileRuntimeHostUninstall();
  #endif
          aurora_shutdown();
---- a/src/hle/input/kpad.cpp
-+++ b/src/hle/input/kpad.cpp
-@@ -9,7 +9,7 @@
- #if defined(__APPLE__)
- #include <TargetConditionals.h>
- #endif
--#if defined(__APPLE__) && TARGET_OS_IOS
-+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
- #include "kartpad_mobile_runtime_host.h"
- #endif
- 
-@@ -784,7 +784,7 @@
-     }
-     EnsureKeyboardWatch();
- 
--#if defined(__APPLE__) && TARGET_OS_IOS
-+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
-     KartPadMobileClassicInputSnapshot mobileInput{};
-     const bool mobileConnected =
-         KartPadMobileReadClassicInputForPlayer(chan, &mobileInput) &&
-@@ -815,7 +815,7 @@
-         (ReadClassicButtons(chan) | pendingClassic);
-     auto stick = fixtureActive ? ClassicStickForGhost(ghost) :
-                                  ReadClassicLeftStick(chan);
--#if defined(__APPLE__) && TARGET_OS_IOS
-+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
-     if (!fixtureActive && mobileConnected) {
-         classicHold |= mobileInput.buttons;
-         hold |= CoreButtonsForClassic(mobileInput.buttons);
-@@ -868,7 +868,7 @@
-             // Racedata is not constructed during the earliest boot reads.
-         }
-     }
--#if defined(__APPLE__) && TARGET_OS_IOS
-+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
-     KartPadMobileClassicInputSnapshot mobileInput{};
-     const bool mobileConnected =
-         KartPadMobileReadClassicInputForPlayer(chan, &mobileInput) &&
-@@ -896,7 +896,7 @@
-             (ReadClassicButtons(chan) | pendingClassic);
-         auto stick = fixtureActive ? ClassicStickForGhost(ghost) :
-                                           ReadClassicLeftStick(chan);
--#if defined(__APPLE__) && TARGET_OS_IOS
-+#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
-         if (!fixtureActive && mobileConnected) {
-             classicButtons |= mobileInput.buttons;
-             coreButtons |= CoreButtonsForClassic(mobileInput.buttons);
