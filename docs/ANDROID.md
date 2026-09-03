@@ -5,12 +5,14 @@
 - **Assessment updated:** 3 September 2026.
 - **Assessment type:** repository review plus A0 source-only implementation and
   ARM64 emulator execution.
-- **Runtime proof:** the local non-playable A0 APK builds, audits, installs, and
-  runs its SDL/JNI/Dawn-Vulkan adapter fixture on the pinned API 36 / 4 KiB and
-  Android 15 / 16 KiB ARM64 AVDs.
-- **Decision:** A0 passes on the authorized second Apple Silicon host. Proceed
-  to A1 native primitives and deterministic Vulkan presentation before
-  user-interface or private full-game work.
+- **Runtime proof:** A0 passes. The local non-playable source-only APK now also
+  creates one Dawn Vulkan device, byte-verifies a deterministic clear/readback,
+  presents through SDL's Android native window, and presents again after
+  HOME/foreground surface recreation on the pinned API 36 / 4 KiB and Android
+  15 / 16 KiB ARM64 AVDs.
+- **Decision:** A1 renderer bring-up is partially green. Continue rotation and
+  repeated lifecycle stress, guest memory, and ELF AArch64 scheduler fixtures
+  before user-interface or private full-game work.
 
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
@@ -772,15 +774,16 @@ Before any tester receives an artifact, verify at minimum:
 
 ## Immediate next action
 
-Continue with A1. Extend the source-only fixture to create a Dawn Vulkan device,
-clear/read back/present a deterministic frame, and survive SDL surface
-destruction/recreation, rotation, and background/foreground transitions. Then
-add page-size-aware guest-memory and Android ELF AArch64 scheduler/register
-fixtures and run them on both pinned AVDs.
+Continue A1 by adding explicit rotation/surface-generation observation and
+bounded repeated lifecycle stress. Then add page-size-aware guest-memory and
+Android ELF AArch64 scheduler/register fixtures and run them on both pinned
+AVDs.
 
 The A0 commands and sanitized result are recorded in
 [`android/README.md`](../android/README.md) and
 [`a0-source-only-fixture.md`](artifacts/2026-09-03/android/a0-source-only-fixture.md).
+The first A1 renderer evidence is in
+[`a1-vulkan-readback-present.md`](artifacts/2026-09-03/android/a1-vulkan-readback-present.md).
 Do not begin the touch-UI port or private full-game link until A1 passes. The
 first valuable user-facing proof after that is a controller-driven
 Original-mode race on physical Android hardware; Retro Rewind installation and

@@ -1,10 +1,15 @@
 # KartPad Android source-only fixture
 
-This directory currently contains the non-playable A0 Android shell. It proves
+This directory contains the non-playable Android source-only fixture. A0 proves
 the pinned ARM64 toolchain, SDLActivity/JNI entry, SDL Vulkan loader, Dawn
-Vulkan adapter discovery, 4 KiB execution, and 16 KiB execution without game
-data or generated translated code. It does not prove presentation, gameplay,
-physical-device support, or release readiness.
+Vulkan adapter discovery, 4 KiB execution, and 16 KiB execution. The first A1
+slice additionally creates one Dawn device, byte-verifies a deterministic GPU
+clear/readback, presents a separate clear through the Android native window,
+and repeats presentation after HOME/foreground surface recreation. None of
+these paths use game data or generated translated code.
+
+Rotation, guest memory, fibers, gameplay, physical-device support,
+performance, and release readiness remain unproven.
 
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:
@@ -33,6 +38,8 @@ Repeat the same cold-boot lane on the pinned Android 15 / 16 KiB image:
 ```
 
 The runner refuses to start when another Android device or emulator is
-connected, wipes only the named disposable KartPad AVD, stops it on exit, and
-keeps raw emulator output under the ignored `.android-bootstrap/` directory.
-The produced debug APK remains a local audit fixture and must not be published.
+connected, wipes only the named disposable KartPad AVD, settles it in the
+shell's declared landscape orientation, stops it on exit, and keeps raw
+emulator output under the ignored `.android-bootstrap/` directory. It drives
+HOME/foreground and requires the post-recreation presentation marker. The
+produced debug APK remains a local audit fixture and must not be published.

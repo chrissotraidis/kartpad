@@ -1629,3 +1629,30 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   URL is disabled; the checkout was intentionally left untouched. This does
   not affect A0, which uses only the independently hash-verified SDL3 and Dawn
   downloads. The SunPad snapshot and repository safety checks pass.
+
+## 2026-09-03 — Android A1 deterministic Vulkan readback and present
+
+- Extended the source-only fixture from adapter discovery to one real Dawn
+  Vulkan device. It clears a 4×4 RGBA8 texture, copies through a WebGPU buffer
+  with the required 256-byte row pitch, maps it, and verifies every pixel as
+  `20-80-e0-ff`.
+- Built a WebGPU surface directly from SDL's Android native-window property,
+  cleared and presented its current texture, drove the app HOME, observed the
+  SDL background boundary through the required event filter, allowed Android
+  surface teardown to settle, resumed, and presented through the replacement
+  surface. The exact run passes on API 36 / 4 KiB and API 35 / 16 KiB ARM64
+  cold-boot AVDs.
+- The initial presentation attempt tried to create a second Dawn device and
+  failed at that exact step. Sharing the intended single device fixed it. A
+  separate startup race came from SDL translating its desktop `RESIZABLE` flag
+  into an Android orientation request; removing that flag keeps SDL aligned
+  with the sensor-landscape manifest. Waiting for `onStop` teardown before
+  foreground avoids a second activity overlap.
+- The audited local debug APK SHA-256 is
+  `151397d104723415d4db9663f4a4566f3d769d42708d600ec417ea5525fa846f`.
+  Classification: **Pass for deterministic Dawn Vulkan GPU clear/readback,
+  Android surface clear/present, and one background/foreground surface
+  recreation on both emulator page sizes.** A1 remains open for rotation,
+  repeated stress, guest memory, and scheduler/register fixtures. No package
+  was hosted or published. Evidence:
+  `docs/artifacts/2026-09-03/android/a1-vulkan-readback-present.md`.

@@ -57,7 +57,7 @@ android {
     }
     lint {
         // A0 deliberately pins this verified wrapper and supports ARM64 Android only.
-        disable += setOf("AndroidGradlePluginVersion", "ChromeOsAbiSupport")
+        disable += setOf("AndroidGradlePluginVersion", "ChromeOsAbiSupport", "DiscouragedApi")
     }
 }
 

@@ -42,6 +42,17 @@ for _ in {1..60}; do
 done
 [[ "$booted" == 1 ]] || { echo "ERROR: emulator did not finish booting" >&2; exit 1; }
 
+# A freshly wiped phone image initially reports portrait even though KartPad is
+# landscape-only. Settle the disposable AVD before launching SDL so Android
+# does not destroy the first activity while its native thread is starting.
+"$adb" shell input keyevent KEYCODE_WAKEUP >/dev/null
+"$adb" shell wm dismiss-keyguard >/dev/null 2>&1 || true
+"$adb" shell settings put system accelerometer_rotation 0
+"$adb" shell settings put system user_rotation 1
+"$adb" shell am start -W -a android.intent.action.MAIN \
+  -c android.intent.category.HOME >/dev/null
+sleep 2
+
 abi="$("$adb" shell getprop ro.product.cpu.abi | tr -d '\r')"
 page_size="$("$adb" shell getconf PAGE_SIZE | tr -d '\r')"
 [[ "$abi" == "arm64-v8a" ]] || { echo "ERROR: unexpected device ABI: $abi" >&2; exit 1; }
@@ -55,19 +66,28 @@ apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
 "$adb" logcat -c
 "$adb" shell am force-stop dev.kartpad.android
 "$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity >/dev/null
-passed=0
-for _ in {1..60}; do
-  if "$adb" logcat -d -v brief KartPadFixture:I AndroidRuntime:E '*:S' |
-      grep -Fq "A0 JNI/Vulkan fixture passed abi=arm64-v8a page_size=$expected_page_size"; then
-    passed=1
-    break
-  fi
-  sleep 1
-done
-if [[ "$passed" != 1 ]]; then
-  echo "ERROR: fixture pass marker was not observed" >&2
+wait_for_marker() {
+  local marker="$1"
+  for _ in {1..60}; do
+    if "$adb" logcat -d -v brief KartPadFixture:I AndroidRuntime:E '*:S' |
+        grep -Fq "$marker"; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "ERROR: fixture marker was not observed: $marker" >&2
   "$adb" logcat -d -v brief KartPadFixture:V SDL:V AndroidRuntime:E libc:F '*:S' >&2
-  exit 1
-fi
+  return 1
+}
 
-echo "Android A0 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size backend=Vulkan adapters=1"
+wait_for_marker \
+  "A1 Vulkan present passed abi=arm64-v8a page_size=$expected_page_size"
+"$adb" shell input keyevent KEYCODE_HOME
+wait_for_marker "A1 lifecycle background observed"
+# Let Android complete onStop/surface teardown before requesting foreground.
+sleep 3
+"$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity >/dev/null
+wait_for_marker \
+  "A1 Vulkan recreate passed generation=2 page_size=$expected_page_size"
+
+echo "Android A1 Vulkan fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=background-foreground-recreated"

@@ -17,6 +17,14 @@ or AAB was published. Evidence:
 [`docs/artifacts/2026-09-03/android/a0-source-only-fixture.md`](artifacts/2026-09-03/android/a0-source-only-fixture.md).
 The lowest incomplete goal is A1.
 
+The first A1 renderer slice passes on both pinned page-size lanes. One Dawn
+Vulkan device performs an exact 16-pixel GPU clear/readback, presents through
+SDL's Android native window, and presents again after an automated
+HOME/foreground surface recreation. A1 remains open for rotation and repeated
+lifecycle stress, guest-memory aliases/protection, and ELF AArch64
+scheduler/register fixtures. Evidence:
+[`docs/artifacts/2026-09-03/android/a1-vulkan-readback-present.md`](artifacts/2026-09-03/android/a1-vulkan-readback-present.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first
