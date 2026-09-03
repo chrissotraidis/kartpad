@@ -1,0 +1,79 @@
+diff --git a/src/hle/input/kpad.cpp b/src/hle/input/kpad.cpp
+--- a/src/hle/input/kpad.cpp
++++ b/src/hle/input/kpad.cpp
+@@ -397,6 +397,15 @@ bool ForceFixtureMetadataEnabled()
+         return value != nullptr && std::strcmp(value, "1") == 0;
+     }();
+     return enabled && Fixture().EnsureLoaded();
++}
++
++bool FixtureKeyboardSteerEnabled()
++{
++    static const bool enabled = [] {
++        const char* value = std::getenv("KARTPAD_RKG_KEYBOARD_STEER_V2");
++        return value != nullptr && std::strcmp(value, "1") == 0;
++    }();
++    return enabled;
+ }
+ 
+ uint32_t ButtonForScancode(uint32_t chan, SDL_Scancode code)
+@@ -983,24 +992,37 @@ extern "C" bool KPad_RkgFixture_CalcInner(CpuContext* ctx)
+         Fixture().Disarm();
+         return false;
+     }
+-    const uint8_t xRaw = static_cast<uint8_t>(sample.direction >> 4);
+-    const uint8_t yRaw = static_cast<uint8_t>(sample.direction & 0x0f);
++    uint8_t xRaw = static_cast<uint8_t>(sample.direction >> 4);
++    uint8_t yRaw = static_cast<uint8_t>(sample.direction & 0x0f);
+     const auto axis = [](uint8_t value) {
+         return (static_cast<float>(value) - 7.0f) / 7.0f;
+     };
++
++    const bool keyboardSteer = FixtureKeyboardSteerEnabled();
++    auto stick = keyboardSteer ? ReadClassicLeftStick(0) :
++                                 std::array<float, 2>{axis(xRaw), axis(yRaw)};
++    if (keyboardSteer) {
++        const auto rawAxis = [](float value) {
++            return static_cast<uint8_t>(
++                std::clamp(value, -1.0f, 1.0f) * 7.0f + 7.5f);
++        };
++        xRaw = rawAxis(stick[0]);
++        yRaw = rawAxis(stick[1]);
++    }
+ 
+     try {
+         Memory::Write8(raceState + 0x14,
+                        static_cast<uint8_t>(Memory::Read8(raceState + 0x14) & 0x7f));
+         Memory::Write8(uiState + 0x30,
+                        static_cast<uint8_t>(Memory::Read8(uiState + 0x30) & 0x7f));
+-        float stickX = axis(xRaw);
++        float stickX = stick[0];
++        float stickY = stick[1];
+         const uint32_t raceConfig = Memory::Read32(0x809bd70c);
+         const bool isMirror = Memory::Read8(raceConfig + 0x4155) != 0;
+-        if (isMirror) {
++        if (isMirror && !keyboardSteer) {
+             stickX = -stickX;
+         }
+-        uint8_t trick = sample.trick;
++        uint8_t trick = keyboardSteer ? 0 : sample.trick;
+         if (isMirror) {
+             if (trick == 3) {
+                 trick = 4;
+@@ -1008,13 +1030,13 @@ extern "C" bool KPad_RkgFixture_CalcInner(CpuContext* ctx)
+                 trick = 3;
+             }
+         }
+-        Memory::Write16(raceState + 0x04, sample.face);
++        Memory::Write16(raceState + 0x04, keyboardSteer ? 0x01 : sample.face);
+         Memory::WriteFloat32(raceState + 0x08, stickX);
+-        Memory::WriteFloat32(raceState + 0x0C, axis(yRaw));
++        Memory::WriteFloat32(raceState + 0x0C, stickY);
+         Memory::Write8(raceState + 0x10, xRaw);
+         Memory::Write8(raceState + 0x11, yRaw);
+         Memory::Write8(raceState + 0x12, trick);
+-        Memory::Write8(raceState + 0x13, sample.trick);
++        Memory::Write8(raceState + 0x13, keyboardSteer ? 0 : sample.trick);
+         Memory::Write8(raceState + 0x14,
+                        static_cast<uint8_t>(Memory::Read8(raceState + 0x14) | 0x80));
+ 

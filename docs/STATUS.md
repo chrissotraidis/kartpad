@@ -92,6 +92,16 @@ hardware. Evidence:
 and
 [`docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`](artifacts/2026-09-03/android/a2-debug-input-replay.md).
 
+An additional Android-only debug marker can now retain fixture acceleration
+while routing steering through the existing keyboard stick. It accepts
+steering but did not complete a race. Normal fixture steering also diverged on
+exact GCN Mario Circuit metadata and on the exact SNES Mario Circuit 3 stream
+previously proven through the native macOS player path. No forced finish was
+used; the private all-cups test save was restored byte-for-byte afterward.
+This is diagnostic capability only and does not narrow A2's remaining player,
+controller, or physical-device gates. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md`](artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

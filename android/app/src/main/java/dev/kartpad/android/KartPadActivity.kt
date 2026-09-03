@@ -46,22 +46,34 @@ class KartPadActivity : SDLActivity() {
             }.getOrDefault(false)
 
         if (valid) {
+            val keyboardSteer = File(filesDir, DEBUG_RKG_KEYBOARD_STEER_RELATIVE_PATH).isFile
             Os.setenv("KARTPAD_RKG_INPUT_V2", fixture.absolutePath, true)
             Os.setenv("KARTPAD_RKG_AUTOSTART_V2", "1", true)
             Os.setenv("KARTPAD_RKG_FORCE_METADATA_V2", "1", true)
             Os.setenv("KARTPAD_PRECISE_MENU_PULSE_V2", "1", true)
-            Log.i(TAG, "Debug app-private RKG input enabled")
+            if (keyboardSteer) {
+                Os.setenv("KARTPAD_RKG_KEYBOARD_STEER_V2", "1", true)
+                Os.setenv("KARTPAD_FULL_SYNTHETIC_STICK_V2", "1", true)
+            } else {
+                Os.unsetenv("KARTPAD_RKG_KEYBOARD_STEER_V2")
+                Os.unsetenv("KARTPAD_FULL_SYNTHETIC_STICK_V2")
+            }
+            Log.i(TAG, "Debug app-private RKG input enabled; keyboard steer=$keyboardSteer")
         } else {
             Os.unsetenv("KARTPAD_RKG_INPUT_V2")
             Os.unsetenv("KARTPAD_RKG_AUTOSTART_V2")
             Os.unsetenv("KARTPAD_RKG_FORCE_METADATA_V2")
             Os.unsetenv("KARTPAD_PRECISE_MENU_PULSE_V2")
+            Os.unsetenv("KARTPAD_RKG_KEYBOARD_STEER_V2")
+            Os.unsetenv("KARTPAD_FULL_SYNTHETIC_STICK_V2")
         }
     }
 
     companion object {
         private const val TAG = "KartPadFixture"
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
+        private const val DEBUG_RKG_KEYBOARD_STEER_RELATIVE_PATH =
+            "KartPad/Diagnostics/TestInput.keyboard-steer"
         private const val MIN_RKG_BYTES = 0x90L
         private const val MAX_RKG_BYTES = 1024L * 1024L
         private val RKG_MAGIC = byteArrayOf('R'.code.toByte(), 'K'.code.toByte(), 'G'.code.toByte(), 'D'.code.toByte())

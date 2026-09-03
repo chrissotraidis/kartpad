@@ -97,11 +97,16 @@ not block offline Retro Rewind support.
    saved license across cold processes, enters live Luigi Circuit gameplay,
    survives repeated title/demo and live-race surface recreation, and sustains
    a clean retail staff replay. The debug-only app-private RKG bridge works,
-   but the existing player fixture diverges and must not be used as completion
-   evidence. Establish a complete player race, results, post-race save/relaunch,
+   and an Android-only marker can replace only its steering with the debug
+   keyboard stick, but neither route completes a race. Exact GCN Mario Circuit
+   metadata and the macOS-proven SNES Mario Circuit 3 stream also diverge on
+   Android and must not be used as completion evidence. Establish a complete
+   player race, results, post-race save/relaunch,
    then repeat with a real controller and physical Android hardware. Evidence
    is in `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` and
-   `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`. A2 remains open.
+   `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`, plus
+   `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md`. A2
+   remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

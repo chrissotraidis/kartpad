@@ -1818,3 +1818,36 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   A2 remains open for a complete player race/results/save, real controller,
   and physical Android hardware. No package was hosted or published. Evidence:
   `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`.
+
+## 2026-09-03 — Android A2 keyboard-steer diagnostic
+
+- Added an Android-only, debug-marker-gated hybrid for the existing RKG player
+  fixture. Fixture acceleration remains deterministic while the Classic
+  keyboard stick supplies steering; tricks are disabled and raw/float axes
+  remain coherent. The ordinary RKG, keyboard/controller, release, and Apple
+  paths are unchanged.
+- The live Luigi Circuit player accepted `A`/`D` steering, including recovery
+  from grass to track, but coarse diagnostic pulses did not hold a three-lap
+  line. No forced finish was used and the run is rejected as completion.
+- With keyboard steering disabled, exact GCN Mario Circuit staff metadata
+  diverged at guest time 17.244. The exact SNES Mario Circuit 3 `01:38.880`
+  staff stream and Mario / Standard Kart M / Manual configuration previously
+  proven through the native macOS player path also diverged at 10.749. This
+  falsifies natural Android RKG completion with the strongest available
+  control.
+- A guarded private all-cups save enabled the locked-course control. The
+  original 2,867,200-byte save was restored byte-for-byte at SHA-256
+  `07c4ff00b6eb686cff3b7c7bc365c0e453a99f1a1f8ad6ef9238679a73a71155`;
+  the private RKG was disabled and marker removed. No private input, save, game
+  data, or capture is packaged or committed.
+- The full private debug APK builds at 103,430,368 bytes and SHA-256
+  `6b4e750366661056e42470f995f833fd132c26643eb5f86761a371b85e710b3c`.
+  Debug/release Kotlin compilation, lint, strict package audit, patch dry-run,
+  diff check, and repository safety pass. Source verification accepts 395
+  hunks plus WiiCompiled/SunPad/WheelWizard before the pre-existing ignored
+  rr-pulsar checkout mismatch.
+  Classification: **Pass for the bounded debug steering diagnostic; fail for
+  complete player automation.** A2 remains open for a complete player race,
+  results/save/relaunch, real controller, and physical Android hardware.
+  Evidence:
+  `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md`.
