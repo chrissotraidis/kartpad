@@ -12,10 +12,12 @@
   sensor transition and three consecutive replacement-surface cycles, and
   proves dynamic 4 GiB guest-memory reservation, shared aliases, and
   protection changes on the pinned API 36 / 4 KiB and Android 15 / 16 KiB
-  ARM64 AVDs.
-- **Decision:** A1 renderer, lifecycle, and memory bring-up are green. Continue
-  the ELF AArch64 scheduler/register fixture before user-interface or private
-  full-game work.
+  ARM64 AVDs. The shared scheduler and ELF AArch64 fiber additionally pass two
+  million deterministic operations and one million register-checked switches
+  per lane.
+- **Decision:** A1 is green. Continue A2 with the private generated
+  Original-mode runtime and controller-driven gameplay proof; keep emulator
+  and physical-device claims separate.
 
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
@@ -777,20 +779,22 @@ Before any tester receives an artifact, verify at minimum:
 
 ## Immediate next action
 
-Continue A1 by adding explicit rotation/surface-generation observation and
-bounded repeated lifecycle stress. Then add page-size-aware guest-memory and
-Android ELF AArch64 scheduler/register fixtures and run them on both pinned
-AVDs.
+A1 is complete: deterministic Vulkan readback/present, flipped-landscape and
+repeated surface lifecycle, dynamic 4 GiB shared aliases/protection, and ELF
+AArch64 scheduler/register stress pass on both pinned AVDs. Continue A2 by
+preparing and linking the ignored private generated Original-mode runtime,
+then prove controller-driven gameplay without weakening the package privacy
+boundary.
 
 The A0 commands and sanitized result are recorded in
 [`android/README.md`](../android/README.md) and
 [`a0-source-only-fixture.md`](artifacts/2026-09-03/android/a0-source-only-fixture.md).
-The first A1 renderer evidence is in
-[`a1-vulkan-readback-present.md`](artifacts/2026-09-03/android/a1-vulkan-readback-present.md).
-Do not begin the touch-UI port or private full-game link until A1 passes. The
-first valuable user-facing proof after that is a controller-driven
-Original-mode race on physical Android hardware; Retro Rewind installation and
-touch parity follow from that stable runtime base.
+A1 evidence is under
+[`docs/artifacts/2026-09-03/android/`](artifacts/2026-09-03/android/).
+Do not begin the touch-UI port until A2's controller-driven Original-mode proof
+passes. Physical Android hardware remains authoritative for vendor Vulkan and
+controller behavior; Retro Rewind installation and touch parity follow from
+that stable runtime base.
 
 ## Platform references
 

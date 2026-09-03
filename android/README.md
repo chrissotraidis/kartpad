@@ -11,11 +11,13 @@ and verifies alias visibility and read-only/guard/read-only protection changes
 using the runtime page size. The surface fixture now also retains and
 reconfigures its Dawn surface across a physical flipped-landscape sensor
 transition, then replaces and presents through three consecutive Android
-background/foreground surface generations. None of these paths use game data
-or generated translated code.
+background/foreground surface generations. The final A1 slice runs the shared
+cooperative scheduler for two million deterministic operations and a native
+ELF AArch64 fiber for one million context switches with callee-saved register
+checks. None of these paths use game data or generated translated code.
 
-Fibers, gameplay, physical-device support, performance, and release readiness
-remain unproven.
+Gameplay, physical-device support, performance, and release readiness remain
+unproven. A1 is complete; A2 is the next gate.
 
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:

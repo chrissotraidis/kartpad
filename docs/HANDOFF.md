@@ -97,9 +97,11 @@ not block offline Retro Rewind support.
    both page-size lanes. Dynamic 4 GiB reservation, shared aliases, and
    protection changes now also pass at both 4 KiB and 16 KiB. A physical
    flipped-landscape transition plus three consecutive surface teardown/
-   foreground/recreate/present cycles pass on both lanes. Add the Android ELF
-   scheduler/register fixture before private game integration. Evidence is under
-   `docs/artifacts/2026-09-03/android/`.
+   foreground/recreate/present cycles pass on both lanes. The Android ELF
+   scheduler/register fixture now passes two million scheduler operations and
+   one million native switches on both lanes, closing A1. Continue A2 with the
+   private generated Original-mode graph and controller-driven gameplay proof.
+   Evidence is under `docs/artifacts/2026-09-03/android/`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

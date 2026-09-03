@@ -1708,3 +1708,27 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   the ELF AArch64 scheduler/register stress fixture. No package was hosted or
   published. Evidence:
   `docs/artifacts/2026-09-03/android/a1-lifecycle-stress.md`.
+
+## 2026-09-03 — Android A1 ELF AArch64 scheduler and register stress
+
+- Linked KartPad's accepted portable `GuestScheduler` directly into the
+  Android native library and exercised start/resume, yield/exit, logical
+  sleep/alarm wake, join, and cancellation. Two independent million-operation
+  runs each reproduce the accepted state hash `0x7287563387fb1677` with exact
+  four-thread distribution, VI cadence, GPR/FPR/SIMD/FPSCR state, and nested
+  scheduler transitions.
+- Added a small Android ELF AArch64 context-switch wrapper sharing the Apple
+  register contract while using ELF symbol rules. One million real stack
+  switches preserve x19–x29, use x30/SP to resume exact control flow, preserve
+  d8–d15, and explicitly preserve FPCR/FPSR. The register fiber has its own
+  aligned 64 KiB stack and cannot fall through after completion.
+- The exact combined cold-boot fixture passes on API 36 / 4 KiB and API 35 /
+  16 KiB while retaining the guest-memory, deterministic GPU readback,
+  flipped-landscape, and five-generation surface checks. The audited local
+  debug APK is 33,673,035 bytes with SHA-256
+  `0846efc7058a5cae61ace508c9bdddd3b214c826275925164c148ba1e8b511b0`.
+- Classification: **A1 pass on both pinned ARM64 emulator lanes.** This closes
+  the source-only memory, scheduler/fiber, Vulkan, rotation, and bounded
+  lifecycle gate. It is not production-runtime, gameplay, physical-driver,
+  or performance evidence. A2 is next. No package was hosted or published.
+  Evidence: `docs/artifacts/2026-09-03/android/a1-elf-scheduler.md`.
