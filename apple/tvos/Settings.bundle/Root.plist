@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>Games</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Game version</string>
+			<key>Key</key>
+			<string>KartPadTVRuntimeProfile</string>
+			<key>DefaultValue</key>
+			<string>base</string>
+			<key>Titles</key>
+			<array>
+				<string>Mario Kart Wii</string>
+				<string>Retro Rewind</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>base</string>
+				<string>retro_rewind</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Aspect ratio</string>
+			<key>Key</key>
+			<string>SunPadAspectRatioMode</string>
+			<key>DefaultValue</key>
+			<integer>0</integer>
+			<key>Titles</key>
+			<array>
+				<string>Original 4:3</string>
+				<string>16:9</string>
+				<string>Fill screen</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

@@ -47,16 +47,78 @@ class TvOSContractTests(unittest.TestCase):
         )
         self.assertIn("SunPadDiagnostics.mm", diagnostics)
 
-    def test_extended_gamepad_is_explicit_and_siri_remote_is_not_gameplay(self):
+    def test_extended_gamepad_is_explicit_and_settings_own_choices(self):
         with (ROOT / "apple/tvos/RuntimeInfo.plist").open("rb") as handle:
             info = plistlib.load(handle)
         self.assertTrue(info["GCSupportsControllerUserInteraction"])
         self.assertEqual(
             info["GCSupportedGameControllers"], [{"ProfileName": "ExtendedGamepad"}]
         )
+        with (ROOT / "apple/tvos/Settings.bundle/Root.plist").open("rb") as handle:
+            settings = plistlib.load(handle)
+        specifiers = {
+            specifier.get("Key"): specifier
+            for specifier in settings["PreferenceSpecifiers"]
+            if "Key" in specifier
+        }
+        profile = specifiers["KartPadTVRuntimeProfile"]
+        self.assertEqual(profile["Type"], "PSMultiValueSpecifier")
+        self.assertEqual(profile["DefaultValue"], "base")
+        self.assertEqual(profile["Values"], ["base", "retro_rewind"])
+        aspect = specifiers["SunPadAspectRatioMode"]
+        self.assertEqual(aspect["Type"], "PSMultiValueSpecifier")
+        self.assertEqual(aspect["DefaultValue"], 0)
+        self.assertEqual(aspect["Values"], [0, 1, 2])
+        runtime_patch = (
+            ROOT / "patches/wiicompiled-tvos-runtime.patch"
+        ).read_text()
+        self.assertIn("MKW_KARTPAD_TVOS_SETTINGS", runtime_patch)
         host = (ROOT / "apple/tvos/KartPadTVRuntimeHost.mm").read_text()
-        self.assertIn("Siri Remote", host)
-        self.assertIn("not a supported racing controller", host)
+        self.assertIn("stringForKey:kKartPadTVProfileKey", host)
+        self.assertIn("source.aspectRatioMode", host)
+        self.assertNotIn("Siri Remote", host)
+        self.assertNotIn("showControllerRequired", host)
+        self.assertNotIn("Choose a mode", host)
+        self.assertNotIn("settings->aspectRatioMode = 1", host)
+
+    def test_tvos_aspect_modes_preserve_original_and_native_widescreen(self):
+        settings_bridge = (
+            ROOT / "patches/wiicompiled-ios-settings-bridge.patch"
+        ).read_text()
+        self.assertIn("AURORA_VIEWPORT_FIT", settings_bridge)
+        self.assertIn("AURORA_VIEWPORT_STRETCH", settings_bridge)
+        self.assertIn("VILockAspectRatio(4, 3)", settings_bridge)
+        self.assertIn("VILockAspectRatio(16, 9)", settings_bridge)
+        self.assertIn("diff --git a/src/hle/sc.cpp", settings_bridge)
+        self.assertIn("widescreen = settings.aspectRatioMode != 0;", settings_bridge)
+        host = (ROOT / "apple/tvos/KartPadTVRuntimeHost.mm").read_text()
+        self.assertIn("settings->aspectRatioMode = static_cast<int>(source.aspectRatioMode)", host)
+        configure = settings_bridge.split(
+            "void ConfigureMkwMobileAspectMode(int aspectMode, uint32_t, uint32_t)",
+            1,
+        )[1].split("diff --git", 1)[0]
+        added_configure = "\n".join(
+            line[1:] for line in configure.splitlines() if line.startswith("+")
+        )
+        self.assertNotIn("ApplyEggScreenRecords", added_configure)
+        self.assertNotIn("UpdateMkwDynamicAspectSurface", added_configure)
+        self.assertNotIn("AuroraSetViewportPolicy", added_configure)
+        dynamic_diff = settings_bridge.split(
+            "diff --git a/src/dynamic_aspect.cpp",
+            1,
+        )[1]
+        update = dynamic_diff.split(
+            "void UpdateMkwDynamicAspectSurface(uint32_t surfaceWidth, uint32_t surfaceHeight)",
+            1,
+        )[1].split("diff --git", 1)[0]
+        added_update = "\n".join(
+            line[1:] for line in update.splitlines() if line.startswith("+")
+        )
+        self.assertIn(
+            "} else if (g_aspectMode == 1) {\n"
+            "        AuroraSetViewportPolicy(AURORA_VIEWPORT_FIT);",
+            added_update,
+        )
 
     def test_tvos_brand_assets_are_layered_and_original(self):
         assets = ROOT / "apple/tvos/Assets.xcassets/App Icon.brandassets"

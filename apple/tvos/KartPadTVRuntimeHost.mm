@@ -7,7 +7,6 @@
 #import "SunPadSettings.h"
 
 #import <CommonCrypto/CommonDigest.h>
-#import <GameController/GameController.h>
 #import <UIKit/UIKit.h>
 
 #include <algorithm>
@@ -164,13 +163,6 @@ BOOL KartPadTVWriteRuntimePaths(NSError **error) {
   return NO;
 }
 
-BOOL KartPadTVHasExtendedController() {
-  for (GCController *controller in GCController.controllers) {
-    if (controller.extendedGamepad != nil) return YES;
-  }
-  return NO;
-}
-
 UIButton *KartPadTVButton(NSString *title, UIColor *color,
                           void (^handler)(void)) {
   UIButtonConfiguration *configuration =
@@ -275,7 +267,6 @@ UIButton *KartPadTVButton(NSString *title, UIColor *color,
 - (void)showGameDataState;
 - (void)selectRetroRewind:(BOOL)retroRewind;
 - (void)finishWithRetroRewind:(BOOL)retroRewind;
-- (void)showControllerRequired:(BOOL)retroRewind;
 - (void)downloadRetroRewind;
 - (void)installArchiveAtPath:(NSString *)archivePath;
 - (UIWindowScene *)availableScene;
@@ -310,40 +301,12 @@ UIButton *KartPadTVButton(NSString *title, UIColor *color,
     [self.root showStatus:message buttons:@[retry]];
     return;
   }
-  __weak KartPadTVLaunchHost *weakSelf = self;
-  UIButton *original = KartPadTVButton(@"Mario Kart Wii", UIColor.systemBlueColor, ^{
-    [weakSelf selectRetroRewind:NO];
-  });
-  UIButton *retro = KartPadTVButton(@"Retro Rewind", UIColor.systemPinkColor, ^{
-    [weakSelf selectRetroRewind:YES];
-  });
-  [self.root showStatus:
-      @"Choose a mode. An Extended Gamepad is required for gameplay."
-                    buttons:@[original, retro]];
-}
-
-- (void)showControllerRequired:(BOOL)retroRewind {
-  __weak KartPadTVLaunchHost *weakSelf = self;
-  UIButton *discover = KartPadTVButton(@"Find Controller", UIColor.systemBlueColor, ^{
-    [GCController startWirelessControllerDiscoveryWithCompletionHandler:^{
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [weakSelf selectRetroRewind:retroRewind];
-      });
-    }];
-  });
-  UIButton *back = KartPadTVButton(@"Back", UIColor.systemGrayColor, ^{
-    [weakSelf showGameDataState];
-  });
-  [self.root showStatus:
-      @"Connect an Extended Gamepad in Apple TV Settings. The Siri Remote can operate setup screens, but it is not a supported racing controller."
-                    buttons:@[discover, back]];
+  NSString *profile =
+      [NSUserDefaults.standardUserDefaults stringForKey:kKartPadTVProfileKey];
+  [self selectRetroRewind:[profile isEqualToString:@"retro_rewind"]];
 }
 
 - (void)finishWithRetroRewind:(BOOL)retroRewind {
-  if (!KartPadTVHasExtendedController()) {
-    [self showControllerRequired:retroRewind];
-    return;
-  }
   NSError *error = nil;
   if (!KartPadTVWriteRuntimePaths(&error)) {
     [self showFailure:@"KartPad could not prepare its runtime paths."
@@ -525,7 +488,7 @@ extern "C" bool KartPadMobileReadRuntimeSettings(
     KartPadMobileRuntimeSettings *settings) {
   if (settings == nullptr) return false;
   SunPadSettings *source = SunPadSettings.sharedSettings;
-  settings->aspectRatioMode = 1;
+  settings->aspectRatioMode = static_cast<int>(source.aspectRatioMode);
   settings->resolutionScale = source.renderScaleFloat;
   settings->showFps = source.showFPSCounter ? 1 : 0;
   return true;

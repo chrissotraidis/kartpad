@@ -106,6 +106,37 @@ index db9be6c..1fb9754 100644
      // Wait for the frame worker's DONE phase: it has replayed the previous frame's ImGui draw lists
      // and started the next ImGui frame, so all overlay callers can now safely issue ImGui commands.
      aurora_wait_for_frame_worker();
+diff --git a/src/hle/sc.cpp b/src/hle/sc.cpp
+--- a/src/hle/sc.cpp
++++ b/src/hle/sc.cpp
+@@ -1,6 +1,12 @@
+ #include "hle_stubs.h"
+ 
++#if defined(__APPLE__)
++#include <TargetConditionals.h>
++#if TARGET_OS_IOS || TARGET_OS_TV
++#include "kartpad_mobile_runtime_host.h"
++#endif
++#endif
+ #include "console_identity.h"
+ #include <cstdlib>
+ #include <cstddef>
+ #include <cstdint>
+@@ -32,6 +38,13 @@
+ // 0x801B1BE4 -> SCGetAspectRatio()
+ // Returns: 0 = 4:3, 1 = 16:9
+ extern "C" uint32_t SCGetAspectRatio_HLE()
+ {
+-    return RuntimeConfigFile::WidescreenEnabled(true) ? 1u : 0u;
++    bool widescreen = RuntimeConfigFile::WidescreenEnabled(true);
++#if defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
++    KartPadMobileRuntimeSettings settings{};
++    if (KartPadMobileReadRuntimeSettings(&settings)) {
++        widescreen = settings.aspectRatioMode != 0;
++    }
++#endif
++    return widescreen ? 1u : 0u;
+ }
 diff --git a/src/dynamic_aspect.cpp b/src/dynamic_aspect.cpp
 index 5c1601c..0a56fc2 100644
 --- a/src/dynamic_aspect.cpp
@@ -147,8 +178,7 @@ index 5c1601c..0a56fc2 100644
 +    ConfigureMkwMobileAspectMode(widescreen ? 2 : 0, surfaceWidth, surfaceHeight);
 +}
 +
-+void ConfigureMkwMobileAspectMode(int aspectMode, uint32_t surfaceWidth,
-+                                  uint32_t surfaceHeight) {
++void ConfigureMkwMobileAspectMode(int aspectMode, uint32_t, uint32_t) {
 +    g_aspectMode = std::clamp(aspectMode, 0, 2);
 +    const bool widescreen = g_aspectMode != 0;
      g_widescreenConfigured = widescreen;
@@ -165,7 +195,8 @@ index 5c1601c..0a56fc2 100644
 -    AuroraSetViewportPolicy(AURORA_VIEWPORT_FIT);
 -    VILockAspectRatio(4, 3);
 -    ApplyEggScreenRecords(surfaceWidth, surfaceHeight);
-+    UpdateMkwDynamicAspectSurface(surfaceWidth, surfaceHeight);
++    // Defer viewport policy, VI presentation aspect, and guest EGG updates until
++    // the post-initialization Update call has a live window.
  }
 diff --git a/src/main.cpp b/src/main.cpp
 index 7338f78..0f51bc1 100644
