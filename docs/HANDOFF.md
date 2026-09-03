@@ -95,9 +95,10 @@ not block offline Retro Rewind support.
 1. Continue Android A1 using `docs/ANDROID-GOAL-LOOP.md`: deterministic Vulkan
    clear/readback/present and HOME/foreground surface recreation now pass on
    both page-size lanes. Dynamic 4 GiB reservation, shared aliases, and
-   protection changes now also pass at both 4 KiB and 16 KiB. Add explicit
-   rotation/repeated lifecycle stress and the Android ELF scheduler/register
-   fixture before private game integration. Evidence is under
+   protection changes now also pass at both 4 KiB and 16 KiB. A physical
+   flipped-landscape transition plus three consecutive surface teardown/
+   foreground/recreate/present cycles pass on both lanes. Add the Android ELF
+   scheduler/register fixture before private game integration. Evidence is under
    `docs/artifacts/2026-09-03/android/`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.

@@ -31,16 +31,34 @@ struct MapState {
 };
 
 struct LifecycleState {
-  std::atomic_bool recreate_pending = false;
+  std::atomic_bool foreground_pending = false;
+  std::atomic_int orientation_pending = SDL_ORIENTATION_UNKNOWN;
+  std::atomic_int current_orientation = SDL_ORIENTATION_UNKNOWN;
+  std::atomic_int background_count = 0;
 };
 
 bool LifecycleEventFilter(void* userdata, SDL_Event* event) {
   auto* state = static_cast<LifecycleState*>(userdata);
   if (event->type == SDL_EVENT_WILL_ENTER_BACKGROUND) {
+    const int cycle = state->background_count.fetch_add(
+                          1, std::memory_order_acq_rel) +
+                      1;
     __android_log_print(ANDROID_LOG_INFO, kLogTag,
-                        "A1 lifecycle background observed");
+                        "A1 lifecycle background observed cycle=%d", cycle);
   } else if (event->type == SDL_EVENT_DID_ENTER_FOREGROUND) {
-    state->recreate_pending.store(true, std::memory_order_release);
+    state->foreground_pending.store(true, std::memory_order_release);
+  } else if (event->type == SDL_EVENT_DISPLAY_ORIENTATION &&
+             event->display.data1 != SDL_ORIENTATION_UNKNOWN) {
+    const int orientation = event->display.data1;
+    const int previous = state->current_orientation.exchange(
+        orientation, std::memory_order_acq_rel);
+    if (orientation != previous) {
+      state->orientation_pending.store(orientation,
+                                       std::memory_order_release);
+      __android_log_print(ANDROID_LOG_INFO, kLogTag,
+                          "A1 orientation observed orientation=%d previous=%d",
+                          orientation, previous);
+    }
   }
   return true;
 }
@@ -154,21 +172,17 @@ bool RunDeterministicReadback(dawn::native::Instance& instance,
 
 bool RunSurfacePresent(dawn::native::Instance& instance,
                        dawn::native::Adapter& adapter, WGPUDevice device,
-                       SDL_Window* window,
+                       SDL_Window* window, WGPUSurface* retained_surface,
+                       bool replace_surface,
                        int* presented_width, int* presented_height) {
-  void* native_window = SDL_GetPointerProperty(
-      SDL_GetWindowProperties(window), SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER,
-      nullptr);
-  if (native_window == nullptr ||
-      !SDL_GetWindowSizeInPixels(window, presented_width, presented_height) ||
+  if (!SDL_GetWindowSizeInPixels(window, presented_width, presented_height) ||
       *presented_width <= 0 || *presented_height <= 0) {
     __android_log_print(ANDROID_LOG_ERROR, kLogTag,
-                        "surface step failed: native-window-or-size");
+                        "surface step failed: window-size");
     return false;
   }
 
   WGPUQueue queue = nullptr;
-  WGPUSurface surface = nullptr;
   WGPUTexture texture = nullptr;
   WGPUTextureView view = nullptr;
   WGPUCommandEncoder encoder = nullptr;
@@ -184,17 +198,32 @@ bool RunSurfacePresent(dawn::native::Instance& instance,
   do {
     queue = wgpuDeviceGetQueue(device);
     if (queue == nullptr) break;
-    WGPUSurfaceSourceAndroidNativeWindow source =
-        WGPU_SURFACE_SOURCE_ANDROID_NATIVE_WINDOW_INIT;
-    source.window = native_window;
-    WGPUSurfaceDescriptor surface_desc = WGPU_SURFACE_DESCRIPTOR_INIT;
-    surface_desc.nextInChain = &source.chain;
-    failed_step = "create-surface";
-    surface = wgpuInstanceCreateSurface(instance.Get(), &surface_desc);
-    if (surface == nullptr) break;
+    if (replace_surface && *retained_surface != nullptr) {
+      wgpuSurfaceRelease(*retained_surface);
+      *retained_surface = nullptr;
+    }
+    if (*retained_surface == nullptr) {
+      void* native_window = SDL_GetPointerProperty(
+          SDL_GetWindowProperties(window),
+          SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, nullptr);
+      if (native_window == nullptr) {
+        failed_step = "native-window";
+        break;
+      }
+      WGPUSurfaceSourceAndroidNativeWindow source =
+          WGPU_SURFACE_SOURCE_ANDROID_NATIVE_WINDOW_INIT;
+      source.window = native_window;
+      WGPUSurfaceDescriptor surface_desc = WGPU_SURFACE_DESCRIPTOR_INIT;
+      surface_desc.nextInChain = &source.chain;
+      failed_step = "create-surface";
+      *retained_surface =
+          wgpuInstanceCreateSurface(instance.Get(), &surface_desc);
+      if (*retained_surface == nullptr) break;
+    }
     failed_step = "surface-capabilities";
     const WGPUStatus capabilities_status =
-        wgpuSurfaceGetCapabilities(surface, adapter.Get(), &capabilities);
+        wgpuSurfaceGetCapabilities(*retained_surface, adapter.Get(),
+                                   &capabilities);
     status_detail = static_cast<int>(capabilities_status);
     if (capabilities_status != WGPUStatus_Success || capabilities.formatCount == 0) {
       break;
@@ -207,12 +236,12 @@ bool RunSurfacePresent(dawn::native::Instance& instance,
     config.width = static_cast<uint32_t>(*presented_width);
     config.height = static_cast<uint32_t>(*presented_height);
     config.presentMode = WGPUPresentMode_Fifo;
-    wgpuSurfaceConfigure(surface, &config);
+    wgpuSurfaceConfigure(*retained_surface, &config);
     configured = true;
 
     failed_step = "current-texture";
     WGPUSurfaceTexture current = WGPU_SURFACE_TEXTURE_INIT;
-    wgpuSurfaceGetCurrentTexture(surface, &current);
+    wgpuSurfaceGetCurrentTexture(*retained_surface, &current);
     status_detail = static_cast<int>(current.status);
     if ((current.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
          current.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal) ||
@@ -243,7 +272,7 @@ bool RunSurfacePresent(dawn::native::Instance& instance,
     if (commands == nullptr) break;
     wgpuQueueSubmit(queue, 1, &commands);
     failed_step = "present";
-    const WGPUStatus present_status = wgpuSurfacePresent(surface);
+    const WGPUStatus present_status = wgpuSurfacePresent(*retained_surface);
     status_detail = static_cast<int>(present_status);
     if (present_status != WGPUStatus_Success) break;
     dawn::native::DeviceTick(device);
@@ -255,9 +284,8 @@ bool RunSurfacePresent(dawn::native::Instance& instance,
   if (encoder != nullptr) wgpuCommandEncoderRelease(encoder);
   if (view != nullptr) wgpuTextureViewRelease(view);
   if (texture != nullptr) wgpuTextureRelease(texture);
-  if (configured) wgpuSurfaceUnconfigure(surface);
+  if (configured) wgpuSurfaceUnconfigure(*retained_surface);
   if (capabilities_valid) wgpuSurfaceCapabilitiesFreeMembers(capabilities);
-  if (surface != nullptr) wgpuSurfaceRelease(surface);
   if (queue != nullptr) wgpuQueueRelease(queue);
   if (!passed) {
     __android_log_print(ANDROID_LOG_ERROR, kLogTag,
@@ -341,10 +369,13 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
                       sysconf(_SC_PAGESIZE), adapters.size());
   int presented_width = 0;
   int presented_height = 0;
-  if (!RunSurfacePresent(instance, adapters.front(), device, window,
+  WGPUSurface surface = nullptr;
+  if (!RunSurfacePresent(instance, adapters.front(), device, window, &surface,
+                         false,
                          &presented_width, &presented_height)) {
     __android_log_print(ANDROID_LOG_ERROR, kLogTag,
                         "A1 Vulkan fixture failed: surface clear/present");
+    if (surface != nullptr) wgpuSurfaceRelease(surface);
     wgpuDeviceRelease(device);
     SDL_Vulkan_UnloadLibrary();
     SDL_DestroyWindow(window);
@@ -358,27 +389,45 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
   int exit_code = 0;
   int presentation_generation = 1;
   LifecycleState lifecycle;
+  lifecycle.current_orientation.store(
+      SDL_GetCurrentDisplayOrientation(SDL_GetDisplayForWindow(window)),
+      std::memory_order_release);
   SDL_SetEventFilter(LifecycleEventFilter, &lifecycle);
   SDL_Event event;
   while (SDL_WaitEvent(&event)) {
     if (event.type == SDL_EVENT_QUIT) break;
-    if (lifecycle.recreate_pending.exchange(false, std::memory_order_acq_rel)) {
+    const int orientation = lifecycle.orientation_pending.exchange(
+        SDL_ORIENTATION_UNKNOWN, std::memory_order_acq_rel);
+    const bool foreground = lifecycle.foreground_pending.exchange(
+        false, std::memory_order_acq_rel);
+    if (orientation != SDL_ORIENTATION_UNKNOWN || foreground) {
+      // Allow Android's SurfaceView transaction to settle before querying the
+      // replacement ANativeWindow. This is bounded by the runner's marker
+      // timeout and avoids presenting through a transition-era surface.
+      std::this_thread::sleep_for(std::chrono::seconds(3));
       if (!RunSurfacePresent(instance, adapters.front(), device, window,
+                             &surface, foreground,
                              &presented_width, &presented_height)) {
         __android_log_print(ANDROID_LOG_ERROR, kLogTag,
-                            "A1 Vulkan fixture failed: foreground surface recreation");
+                            "A1 Vulkan fixture failed: surface recreation");
         exit_code = 9;
         break;
       }
       ++presentation_generation;
       __android_log_print(ANDROID_LOG_INFO, kLogTag,
-                          "A1 Vulkan recreate passed generation=%d page_size=%ld "
-                          "size=%dx%d",
-                          presentation_generation, sysconf(_SC_PAGESIZE),
+                          "A1 Vulkan recreate passed generation=%d reason=%s "
+                          "orientation=%d page_size=%ld size=%dx%d",
+                          presentation_generation,
+                          orientation != SDL_ORIENTATION_UNKNOWN ? "orientation"
+                                                                 : "foreground",
+                          lifecycle.current_orientation.load(
+                              std::memory_order_acquire),
+                          sysconf(_SC_PAGESIZE),
                           presented_width, presented_height);
     }
   }
   SDL_SetEventFilter(nullptr, nullptr);
+  if (surface != nullptr) wgpuSurfaceRelease(surface);
   wgpuDeviceRelease(device);
   SDL_Vulkan_UnloadLibrary();
   SDL_DestroyWindow(window);

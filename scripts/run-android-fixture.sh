@@ -84,12 +84,30 @@ wait_for_marker \
   "A1 guest memory passed reserve_bytes=4294967296"
 wait_for_marker \
   "A1 Vulkan present passed abi=arm64-v8a page_size=$expected_page_size"
-"$adb" shell input keyevent KEYCODE_HOME
-wait_for_marker "A1 lifecycle background observed"
-# Let Android complete onStop/surface teardown before requesting foreground.
-sleep 3
-"$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity >/dev/null
-wait_for_marker \
-  "A1 Vulkan recreate passed generation=2 page_size=$expected_page_size"
 
-echo "Android A1 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=background-foreground-recreated"
+# Exercise the other allowed landscape orientation and require SDL to observe
+# it before accepting a newly created Dawn surface presentation.
+"$adb" shell settings put system accelerometer_rotation 1
+"$adb" emu sensor set acceleration -9.81:0:0 >/dev/null
+wait_for_marker "A1 orientation observed orientation=2 previous=1"
+wait_for_marker \
+  "A1 Vulkan recreate passed generation=2 reason=orientation orientation=2 page_size=$expected_page_size"
+
+for cycle in 1 2 3; do
+  generation=$((cycle + 2))
+  "$adb" shell input keyevent KEYCODE_HOME
+  wait_for_marker "A1 lifecycle background observed cycle=$cycle"
+  # Let Android complete onStop/surface teardown before requesting foreground.
+  sleep 3
+  "$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity >/dev/null
+  wait_for_marker \
+    "A1 Vulkan recreate passed generation=$generation reason=foreground orientation=2 page_size=$expected_page_size"
+done
+
+if "$adb" logcat -d -v brief KartPadFixture:E '*:S' | grep -q .; then
+  echo "ERROR: fixture emitted an error despite reaching all pass markers" >&2
+  "$adb" logcat -d -v brief KartPadFixture:V '*:S' >&2
+  exit 1
+fi
+
+echo "Android A1 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=orientation-plus-3-background-foreground-recreations"

@@ -8,11 +8,14 @@ clear/readback, presents a separate clear through the Android native window,
 and repeats presentation after HOME/foreground surface recreation. The next
 A1 slice reserves a dynamic sparse 4 GiB guest range, maps two shared views,
 and verifies alias visibility and read-only/guard/read-only protection changes
-using the runtime page size. None of these paths use game data or generated
-translated code.
+using the runtime page size. The surface fixture now also retains and
+reconfigures its Dawn surface across a physical flipped-landscape sensor
+transition, then replaces and presents through three consecutive Android
+background/foreground surface generations. None of these paths use game data
+or generated translated code.
 
-Rotation, repeated lifecycle stress, fibers, gameplay, physical-device
-support, performance, and release readiness remain unproven.
+Fibers, gameplay, physical-device support, performance, and release readiness
+remain unproven.
 
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:

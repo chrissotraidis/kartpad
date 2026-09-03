@@ -1681,3 +1681,30 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   open for rotation/repeated lifecycle and ELF AArch64 scheduler/register
   stress. No package was hosted or published. Evidence:
   `docs/artifacts/2026-09-03/android/a1-guest-memory.md`.
+
+## 2026-09-03 — Android A1 rotation and repeated surface lifecycle
+
+- Changed the Vulkan fixture to retain and reconfigure its Dawn surface when
+  Android changes the existing `SurfaceView`, and to release/create a new Dawn
+  surface only after Android has actually destroyed and recreated the native
+  surface. This matches the ownership boundary needed by the product.
+- The runner enables the physical emulator accelerometer, sets an absolute
+  flipped-landscape gravity vector, and requires SDL's exact orientation
+  transition from landscape `1` to flipped landscape `2`. It then requires a
+  successful retained-surface presentation followed by three separate HOME /
+  foreground replacement-surface presentations. Every pass marker is rejected
+  if the fixture emitted any error-level line.
+- A naive user-rotation setting produced no sensor event and was rejected. The
+  first physical-sensor implementation attempted to create a new Dawn surface
+  from a `SurfaceView` changed in place; Dawn rejected its capabilities. The
+  retained-surface model fixes that ownership error and passes cold boots on
+  API 36 / 4 KiB and API 35 / 16 KiB.
+- The audited local debug APK is 33,545,363 bytes with SHA-256
+  `f2efa7efd850d41fe5bb4b19e0d2d448ade8ee3a4f82f58397c63665cdfe2e70`.
+  Classification: **Pass for flipped-landscape reconfiguration and three
+  consecutive background/foreground native-surface replacements on both
+  pinned emulator page sizes.** Physical OEM lifecycle behavior, gameplay,
+  performance, and long-session stability remain open. A1 now requires only
+  the ELF AArch64 scheduler/register stress fixture. No package was hosted or
+  published. Evidence:
+  `docs/artifacts/2026-09-03/android/a1-lifecycle-stress.md`.
