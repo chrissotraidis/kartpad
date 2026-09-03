@@ -102,6 +102,17 @@ This is diagnostic capability only and does not narrow A2's remaining player,
 controller, or physical-device gates. Evidence:
 [`docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md`](artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md).
 
+Android's discovered SDL controllers now reach the Classic/KPAD path through
+a narrow public Aurora snapshot and shared, host-tested mapping contract. A
+lone unassigned controller may drive player one until the native settings UI
+exists; explicit port assignments remain authoritative and multiple
+unassigned pads are never guessed. Both page-size fixture lanes, a clean
+private runtime preparation/link, lint, package/privacy audit, and exact patch
+reproduction pass. No controller was attached, so live controller,
+disconnect/reconnect, rumble, race, and physical-device acceptance remain
+open. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`](artifacts/2026-09-03/android/a2-sdl-controller-bridge.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

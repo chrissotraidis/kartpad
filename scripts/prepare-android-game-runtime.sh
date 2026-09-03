@@ -34,6 +34,8 @@ KARTPAD_PREPARE_ONLY=1 "$repo_root/scripts/prepare-ios-game-runtime.sh" \
   "$translation_root" "$runtime_source" "$runtime_build" "$product"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-public-sdl-surface-lock.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-android-gamepad-snapshot.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-runtime.patch"
 patch --batch -p1 -d "$runtime_source" < \
@@ -42,6 +44,8 @@ patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-surface-resume.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-keyboard-steer.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-sdl-controller.patch"
 
 generated_link="$(dirname "$runtime_source")/generated"
 if [[ -e "$generated_link" && ! -L "$generated_link" ]]; then

@@ -1851,3 +1851,31 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   results/save/relaunch, real controller, and physical Android hardware.
   Evidence:
   `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md`.
+
+## 2026-09-03 — Android A2 SDL controller bridge
+
+- Found that Aurora already opened Android SDL gamepads, but Mario Kart's
+  Classic/KPAD HLE consumed only keyboard, RKG fixture, and the iOS mobile
+  bridge. A connected Android controller therefore could not satisfy A2.
+- Added a narrow public Aurora standard-gamepad snapshot and mapped it into the
+  shared Classic contract. South/east/west/north map to A/B/X/Y, Start/Back to
+  Plus/Minus, shoulders/triggers to L/R/ZL/ZR, D-pad directions directly, and
+  the left stick through an 8,000-unit normalized/inverted deadzone.
+- Explicit port assignments win. Player one may use a sole unassigned pad
+  before A4's settings UI exists; multiple unassigned pads are never guessed.
+  Existing KPAD history emits neutral state after secondary disconnect, and
+  sanitized logs contain no controller identifiers.
+- Added a host CTest and source-only Android marker for the shared mapping.
+  Both API 36 / 4 KiB and API 35 / 16 KiB fixture lanes pass their complete
+  lifecycle suites with the new marker.
+- A fresh prepared private source graph compiled/linked, and a final reproduced
+  tree matches all patched upstream files byte-for-byte. The audited local-only
+  103,433,120-byte APK has SHA-256
+  `7491b416ea3640b8d7a9cb8545fffe41dc625a4d378dd4d0d4abc8293ae22d01`;
+  its stripped 83,536,152-byte `libmain.so` is
+  `15a7c1dfecd40066b5f15dc950bb4d555d4375a09a21553ff9fbf9dd8f6c3c74`.
+- Classification: **Pass for controller-path implementation, deterministic
+  contract, patch reproduction, and private compile/link/package only.** No
+  controller was attached, so live controller and physical-device acceptance
+  remain open. No APK/AAB or private input was published. Evidence:
+  `docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`.

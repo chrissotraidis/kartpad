@@ -84,6 +84,7 @@ wait_for_marker \
   "A1 guest memory passed reserve_bytes=4294967296"
 wait_for_marker \
   "A1 ELF scheduler passed operations=2000000 hash=0x7287563387fb1677 fiber_switches=1000000"
+wait_for_marker "A2 SDL gamepad contract passed"
 wait_for_marker \
   "A1 Vulkan present passed abi=arm64-v8a page_size=$expected_page_size"
 
@@ -112,4 +113,4 @@ if "$adb" logcat -d -v brief KartPadFixture:E '*:S' | grep -q .; then
   exit 1
 fi
 
-echo "Android A1 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected scheduler=2M-operations fiber=1M-register-checked-switches backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=orientation-plus-3-background-foreground-recreations"
+echo "Android A1/A2 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected scheduler=2M-operations fiber=1M-register-checked-switches gamepad_contract=passed backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=orientation-plus-3-background-foreground-recreations"

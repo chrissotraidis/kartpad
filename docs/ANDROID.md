@@ -789,8 +789,11 @@ Its exact public resources install before SDL loads, and a cleared API 36
 launch reaches translated constructors and Vulkan using only app-private
 config/cache/NAND paths before the expected missing-DVD failure. Continue A2 by
 staging the validated ignored DATA directory outside the APK, setting its
-app-private path, and proving controller-driven gameplay without weakening the
-package privacy boundary.
+app-private path, and using the new Aurora-to-Classic SDL controller bridge to
+prove a complete controller-driven player race, results, and save/relaunch
+without weakening the package privacy boundary. The bridge's deterministic
+source-only contract passes on both page-size lanes, but no controller
+acceptance is claimed until an actual controller is attached.
 
 The A0 commands and sanitized result are recorded in
 [`android/README.md`](../android/README.md) and

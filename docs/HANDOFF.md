@@ -100,12 +100,16 @@ not block offline Retro Rewind support.
    and an Android-only marker can replace only its steering with the debug
    keyboard stick, but neither route completes a race. Exact GCN Mario Circuit
    metadata and the macOS-proven SNES Mario Circuit 3 stream also diverge on
-   Android and must not be used as completion evidence. Establish a complete
+   Android and must not be used as completion evidence. Aurora's discovered
+   SDL pads now feed the Android Classic/KPAD path through a deterministic
+   mapping contract, but no controller was attached, so this is implementation
+   and compile evidence only. Establish a complete
    player race, results, post-race save/relaunch,
    then repeat with a real controller and physical Android hardware. Evidence
    is in `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` and
    `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`, plus
-   `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md`. A2
+   `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md` and
+   `docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`. A2
    remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.

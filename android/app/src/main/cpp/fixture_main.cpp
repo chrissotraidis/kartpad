@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "guest_memory_fixture.h"
+#include "kartpad/android/gamepad_contract.h"
 #include "scheduler_fixture.h"
 
 #include <algorithm>
@@ -25,6 +26,29 @@ constexpr char kLogTag[] = "KartPadFixture";
 void LogError(const char* message) {
   __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s: %s", message,
                       SDL_GetError());
+}
+
+bool RunAndroidGamepadContract() {
+  using namespace kartpad::android;
+  RawGamepadState input;
+  input.connected = true;
+  input.buttons = kGamepadSouth | kGamepadEast | kGamepadWest |
+                  kGamepadNorth | kGamepadBack | kGamepadStart |
+                  kGamepadLeftShoulder | kGamepadRightShoulder |
+                  kGamepadDpadUp | kGamepadDpadDown |
+                  kGamepadDpadLeft | kGamepadDpadRight;
+  input.left_trigger = kTriggerThreshold;
+  input.right_trigger = kTriggerThreshold;
+  input.left_x = 32767;
+  input.left_y = -32768;
+  const auto mapped = MapGamepadToClassic(input);
+  constexpr uint32_t kExpectedButtons =
+      kClassicA | kClassicB | kClassicX | kClassicY | kClassicMinus |
+      kClassicPlus | kClassicL | kClassicR | kClassicUp | kClassicDown |
+      kClassicLeft | kClassicRight | kClassicZl | kClassicZr;
+  return mapped.connected && mapped.buttons == kExpectedButtons &&
+         mapped.left_stick_x == 1.0f && mapped.left_stick_y == 1.0f &&
+         !MapGamepadToClassic({}).connected;
 }
 
 struct MapState {
@@ -319,6 +343,14 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
     SDL_Quit();
     return 3;
   }
+  if (!RunAndroidGamepadContract()) {
+    __android_log_print(ANDROID_LOG_ERROR, kLogTag,
+                        "A2 SDL gamepad contract failed");
+    SDL_Quit();
+    return 10;
+  }
+  __android_log_print(ANDROID_LOG_INFO, kLogTag,
+                      "A2 SDL gamepad contract passed");
   SDL_Window* window = SDL_CreateWindow(
       "KartPad", 960, 540, SDL_WINDOW_VULKAN | SDL_WINDOW_HIGH_PIXEL_DENSITY);
   if (window == nullptr) {

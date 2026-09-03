@@ -12,6 +12,15 @@ target_compile_options(kartpad_semantics_contract PRIVATE
 )
 add_test(NAME kartpad_semantics_contract COMMAND kartpad_semantics_contract)
 
+add_executable(kartpad_android_gamepad_contract
+  runtime/tests/android_gamepad_contract_tests.cpp)
+target_include_directories(kartpad_android_gamepad_contract PRIVATE runtime/include)
+target_compile_features(kartpad_android_gamepad_contract PRIVATE cxx_std_20)
+target_compile_options(kartpad_android_gamepad_contract PRIVATE
+  -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME kartpad.android.gamepad-contract
+  COMMAND kartpad_android_gamepad_contract)
+
 option(MKW_PRODUCT_BASE "Build the original-disc base product" ON)
 option(MKW_PRODUCT_RETRO_REWIND "Build the Retro Rewind product" OFF)
 option(MKW_BUILD_MACOS "Build the native macOS host" OFF)

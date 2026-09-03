@@ -1,0 +1,155 @@
+diff --git a/src/hle/input/kpad.cpp b/src/hle/input/kpad.cpp
+--- a/src/hle/input/kpad.cpp
++++ b/src/hle/input/kpad.cpp
+@@ -6,6 +6,11 @@
+ #include <SDL3/SDL_scancode.h>
+ #include <SDL3/SDL_timer.h>
+ 
++#if defined(__ANDROID__)
++#include <aurora/input.hpp>
++#include "kartpad/android/gamepad_contract.h"
++#endif
++
+ #if defined(__APPLE__)
+ #include <TargetConditionals.h>
+ #endif
+@@ -70,6 +75,9 @@
+ std::array<std::atomic<uint32_t>, 4> g_pendingPresses{};
+ std::array<std::atomic<uint32_t>, 4> g_pendingClassicPresses{};
+ std::array<std::atomic<bool>, 4> g_keyboardConnected{};
++#if defined(__ANDROID__)
++std::array<std::atomic<bool>, 4> g_androidControllerConnected{};
++#endif
+ std::atomic<bool> g_fixtureArmRequested{false};
+ std::atomic<bool> g_preciseMenuPulseRequested{false};
+ std::array<std::atomic<uint64_t>, SDL_SCANCODE_COUNT> g_syntheticExpiryNs{};
+@@ -659,6 +667,50 @@
+     return {x, y};
+ }
+ 
++#if defined(__ANDROID__)
++kartpad::android::ClassicInputState ReadAndroidClassicInput(uint32_t chan)
++{
++    using namespace kartpad::android;
++    static_assert(aurora::input::kStandardGamepadSouth == kGamepadSouth);
++    static_assert(aurora::input::kStandardGamepadEast == kGamepadEast);
++    static_assert(aurora::input::kStandardGamepadWest == kGamepadWest);
++    static_assert(aurora::input::kStandardGamepadNorth == kGamepadNorth);
++    static_assert(aurora::input::kStandardGamepadBack == kGamepadBack);
++    static_assert(aurora::input::kStandardGamepadStart == kGamepadStart);
++    static_assert(aurora::input::kStandardGamepadLeftShoulder ==
++                  kGamepadLeftShoulder);
++    static_assert(aurora::input::kStandardGamepadRightShoulder ==
++                  kGamepadRightShoulder);
++    static_assert(aurora::input::kStandardGamepadDpadUp == kGamepadDpadUp);
++    static_assert(aurora::input::kStandardGamepadDpadDown == kGamepadDpadDown);
++    static_assert(aurora::input::kStandardGamepadDpadLeft == kGamepadDpadLeft);
++    static_assert(aurora::input::kStandardGamepadDpadRight ==
++                  kGamepadDpadRight);
++    aurora::input::StandardGamepadState snapshot;
++    RawGamepadState raw;
++    const bool connected = aurora::input::read_standard_gamepad_state(
++        chan, chan == 0, &snapshot);
++    const bool wasConnected =
++        g_androidControllerConnected[chan].exchange(connected,
++                                                     std::memory_order_acq_rel);
++    if (connected != wasConnected) {
++        std::fprintf(stderr, "[input] Android SDL controller channel %u %s\n",
++                     chan, connected ? "connected" : "disconnected");
++    }
++    if (!connected) {
++        return MapGamepadToClassic(raw);
++    }
++
++    raw.connected = snapshot.connected;
++    raw.buttons = snapshot.buttons;
++    raw.left_x = snapshot.leftX;
++    raw.left_y = snapshot.leftY;
++    raw.left_trigger = snapshot.leftTrigger;
++    raw.right_trigger = snapshot.rightTrigger;
++    return MapGamepadToClassic(raw);
++}
++#endif
++
+ uint32_t ClassicButtonsForGhost(const GhostSample& sample)
+ {
+     uint32_t buttons = 0;
+@@ -777,8 +829,12 @@
+ 
+ extern "C" bool KPAD_IsKeyboardChannelConnected(uint32_t chan)
+ {
+-    return chan < g_keyboardConnected.size() &&
+-           (chan == 0 || g_keyboardConnected[chan].load(std::memory_order_acquire));
++    if (chan >= g_keyboardConnected.size()) return false;
++#if defined(__ANDROID__)
++    if (ReadAndroidClassicInput(chan).connected) return true;
++#endif
++    return chan == 0 ||
++           g_keyboardConnected[chan].load(std::memory_order_acquire);
+ }
+ 
+ extern "C" int32_t KPAD__Read_HLE(uint32_t chan, uint32_t statusPtr, uint32_t count)
+@@ -801,8 +857,16 @@
+ #else
+     const bool mobileConnected = false;
+ #endif
++#if defined(__ANDROID__)
++    const auto androidInput = ReadAndroidClassicInput(chan);
++    const bool androidConnected = androidInput.connected;
++#else
++    const bool androidConnected = false;
++#endif
+     const bool connected = chan == 0 || mobileConnected ||
+-        g_keyboardConnected[chan].load(std::memory_order_acquire);
++        androidConnected ||
++        g_keyboardConnected[chan].load(std::memory_order_acquire) ||
++        g_previousButtons[chan] != 0 || g_previousClassicButtons[chan] != 0;
+     if (!connected) return 0;
+     const uint32_t pending = g_pendingPresses[chan].exchange(0, std::memory_order_acq_rel);
+     const uint32_t pendingClassic = g_pendingClassicPresses[chan].exchange(0, std::memory_order_acq_rel);
+@@ -831,6 +895,13 @@
+         stick = {mobileInput.leftStickX, mobileInput.leftStickY};
+     }
+ #endif
++#if defined(__ANDROID__)
++    if (!fixtureActive && androidConnected) {
++        classicHold |= androidInput.buttons;
++        hold |= CoreButtonsForClassic(androidInput.buttons);
++        stick = {androidInput.left_stick_x, androidInput.left_stick_y};
++    }
++#endif
+     const uint32_t previous = g_previousButtons[chan];
+     const uint32_t previousClassic = g_previousClassicButtons[chan];
+     const uint32_t trigger = (fixtureActive ? 0 : pending) | (hold & ~previous);
+@@ -885,8 +956,15 @@
+ #else
+     const bool mobileConnected = false;
+ #endif
+-    if (chan != 0 && !mobileConnected &&
+-        !g_keyboardConnected[chan].load(std::memory_order_acquire)) {
++#if defined(__ANDROID__)
++    const auto androidInput = ReadAndroidClassicInput(chan);
++    const bool androidConnected = androidInput.connected;
++#else
++    const bool androidConnected = false;
++#endif
++    if (chan != 0 && !mobileConnected && !androidConnected &&
++        !g_keyboardConnected[chan].load(std::memory_order_acquire) &&
++        g_previousButtons[chan] == 0 && g_previousClassicButtons[chan] == 0) {
+         return 0;
+     }
+     const uint32_t pending = g_pendingPresses[chan].exchange(0, std::memory_order_acq_rel);
+@@ -912,6 +990,13 @@
+             stick = {mobileInput.leftStickX, mobileInput.leftStickY};
+         }
+ #endif
++#if defined(__ANDROID__)
++        if (!fixtureActive && androidConnected) {
++            classicButtons |= androidInput.buttons;
++            coreButtons |= CoreButtonsForClassic(androidInput.buttons);
++            stick = {androidInput.left_stick_x, androidInput.left_stick_y};
++        }
++#endif
+         Memory::Write16(statusPtr + 0x00,
+                         static_cast<uint16_t>(coreButtons));
+         Memory::Write16(statusPtr + 0x2A,

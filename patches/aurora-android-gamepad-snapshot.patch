@@ -1,0 +1,111 @@
+diff --git a/lib/input.cpp b/lib/input.cpp
+--- a/lib/input.cpp
++++ b/lib/input.cpp
+@@ -1,6 +1,8 @@
+ #include "input.hpp"
+ #include "internal.hpp"
+ 
++#include <aurora/input.hpp>
++
+ #include "magic_enum.hpp"
+ 
+ #include <SDL3/SDL_haptic.h>
+@@ -345,6 +347,56 @@ GameController* get_controller_for_player(uint32_t player) noexcept {
+   }
+ 
+   return nullptr;
++}
++
++bool read_standard_gamepad_state(uint32_t player, bool allowSingleUnassigned,
++                                 StandardGamepadState* state) noexcept {
++  if (state == nullptr) {
++    return false;
++  }
++  *state = {};
++
++  GameController* controller = get_controller_for_player(player);
++  if (controller == nullptr && player == 0 && allowSingleUnassigned &&
++      g_GameControllers.size() == 1) {
++    auto& [instance, candidate] = *g_GameControllers.begin();
++    if (player_index(instance) < 0) {
++      controller = &candidate;
++    }
++  }
++  if (controller == nullptr || controller->m_controller == nullptr ||
++      !SDL_GamepadConnected(controller->m_controller)) {
++    return false;
++  }
++
++  state->connected = true;
++  const auto add = [&](SDL_GamepadButton source,
++                       StandardGamepadButton destination) {
++    if (SDL_GetGamepadButton(controller->m_controller, source)) {
++      state->buttons |= destination;
++    }
++  };
++  add(SDL_GAMEPAD_BUTTON_SOUTH, kStandardGamepadSouth);
++  add(SDL_GAMEPAD_BUTTON_EAST, kStandardGamepadEast);
++  add(SDL_GAMEPAD_BUTTON_WEST, kStandardGamepadWest);
++  add(SDL_GAMEPAD_BUTTON_NORTH, kStandardGamepadNorth);
++  add(SDL_GAMEPAD_BUTTON_BACK, kStandardGamepadBack);
++  add(SDL_GAMEPAD_BUTTON_START, kStandardGamepadStart);
++  add(SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, kStandardGamepadLeftShoulder);
++  add(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, kStandardGamepadRightShoulder);
++  add(SDL_GAMEPAD_BUTTON_DPAD_UP, kStandardGamepadDpadUp);
++  add(SDL_GAMEPAD_BUTTON_DPAD_DOWN, kStandardGamepadDpadDown);
++  add(SDL_GAMEPAD_BUTTON_DPAD_LEFT, kStandardGamepadDpadLeft);
++  add(SDL_GAMEPAD_BUTTON_DPAD_RIGHT, kStandardGamepadDpadRight);
++  state->leftX = SDL_GetGamepadAxis(controller->m_controller,
++                                   SDL_GAMEPAD_AXIS_LEFTX);
++  state->leftY = SDL_GetGamepadAxis(controller->m_controller,
++                                   SDL_GAMEPAD_AXIS_LEFTY);
++  state->leftTrigger = SDL_GetGamepadAxis(controller->m_controller,
++                                         SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
++  state->rightTrigger = SDL_GetGamepadAxis(controller->m_controller,
++                                          SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
++  return true;
+ }
+ 
+ Sint32 get_instance_for_player(uint32_t player) noexcept {
+diff --git a/include/aurora/input.hpp b/include/aurora/input.hpp
+new file mode 100644
+--- /dev/null
++++ b/include/aurora/input.hpp
+@@ -0,0 +1,37 @@
++#pragma once
++
++#include <cstdint>
++
++namespace aurora::input {
++
++enum StandardGamepadButton : uint32_t {
++  kStandardGamepadSouth = 1u << 0,
++  kStandardGamepadEast = 1u << 1,
++  kStandardGamepadWest = 1u << 2,
++  kStandardGamepadNorth = 1u << 3,
++  kStandardGamepadBack = 1u << 4,
++  kStandardGamepadStart = 1u << 5,
++  kStandardGamepadLeftShoulder = 1u << 6,
++  kStandardGamepadRightShoulder = 1u << 7,
++  kStandardGamepadDpadUp = 1u << 8,
++  kStandardGamepadDpadDown = 1u << 9,
++  kStandardGamepadDpadLeft = 1u << 10,
++  kStandardGamepadDpadRight = 1u << 11,
++};
++
++struct StandardGamepadState {
++  bool connected = false;
++  uint32_t buttons = 0;
++  int16_t leftX = 0;
++  int16_t leftY = 0;
++  int16_t leftTrigger = 0;
++  int16_t rightTrigger = 0;
++};
++
++// Reads an explicitly assigned controller. Player zero may opt into a lone,
++// unassigned controller so the first connected pad works before a settings UI
++// exists; multiple unassigned controllers are never selected implicitly.
++bool read_standard_gamepad_state(uint32_t player, bool allowSingleUnassigned,
++                                 StandardGamepadState* state) noexcept;
++
++}  // namespace aurora::input
