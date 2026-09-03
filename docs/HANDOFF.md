@@ -93,15 +93,15 @@ not block offline Retro Rewind support.
 ## Next executable work
 
 1. Continue Android A2 using `docs/ANDROID-GOAL-LOOP.md`. The complete private
-   29,065-function Original graph builds, and its app-private resource/config/
-   cache/NAND bridge now cold-starts through translated constructors and the
-   Vulkan renderer before failing closed on the intentionally absent DVD root.
-   Stage the already validated ignored `RMCP01` DATA directory outside the
-   APK, write its app-private config path, and establish the first emulator
-   game boot/frame before controller-driven title/menu/race/save/relaunch.
-   Evidence is in `docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`
-   and `docs/artifacts/2026-09-03/android/a2-app-private-runtime.md`. Do not call
-   this gameplay or physical-device acceptance; A2 remains open.
+   Original runtime now boots ignored app-private RMCP01 data, restores its
+   saved license across cold processes, enters live Luigi Circuit gameplay,
+   survives repeated title/demo and live-race surface recreation, and sustains
+   a clean retail staff replay. The debug-only app-private RKG bridge works,
+   but the existing player fixture diverges and must not be used as completion
+   evidence. Establish a complete player race, results, post-race save/relaunch,
+   then repeat with a real controller and physical Android hardware. Evidence
+   is in `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` and
+   `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`. A2 remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

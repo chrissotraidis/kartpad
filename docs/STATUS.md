@@ -76,6 +76,22 @@ remains open for privately staged `RMCP01` data and the emulator/physical
 gameplay matrix. Evidence:
 [`docs/artifacts/2026-09-03/android/a2-app-private-runtime.md`](artifacts/2026-09-03/android/a2-app-private-runtime.md).
 
+The first full Original emulator boot now also passes. Ignored validated
+RMCP01 data is staged only under the app sandbox; the title, demo, saved
+license, non-silent SDL stream, and live Luigi Circuit gameplay render through
+the complete translated runtime. Six title/demo and three live-race
+HOME/foreground cycles retained their process after a narrow stale-ImGui-frame
+repair. Three cold processes restored the saved `KartPad` license. A debug-only
+app-private RKG bridge reaches the existing native player fixture, but that
+fixture diverges into the wall and does not finish; a separate clean Nintendo
+staff replay rendered for more than twelve wall-clock minutes without a crash
+but is not player/results/save evidence. A2 remains open for a complete player
+race, results, post-race save/relaunch, real controller, and physical Android
+hardware. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md`](artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md)
+and
+[`docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`](artifacts/2026-09-03/android/a2-debug-input-replay.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

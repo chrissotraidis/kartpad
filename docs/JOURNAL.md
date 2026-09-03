@@ -1787,3 +1787,34 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   no APK/AAB was published. Continue with ignored private DATA staging and the
   first emulator game frame. Evidence:
   `docs/artifacts/2026-09-03/android/a2-app-private-runtime.md`.
+
+## 2026-09-03 — Android A2 app-private RKG diagnostic and retail replay
+
+- Added a debug-game-only bridge for the existing native RKG player fixture.
+  It accepts exactly one bounded, magic-checked app-private file, sets the
+  existing `_V2` diagnostic variables before SDL loads, emits no private path,
+  and clears every variable when the file is absent or invalid.
+- The ignored 2,016-byte staff input was staged after installation and verified
+  by SHA-256. Its structural-only inspection reports course 8, 89.670 seconds,
+  2,194 input bytes, and equal 5,615-frame streams. No input bytes, game data,
+  save, or screenshot entered the APK or Git.
+- The diagnostic selected Mario, Standard Kart M, automatic drift, and Luigi
+  Circuit, then moved after the countdown. It diverged into the wall by guest
+  time 10.881 and remained there at 34.236 on lap 1/3. No forced finish was
+  enabled. This is a pass for the Android/private diagnostic bridge and a fail
+  for natural player-fixture completion, matching the existing native warning.
+- With the fixture disabled, a fresh PID rendered the retail Luigi Circuit
+  staff Watch Replay for more than twelve wall-clock minutes at roughly
+  9--13 FPS. Progress captures were byte-distinct, a finish-line crossing was
+  observed, and no ImGui assertion, `SIGABRT`, or Java fatal exception appeared.
+  Because Watch Replay has no player results/save contract, it does not satisfy
+  the complete-race gate.
+- The full game APK build, game release/source-only debug Kotlin compiles,
+  `lintDebug`, and strict APK audit pass. The local 103,429,984-byte APK
+  has SHA-256
+  `c6b0eae50624f1e5466b679558a643e41cf8d721b3f3d5d4179303c3a038884e`;
+  its stripped 83,533,016-byte `libmain.so` remains
+  `71486d448c0765e916b95c3ca703d1276152357a912ad0d2fd49c673cc98b44a`.
+  A2 remains open for a complete player race/results/save, real controller,
+  and physical Android hardware. No package was hosted or published. Evidence:
+  `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`.
