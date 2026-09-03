@@ -99,8 +99,24 @@
       "iosArm64Sha256": "a361fcca75929fa5c766cfcde979c010a6da7d805e5db8e15c75e73fd8260e78",
       "iosSimulatorArm64Artifact": "dawn-ios-simulator-arm64.tar.gz",
       "iosSimulatorArm64Sha256": "feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf",
+      "androidArm64Artifact": "dawn-android-aarch64.tar.gz",
+      "androidArm64Url": "https://github.com/encounter/dawn-build/releases/download/v20260603.191052/dawn-android-aarch64.tar.gz",
+      "androidArm64Bytes": 11645719,
+      "androidArm64Sha256": "27d910dee1201fd1e5b6ac567f0ba2306ebf2135e9f40b6929976c365d38b09b",
+      "androidMetadataSanitization": "Replace the pinned Linux NDK API-28 liblog.so absolute path in DawnTargets.cmake with Android's logical log library; reject remaining /usr/local/lib/android/sdk paths.",
+      "androidSanitizedDawnTargetsSha256": "950622eccd03a73154849a5f682347b1f69b5cb5847cc00857eb12459fee4591",
       "declaredAt": "ref/upstream/Wiicompiled/aurora-main/CMakeLists.txt",
       "role": "Pinned WebGPU implementation used by vendored Aurora; macOS and iOS artifacts are hash-verified at configure time"
+    },
+    {
+      "name": "SDL3 Android",
+      "repository": "https://github.com/libsdl-org/SDL",
+      "version": "3.4.4",
+      "artifact": "SDL3-devel-3.4.4-android.zip",
+      "url": "https://github.com/libsdl-org/SDL/releases/download/release-3.4.4/SDL3-devel-3.4.4-android.zip",
+      "bytes": 16525764,
+      "sha256": "da67b5a43442e449511399c65aa86b724419f92850cf36a2a8c7de72eb992bc0",
+      "role": "Pinned SDLActivity, controller/audio glue, and Prefab native library for the Android source-only shell"
     },
     {
       "name": "sse2neon",

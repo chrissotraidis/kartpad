@@ -92,9 +92,11 @@ not block offline Retro Rewind support.
 
 ## Next executable work
 
-1. Begin Android A0 on the authorized second machine using
-   `docs/ANDROID-GOAL-LOOP.md`: bootstrap pinned tools and prove the source-only
-   ARM64 SDL/JNI/Vulkan fixture before private game integration.
+1. Continue Android A1 using `docs/ANDROID-GOAL-LOOP.md`: add deterministic
+   Vulkan clear/readback/present and SDL surface lifecycle coverage, then the
+   4 KiB/16 KiB guest-memory and Android ELF scheduler/register fixtures before
+   private game integration. A0 evidence is under
+   `docs/artifacts/2026-09-03/android/`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

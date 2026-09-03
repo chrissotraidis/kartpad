@@ -4,14 +4,18 @@ Updated: 2026-09-03
 
 ## Native Android work
 
-Android implementation is authorized to begin on a separate machine using the
-evidence-gated architecture in [`docs/ANDROID.md`](ANDROID.md) and the
-autonomous execution contract in
-[`docs/ANDROID-GOAL-LOOP.md`](ANDROID-GOAL-LOOP.md). The agent may explicitly
-bootstrap pinned Android/Java tools and official repository dependencies. The
-current target is an ARM64 source-only SDL/JNI/Vulkan fixture before private
-full-game integration. No Android library, APK, installation, frame, gameplay,
-or physical-device result exists yet.
+Android A0 passes on the authorized second Apple Silicon host. The explicit
+bootstrap pins public ARM64 Temurin 17, SDK/Build Tools/NDK/CMake/emulator
+components and two disposable ARM64 AVDs. The non-playable SDLActivity shell,
+transparent KartPad-owned overlay, SDL/JNI entry, and Dawn Vulkan adapter
+fixture build and pass package audit, then install and run on API 36 / 4 KiB
+and Android 15 / 16 KiB cold-boot AVDs. The audited local debug APK SHA-256 is
+`c28461e09f78ba2dc05ab70d137d1918d2e559c9ec2864ae645d26f3697e22ee`.
+This does not prove a presented frame, lifecycle, guest memory, fibers,
+gameplay, physical Android hardware, performance, or release readiness; no APK
+or AAB was published. Evidence:
+[`docs/artifacts/2026-09-03/android/a0-source-only-fixture.md`](artifacts/2026-09-03/android/a0-source-only-fixture.md).
+The lowest incomplete goal is A1.
 
 ## Native tvOS work
 

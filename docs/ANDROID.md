@@ -3,11 +3,14 @@
 ## Status and decision
 
 - **Assessment updated:** 3 September 2026.
-- **Assessment type:** repository, dependency, host-toolchain, and platform review.
-- **Runtime proof:** no Android library, APK, or AAB has been built or run.
-- **Decision:** proceed through evidence-gated milestones, beginning with an
-  Android ARM64 native-link and emulator fixture rather than user-interface
-  work.
+- **Assessment type:** repository review plus A0 source-only implementation and
+  ARM64 emulator execution.
+- **Runtime proof:** the local non-playable A0 APK builds, audits, installs, and
+  runs its SDL/JNI/Dawn-Vulkan adapter fixture on the pinned API 36 / 4 KiB and
+  Android 15 / 16 KiB ARM64 AVDs.
+- **Decision:** A0 passes on the authorized second Apple Silicon host. Proceed
+  to A1 native primitives and deterministic Vulkan presentation before
+  user-interface or private full-game work.
 
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
@@ -769,17 +772,19 @@ Before any tester receives an artifact, verify at minimum:
 
 ## Immediate next action
 
-Begin with A0. Follow [`ANDROID-GOAL-LOOP.md`](ANDROID-GOAL-LOOP.md): inventory
-the new machine, install and pin the missing JDK/SDK command-line
-tools/NDK/system images, add the minimal Android SDL shell, sanitize and lock
-the Dawn Android dependency, and prove a source-only JNI/Vulkan fixture on one
-ARM64 phone AVD plus a 16 KiB AVD.
+Continue with A1. Extend the source-only fixture to create a Dawn Vulkan device,
+clear/read back/present a deterministic frame, and survive SDL surface
+destruction/recreation, rotation, and background/foreground transitions. Then
+add page-size-aware guest-memory and Android ELF AArch64 scheduler/register
+fixtures and run them on both pinned AVDs.
 
-Do not begin the touch-UI port or full private game link until the shell,
-toolchain, page-size, and Dawn configuration gates are reproducible on a clean
-second Apple Silicon Mac. Once A1 passes, the first valuable user-facing proof
-is a controller-driven Original-mode race on physical Android hardware; Retro
-Rewind installation and touch parity follow from that stable runtime base.
+The A0 commands and sanitized result are recorded in
+[`android/README.md`](../android/README.md) and
+[`a0-source-only-fixture.md`](artifacts/2026-09-03/android/a0-source-only-fixture.md).
+Do not begin the touch-UI port or private full-game link until A1 passes. The
+first valuable user-facing proof after that is a controller-driven
+Original-mode race on physical Android hardware; Retro Rewind installation and
+touch parity follow from that stable runtime base.
 
 ## Platform references
 

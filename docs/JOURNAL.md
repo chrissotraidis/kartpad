@@ -1591,3 +1591,41 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   physical iPad then iPhone acceptance.** Evidence:
   `docs/artifacts/2026-08-30/g15-native-wbfs-import/` and
   `docs/PHYSICAL-ACCEPTANCE.md`.
+
+## 2026-09-03 — Android A0 source-only shell
+
+- Started from clean `origin/main` commit
+  `8432a7f32f34b286653cde34f8977570756816b8` on the authorized second Apple
+  Silicon host. Added a hash-pinned explicit bootstrap for ARM64 Temurin 17,
+  Android command-line tools, SDK 36, Build Tools 36.0.0, NDK 29, CMake,
+  emulator, and the API 36 / Android 15 16 KiB ARM64 images; the ordinary
+  validator and build do not install software or accept terms.
+- Added the non-playable Gradle/SDLActivity application, transparent
+  KartPad-owned View overlay, ARM64 `libmain.so`, SDL/JNI entry, and a
+  source-only Dawn Vulkan-adapter fixture. SDL3 Android and Dawn downloads are
+  hash/size verified. Dawn's pinned Linux-CI `liblog.so` path is rewritten to
+  logical `log`, remaining CI SDK paths are rejected, and the sanitized CMake
+  metadata digest is locked.
+- The local debug APK builds and passes its SDK/package, ARM64-only library,
+  16 KiB ZIP/ELF alignment, dependency, RELRO, non-executable-stack, and
+  privacy audit. Its SHA-256 is
+  `c28461e09f78ba2dc05ab70d137d1918d2e559c9ec2864ae645d26f3697e22ee`.
+- Cold-boot execution passes on `KartPad_API_36_ARM64` at API 36 / 4,096-byte
+  pages and `KartPad_API_35_PS16K_ARM64` at API 35 / 16,384-byte pages. Each
+  reports one Dawn Vulkan adapter through the emulator's gfxstream/lavapipe
+  path. An initial 16 KiB 30-second marker timeout passed unchanged on retry;
+  the recorded runner now uses a 60-second bound and wider failure diagnostics.
+- Classification: **A0 pass for public toolchain/bootstrap, source-only build
+  and audit, SDL/JNI entry, Dawn Vulkan adapter discovery, and 4 KiB/16 KiB
+  emulator execution.** This is not presented-frame, lifecycle, native-runtime,
+  gameplay, physical-device, performance, or release evidence. No APK/AAB was
+  hosted or published. Continue A1 with deterministic Vulkan
+  clear/readback/present and lifecycle, guest-memory, and scheduler fixtures.
+  Evidence: `docs/artifacts/2026-09-03/android/a0-source-only-fixture.md`.
+- The repository-wide `scripts/verify-sources.sh` validated all 335 patch hunks
+  plus WiiCompiled, SunPad, and WheelWizard, then stopped because the ignored,
+  clean `rr-pulsar` checkout's HEAD is newer than the dependency lock. The
+  locked commit object and its exact locked tree remain present and its push
+  URL is disabled; the checkout was intentionally left untouched. This does
+  not affect A0, which uses only the independently hash-verified SDL3 and Dawn
+  downloads. The SunPad snapshot and repository safety checks pass.
