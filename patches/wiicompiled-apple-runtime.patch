@@ -222,12 +222,16 @@ diff -ruN --exclude=.git --exclude=third_party --exclude=build a/cmake/PublicPro
 
      set(MKW_WII_BOOTSTRAP_SOURCE_DIR "${MKW_RUNTIME_SOURCE_DIR}/assets/wii")
      if(NOT EXISTS "${MKW_WII_BOOTSTRAP_SOURCE_DIR}/shared2/wc24")
-@@ -287,6 +291,6 @@
+@@ -287,6 +291,10 @@
      mkw_retro_rewind_functions WiiCompiled RetroRewind)
  foreach(target IN LISTS MKW_ALL_BUILD_TARGETS)
      if(TARGET ${target})
 -        target_compile_options(${target} PRIVATE -march=x86-64-v3)
-+        target_compile_options(${target} PRIVATE -mcpu=apple-m2)
++        if(CMAKE_SYSTEM_NAME STREQUAL "tvOS")
++            target_compile_options(${target} PRIVATE -mcpu=generic)
++        else()
++            target_compile_options(${target} PRIVATE -mcpu=apple-m2)
++        endif()
      endif()
  endforeach()
 diff -ruN --exclude=.git --exclude=third_party --exclude=build a/include/audio_backend.h b/include/audio_backend.h
