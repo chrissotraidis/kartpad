@@ -2,6 +2,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_vulkan.h>
 #include <android/log.h>
+#include <jni.h>
 #include <dawn/native/DawnNative.h>
 #include <dawn/webgpu.h>
 #include <unistd.h>
@@ -297,6 +298,12 @@ bool RunSurfacePresent(dawn::native::Instance& instance,
 }
 
 }  // namespace
+
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation(JNIEnv*, jobject) {}
+
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation(JNIEnv*, jobject, jboolean) {}
 
 extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
   SDL_SetAppMetadata("KartPad", "0.0.1-a0", "dev.kartpad.android");

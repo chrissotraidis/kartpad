@@ -92,16 +92,15 @@ not block offline Retro Rewind support.
 
 ## Next executable work
 
-1. Continue Android A1 using `docs/ANDROID-GOAL-LOOP.md`: deterministic Vulkan
-   clear/readback/present and HOME/foreground surface recreation now pass on
-   both page-size lanes. Dynamic 4 GiB reservation, shared aliases, and
-   protection changes now also pass at both 4 KiB and 16 KiB. A physical
-   flipped-landscape transition plus three consecutive surface teardown/
-   foreground/recreate/present cycles pass on both lanes. The Android ELF
-   scheduler/register fixture now passes two million scheduler operations and
-   one million native switches on both lanes, closing A1. Continue A2 with the
-   private generated Original-mode graph and controller-driven gameplay proof.
-   Evidence is under `docs/artifacts/2026-09-03/android/`.
+1. Continue Android A2 using `docs/ANDROID-GOAL-LOOP.md`. The complete private
+   29,065-function Original graph now compiles, links, packages, and passes the
+   strict Android APK audit through a reproducible ignored-source path. Add the
+   Android app-private data/config/cache bridge, stage the already validated
+   `RMCP01` DATA directory without packaging it, and establish the first
+   emulator boot/frame before controller-driven title/menu/race/save/relaunch.
+   Build/package evidence is
+   `docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`. Do not call
+   this gameplay or physical-device acceptance; A2 remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

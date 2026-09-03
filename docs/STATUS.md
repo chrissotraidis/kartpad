@@ -42,6 +42,24 @@ This closes A1's source-only native primitive and Vulkan-surface gate. It does
 not prove production-runtime integration, gameplay, physical-device Vulkan,
 or performance. The lowest incomplete goal is A2.
 
+The first A2 build/link slice passes. A fresh ignored runtime copy consumes the
+current common Apple patch stack plus narrow Android patches, compiles all
+29,065 Original translated functions, and links them with the production
+4 GiB guest-memory implementation, ELF AArch64 fibers, Aurora, pinned Dawn,
+and the official SDL AAR as `libmain.so`. Gradle packages the complete runtime
+through the normal app module while fixture mode remains the public default.
+The resulting local ARM64 debug APK is 103,425,387 bytes with SHA-256
+`5d96c31ef91ead5d7ada0977c1853d39b4fcc7f57ea8f4fe3439c1de89ac9e13`;
+its stripped `libmain.so` is 83,529,560 bytes with SHA-256
+`a1b15ee74f77fd891f7d885c6602bf23bd73c9b6e4cfcfc56ce1ee2279089165`.
+The package passes ABI, dependency, RELRO, non-executable-stack, 16 KiB load,
+JNI/SDL export, permission, native allowlist, and private-path/data audits.
+This is build and package evidence only: no game data was included or staged,
+and boot, gameplay, controller, audio, save/relaunch, lifecycle under the game,
+and physical-device rows remain open. A2 remains the lowest incomplete goal.
+Evidence:
+[`docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`](artifacts/2026-09-03/android/a2-original-runtime-link.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

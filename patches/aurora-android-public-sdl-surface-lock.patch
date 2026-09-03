@@ -1,0 +1,60 @@
+--- a/lib/window.cpp
++++ b/lib/window.cpp
+@@ -28,12 +28,11 @@
+ 
+ #if defined(SDL_PLATFORM_ANDROID)
+ #include <jni.h>
+-extern "C" void Android_LockActivityMutex(void);
+-extern "C" void Android_UnlockActivityMutex(void);
+ #endif
+ 
+ #include <algorithm>
+ #include <atomic>
++#include <mutex>
+ #include <vector>
+ 
+ #include "dolphin/vi/vi_internal.hpp"
+@@ -56,6 +55,7 @@
+ std::atomic<AuroraDisplayMode> g_displayMode{AURORA_DISPLAY_MODE_WINDOWED};
+ #if defined(SDL_PLATFORM_ANDROID)
+ std::atomic_bool g_surfaceReady = false;
++std::recursive_mutex g_surfaceMutex;
+ #else
+ std::atomic_bool g_surfaceReady = true;
+ #endif
+@@ -607,13 +607,13 @@
+ 
+ SurfaceLock::SurfaceLock() noexcept {
+ #if defined(SDL_PLATFORM_ANDROID)
+-  Android_LockActivityMutex();
++  g_surfaceMutex.lock();
+ #endif
+ }
+ 
+ SurfaceLock::~SurfaceLock() {
+ #if defined(SDL_PLATFORM_ANDROID)
+-  Android_UnlockActivityMutex();
++  g_surfaceMutex.unlock();
+ #endif
+ }
+ 
+@@ -811,6 +811,19 @@
+ } // namespace aurora::window
+ 
+ #if defined(SDL_PLATFORM_ANDROID)
++extern "C" JNIEXPORT void JNICALL
++Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation(JNIEnv*, jobject) {
++  aurora::window::g_surfaceMutex.lock();
++  aurora::window::set_surface_ready(false);
++}
++
++extern "C" JNIEXPORT void JNICALL
++Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation(JNIEnv*, jobject,
++                                                                  jboolean ready) {
++  aurora::window::set_surface_ready(ready == JNI_TRUE);
++  aurora::window::g_surfaceMutex.unlock();
++}
++
+ extern "C" JNIEXPORT void JNICALL Java_org_libsdl_app_SDLSurface_auroraNativeSetSurfaceReady(JNIEnv*, jclass,
+                                                                                              jboolean ready) {
+   aurora::window::set_surface_ready(ready == JNI_TRUE);

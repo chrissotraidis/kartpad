@@ -23,7 +23,7 @@ badging="$("$aapt2" dump badging "$apk")"
 [[ "$badging" == *"native-code: 'arm64-v8a'"* ]]
 permissions="$("$aapt2" dump permissions "$apk")"
 if [[ "$permissions" == *"uses-permission:"* ]]; then
-  echo "ERROR: A0 source-only fixture unexpectedly requests a permission" >&2
+  echo "ERROR: KartPad Android package unexpectedly requests a permission" >&2
   exit 1
 fi
 
@@ -81,6 +81,14 @@ sdl_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libSDL3.so")"
   echo "ERROR: libmain.so does not export SDL_main" >&2
   exit 1
 }
+for symbol in \
+  Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation \
+  Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation; do
+  [[ "$main_symbols" == *" $symbol"* ]] || {
+    echo "ERROR: libmain.so does not export $symbol" >&2
+    exit 1
+  }
+done
 [[ "$sdl_symbols" == *" JNI_OnLoad@@"* ]] || {
   echo "ERROR: libSDL3.so does not export its JNI registration entry" >&2
   exit 1

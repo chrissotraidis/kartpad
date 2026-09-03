@@ -1732,3 +1732,28 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   lifecycle gate. It is not production-runtime, gameplay, physical-driver,
   or performance evidence. A2 is next. No package was hosted or published.
   Evidence: `docs/artifacts/2026-09-03/android/a1-elf-scheduler.md`.
+
+## 2026-09-03 — Android A2 complete Original runtime link
+
+- Prepared a disposable WiiCompiled source tree from the existing ordered
+  mobile patch stack, then added narrow Android CMake, shared-memory, ELF fiber,
+  SDL entry, Crypto++, and object-format adaptations. The production Android
+  fiber preserves x19-x29, x30/SP, d8-d15, FPCR, and FPSR.
+- Compiled all 29,065 functions in the ignored Original translation graph and
+  linked `libmain.so`. Older private registration shards are profile-labeled in
+  the build directory, leaving the translator-owned inputs unchanged.
+- Replaced Aurora's unexported SDL-internal activity mutex dependency with a
+  KartPad-owned Java/native surface mutation lock. The normal source-only
+  fixture still builds because it exports matching no-op hooks.
+- The Gradle game-runtime mode produced a 103,425,387-byte local debug APK with
+  SHA-256 `5d96c31ef91ead5d7ada0977c1853d39b4fcc7f57ea8f4fe3439c1de89ac9e13`.
+  Its stripped 83,529,560-byte `libmain.so` has SHA-256
+  `a1b15ee74f77fd891f7d885c6602bf23bd73c9b6e4cfcfc56ce1ee2279089165`.
+  The strict package audit passes, including 16 KiB alignment and local/private
+  path rejection. No APK/AAB was published.
+- Classification: **Pass for A2 private Original compile/link/Gradle package
+  integration only.** No game data is packaged or staged, and no boot,
+  gameplay, controller, audio, save/relaunch, game lifecycle, or physical
+  Android acceptance is claimed. A2 remains open for app-private paths and the
+  gameplay matrix. Evidence:
+  `docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`.

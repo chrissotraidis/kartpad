@@ -19,6 +19,21 @@ checks. None of these paths use game data or generated translated code.
 Gameplay, physical-device support, performance, and release readiness remain
 unproven. A1 is complete; A2 is the next gate.
 
+The first A2 build slice can privately prepare and package the complete
+29,065-function Original runtime when the ignored translated graph already
+exists. This command never copies that graph or game data into Git and does
+not publish the resulting APK:
+
+```sh
+./scripts/build-android-game-app.sh private/g8-full-translation
+./scripts/audit-android-package.sh \
+  android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Fixture mode remains the default when the private Gradle properties are not
+provided. A full-runtime package is only build/link evidence until separately
+staged validated game data boots and completes the A2 gameplay matrix.
+
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:
 

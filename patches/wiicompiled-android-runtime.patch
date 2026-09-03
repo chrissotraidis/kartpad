@@ -1,0 +1,654 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,11 +1,11 @@
+ ﻿cmake_minimum_required(VERSION 3.16)
+-project(mkw_recompiled LANGUAGES C CXX)
++project(mkw_recompiled LANGUAGES C CXX ASM)
+ 
+-if(NOT APPLE OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8 OR
++if((NOT APPLE AND NOT ANDROID) OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8 OR
+    NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64|ARM64)$")
+-    message(FATAL_ERROR "KartPad G7 runtime spike requires 64-bit Apple arm64")
++    message(FATAL_ERROR "KartPad runtime requires 64-bit Apple/Android arm64")
+ endif()
+-if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
++if(NOT ANDROID AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+     message(FATAL_ERROR "WiiCompiled only supports Release builds")
+ endif()
+ 
+@@ -18,6 +18,7 @@
+ set(MKW_PROJECT_COMPILE_DEFINITIONS NOMINMAX)
+ 
+ set(CMAKE_CXX_STANDARD 20)
++find_package(Threads REQUIRED)
+ 
+ # Release binaries must not disclose the local checkout path through __FILE__
+ # strings emitted by first-party sources and header-only dependencies.
+@@ -117,7 +118,13 @@
+     if(NOT EXISTS ${MKW_AURORA_DIR}/CMakeLists.txt)
+         message(FATAL_ERROR "Requested aurora-main but ${MKW_AURORA_DIR} is missing")
+     endif()
+-    set(AURORA_DAWN_PROVIDER package CACHE STRING "" FORCE)
++    if(ANDROID)
++        set(AURORA_DAWN_PROVIDER system CACHE STRING "" FORCE)
++        set(AURORA_SDL3_PROVIDER system CACHE STRING "" FORCE)
++        set(AURORA_SDL3_LINKAGE shared CACHE STRING "" FORCE)
++    else()
++        set(AURORA_DAWN_PROVIDER package CACHE STRING "" FORCE)
++    endif()
+     set(AURORA_DAWN_VERSION v20260603.191052 CACHE STRING "" FORCE)
+     set(AURORA_DAWN_PACKAGE_URL "" CACHE STRING
+         "file:// URL for the pinned Dawn Darwin arm64 archive")
+@@ -143,8 +150,13 @@
+     set(CMAKE_DISABLE_FIND_PACKAGE_absl TRUE CACHE BOOL "" FORCE)
+     set(CMAKE_DISABLE_FIND_PACKAGE_PNG TRUE CACHE BOOL "" FORCE)
+     set(CMAKE_DISABLE_FIND_PACKAGE_Freetype TRUE CACHE BOOL "" FORCE)
+-    set(AURORA_SDL3_PROVIDER vendor CACHE STRING "" FORCE)
+-    set(AURORA_SDL3_LINKAGE static CACHE STRING "" FORCE)
++    if(ANDROID)
++        set(AURORA_SDL3_PROVIDER system CACHE STRING "" FORCE)
++        set(AURORA_SDL3_LINKAGE shared CACHE STRING "" FORCE)
++    else()
++        set(AURORA_SDL3_PROVIDER vendor CACHE STRING "" FORCE)
++        set(AURORA_SDL3_LINKAGE static CACHE STRING "" FORCE)
++    endif()
+     set(AURORA_ENABLE_GX ON CACHE BOOL "" FORCE)
+     set(AURORA_ENABLE_DVD OFF CACHE BOOL "" FORCE)
+ 
+@@ -167,8 +179,10 @@
+     # should add it to the Dawn targets the same way.
+ 
+     # Keep SDL3 lean when aurora is enabled.
+-    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+-    set(SDL_STATIC ON CACHE BOOL "" FORCE)
++    if(NOT ANDROID)
++        set(SDL_SHARED OFF CACHE BOOL "" FORCE)
++        set(SDL_STATIC ON CACHE BOOL "" FORCE)
++    endif()
+     set(SDL_TEST OFF CACHE BOOL "" FORCE)
+     # FetchContent uses the first declaration for a dependency. Declare the
+     # two Aurora source archives that lack upstream URL_HASH values before the
+@@ -273,9 +287,16 @@
+ list(REMOVE_ITEM SOURCES
+     "${CMAKE_CURRENT_LIST_DIR}/src/guest_flat_memory.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/src/wup028_adapter.cpp")
+-list(APPEND SOURCES
+-    "${CMAKE_CURRENT_LIST_DIR}/src/apple/guest_flat_memory_apple.cpp"
+-    "${CMAKE_CURRENT_LIST_DIR}/src/apple/wup028_adapter_stub.cpp")
++if(ANDROID)
++    list(APPEND SOURCES
++        "${CMAKE_CURRENT_LIST_DIR}/src/android/fiber_switch_android.S"
++        "${CMAKE_CURRENT_LIST_DIR}/src/apple/guest_flat_memory_apple.cpp"
++        "${CMAKE_CURRENT_LIST_DIR}/src/apple/wup028_adapter_stub.cpp")
++else()
++    list(APPEND SOURCES
++        "${CMAKE_CURRENT_LIST_DIR}/src/apple/guest_flat_memory_apple.cpp"
++        "${CMAKE_CURRENT_LIST_DIR}/src/apple/wup028_adapter_stub.cpp")
++endif()
+ 
+ # The translator emits the complete, content-addressed source graph. Consuming
+ # this one manifest keeps configure independent of the 28k generated function
+@@ -295,6 +316,40 @@
+     "${MKW_PROFILE_SENSITIVE_CALLER_COUNT} profile-sensitive callers; "
+     "${MKW_RETRO_REWIND_FUNCTION_COUNT} Retro Rewind functions")
+ 
++# Older private translation graphs predate profile-owned bulk registration.
++# Normalize those cold registration shards into the build directory without
++# modifying the translator-owned graph. Modern shards already carry the
++# profile string and pass through unchanged.
++if(ANDROID)
++    function(mkw_android_label_legacy_registrations variable profile)
++        set(normalized_sources)
++        foreach(source IN LISTS ${variable})
++            if(source MATCHES "/(base|retro_rewind)_registration/")
++                file(READ "${source}" registration_content)
++                string(REPLACE
++                    "kRegistrar(kRecords, std::size(kRecords))"
++                    "kRegistrar(\"${profile}\", kRecords, std::size(kRecords))"
++                    normalized_content "${registration_content}")
++                if(NOT normalized_content STREQUAL registration_content)
++                    get_filename_component(source_name "${source}" NAME)
++                    set(normalized_source
++                        "${CMAKE_CURRENT_BINARY_DIR}/android_${profile}_${source_name}")
++                    file(WRITE "${normalized_source}" "${normalized_content}")
++                    list(APPEND normalized_sources "${normalized_source}")
++                else()
++                    list(APPEND normalized_sources "${source}")
++                endif()
++            else()
++                list(APPEND normalized_sources "${source}")
++            endif()
++        endforeach()
++        set(${variable} "${normalized_sources}" PARENT_SCOPE)
++    endfunction()
++    mkw_android_label_legacy_registrations(MKW_BASE_REGISTRATION_SOURCES base)
++    mkw_android_label_legacy_registrations(
++        MKW_RETRO_REGISTRATION_SOURCES retro_rewind)
++endif()
++
+ set(MKW_RUNTIME_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}")
+ set(MKW_KARTPAD_RUNTIME_INCLUDE "" CACHE PATH
+     "Path to KartPad's header-only PowerPC architectural semantics")
+--- a/cmake/PublicProducts.cmake
++++ b/cmake/PublicProducts.cmake
+@@ -6,6 +6,15 @@
+ 
+ set(DATA_INIT_FILE "${MKW_RUNTIME_SOURCE_DIR}/../generated/data_sections_init.cpp")
+ set(DATA_INIT_BLOB_ASM "${MKW_RUNTIME_SOURCE_DIR}/../generated/data_sections_init_blobs.S")
++if(ANDROID AND EXISTS "${DATA_INIT_BLOB_ASM}")
++    file(READ "${DATA_INIT_BLOB_ASM}" MKW_ANDROID_DATA_INIT_BLOB_CONTENT)
++    string(REPLACE ".section .rdata,\"dr\""
++        ".section .rodata,\"a\",%progbits"
++        MKW_ANDROID_DATA_INIT_BLOB_CONTENT
++        "${MKW_ANDROID_DATA_INIT_BLOB_CONTENT}")
++    set(DATA_INIT_BLOB_ASM "${CMAKE_CURRENT_BINARY_DIR}/data_sections_init_blobs_android.S")
++    file(WRITE "${DATA_INIT_BLOB_ASM}" "${MKW_ANDROID_DATA_INIT_BLOB_CONTENT}")
++endif()
+ if(EXISTS "${DATA_INIT_FILE}")
+     list(APPEND SOURCES "${DATA_INIT_FILE}")
+ endif()
+@@ -72,13 +81,15 @@
+ mkw_configure_object_target(mkw_runtime_common)
+ target_compile_features(mkw_runtime_common PRIVATE cxx_std_20)
+ target_compile_definitions(mkw_runtime_common PRIVATE
+-    $<$<NOT:$<PLATFORM_ID:iOS>>:SDL_MAIN_HANDLED>
++    $<$<NOT:$<PLATFORM_ID:iOS,Android>>:SDL_MAIN_HANDLED>
+     _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION
+     $<$<PLATFORM_ID:Darwin,iOS>:_XOPEN_SOURCE>)
+ target_link_libraries(mkw_runtime_common PRIVATE
+     aurora::gx aurora::pad aurora::si aurora::vi aurora::mtx)
+ target_link_libraries(mkw_runtime_common PRIVATE mkw::pugixml mkw::toml11 mkw::cryptopp)
+-target_link_libraries(mkw_runtime_common PRIVATE "-framework Foundation")
++if(APPLE)
++    target_link_libraries(mkw_runtime_common PRIVATE "-framework Foundation")
++endif()
+ if(MKW_CPPWINRT_INCLUDE_DIR)
+     if(NOT EXISTS "${MKW_CPPWINRT_INCLUDE_DIR}/winrt/base.h")
+         message(FATAL_ERROR
+@@ -180,7 +191,7 @@
+         "${MKW_RUNTIME_SOURCE_DIR}/.."
+         "${MKW_RUNTIME_SOURCE_DIR}/../aurora-main/include")
+     target_compile_definitions(${target} PRIVATE
+-        $<$<NOT:$<PLATFORM_ID:iOS>>:SDL_MAIN_HANDLED>
++        $<$<NOT:$<PLATFORM_ID:iOS,Android>>:SDL_MAIN_HANDLED>
+         _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION TARGET_PC)
+     target_compile_features(${target} PRIVATE cxx_std_20)
+     mkw_apply_common_compile_options(${target})
+@@ -206,9 +217,13 @@
+             $<TARGET_FILE:sqlite3> $<TARGET_FILE_DIR:${target}>)
+     endif()
+ 
+-    target_link_libraries(${target} PRIVATE
+-        "-framework Foundation" "-framework CoreAudio" "-framework AudioToolbox"
+-        "-framework Security")
++    if(APPLE)
++        target_link_libraries(${target} PRIVATE
++            "-framework Foundation" "-framework CoreAudio" "-framework AudioToolbox"
++            "-framework Security")
++    elseif(ANDROID)
++        target_link_libraries(${target} PRIVATE android log dl)
++    endif()
+ 
+     if(WIN32)
+       set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE TRUE)
+@@ -234,8 +249,10 @@
+     if(NOT EXISTS "${MKW_WII_BOOTSTRAP_SOURCE_DIR}/shared2/wc24")
+         message(FATAL_ERROR "Missing Wii first-run bootstrap payload: ${MKW_WII_BOOTSTRAP_SOURCE_DIR}")
+     endif()
+-    add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+-        "${MKW_WII_BOOTSTRAP_SOURCE_DIR}" "$<TARGET_FILE_DIR:${target}>/wii_bootstrap")
++    if(NOT ANDROID)
++        add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
++            "${MKW_WII_BOOTSTRAP_SOURCE_DIR}" "$<TARGET_FILE_DIR:${target}>/wii_bootstrap")
++    endif()
+ 
+     set(MKW_DSP_COEFFICIENT_ROM "${MKW_RUNTIME_SOURCE_DIR}/assets/dsp/dsp_coef.bin")
+     if(NOT EXISTS "${MKW_DSP_COEFFICIENT_ROM}")
+@@ -246,8 +263,10 @@
+        "d7741279c2e8ec5c5fb318f8fbdd6de6bf583520d288e836a5383233a4238179")
+         message(FATAL_ERROR "Wii DSP coefficient ROM hash mismatch: ${MKW_DSP_COEFFICIENT_ROM_SHA256}")
+     endif()
+-    add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+-        "${MKW_DSP_COEFFICIENT_ROM}" "$<TARGET_FILE_DIR:${target}>/dsp_coef.bin")
++    if(NOT ANDROID)
++        add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
++            "${MKW_DSP_COEFFICIENT_ROM}" "$<TARGET_FILE_DIR:${target}>/dsp_coef.bin")
++    endif()
+ 
+     # Aurora imports this portable recipe database into each user's writable
+     # pipeline cache. Keep the upstream filename so its default resourcesPath
+@@ -257,12 +276,19 @@
+     if(NOT EXISTS "${MKW_INITIAL_PIPELINE_CACHE}")
+         message(FATAL_ERROR "Missing transferable Aurora pipeline cache: ${MKW_INITIAL_PIPELINE_CACHE}")
+     endif()
+-    add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+-        "${MKW_INITIAL_PIPELINE_CACHE}"
+-        "$<TARGET_FILE_DIR:${target}>/initial_pipeline_cache.db")
++    if(NOT ANDROID)
++        add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
++            "${MKW_INITIAL_PIPELINE_CACHE}"
++            "$<TARGET_FILE_DIR:${target}>/initial_pipeline_cache.db")
++    endif()
+ endfunction()
+ 
+-add_executable(WiiCompiled "${MKW_BASE_PRODUCT_SOURCE}" ${MKW_BASE_REGISTRATION_SOURCES})
++if(ANDROID)
++    add_library(WiiCompiled SHARED "${MKW_BASE_PRODUCT_SOURCE}" ${MKW_BASE_REGISTRATION_SOURCES})
++    set_target_properties(WiiCompiled PROPERTIES OUTPUT_NAME main)
++else()
++    add_executable(WiiCompiled "${MKW_BASE_PRODUCT_SOURCE}" ${MKW_BASE_REGISTRATION_SOURCES})
++endif()
+ mkw_configure_product(WiiCompiled)
+ target_precompile_headers(WiiCompiled PRIVATE
+     "${MKW_RUNTIME_SOURCE_DIR}/include/mkw_pch.h")
+@@ -537,6 +563,8 @@
+     mkw_retro_rewind_functions WiiCompiled RetroRewind KartPadDual)
+ foreach(target IN LISTS MKW_ALL_BUILD_TARGETS)
+     if(TARGET ${target})
+-        target_compile_options(${target} PRIVATE -mcpu=apple-m2)
++        if(APPLE)
++            target_compile_options(${target} PRIVATE -mcpu=apple-m2)
++        endif()
+     endif()
+ endforeach()
+--- a/include/guest_flat_memory.h
++++ b/include/guest_flat_memory.h
+@@ -18,7 +18,7 @@
+ // of a global. 16 TiB: clear of the Windows ASan shadow (32 TiB) and of the
+ // usual image/heap placement.
+ inline constexpr uint64_t kGuestSpaceSize = 0x1'0000'0000ull;
+-#if defined(__APPLE__) && TARGET_OS_IPHONE
++#if (defined(__APPLE__) && TARGET_OS_IPHONE) || defined(__ANDROID__)
+ // Physical iOS chooses the 4 GiB reservation at launch. Its userspace layout
+ // does not guarantee that a build-time address is available.
+ extern uint8_t* gFlatGuestBase;
+--- a/src/apple/guest_flat_memory_apple.cpp
++++ b/src/apple/guest_flat_memory_apple.cpp
+@@ -14,9 +14,12 @@
+ #include <sys/mman.h>
+ #include <unistd.h>
+ #include <vector>
++#if defined(__ANDROID__)
++#include <android/sharedmem.h>
++#endif
+ 
+ namespace GuestFlat {
+-#if TARGET_OS_IPHONE
++#if (defined(__APPLE__) && TARGET_OS_IPHONE) || defined(__ANDROID__)
+ uint8_t* gFlatGuestBase = nullptr;
+ #endif
+ namespace {
+@@ -90,7 +93,18 @@
+ 
+ int CreateSharedSection(uint64_t size, unsigned ordinal)
+ {
+-#if TARGET_OS_IPHONE
++#if defined(__ANDROID__)
++    const std::string name = "kartpad-guest-" + std::to_string(ordinal);
++    const int fd = ASharedMemory_create(name.c_str(), static_cast<size_t>(size));
++    if (fd < 0)
++        ThrowErrno("ASharedMemory_create");
++    if (ASharedMemory_setProt(fd, PROT_READ | PROT_WRITE) != 0) {
++        const int saved = errno;
++        close(fd);
++        errno = saved;
++        ThrowErrno("ASharedMemory_setProt");
++    }
++#elif defined(__APPLE__) && TARGET_OS_IPHONE
+     const char* temporaryRoot = std::getenv("TMPDIR");
+     if (temporaryRoot == nullptr || *temporaryRoot == '\0') {
+         errno = ENOENT;
+@@ -149,11 +163,11 @@
+ 
+     const uint64_t pageSize = static_cast<uint64_t>(getpagesize());
+     const uint64_t reservationSize = kGuestSpaceSize + pageSize;
+-#if TARGET_OS_IPHONE
++#if (defined(__APPLE__) && TARGET_OS_IPHONE) || defined(__ANDROID__)
+     void* reserved = mmap(nullptr, static_cast<size_t>(reservationSize), PROT_NONE,
+                           MAP_PRIVATE | MAP_ANON, -1, 0);
+     if (reserved == MAP_FAILED)
+-        ThrowErrno("mmap iOS flat guest reservation");
++        ThrowErrno("mmap mobile flat guest reservation");
+     g_base = static_cast<uint8_t*>(reserved);
+     gFlatGuestBase = g_base;
+ #else
+--- a/src/fiber_manager.cpp
++++ b/src/fiber_manager.cpp
+@@ -139,6 +139,73 @@
+ {
+     delete static_cast<AppleFiber*>(handle);
+ }
++#elif defined(__ANDROID__)
++struct AndroidFiberContext {
++    uint64_t x19 = 0;
++    uint64_t x20 = 0;
++    uint64_t x21 = 0;
++    uint64_t x22 = 0;
++    uint64_t x23 = 0;
++    uint64_t x24 = 0;
++    uint64_t x25 = 0;
++    uint64_t x26 = 0;
++    uint64_t x27 = 0;
++    uint64_t x28 = 0;
++    uint64_t fp = 0;
++    uint64_t lr = 0;
++    uint64_t sp = 0;
++    uint32_t fpcr = 0;
++    uint32_t fpsr = 0;
++    uint64_t d8 = 0;
++    uint64_t d9 = 0;
++    uint64_t d10 = 0;
++    uint64_t d11 = 0;
++    uint64_t d12 = 0;
++    uint64_t d13 = 0;
++    uint64_t d14 = 0;
++    uint64_t d15 = 0;
++};
++
++static_assert(sizeof(AndroidFiberContext) == 176);
++extern "C" void KartPadSwitchAndroidRuntimeFiber(AndroidFiberContext* source,
++                                                   const AndroidFiberContext* target);
++
++struct AndroidFiber {
++    AndroidFiberContext context{};
++    std::unique_ptr<std::byte[]> stack;
++};
++
++thread_local AndroidFiber* g_currentAndroidFiber = nullptr;
++
++void* CreateAndroidSchedulerFiber()
++{
++    auto fiber = std::make_unique<AndroidFiber>();
++    g_currentAndroidFiber = fiber.get();
++    return fiber.release();
++}
++
++void SwitchHostFiber(void* handle)
++{
++    auto* target = static_cast<AndroidFiber*>(handle);
++    AndroidFiber* source = g_currentAndroidFiber;
++    if (!source || !target || source == target) {
++        return;
++    }
++
++    g_currentAndroidFiber = target;
++    KartPadSwitchAndroidRuntimeFiber(&source->context, &target->context);
++    g_currentAndroidFiber = source;
++}
++
++void* CurrentHostFiber()
++{
++    return g_currentAndroidFiber;
++}
++
++void DeleteHostFiber(void* handle)
++{
++    delete static_cast<AndroidFiber*>(handle);
++}
+ #elif defined(_WIN32)
+ void SwitchHostFiber(void* handle) { SwitchToFiber(handle); }
+ void* CurrentHostFiber() { return GetCurrentFiber(); }
+@@ -157,7 +224,7 @@
+ thread_local CpuContext* GuestFiberManager::s_cpuContext = nullptr;
+ 
+ void GuestFiberManager::PurgePendingFibers() {
+-#if defined(_WIN32) || defined(__APPLE__)
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
+     std::vector<void*> toDelete;
+     {
+         std::lock_guard<std::mutex> lock(s_mutex);
+@@ -343,6 +410,12 @@
+                           << std::strerror(errno) << std::endl;
+         std::abort();
+     }
++#elif defined(__ANDROID__)
++    s_schedulerFiber = CreateAndroidSchedulerFiber();
++    if (!s_schedulerFiber) {
++        RT_LOG(RT_TAG_OS) << "FATAL: Failed to initialize Android scheduler fiber!" << std::endl;
++        std::abort();
++    }
+ #else
+     RT_LOG(RT_TAG_OS) << "WARNING: Fiber support not available on this platform!" << std::endl;
+     s_schedulerFiber = nullptr;
+@@ -355,7 +428,7 @@
+ void GuestFiberManager::Shutdown() {
+     std::lock_guard<std::mutex> lock(s_mutex);
+ 
+-#if defined(_WIN32) || defined(__APPLE__)
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
+     for (auto& [addr, fiber] : s_fibers) {
+         if (fiber.fiber && !fiber.isSchedulerFiber) {
+             DeleteHostFiber(fiber.fiber);
+@@ -370,11 +443,17 @@
+         ConvertFiberToThread();
+         s_schedulerFiber = nullptr;
+     }
+-#else
++#elif defined(__APPLE__)
+     if (s_schedulerFiber) {
+         DeleteHostFiber(s_schedulerFiber);
+         s_schedulerFiber = nullptr;
+         g_currentAppleFiber = nullptr;
++    }
++#else
++    if (s_schedulerFiber) {
++        DeleteHostFiber(s_schedulerFiber);
++        s_schedulerFiber = nullptr;
++        g_currentAndroidFiber = nullptr;
+     }
+ #endif
+ #endif
+@@ -398,7 +477,7 @@
+     // Check if fiber already exists for this thread - if so, reset it
+     auto existingIt = s_fibers.find(guestThreadAddr);
+     if (existingIt != s_fibers.end()) {
+-#if defined(_WIN32) || defined(__APPLE__)
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
+         // Delete the old fiber if it exists and is not the scheduler fiber
+         if (existingIt->second.fiber && !existingIt->second.isSchedulerFiber) {
+             DeleteHostFiber(existingIt->second.fiber);
+@@ -469,6 +548,22 @@
+                 reinterpret_cast<void (*)()>(trampoline), 1, guestThreadAddr);
+ #endif
+     gf.fiber = appleFiber.release();
++#elif defined(__ANDROID__)
++    constexpr size_t kHostStackSize = 256 * 1024;
++    auto androidFiber = std::make_unique<AndroidFiber>();
++    androidFiber->stack = std::make_unique<std::byte[]>(kHostStackSize);
++    auto trampoline = +[](uint32_t threadAddr) {
++        GuestFiberManager::FiberProc(
++            reinterpret_cast<void*>(static_cast<uintptr_t>(threadAddr)));
++        std::abort();
++    };
++    const uintptr_t stackTop =
++        (reinterpret_cast<uintptr_t>(androidFiber->stack.get()) + kHostStackSize) &
++        ~static_cast<uintptr_t>(0x0f);
++    androidFiber->context.x19 = guestThreadAddr;
++    androidFiber->context.sp = stackTop;
++    androidFiber->context.lr = reinterpret_cast<uintptr_t>(trampoline);
++    gf.fiber = androidFiber.release();
+ #else
+     gf.fiber = nullptr;
+ #endif
+@@ -524,7 +619,7 @@
+         s_currentGuestThread = 0;
+     }
+     
+-#if defined(_WIN32) || defined(__APPLE__)
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
+     if (it->second.fiber && !it->second.isSchedulerFiber) {
+         const void* current = CurrentHostFiber();
+         if (it->second.fiber == current) {
+@@ -597,7 +692,7 @@
+     // Store CPU context pointer for the target fiber to use
+     s_cpuContext = cpu;
+     
+-#if defined(_WIN32) || defined(__APPLE__)
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
+     // Check if we're already on the target fiber (e.g., switching to main thread
+     // when we're already on the scheduler fiber)
+     void* currentFiber = CurrentHostFiber();
+@@ -742,7 +837,7 @@
+     uint32_t guestThreadAddr = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(param));
+     
+     
+-#if defined(_WIN32) || defined(__APPLE__)
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
+     // Get our fiber info
+     GuestFiber* fiber = nullptr;
+     uint32_t entryPoint = 0;
+--- a/src/hle/audio/audio.cpp
++++ b/src/hle/audio/audio.cpp
+@@ -498,7 +498,8 @@
+     static thread_local Clock::time_point lastPoll = Clock::now();
+ 
+     const Clock::time_point now = Clock::now();
+-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - lastPoll).count();
++    int64_t elapsed = static_cast<int64_t>(
++        std::chrono::duration_cast<std::chrono::microseconds>(now - lastPoll).count());
+     lastPoll = now;
+ 
+     if (elapsed < 0) {
+--- a/src/hle/storage/dvd.cpp
++++ b/src/hle/storage/dvd.cpp
+@@ -637,7 +637,8 @@
+     for (const DVDFileEntry& entry : g_fileEntries) {
+         if (entry.discOffsetWords != 0) {
+             nextFreeBytes = std::max(
+-                nextFreeBytes, static_cast<uint64_t>(entry.discOffsetWords) * 4ull + entry.size);
++                nextFreeBytes,
++                static_cast<uint64_t>(entry.discOffsetWords) * uint64_t{4} + entry.size);
+         }
+     }
+     for (DVDFileEntry& entry : g_fileEntries) {
+@@ -1118,4 +1119,3 @@
+ 
+ extern "C" int32_t DVDLowClearCoverInterrupt_80166964(uint32_t cb) { return 1; }
+ PPC_NATIVE_OVERRIDE(80166964, DVDLowClearCoverInterrupt_80166964, int32_t, (uint32_t cb), (cb));
+-
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -63,8 +63,11 @@
+ #include <dolphin/gx/GXAurora.h>
+ #include <dolphin/vi.h>
+ 
+-#if defined(__APPLE__) && TARGET_OS_IOS
++#if (defined(__APPLE__) && TARGET_OS_IOS) || defined(__ANDROID__)
+ #include <SDL3/SDL_main.h>
++#endif
++
++#if defined(__APPLE__) && TARGET_OS_IOS
+ #include "kartpad_mobile_runtime_host.h"
+ #endif
+ 
+--- a/third_party/cryptopp/cpu.cpp
++++ b/third_party/cryptopp/cpu.cpp
+@@ -69,7 +69,7 @@
+ // "$ANDROID_NDK_ROOT/sources/android/cpufeatures".
+ // setenv-android.sh will copy the header and source file
+ // into PWD and the makefile will build it in place.
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ # include "cpu-features.h"
+ #endif
+ 
+@@ -862,7 +862,7 @@
+ 
+ inline bool CPU_QueryNEON()
+ {
+-#if defined(__ANDROID__) && defined(__aarch64__)
++#if defined(__ANDROID__) && defined(__aarch64__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ 	if (((android_getCpuFamily() & ANDROID_CPU_FAMILY_ARM64) != 0) &&
+ 		((android_getCpuFeatures() & ANDROID_CPU_ARM64_FEATURE_ASIMD) != 0))
+ 		return true;
+@@ -893,7 +893,7 @@
+ 
+ inline bool CPU_QueryCRC32()
+ {
+-#if defined(__ANDROID__) && defined(__aarch64__)
++#if defined(__ANDROID__) && defined(__aarch64__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ 	if (((android_getCpuFamily() & ANDROID_CPU_FAMILY_ARM64) != 0) &&
+ 		((android_getCpuFeatures() & ANDROID_CPU_ARM64_FEATURE_CRC32) != 0))
+ 		return true;
+@@ -920,7 +920,7 @@
+ 
+ inline bool CPU_QueryPMULL()
+ {
+-#if defined(__ANDROID__) && defined(__aarch64__)
++#if defined(__ANDROID__) && defined(__aarch64__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ 	if (((android_getCpuFamily() & ANDROID_CPU_FAMILY_ARM64) != 0) &&
+ 		((android_getCpuFeatures() & ANDROID_CPU_ARM64_FEATURE_PMULL) != 0))
+ 		return true;
+@@ -947,7 +947,7 @@
+ 
+ inline bool CPU_QueryAES()
+ {
+-#if defined(__ANDROID__) && defined(__aarch64__)
++#if defined(__ANDROID__) && defined(__aarch64__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ 	if (((android_getCpuFamily() & ANDROID_CPU_FAMILY_ARM64) != 0) &&
+ 		((android_getCpuFeatures() & ANDROID_CPU_ARM64_FEATURE_AES) != 0))
+ 		return true;
+@@ -974,7 +974,7 @@
+ 
+ inline bool CPU_QuerySHA1()
+ {
+-#if defined(__ANDROID__) && defined(__aarch64__)
++#if defined(__ANDROID__) && defined(__aarch64__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ 	if (((android_getCpuFamily() & ANDROID_CPU_FAMILY_ARM64) != 0) &&
+ 		((android_getCpuFeatures() & ANDROID_CPU_ARM64_FEATURE_SHA1) != 0))
+ 		return true;
+@@ -1001,7 +1001,7 @@
+ 
+ inline bool CPU_QuerySHA256()
+ {
+-#if defined(__ANDROID__) && defined(__aarch64__)
++#if defined(__ANDROID__) && defined(__aarch64__) && defined(CRYPTOPP_USE_LEGACY_ANDROID_CPU_FEATURES)
+ 	if (((android_getCpuFamily() & ANDROID_CPU_FAMILY_ARM64) != 0) &&
+ 		((android_getCpuFeatures() & ANDROID_CPU_ARM64_FEATURE_SHA2) != 0))
+ 		return true;
+--- /dev/null
++++ b/src/android/fiber_switch_android.S
+@@ -0,0 +1,43 @@
++.text
++.p2align 2
++.global KartPadSwitchAndroidRuntimeFiber
++.type KartPadSwitchAndroidRuntimeFiber, %function
++KartPadSwitchAndroidRuntimeFiber:
++    stp x19, x20, [x0, #0]
++    stp x21, x22, [x0, #16]
++    stp x23, x24, [x0, #32]
++    stp x25, x26, [x0, #48]
++    stp x27, x28, [x0, #64]
++    stp x29, x30, [x0, #80]
++    mov x9, sp
++    str x9, [x0, #96]
++    mrs x9, fpcr
++    str w9, [x0, #104]
++    mrs x9, fpsr
++    str w9, [x0, #108]
++    stp d8, d9, [x0, #112]
++    stp d10, d11, [x0, #128]
++    stp d12, d13, [x0, #144]
++    stp d14, d15, [x0, #160]
++
++    ldp x19, x20, [x1, #0]
++    ldp x21, x22, [x1, #16]
++    ldp x23, x24, [x1, #32]
++    ldp x25, x26, [x1, #48]
++    ldp x27, x28, [x1, #64]
++    ldp x29, x30, [x1, #80]
++    ldr x9, [x1, #96]
++    mov sp, x9
++    ldr w9, [x1, #104]
++    msr fpcr, x9
++    ldr w9, [x1, #108]
++    msr fpsr, x9
++    ldp d8, d9, [x1, #112]
++    ldp d10, d11, [x1, #128]
++    ldp d12, d13, [x1, #144]
++    ldp d14, d15, [x1, #160]
++    mov x0, x19
++    ret
++.size KartPadSwitchAndroidRuntimeFiber, .-KartPadSwitchAndroidRuntimeFiber
++
++.section .note.GNU-stack,"",%progbits

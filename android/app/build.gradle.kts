@@ -6,6 +6,8 @@ plugins {
 }
 
 val dawnAndroidRoot = providers.environmentVariable("DAWN_ANDROID_ROOT")
+val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orNull
+val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
 
 android {
     namespace = "dev.kartpad.android"
@@ -29,6 +31,15 @@ android {
                     "-DANDROID_STL=c++_shared",
                     "-DDAWN_ANDROID_ROOT=${dawnAndroidRoot.get()}",
                 )
+                if (gameRuntimeSource != null || translatedShardManifest != null) {
+                    require(gameRuntimeSource != null && translatedShardManifest != null) {
+                        "kartpadGameRuntimeSource and kartpadTranslatedShardManifest must be set together"
+                    }
+                    arguments += listOf(
+                        "-DKARTPAD_GAME_RUNTIME_SOURCE=$gameRuntimeSource",
+                        "-DKARTPAD_TRANSLATED_SHARD_MANIFEST=$translatedShardManifest",
+                    )
+                }
                 cppFlags += listOf("-std=c++20", "-fvisibility=hidden")
             }
         }
