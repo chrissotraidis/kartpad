@@ -54,6 +54,28 @@ expected_native_members="$(printf '%s\n' \
   echo "ERROR: APK native-library set differs from the A0 allowlist" >&2
   exit 1
 }
+asset_members="$(printf '%s\n' "$members" | grep '^assets/.' | sort || true)"
+if [[ -n "$asset_members" ]]; then
+  expected_asset_members="$(printf '%s\n' \
+    assets/dsp/dsp_coef.bin \
+    assets/pipeline/initial_pipeline_cache.db \
+    assets/wii/README.md \
+    assets/wii/shared2/wc24/mbox/Readme.txt \
+    assets/wii/shared2/wc24/mbox/wc24recv.ctl \
+    assets/wii/shared2/wc24/mbox/wc24recv.mbx \
+    assets/wii/shared2/wc24/mbox/wc24send.ctl \
+    assets/wii/shared2/wc24/mbox/wc24send.mbx \
+    assets/wii/shared2/wc24/misc.bin \
+    assets/wii/shared2/wc24/nwc24dl.bin \
+    assets/wii/shared2/wc24/nwc24fl.bin \
+    assets/wii/shared2/wc24/nwc24fls.bin \
+    assets/wii/shared2/wc24/nwc24msg.cbk \
+    assets/wii/shared2/wc24/nwc24msg.cfg | sort)"
+  [[ "$asset_members" == "$expected_asset_members" ]] || {
+    echo "ERROR: APK asset set differs from the public runtime-resource allowlist" >&2
+    exit 1
+  }
+fi
 
 "$zipalign" -c -P 16 -v 4 "$apk" >/dev/null
 audit_root="$repo_root/.android-bootstrap/audit"

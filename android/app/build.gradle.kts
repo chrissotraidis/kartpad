@@ -21,6 +21,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.0.1-a0"
+        buildConfigField("boolean", "GAME_RUNTIME", (gameRuntimeSource != null).toString())
 
         ndk {
             abiFilters += "arm64-v8a"
@@ -55,6 +56,11 @@ android {
     buildFeatures {
         prefab = true
         buildConfig = true
+    }
+    if (gameRuntimeSource != null) {
+        sourceSets.named("main") {
+            assets.srcDir(file("$gameRuntimeSource/assets"))
+        }
     }
 
     compileOptions {

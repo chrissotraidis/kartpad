@@ -60,6 +60,22 @@ and physical-device rows remain open. A2 remains the lowest incomplete goal.
 Evidence:
 [`docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`](artifacts/2026-09-03/android/a2-original-runtime-link.md).
 
+The next A2 storage/runtime slice also passes. Game-runtime builds package an
+exact 14-file public asset allowlist and atomically install it before SDL loads
+at `files/KartPad/RuntimeResources/a2-v1`. Context-derived app-private paths
+now own configuration, logs, NAND, and mutable Dawn/Aurora caches without any
+storage permission or private content in the APK. A cleared API 36 / 4 KiB
+cold launch initializes the dynamic 4 GiB guest mapping, loads the translated
+image, executes 43 main-DOL and 192 StaticR constructors, creates the Vulkan
+renderer, seeds 1,199 public pipeline rows, and then fails closed at the exact
+expected boundary because no DVD root is configured. The audited game APK is
+103,429,792 bytes with SHA-256
+`49526a79b60bdc0f1b3ca51202f4b95c12b2fef3329a552a125a63f1863011c2`.
+This is app-private initialization evidence, not game boot or gameplay. A2
+remains open for privately staged `RMCP01` data and the emulator/physical
+gameplay matrix. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-app-private-runtime.md`](artifacts/2026-09-03/android/a2-app-private-runtime.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

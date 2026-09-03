@@ -93,13 +93,14 @@ not block offline Retro Rewind support.
 ## Next executable work
 
 1. Continue Android A2 using `docs/ANDROID-GOAL-LOOP.md`. The complete private
-   29,065-function Original graph now compiles, links, packages, and passes the
-   strict Android APK audit through a reproducible ignored-source path. Add the
-   Android app-private data/config/cache bridge, stage the already validated
-   `RMCP01` DATA directory without packaging it, and establish the first
-   emulator boot/frame before controller-driven title/menu/race/save/relaunch.
-   Build/package evidence is
-   `docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`. Do not call
+   29,065-function Original graph builds, and its app-private resource/config/
+   cache/NAND bridge now cold-starts through translated constructors and the
+   Vulkan renderer before failing closed on the intentionally absent DVD root.
+   Stage the already validated ignored `RMCP01` DATA directory outside the
+   APK, write its app-private config path, and establish the first emulator
+   game boot/frame before controller-driven title/menu/race/save/relaunch.
+   Evidence is in `docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`
+   and `docs/artifacts/2026-09-03/android/a2-app-private-runtime.md`. Do not call
    this gameplay or physical-device acceptance; A2 remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.

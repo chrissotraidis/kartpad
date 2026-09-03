@@ -1757,3 +1757,33 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   Android acceptance is claimed. A2 remains open for app-private paths and the
   gameplay matrix. Evidence:
   `docs/artifacts/2026-09-03/android/a2-original-runtime-link.md`.
+
+## 2026-09-03 — Android A2 app-private runtime initialization
+
+- Added an exact 14-file public runtime-resource asset allowlist and a
+  versioned staging/rename installer that runs before SDL loads. Fixture mode
+  remains asset-free, and the package audit rejects any unexpected game-mode
+  asset.
+- Routed native configuration, logs, NAND, and mutable renderer caches through
+  the Activity's Context-derived app-private files/cache directories. The
+  first attempt called SDL's Android path helper from `libmain.so` static
+  initialization and aborted with a null SDL JNI class; exporting the exact
+  directories before `SDLActivity.onCreate` removes that load cycle.
+- The next run exposed a production-memory defect hidden by the source-only
+  fixture: Android shared memory is already sized by `ASharedMemory_create`, so
+  a redundant POSIX `ftruncate` failed with `EINVAL`. Skipping that resize only
+  on Android preserves the accepted alias/protection model.
+- A cleared API 36 / 4 KiB launch now installs all resources, initializes the
+  4 GiB guest map, loads the complete translated image, executes 43 main-DOL
+  and 192 StaticR constructors, creates Vulkan/Aurora, seeds 1,199 public
+  pipeline rows, creates only app-private writable databases/NAND/log paths,
+  and fails closed with `No DVD root is configured`. The accepted 103,429,792-
+  byte APK has SHA-256
+  `49526a79b60bdc0f1b3ca51202f4b95c12b2fef3329a552a125a63f1863011c2`;
+  the default fixture rebuild/audit also passes at
+  `dcc02c1b618e1de4e32b135ff058159eadbd9632a19e74b9a64384de18c3128b`.
+- Classification: **Pass for A2 app-private runtime initialization without
+  game data.** No game boot/gameplay or physical-device result is claimed and
+  no APK/AAB was published. Continue with ignored private DATA staging and the
+  first emulator game frame. Evidence:
+  `docs/artifacts/2026-09-03/android/a2-app-private-runtime.md`.

@@ -1,0 +1,98 @@
+--- a/include/runtime_config.h
++++ b/include/runtime_config.h
+@@ -224,6 +224,14 @@
+         account && account->pw_dir && *account->pw_dir) {
+         return std::filesystem::path(account->pw_dir) / "Library" / "Application Support" / "KartPad";
+     }
++#elif defined(__ANDROID__)
++    // SDL's Android helpers cannot be called from libmain.so static
++    // initialization: SDLActivity is still loading the library and has not
++    // installed its JNI class references yet. The Activity exports its exact
++    // Context-derived directory before delegating to SDLActivity.onCreate().
++    if (const char* files = std::getenv("KARTPAD_ANDROID_FILES_DIR"); files && *files) {
++        return std::filesystem::path(files) / "KartPad";
++    }
+ #endif
+     return std::filesystem::current_path() / kApplicationDirectoryName;
+ }
+@@ -243,9 +251,19 @@
+         account && account->pw_dir && *account->pw_dir) {
+         return std::filesystem::path(account->pw_dir) / "Library" / "Caches" / "KartPad";
+     }
++#elif defined(__ANDROID__)
++    if (const char* cache = std::getenv("KARTPAD_ANDROID_CACHE_DIR"); cache && *cache) {
++        return std::filesystem::path(cache) / "KartPad";
++    }
+ #endif
+     return ApplicationDataDirectory() / "Cache";
++}
++
++#ifdef __ANDROID__
++inline std::filesystem::path BundledResourcesDirectory() {
++    return ApplicationDataDirectory() / "RuntimeResources" / "a2-v1";
+ }
++#endif
+ 
+ inline std::filesystem::path ResolveConfigPath() {
+     return ApplicationDataDirectory() / kConfigFileName;
+--- a/include/nand_path.h
++++ b/include/nand_path.h
+@@ -68,6 +68,12 @@
+ }
+ 
+ inline std::optional<std::filesystem::path> BootstrapPayloadPath() {
++#ifdef __ANDROID__
++    const auto bundled = RuntimeConfigFile::BundledResourcesDirectory() / "wii";
++    if (ExistingDirectory(bundled / "shared2" / "wc24")) {
++        return bundled;
++    }
++#endif
+     if (auto executableDirectory = RuntimeConfigFile::ExecutableDirectory()) {
+         const auto adjacent = *executableDirectory / "wii_bootstrap";
+         if (ExistingDirectory(adjacent / "shared2" / "wc24")) {
+--- a/src/apple/guest_flat_memory_apple.cpp
++++ b/src/apple/guest_flat_memory_apple.cpp
+@@ -128,11 +128,13 @@ int CreateSharedSection(uint64_t size, unsigned ordinal)
+     shm_unlink(name.c_str());
+ #endif
++#if !defined(__ANDROID__)
+     if (ftruncate(fd, static_cast<off_t>(size)) != 0) {
+         const int saved = errno;
+         close(fd);
+         errno = saved;
+         ThrowErrno("ftruncate");
+     }
++#endif
+     return fd;
+ }
+ 
+--- a/src/hle/audio/ax_mix.cpp
++++ b/src/hle/audio/ax_mix.cpp
+@@ -32,6 +32,13 @@
+ namespace {
+ 
+ std::filesystem::path FindDspCoefficientRom() {
++#ifdef __ANDROID__
++    const auto bundled = RuntimeConfigFile::BundledResourcesDirectory() /
++                         "dsp" / "dsp_coef.bin";
++    if (std::filesystem::is_regular_file(bundled)) {
++        return bundled;
++    }
++#endif
+     if (const auto executableDirectory = RuntimeConfigFile::ExecutableDirectory()) {
+         const auto adjacent = *executableDirectory / "dsp_coef.bin";
+         if (std::filesystem::is_regular_file(adjacent)) {
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -1233,6 +1233,11 @@
+         const std::string auroraCachePath = rendererCacheDirectory.string();
+         auroraConfig.userPath = auroraUserPath.c_str();
+         auroraConfig.cachePath = auroraCachePath.c_str();
++#if defined(__ANDROID__)
++        const std::string auroraResourcesPath =
++            (RuntimeConfigFile::BundledResourcesDirectory() / "pipeline").string();
++        auroraConfig.resourcesPath = auroraResourcesPath.c_str();
++#endif
+         auroraConfig.logCallback = &RuntimeAuroraLogCallback;
+         auroraConfig.logLevel = LOG_DEBUG;
+         bool configWidescreen = RuntimeConfigFile::WidescreenEnabled(false);

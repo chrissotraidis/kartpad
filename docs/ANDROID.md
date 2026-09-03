@@ -15,10 +15,11 @@
   ARM64 AVDs. The shared scheduler and ELF AArch64 fiber additionally pass two
   million deterministic operations and one million register-checked switches
   per lane.
-- **Decision:** A1 is green and the first A2 build/link slice packages the
-  complete 29,065-function Original runtime. Continue A2 with app-private
-  paths/data staging and controller-driven gameplay; keep emulator and
-  physical-device claims separate.
+- **Decision:** A1 is green. A2 packages the complete 29,065-function Original
+  runtime and now cold-starts through translated constructors and Vulkan using
+  versioned public resources plus Context-derived app-private config/cache/
+  NAND paths. Continue A2 with private DATA staging and controller-driven
+  gameplay; keep emulator and physical-device claims separate.
 
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
@@ -783,11 +784,13 @@ Before any tester receives an artifact, verify at minimum:
 A1 is complete: deterministic Vulkan readback/present, flipped-landscape and
 repeated surface lifecycle, dynamic 4 GiB shared aliases/protection, and ELF
 AArch64 scheduler/register stress pass on both pinned AVDs. A2's private
-29,065-function Original runtime now compiles, links, and packages through
-Gradle with a clean strict audit. Continue A2 by bridging app-private
-config/cache/data paths, staging the validated ignored DATA directory outside
-the APK, and proving controller-driven gameplay without weakening the package
-privacy boundary.
+29,065-function Original runtime compiles, links, and packages through Gradle.
+Its exact public resources install before SDL loads, and a cleared API 36
+launch reaches translated constructors and Vulkan using only app-private
+config/cache/NAND paths before the expected missing-DVD failure. Continue A2 by
+staging the validated ignored DATA directory outside the APK, setting its
+app-private path, and proving controller-driven gameplay without weakening the
+package privacy boundary.
 
 The A0 commands and sanitized result are recorded in
 [`android/README.md`](../android/README.md) and

@@ -34,6 +34,14 @@ Fixture mode remains the default when the private Gradle properties are not
 provided. A full-runtime package is only build/link evidence until separately
 staged validated game data boots and completes the A2 gameplay matrix.
 
+In game-runtime mode the APK contains exactly 14 audited public support assets.
+`KartPadRuntimeResources` atomically installs them into versioned app-private
+storage before SDL loads. The Activity supplies its Context-derived private
+files/cache paths to the native runtime, which keeps configuration, logs, NAND,
+and writable renderer databases out of both the APK and shared storage. A cold
+launch without staged game data must reach the explicit `No DVD root is
+configured` boundary; it is not gameplay evidence.
+
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:
 
