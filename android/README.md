@@ -42,6 +42,14 @@ and writable renderer databases out of both the APK and shared storage. A cold
 launch without staged game data must reach the explicit `No DVD root is
 configured` boundary; it is not gameplay evidence.
 
+With an already validated ignored RMCP01 DATA directory staged separately in
+that private storage, the API 36 emulator now boots and renders the Original
+title/demo loop. Six consecutive HOME/foreground surface generations retained
+one process and resumed presentation. See
+`docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` for the exact
+evidence and open failures. A2 remains open: the complete race/results,
+save/relaunch, real-controller, and physical-device rows are not yet proven.
+
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:
 

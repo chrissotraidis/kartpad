@@ -1,0 +1,101 @@
+--- a/include/settings_overlay.h
++++ b/include/settings_overlay.h
+@@ -10,7 +10,8 @@
+ void RefreshHostSettings() noexcept;
+ // Draw the F10 settings bar before each Aurora present.
+ void HandleEvents(const AuroraEvent* events) noexcept;
+-void Draw() noexcept;
++bool FrameReadyForOverlay() noexcept;
++bool Draw() noexcept;
+ bool StartupScreenVisible() noexcept;
+ void NotifyStrapInputAccepted() noexcept;
+ void AdvancePresentedFrame() noexcept;
+--- a/src/settings_overlay.cpp
++++ b/src/settings_overlay.cpp
+@@ -16,6 +16,7 @@
+ #include "runtime_log.h"
+ 
+ #include <imgui.h>
++#include <imgui_internal.h>
+ #include <SDL3/SDL_events.h>
+ #include <SDL3/SDL_gamepad.h>
+ #include <SDL3/SDL_keyboard.h>
+@@ -1055,11 +1056,19 @@
+     }
+ }
+ 
+-void Draw() noexcept {
+-    RefreshHostSettings();
++bool FrameReadyForOverlay() noexcept {
+     // Wait for the frame worker's DONE phase: it has replayed the previous frame's ImGui draw lists
+     // and started the next ImGui frame, so all overlay callers can now safely issue ImGui commands.
+     aurora_wait_for_frame_worker();
++    const ImGuiContext* context = ImGui::GetCurrentContext();
++    return context != nullptr && context->WithinFrameScope;
++}
++
++bool Draw() noexcept {
++    RefreshHostSettings();
++    if (!FrameReadyForOverlay()) {
++        return false;
++    }
+     ApplyConfiguredMappings();
+     PersistDisplayModeIfChanged();
+     UpdateCursorAutoHide();
+@@ -1073,6 +1082,7 @@
+     // top bar is hidden mid-setup.
+     PADBlockInput(g_topBarVisible || controller_mapping_wizard::IsActive());
+     DrawStartupScreen();
++    return true;
+ }
+ 
+ bool StartupScreenVisible() noexcept {
+--- a/src/hle/gx/gx_copy.cpp
++++ b/src/hle/gx/gx_copy.cpp
+@@ -121,11 +121,16 @@
+     // phase, which strictly subsumes the drain this call would perform.
+     ++g_gxFrameCount;
+     VI_HLE_SetXfbReady(da);
++    // Surface loss can leave Aurora's asynchronous worker without an ImGui
++    // frame even when the runtime's optimistic frame flag is still set. Drop
++    // this presentation and clear the flag so the next GX call retries begin.
++    if (!settings_overlay::Draw()) {
++        g_auroraFrameActive.store(false, std::memory_order_release);
++        return;
++    }
+     // Present immediately so post-copy draws don't leak into this frame. Join at the DONE phase
+     // (not the cheaper SEALED phase GXDrawDone waits for) because ImGui's draw lists, owned by
+     // Aurora's render worker, replay during encode; aurora_end_frame would join here anyway.
+-    aurora_wait_for_frame_worker();
+-    settings_overlay::Draw();
+     // Seal, pace to the VI retrace boundary (Aurora renders the sealed frame
+     // during the wait), and pre-warm the next frame.
+     VI_HLE_PresentFrame(/*presentedXfb=*/true, /*paceToRetrace=*/true);
+--- a/src/hle/vi.cpp
++++ b/src/hle/vi.cpp
+@@ -424,13 +424,21 @@
+         const bool shouldSubmit = frameActive && (shouldPresentXfb || shouldPresentBlack);
+ 
+         if (shouldSubmit) {
++            bool frameReady = false;
+             if (!isBlack || settings_overlay::StartupScreenVisible()) {
+                 // Normal presentation: draw overlay on top of GX content
+-                settings_overlay::Draw();
++                frameReady = settings_overlay::Draw();
++            } else {
++                frameReady = settings_overlay::FrameReadyForOverlay();
+             }
+-            // Outside startup, VI black remains a pure black presentation.
+-            // Unpaced: this present already runs in retrace context.
+-            VI_HLE_PresentFrame(shouldPresentXfb, false);
++            if (frameReady) {
++                // Outside startup, VI black remains a pure black presentation.
++                // Unpaced: this present already runs in retrace context.
++                VI_HLE_PresentFrame(shouldPresentXfb, false);
++            } else {
++                g_auroraFrameActive.store(false, std::memory_order_release);
++                g_auroraFrameHadWork.store(false, std::memory_order_release);
++            }
+         } else if (g_auroraFrameHadWork.load(std::memory_order_acquire) && !shouldPresentXfb && !isBlack) {
+             // GX work is in progress but frame not complete - just poll window events
+             // Don't call aurora_end_frame() as that would present incomplete work
