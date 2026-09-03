@@ -6,6 +6,8 @@
 #include <dawn/webgpu.h>
 #include <unistd.h>
 
+#include "guest_memory_fixture.h"
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -273,18 +275,22 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
     LogError("SDL_Init failed");
     return 1;
   }
+  if (!RunGuestMemoryFixture()) {
+    SDL_Quit();
+    return 2;
+  }
   SDL_Window* window = SDL_CreateWindow(
       "KartPad", 960, 540, SDL_WINDOW_VULKAN | SDL_WINDOW_HIGH_PIXEL_DENSITY);
   if (window == nullptr) {
     LogError("SDL_CreateWindow failed");
     SDL_Quit();
-    return 2;
+    return 3;
   }
   if (!SDL_Vulkan_LoadLibrary(nullptr) || SDL_Vulkan_GetVkGetInstanceProcAddr() == nullptr) {
     LogError("SDL Vulkan loader unavailable");
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 3;
+    return 4;
   }
 
   WGPURequestAdapterOptions options = WGPU_REQUEST_ADAPTER_OPTIONS_INIT;
@@ -297,7 +303,7 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
     SDL_Vulkan_UnloadLibrary();
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 4;
+    return 5;
   }
   __android_log_print(ANDROID_LOG_INFO, kLogTag,
                       "A0 JNI/Vulkan fixture passed abi=arm64-v8a page_size=%ld adapters=%zu",
@@ -317,7 +323,7 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
     SDL_Vulkan_UnloadLibrary();
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 5;
+    return 6;
   }
   if (!RunDeterministicReadback(instance, device)) {
     __android_log_print(ANDROID_LOG_ERROR, kLogTag,
@@ -326,7 +332,7 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
     SDL_Vulkan_UnloadLibrary();
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 6;
+    return 7;
   }
 
   __android_log_print(ANDROID_LOG_INFO, kLogTag,
@@ -343,7 +349,7 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
     SDL_Vulkan_UnloadLibrary();
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 7;
+    return 8;
   }
   __android_log_print(ANDROID_LOG_INFO, kLogTag,
                       "A1 Vulkan present passed abi=arm64-v8a page_size=%ld "
@@ -361,7 +367,7 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
                              &presented_width, &presented_height)) {
         __android_log_print(ANDROID_LOG_ERROR, kLogTag,
                             "A1 Vulkan fixture failed: foreground surface recreation");
-        exit_code = 8;
+        exit_code = 9;
         break;
       }
       ++presentation_generation;

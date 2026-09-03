@@ -81,6 +81,8 @@ wait_for_marker() {
 }
 
 wait_for_marker \
+  "A1 guest memory passed reserve_bytes=4294967296"
+wait_for_marker \
   "A1 Vulkan present passed abi=arm64-v8a page_size=$expected_page_size"
 "$adb" shell input keyevent KEYCODE_HOME
 wait_for_marker "A1 lifecycle background observed"
@@ -90,4 +92,4 @@ sleep 3
 wait_for_marker \
   "A1 Vulkan recreate passed generation=2 page_size=$expected_page_size"
 
-echo "Android A1 Vulkan fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=background-foreground-recreated"
+echo "Android A1 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=background-foreground-recreated"

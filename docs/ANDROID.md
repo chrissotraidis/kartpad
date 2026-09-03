@@ -7,12 +7,13 @@
   ARM64 emulator execution.
 - **Runtime proof:** A0 passes. The local non-playable source-only APK now also
   creates one Dawn Vulkan device, byte-verifies a deterministic clear/readback,
-  presents through SDL's Android native window, and presents again after
-  HOME/foreground surface recreation on the pinned API 36 / 4 KiB and Android
-  15 / 16 KiB ARM64 AVDs.
+  presents through SDL's Android native window, presents again after
+  HOME/foreground surface recreation, and proves dynamic 4 GiB guest-memory
+  reservation, shared aliases, and protection changes on the pinned API 36 /
+  4 KiB and Android 15 / 16 KiB ARM64 AVDs.
 - **Decision:** A1 renderer bring-up is partially green. Continue rotation and
-  repeated lifecycle stress, guest memory, and ELF AArch64 scheduler fixtures
-  before user-interface or private full-game work.
+  repeated lifecycle stress and ELF AArch64 scheduler fixtures before
+  user-interface or private full-game work.
 
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original

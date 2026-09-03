@@ -21,9 +21,13 @@ The first A1 renderer slice passes on both pinned page-size lanes. One Dawn
 Vulkan device performs an exact 16-pixel GPU clear/readback, presents through
 SDL's Android native window, and presents again after an automated
 HOME/foreground surface recreation. A1 remains open for rotation and repeated
-lifecycle stress, guest-memory aliases/protection, and ELF AArch64
-scheduler/register fixtures. Evidence:
-[`docs/artifacts/2026-09-03/android/a1-vulkan-readback-present.md`](artifacts/2026-09-03/android/a1-vulkan-readback-present.md).
+lifecycle stress and ELF AArch64 scheduler/register fixtures. A separate A1
+checkpoint now reserves a dynamic sparse 4 GiB range and proves two shared
+views, cross-alias visibility, and runtime-page-size-aware protection changes
+on both 4 KiB and 16 KiB lanes without writable-executable memory. Evidence:
+[`docs/artifacts/2026-09-03/android/a1-vulkan-readback-present.md`](artifacts/2026-09-03/android/a1-vulkan-readback-present.md)
+and
+[`docs/artifacts/2026-09-03/android/a1-guest-memory.md`](artifacts/2026-09-03/android/a1-guest-memory.md).
 
 ## Native tvOS work
 

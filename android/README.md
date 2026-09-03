@@ -5,11 +5,14 @@ the pinned ARM64 toolchain, SDLActivity/JNI entry, SDL Vulkan loader, Dawn
 Vulkan adapter discovery, 4 KiB execution, and 16 KiB execution. The first A1
 slice additionally creates one Dawn device, byte-verifies a deterministic GPU
 clear/readback, presents a separate clear through the Android native window,
-and repeats presentation after HOME/foreground surface recreation. None of
-these paths use game data or generated translated code.
+and repeats presentation after HOME/foreground surface recreation. The next
+A1 slice reserves a dynamic sparse 4 GiB guest range, maps two shared views,
+and verifies alias visibility and read-only/guard/read-only protection changes
+using the runtime page size. None of these paths use game data or generated
+translated code.
 
-Rotation, guest memory, fibers, gameplay, physical-device support,
-performance, and release readiness remain unproven.
+Rotation, repeated lifecycle stress, fibers, gameplay, physical-device
+support, performance, and release readiness remain unproven.
 
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:

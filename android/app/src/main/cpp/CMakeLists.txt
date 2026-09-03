@@ -18,7 +18,7 @@ if(NOT TARGET dawn::webgpu_dawn)
   message(FATAL_ERROR "Pinned Dawn config did not define dawn::webgpu_dawn")
 endif()
 
-add_library(main SHARED fixture_main.cpp)
+add_library(main SHARED fixture_main.cpp guest_memory_fixture.cpp)
 target_compile_features(main PRIVATE cxx_std_20)
 target_compile_options(main PRIVATE -Wall -Wextra -Werror -fvisibility=hidden)
 target_link_libraries(main PRIVATE SDL3::SDL3 dawn::webgpu_dawn android log dl)

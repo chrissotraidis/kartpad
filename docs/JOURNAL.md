@@ -1656,3 +1656,28 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   repeated stress, guest memory, and scheduler/register fixtures. No package
   was hosted or published. Evidence:
   `docs/artifacts/2026-09-03/android/a1-vulkan-readback-present.md`.
+
+## 2026-09-03 — Android A1 dynamic guest-memory aliases
+
+- Added an Android-native, source-only memory fixture using
+  `ASharedMemory_create`. It reserves a dynamic sparse 4 GiB `PROT_NONE`
+  address range without a fixed high-address assumption, replaces a centered
+  two-page span with a shared primary mapping, and creates a second shared
+  alias of the same file descriptor.
+- Filled the primary mapping with deterministic bytes and verified every byte
+  through the secondary alias. Changed the primary to read-only, wrote through
+  the secondary alias, observed the update through the primary, cycled the
+  primary through `PROT_NONE` and back to read-only, and verified that data was
+  preserved. The fixture never requests executable permission.
+- Cold-boot combined runs pass on API 36 / 4,096-byte pages and API 35 /
+  16,384-byte pages while retaining the existing Vulkan readback, initial
+  presentation, and HOME/foreground replacement-surface checks. The audited
+  local debug APK is 33,540,035 bytes with SHA-256
+  `b9401bfb23c50a8256d6ef336c99085159d403873cf508a759d389e7f64e0635`.
+- Classification: **Pass for dynamic 4 GiB reservation, shared alias
+  visibility, and page-size-aware protection changes on both pinned emulator
+  lanes.** This is not the production checked-memory implementation, scheduler
+  evidence, physical-device evidence, gameplay, or performance. A1 remains
+  open for rotation/repeated lifecycle and ELF AArch64 scheduler/register
+  stress. No package was hosted or published. Evidence:
+  `docs/artifacts/2026-09-03/android/a1-guest-memory.md`.
