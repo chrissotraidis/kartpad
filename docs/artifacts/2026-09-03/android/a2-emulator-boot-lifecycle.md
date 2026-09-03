@@ -74,6 +74,21 @@ continued reporting game presentation and non-silent audio. The ignored final
 screenshot is `.android-bootstrap/a2-resume-final-generation-6.png`, SHA-256
 `7b4c8c8f2dcd9ccdb52d68ab8689dce25e2f35b8daf34ae31c6418df53e35775`.
 
+The same final process then used precise keyboard pulses to load the existing
+license, navigate to 50cc Mushroom Cup, and enter a live Luigi Circuit race.
+Three more HOME/foreground cycles at the live race retained PID `7414`, resumed
+the running race, and produced zero assertion matches. The ignored third-
+generation race screenshot is
+`.android-bootstrap/a2-final-live-race-generation-3.png`, SHA-256
+`01823c192ee513a0ddd3ee4836893bf7b2718aa86ac62936e6b87b8721dcdbc5`.
+
+The preserved post-license NAND was also exercised across three consecutive
+cold processes. All reached the title path, and the last visibly restored the
+existing `KartPad` license rather than presenting an empty license slot. That
+ignored screenshot is `.android-bootstrap/a2-saved-license-precise.png`,
+SHA-256
+`0383cc02f008c105ee75c51c31cc40242cd5f2ab1686aff4966f17d518b6793e`.
+
 ## Reproducibility and package audit
 
 - Fresh preparation applied the complete Android patch stack: pass.
@@ -92,14 +107,16 @@ No APK or AAB was hosted or published.
 
 ## Honest classification
 
-**Pass for first Original emulator rendering and repeated title/demo surface
-recreation.** A2 remains open. The emulator uses a software Vulkan path and
-ran at roughly 10–15 effective FPS, so it is not performance evidence. Audible
-quality was not judged. A full race, results, save/relaunch, exact live-race
-resume retest, real controller, and physical Android hardware remain unproven.
+**Pass for first Original emulator rendering, saved-license cold relaunch, and
+repeated title/demo plus live-race surface recreation.** A2 remains open. The
+emulator uses a software Vulkan path and ran at roughly 10–15 effective FPS, so
+it is not performance evidence. Audible quality was not judged. A complete
+race, results, post-race save/relaunch, real controller, and physical Android
+hardware remain unproven.
 
-A separate relaunch attempt also exposed a persisted managed-NAND defect:
-`MiiManager::Init` jumped through guest address zero after an earlier session
-had written state. The failing NAND was preserved by in-place rename during
-testing rather than deleted. This blocks any save/relaunch claim and is the
-next emulator-side A2 failure to isolate.
+One earlier cold process jumped through guest address zero from
+`MiiManager::Init`. Its NAND was preserved by in-place rename rather than
+deleted, but the exact same RFL database and post-license `rksys.dat` then
+passed the three cold launches above. The event is therefore recorded as an
+unresolved, non-reproduced timing failure rather than classified as save
+corruption or a deterministic relaunch defect.

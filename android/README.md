@@ -45,7 +45,8 @@ configured` boundary; it is not gameplay evidence.
 With an already validated ignored RMCP01 DATA directory staged separately in
 that private storage, the API 36 emulator now boots and renders the Original
 title/demo loop. Six consecutive HOME/foreground surface generations retained
-one process and resumed presentation. See
+one process and resumed presentation; three more did the same in a live race,
+and a saved license survived three cold launches. See
 `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` for the exact
 evidence and open failures. A2 remains open: the complete race/results,
 save/relaunch, real-controller, and physical-device rows are not yet proven.
