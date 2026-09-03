@@ -72,6 +72,7 @@ for required in \
   _KartPadMobileSelectedRuntimeProfile \
   _KartPadMobileRuntimeHostInstall \
   _KartPadMobileReadClassicInputForPlayer \
+  _KartPadMobileSetRumbleForPlayer \
   '_OBJC_CLASS_$_KartPadPhysicalControllers' \
   '_OBJC_CLASS_$_SDLUIKitSceneDelegate'; do
   rg -F -q "${required}" <<<"${symbols}" || {

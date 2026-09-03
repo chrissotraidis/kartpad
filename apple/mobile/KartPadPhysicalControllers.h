@@ -37,6 +37,7 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
 - (void)reconcileControllers;
 - (BOOL)consumePlayer:(NSUInteger)player state:(SunPadInputState *)state;
 - (NSUInteger)connectedControllerCount;
+- (BOOL)setRumbleForPlayer:(NSUInteger)player enabled:(BOOL)enabled;
 
 @end
 

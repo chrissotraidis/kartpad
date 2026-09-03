@@ -4,6 +4,10 @@
 #import "SunPadDiagnostics.h"
 #import "SunPadInputMixer.h"
 
+#import <TargetConditionals.h>
+#if TARGET_OS_TV
+#import <CoreHaptics/CoreHaptics.h>
+#endif
 #import <GameController/GameController.h>
 
 #include <algorithm>
@@ -93,9 +97,16 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
 @implementation KartPadPhysicalControllers {
   SunPadControllerSlots _slots;
   NSMutableDictionary<NSNumber *, GCController *> *_configuredControllers;
+#if TARGET_OS_TV
+  NSMutableDictionary<NSNumber *, CHHapticEngine *> *_hapticEngines;
+  NSMutableDictionary<NSNumber *, id<CHHapticPatternPlayer>> *_rumblePlayers;
+#endif
   std::mutex _stateMutex;
   std::array<SunPadInputState, SunPadControllerSlots::kMaxPlayers> _states;
   std::array<uint16_t, SunPadControllerSlots::kMaxPlayers> _latchedButtons;
+#if TARGET_OS_TV
+  std::array<BOOL, SunPadControllerSlots::kMaxPlayers> _rumbleActive;
+#endif
   BOOL _started;
 }
 
@@ -112,8 +123,15 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   self = [super init];
   if (self != nil) {
     _configuredControllers = [NSMutableDictionary dictionary];
+#if TARGET_OS_TV
+    _hapticEngines = [NSMutableDictionary dictionary];
+    _rumblePlayers = [NSMutableDictionary dictionary];
+#endif
     _states = {};
     _latchedButtons = {};
+#if TARGET_OS_TV
+    _rumbleActive = {};
+#endif
   }
   return self;
 }
@@ -141,8 +159,20 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
     controller.extendedGamepad.valueChangedHandler = nil;
     controller.playerIndex = GCControllerPlayerIndexUnset;
   }
+#if TARGET_OS_TV
+  for (id<CHHapticPatternPlayer> player in _rumblePlayers.allValues) {
+    [player stopAtTime:CHHapticTimeImmediate error:nil];
+  }
+#endif
   [_configuredControllers removeAllObjects];
+#if TARGET_OS_TV
+  [_hapticEngines removeAllObjects];
+  [_rumblePlayers removeAllObjects];
+#endif
   _slots = {};
+#if TARGET_OS_TV
+  _rumbleActive = {};
+#endif
   {
     std::scoped_lock lock(_stateMutex);
     _states = {};
@@ -211,7 +241,15 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
     GCController *controller = _configuredControllers[key];
     controller.extendedGamepad.valueChangedHandler = nil;
     controller.playerIndex = GCControllerPlayerIndexUnset;
+#if TARGET_OS_TV
+    [_rumblePlayers[key] stopAtTime:CHHapticTimeImmediate error:nil];
+#endif
     [_configuredControllers removeObjectForKey:key];
+#if TARGET_OS_TV
+    [_hapticEngines removeObjectForKey:key];
+    [_rumblePlayers removeObjectForKey:key];
+    _rumbleActive[change.slot] = NO;
+#endif
     {
       std::scoped_lock lock(_stateMutex);
       _states[change.slot] = {};
@@ -258,4 +296,88 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   return count;
 }
 
+- (BOOL)setRumbleForPlayer:(NSUInteger)player enabled:(BOOL)enabled {
+#if TARGET_OS_TV
+  __block BOOL handled = NO;
+  void (^applyRumble)(void) = ^{
+    if (!self->_started || player >= SunPadControllerSlots::kMaxPlayers) return;
+    const uintptr_t instance = self->_slots.InstanceAt(player);
+    if (instance == 0) return;
+    GCController *controller = self->_configuredControllers[@(instance)];
+    if (controller == nil || controller.haptics == nil) return;
+    handled = YES;
+    NSNumber *key = @(instance);
+    if (enabled == self->_rumbleActive[player]) return;
+    if (!enabled) {
+      [self->_rumblePlayers[key] stopAtTime:CHHapticTimeImmediate error:nil];
+      self->_rumbleActive[player] = NO;
+      return;
+    }
+
+    NSError *error = nil;
+    CHHapticEngine *engine = self->_hapticEngines[key];
+    id<CHHapticPatternPlayer> playerObject = self->_rumblePlayers[key];
+    if (engine != nil && playerObject != nil &&
+        [engine startAndReturnError:&error] &&
+        [playerObject startAtTime:CHHapticTimeImmediate error:&error]) {
+      self->_rumbleActive[player] = YES;
+      return;
+    }
+    [self->_rumblePlayers removeObjectForKey:key];
+    [self->_hapticEngines removeObjectForKey:key];
+
+    engine = [controller.haptics createEngineWithLocality:GCHapticsLocalityDefault];
+    if (engine == nil || ![engine startAndReturnError:&error]) {
+      SunPadLog(@"controller rumble unavailable for player=%lu: %@",
+                static_cast<unsigned long>(player + 1),
+                error.localizedDescription ?: @"no haptic engine");
+      handled = NO;
+      return;
+    }
+    engine.playsHapticsOnly = YES;
+    NSArray<CHHapticEventParameter *> *parameters = @[
+      [[CHHapticEventParameter alloc]
+          initWithParameterID:CHHapticEventParameterIDHapticIntensity value:1.0f],
+      [[CHHapticEventParameter alloc]
+          initWithParameterID:CHHapticEventParameterIDHapticSharpness value:0.1f],
+    ];
+    CHHapticEvent *event = [[CHHapticEvent alloc]
+        initWithEventType:CHHapticEventTypeHapticContinuous
+               parameters:parameters
+             relativeTime:0.0
+                 duration:GCHapticDurationInfinite];
+    CHHapticPattern *pattern = [[CHHapticPattern alloc]
+        initWithEvents:@[event] parameters:@[] error:&error];
+    playerObject = pattern == nil
+        ? nil : [engine createPlayerWithPattern:pattern error:&error];
+    if (playerObject == nil ||
+        ![playerObject startAtTime:CHHapticTimeImmediate error:&error]) {
+      SunPadLog(@"controller rumble start failed for player=%lu: %@",
+                static_cast<unsigned long>(player + 1),
+                error.localizedDescription ?: @"unknown haptic error");
+      handled = NO;
+      return;
+    }
+    self->_hapticEngines[key] = engine;
+    self->_rumblePlayers[key] = playerObject;
+    self->_rumbleActive[player] = YES;
+  };
+  if (NSThread.isMainThread) {
+    applyRumble();
+  } else {
+    dispatch_sync(dispatch_get_main_queue(), applyRumble);
+  }
+  return handled;
+#else
+  (void)player;
+  (void)enabled;
+  return NO;
+#endif
+}
+
 @end
+
+extern "C" bool KartPadMobileSetRumbleForPlayer(unsigned int player, bool enabled) {
+  return [[KartPadPhysicalControllers sharedControllers]
+      setRumbleForPlayer:player enabled:enabled ? YES : NO];
+}

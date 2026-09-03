@@ -117,7 +117,8 @@
 +        target_link_libraries(${target} PRIVATE MINIZIP::minizip
 +            "-framework UIKit" "-framework CoreGraphics"
 +            "-framework QuartzCore" "-framework Metal"
-+            "-framework GameController" "-framework Foundation")
++            "-framework GameController" "-framework CoreHaptics"
++            "-framework Foundation")
 +        set_target_properties(${target} PROPERTIES
 +            OUTPUT_NAME "${output_name}"
 +            MACOSX_BUNDLE TRUE
@@ -339,3 +340,50 @@
          if (!fixtureActive && mobileConnected) {
              classicButtons |= mobileInput.buttons;
              coreButtons |= CoreButtonsForClassic(mobileInput.buttons);
+diff --git a/src/hle/input/pad.cpp b/src/hle/input/pad.cpp
+--- a/src/hle/input/pad.cpp
++++ b/src/hle/input/pad.cpp
+@@ -10,4 +10,10 @@
+ #include <cstring>
+ 
+ #include <SDL3/SDL_scancode.h>
++#if defined(__APPLE__)
++#include <TargetConditionals.h>
++#if TARGET_OS_TV
++#include "kartpad_mobile_runtime_host.h"
++#endif
++#endif
+ #include <dolphin/pad.h>
+@@ -127,3 +133,8 @@
+ extern "C" void PAD__ControlMotor_HLE(int32_t chan, uint32_t command)
+ {
++#if defined(__APPLE__) && TARGET_OS_TV
++    if (KartPadMobileSetRumbleForPlayer(static_cast<uint32_t>(chan), command == 1u)) {
++        return;
++    }
++#endif
+     if (!Wup028Adapter::SetRumble(static_cast<uint32_t>(chan), command == PAD_MOTOR_RUMBLE)) {
+diff --git a/src/hle/input/wpad.cpp b/src/hle/input/wpad.cpp
+--- a/src/hle/input/wpad.cpp
++++ b/src/hle/input/wpad.cpp
+@@ -5,4 +5,10 @@
+ #include <cstdint>
+ #include <cstring>
+ 
++#if defined(__APPLE__)
++#include <TargetConditionals.h>
++#if TARGET_OS_TV
++#include "kartpad_mobile_runtime_host.h"
++#endif
++#endif
+ void NandQueueIosCallback(uint32_t callbackPtr, int32_t result, uint32_t callbackArg);
+@@ -131,4 +137,9 @@
+ extern "C" void WPADControlMotor_HLE(uint32_t chan, uint32_t command)
+ {
++#if defined(__APPLE__) && TARGET_OS_TV
++    if (KartPadMobileSetRumbleForPlayer(chan, command == 1u)) {
++        return;
++    }
++#endif
+     (void)chan;
+     (void)command;

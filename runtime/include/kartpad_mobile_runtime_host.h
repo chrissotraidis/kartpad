@@ -45,4 +45,7 @@ bool KartPadMobileReadClassicInput(KartPadMobileClassicInputSnapshot *snapshot);
 bool KartPadMobileReadClassicInputForPlayer(
     unsigned int player, KartPadMobileClassicInputSnapshot *snapshot);
 
+// Maps the guest WPAD motor state to the selected Apple controller.
+bool KartPadMobileSetRumbleForPlayer(unsigned int player, bool enabled);
+
 }

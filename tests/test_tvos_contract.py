@@ -161,6 +161,24 @@ class TvOSContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "docs/INSTALL_TVOS.md").is_file())
         self.assertTrue((ROOT / "docs/releases/v0.4.1.md").is_file())
 
+    def test_tvos_physical_controller_rumble_routes_to_native_haptics(self):
+        controllers = (
+            ROOT / "apple/mobile/KartPadPhysicalControllers.mm"
+        ).read_text()
+        self.assertIn("#import <CoreHaptics/CoreHaptics.h>", controllers)
+        self.assertIn("GCHapticsLocalityDefault", controllers)
+        self.assertIn("CHHapticEventTypeHapticContinuous", controllers)
+        self.assertIn("GCHapticDurationInfinite", controllers)
+        self.assertIn("KartPadMobileSetRumbleForPlayer", controllers)
+        runtime_patch = (
+            ROOT / "patches/wiicompiled-tvos-runtime.patch"
+        ).read_text()
+        self.assertIn("WPADControlMotor_HLE", runtime_patch)
+        self.assertIn("PAD__ControlMotor_HLE", runtime_patch)
+        self.assertIn("KartPadMobileSetRumbleForPlayer", runtime_patch)
+        self.assertIn("-framework CoreHaptics", runtime_patch)
+        self.assertIn("#if defined(__APPLE__) && TARGET_OS_TV", runtime_patch)
+
 
 if __name__ == "__main__":
     unittest.main()
