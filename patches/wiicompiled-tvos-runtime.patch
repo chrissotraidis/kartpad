@@ -36,7 +36,7 @@
          _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION TARGET_PC)
      target_compile_features(${target} PRIVATE cxx_std_20)
      mkw_apply_common_compile_options(${target})
-@@ -390,7 +390,104 @@
+@@ -390,7 +390,105 @@
          XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
          XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
  endif()
