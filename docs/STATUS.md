@@ -125,6 +125,20 @@ an exact selectable staff configuration and was removed; it is not a product
 or completion path. A2 remains open. Evidence:
 [`docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`](artifacts/2026-09-03/android/a2-sdl-controller-rumble.md).
 
+Android surface loss and backgrounding now suspend that shared SDL controller
+bridge: snapshots fail neutral, new rumble starts fail closed, and active
+rumble is stopped before surface release. Controller add/remove and the
+cross-thread lifecycle callback are serialized so a removed pad cannot be
+used during shutdown. A corrected API 36 cold launch starts with the bridge
+active, and one process retained its PID through four HOME/surface recreation
+cycles with exactly four suspend/resume pairs and no Android fatal. One prior
+corrected process ended silently after a single cycle and remains an
+unexplained non-reproduced exit. Fresh patch reproduction, private ARM64
+compile/link, lint, storage and package/privacy audits pass. No controller was
+attached, so actual neutral input and motor-stop behavior remain unaccepted.
+Evidence:
+[`docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`](artifacts/2026-09-03/android/a2-controller-lifecycle.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

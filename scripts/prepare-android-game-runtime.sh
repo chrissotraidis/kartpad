@@ -38,6 +38,8 @@ patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-snapshot.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-rumble.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-android-gamepad-lifecycle.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-runtime.patch"
 patch --batch -p1 -d "$runtime_source" < \

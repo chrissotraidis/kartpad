@@ -1,0 +1,176 @@
+--- a/include/aurora/input.hpp
++++ b/include/aurora/input.hpp
+@@ -40,4 +40,9 @@
+ bool set_standard_gamepad_rumble(uint32_t player, bool allowSingleUnassigned,
+                                  bool enabled) noexcept;
+ 
++// Enables or suspends the standard gamepad bridge. Suspension makes snapshots
++// neutral immediately and stops any active rumble before Android releases its
++// native surface. Rumble stop requests remain accepted while suspended.
++void set_standard_gamepads_active(bool active) noexcept;
++
+ }  // namespace aurora::input
+--- a/lib/input.cpp
++++ b/lib/input.cpp
+@@ -14,6 +14,8 @@
+ #include <absl/container/flat_hash_map.h>
+ #include <algorithm>
+ #include <array>
++#include <atomic>
++#include <mutex>
+ #include <string>
+ #include <utility>
+ 
+@@ -24,6 +26,9 @@
+ absl::flat_hash_map<Uint32, GameController> g_GameControllers;
+ 
+ namespace {
++std::atomic_bool g_standardGamepadsActive{true};
++std::mutex g_standardGamepadBridgeMutex;
++
+ constexpr uint32_t kPortPreferencesMagic = SBIG('CPRT');
+ constexpr uint32_t kPortPreferencesVersion = 2;
+ constexpr uint32_t kMaxPersistedStringLength = 256;
+@@ -369,6 +374,11 @@
+   }
+   *state = {};
+ 
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  if (!g_standardGamepadsActive.load(std::memory_order_acquire)) {
++    return false;
++  }
++
+   GameController* controller =
+       resolve_standard_gamepad(player, allowSingleUnassigned);
+   if (controller == nullptr || controller->m_controller == nullptr ||
+@@ -408,6 +418,11 @@
+ 
+ bool set_standard_gamepad_rumble(uint32_t player, bool allowSingleUnassigned,
+                                  bool enabled) noexcept {
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  if (enabled &&
++      !g_standardGamepadsActive.load(std::memory_order_acquire)) {
++    return false;
++  }
+   GameController* controller =
+       resolve_standard_gamepad(player, allowSingleUnassigned);
+   if (controller == nullptr || controller->m_controller == nullptr ||
+@@ -420,6 +435,25 @@
+   const uint16_t high = enabled ? controller->m_rumbleIntensityHigh : 0;
+   return SDL_RumbleGamepad(controller->m_controller, low, high,
+                            enabled ? 0xffffffffu : 0u);
++}
++
++void set_standard_gamepads_active(bool active) noexcept {
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  const bool previous =
++      g_standardGamepadsActive.exchange(active, std::memory_order_acq_rel);
++  if (previous == active) {
++    return;
++  }
++
++  if (!active) {
++    for (const auto& [instance, controller] : g_GameControllers) {
++      (void)instance;
++      if (controller.m_controller != nullptr && controller.m_hasRumble) {
++        SDL_RumbleGamepad(controller.m_controller, 0, 0, 0);
++      }
++    }
++  }
++  Log.info("Standard gamepads {}", active ? "resumed" : "suspended");
+ }
+ 
+ Sint32 get_instance_for_player(uint32_t player) noexcept {
+@@ -433,6 +467,7 @@
+ }
+ 
+ SDL_JoystickID add_controller(SDL_JoystickID which) noexcept {
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
+   if (g_GameControllers.contains(which)) {
+     return which;
+   }
+@@ -467,6 +502,7 @@
+ }
+ 
+ bool refresh_controller(SDL_JoystickID instance) noexcept {
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
+   const auto it = g_GameControllers.find(instance);
+   if (it == g_GameControllers.end()) {
+     return false;
+@@ -480,6 +516,7 @@
+ }
+ 
+ void remove_controller(Uint32 instance) noexcept {
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
+   if (auto it = g_GameControllers.find(instance); it != g_GameControllers.end()) {
+     SDL_CloseGamepad(it->second.m_controller);
+     g_GameControllers.erase(it);
+@@ -576,6 +613,7 @@
+ }
+ 
+ void shutdown() noexcept {
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
+   // Upon shutdown we want to ensure all controllers are in a default state, so force all rumble supporting controllers
+   // to shut off their rumble motors.
+   for (const auto& controller : g_GameControllers) {
+--- a/lib/window.cpp
++++ b/lib/window.cpp
+@@ -8,6 +8,7 @@
+ #include <aurora/aurora.h>
+ #include <aurora/event.h>
+ #include <aurora/gfx.h>
++#include <aurora/input.hpp>
+ #include <aurora/render_size_limits.hpp>
+ #include <SDL3/SDL_error.h>
+ #include <SDL3/SDL_events.h>
+@@ -219,11 +219,20 @@
+     g_nativeResizePending.store(true, std::memory_order_release);
+     break;
+ #if defined(SDL_PLATFORM_ANDROID) || defined(SDL_PLATFORM_APPLE)
++  case SDL_EVENT_WILL_ENTER_BACKGROUND:
+   case SDL_EVENT_WINDOW_MINIMIZED:
+-    g_backgrounded.store(true, std::memory_order_relaxed);
++    g_backgrounded.store(true, std::memory_order_release);
++#if defined(SDL_PLATFORM_ANDROID)
++    input::set_standard_gamepads_active(false);
++#endif
+     break;
++  case SDL_EVENT_DID_ENTER_FOREGROUND:
+   case SDL_EVENT_WINDOW_RESTORED:
+-    g_backgrounded.store(false, std::memory_order_relaxed);
++    g_backgrounded.store(false, std::memory_order_release);
++#if defined(SDL_PLATFORM_ANDROID)
++    input::set_standard_gamepads_active(
++        g_surfaceReady.load(std::memory_order_acquire));
++#endif
+     break;
+ #endif
+   default:
+@@ -483,6 +492,12 @@
+       SDL_GetError());
+   TRY(SDL_InitSubSystem(SDL_INIT_EVENTS | SDL_INIT_VIDEO), "Error initializing SDL: {}", SDL_GetError());
+ 
++#if defined(SDL_PLATFORM_ANDROID)
++  input::set_standard_gamepads_active(
++      g_surfaceReady.load(std::memory_order_acquire) &&
++      !g_backgrounded.load(std::memory_order_acquire));
++#endif
++
+ #if !defined(_WIN32) && !defined(__APPLE__)
+   TRY(SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0"), "Error setting {}: {}",
+       SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, SDL_GetError());
+@@ -603,7 +618,13 @@
+   return size.native_fb_width == width && size.native_fb_height == height;
+ }
+ 
+-void set_surface_ready(bool ready) noexcept { g_surfaceReady.store(ready, std::memory_order_release); }
++void set_surface_ready(bool ready) noexcept {
++  g_surfaceReady.store(ready, std::memory_order_release);
++#if defined(SDL_PLATFORM_ANDROID)
++  input::set_standard_gamepads_active(
++      ready && !g_backgrounded.load(std::memory_order_acquire));
++#endif
++}
+ 
+ SurfaceLock::SurfaceLock() noexcept {
+ #if defined(SDL_PLATFORM_ANDROID)

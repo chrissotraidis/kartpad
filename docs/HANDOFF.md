@@ -103,7 +103,11 @@ not block offline Retro Rewind support.
    Android and must not be used as completion evidence. Aurora's discovered
    SDL pads now feed the Android Classic/KPAD path through a deterministic
    mapping contract, and `WPADControlMotor` now reaches that same resolved pad
-   through a fail-closed SDL rumble bridge. No controller was attached, so
+   through a fail-closed SDL rumble bridge. Surface loss/backgrounding now
+   makes that bridge neutral, rejects new rumble starts, and stops active
+   rumble; a corrected process retained its PID through four emulator cycles.
+   One earlier corrected process ended silently after one cycle and remains an
+   unexplained non-reproduced exit. No controller was attached, so
    input and tactile behavior remain implementation/compile evidence only. A
    temporary exact-configuration retail-KPAD RKG replay also diverged by guest
    time 8.580 and was removed; do not repeat it unchanged. Establish a complete
@@ -113,7 +117,8 @@ not block offline Retro Rewind support.
    `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`, plus
    `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md` and
    `docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`, plus
-   `docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`. A2
+   `docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`, plus
+   `docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`. A2
    remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.

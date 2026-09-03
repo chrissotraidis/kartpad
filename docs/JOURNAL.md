@@ -1912,3 +1912,42 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   physical Android acceptance remain open. No APK/AAB or private data was
   published. Evidence:
   `docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`.
+
+## 2026-09-03 — Android A2 controller lifecycle gate
+
+- Added one Aurora lifecycle gate shared by Android's standard-gamepad input
+  and rumble APIs. Surface loss or backgrounding makes snapshots neutral,
+  rejects new rumble starts, and sends zero intensity to every active
+  rumble-capable pad; stop remains legal while suspended.
+- Serialized the bridge with controller add/remap/remove/shutdown so the
+  Android UI thread cannot stop rumble through a controller pointer while the
+  SDL event thread closes it. SDL background controller events remain enabled
+  so releases during backgrounding are retained.
+- The first ARM64 compile exposed a missing public Aurora input include. The
+  first live launch then exposed a surface-before-Aurora initialization race
+  that left the bridge suspended. Both were corrected before acceptance;
+  initialization now derives state from the existing surface/background
+  atomics.
+- A corrected run logged the bridge active. One process later ended
+  silently after its first resume without an Android fatal record. A fresh
+  exact-final process retained PID `2293` through four HOME/surface recreation
+  cycles with exactly four suspend/resume pairs and no Android fatal or
+  `SIGABRT`; the
+  earlier exit remains unexplained and is not counted as passing evidence.
+- Host controller contract, clean patch dry-run, fresh exact source
+  reproduction, private ARM64 compile/link, debug lint, release Kotlin compile,
+  storage contract, package/privacy audit, repository safety, and diff checks
+  pass. The broad verifier accepts 426 hunks and three pins before the known
+  ignored `rr-pulsar` checkout/lock mismatch. The exact local-only APK is
+  103,434,720 bytes at SHA-256
+  `2c9c62b88277f34b27b481e254a25dd37936144d5c78a7db10eedb36c75e7145`;
+  its 83,537,752-byte stripped `libmain.so` is
+  `cf6b61932ef465c12135095ccfeb058c490fa2886f502d116c5dbeb9b87e0f24`.
+  The lifecycle patch SHA-256 is
+  `949aca693d660e966d0c3a8a6c10956e0f0aef0cc4488b8e10c6b96f01eee3a0`.
+- Classification: **Pass for lifecycle-gated controller bridge implementation,
+  exact reproduction, ARM64 link, and bounded emulator execution only.** No
+  controller was attached, so real neutral input, motor stop, controller race,
+  and physical Android acceptance remain open. No APK/AAB or private data was
+  published. Evidence:
+  `docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`.
