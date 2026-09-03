@@ -1,0 +1,75 @@
+diff --git a/include/aurora/input.hpp b/include/aurora/input.hpp
+--- a/include/aurora/input.hpp
++++ b/include/aurora/input.hpp
+@@ -34,4 +34,10 @@
+ bool read_standard_gamepad_state(uint32_t player, bool allowSingleUnassigned,
+                                  StandardGamepadState* state) noexcept;
+ 
++// Starts or stops rumble on the controller resolved by the same assignment
++// rule as read_standard_gamepad_state. Returns false when no suitable
++// rumble-capable controller exists or SDL rejects the request.
++bool set_standard_gamepad_rumble(uint32_t player, bool allowSingleUnassigned,
++                                 bool enabled) noexcept;
++
+ }  // namespace aurora::input
+diff --git a/lib/input.cpp b/lib/input.cpp
+--- a/lib/input.cpp
++++ b/lib/input.cpp
+@@ -349,13 +349,8 @@
+   return nullptr;
+ }
+ 
+-bool read_standard_gamepad_state(uint32_t player, bool allowSingleUnassigned,
+-                                 StandardGamepadState* state) noexcept {
+-  if (state == nullptr) {
+-    return false;
+-  }
+-  *state = {};
+-
++static GameController* resolve_standard_gamepad(
++    uint32_t player, bool allowSingleUnassigned) noexcept {
+   GameController* controller = get_controller_for_player(player);
+   if (controller == nullptr && player == 0 && allowSingleUnassigned &&
+       g_GameControllers.size() == 1) {
+@@ -364,6 +359,18 @@
+       controller = &candidate;
+     }
+   }
++  return controller;
++}
++
++bool read_standard_gamepad_state(uint32_t player, bool allowSingleUnassigned,
++                                 StandardGamepadState* state) noexcept {
++  if (state == nullptr) {
++    return false;
++  }
++  *state = {};
++
++  GameController* controller =
++      resolve_standard_gamepad(player, allowSingleUnassigned);
+   if (controller == nullptr || controller->m_controller == nullptr ||
+       !SDL_GamepadConnected(controller->m_controller)) {
+     return false;
+@@ -399,6 +406,22 @@
+   return true;
+ }
+ 
++bool set_standard_gamepad_rumble(uint32_t player, bool allowSingleUnassigned,
++                                 bool enabled) noexcept {
++  GameController* controller =
++      resolve_standard_gamepad(player, allowSingleUnassigned);
++  if (controller == nullptr || controller->m_controller == nullptr ||
++      !controller->m_hasRumble ||
++      !SDL_GamepadConnected(controller->m_controller)) {
++    return false;
++  }
++
++  const uint16_t low = enabled ? controller->m_rumbleIntensityLow : 0;
++  const uint16_t high = enabled ? controller->m_rumbleIntensityHigh : 0;
++  return SDL_RumbleGamepad(controller->m_controller, low, high,
++                           enabled ? 0xffffffffu : 0u);
++}
++
+ Sint32 get_instance_for_player(uint32_t player) noexcept {
+   for (const auto& [which, controller] : g_GameControllers) {
+     if (player_index(which) == player) {

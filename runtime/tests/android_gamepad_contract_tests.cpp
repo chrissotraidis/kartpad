@@ -53,6 +53,11 @@ int main() {
   passed &= Require(MapGamepadToClassic(buttons).buttons == 0,
                     "triggers must remain released below the threshold");
 
+  passed &= Require(!WpadMotorCommandEnablesRumble(kWpadMotorStop) &&
+                        WpadMotorCommandEnablesRumble(kWpadMotorRumble) &&
+                        !WpadMotorCommandEnablesRumble(2),
+                    "only the WPAD rumble command may enable controller output");
+
   RawGamepadState axes;
   axes.connected = true;
   axes.left_x = 32767;

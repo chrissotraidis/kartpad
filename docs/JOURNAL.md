@@ -1879,3 +1879,36 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   controller was attached, so live controller and physical-device acceptance
   remain open. No APK/AAB or private input was published. Evidence:
   `docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`.
+
+## 2026-09-03 — Android A2 SDL controller rumble
+
+- Replaced Android's `WPADControlMotor` no-op with a narrow Aurora output API
+  using the same explicit-port / sole-unassigned-player-one resolution rule as
+  the accepted SDL input snapshot. Capability, connection, and SDL errors fail
+  closed; Start uses configured low/high intensity and Stop is immediate.
+- Added a pure host contract proving only WPAD command `1` enables rumble.
+  Commands `0` and unknown values stop it. The Apple path is unchanged.
+- Fresh preparation applies two new incremental patches and reproduces the
+  three modified upstream files byte-for-byte. The complete private Original
+  ARM64 graph compiled and linked in 8m19s; after centralizing input/output
+  assignment in one resolver, the exact final source rebuilt and relinked in
+  11s.
+- The strict audit passes on the local-only 103,433,440-byte APK, SHA-256
+  `3044e148e320236b0b71d4cf86ff8a5b158a896c75671f215a5da8c0faf23ad0`.
+  Its stripped 83,536,472-byte `libmain.so` is
+  `57856f61c5e1e162c0525b1d757eed46ccd27aaacf7a9bf287a20b78472954ad`.
+  Host CTest, debug lint, release Kotlin compile, storage contract, repository
+  safety, patch verification, and diff checks pass. The broad source verifier
+  again stopped only after accepting 412 hunks and three pins because the
+  ignored `rr-pulsar` checkout has the known unrelated pin mismatch.
+- A temporary retail-KPAD replay hypothesis was tested and removed. The first
+  mismatched Luigi Circuit run hit a wall at 14.346; an exact Baby Mario / PAL
+  Nanobike / Manual N64 Mario Raceway run still diverged by 8.580. No forced
+  finish was used. The marker, private RKG, source experiment, and emulator were
+  removed or stopped, so this path must not be treated as completion evidence.
+- Classification: **Pass for rumble implementation, deterministic command
+  semantics, patch reproduction, private link, and audit only.** No controller
+  was attached, so live rumble/input, complete player race/results/save, and
+  physical Android acceptance remain open. No APK/AAB or private data was
+  published. Evidence:
+  `docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`.

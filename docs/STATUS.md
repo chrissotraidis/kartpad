@@ -113,6 +113,18 @@ disconnect/reconnect, rumble, race, and physical-device acceptance remain
 open. Evidence:
 [`docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`](artifacts/2026-09-03/android/a2-sdl-controller-bridge.md).
 
+Mario Kart's Android `WPADControlMotor` path now drives the same resolved SDL
+controller with fail-closed Start/Stop rumble semantics; Apple behavior is
+unchanged. The host contract, fresh patch reproduction, full private ARM64
+link, lint, storage contract, and strict package/privacy audit pass. The exact
+local-only 103,433,440-byte APK has SHA-256
+`3044e148e320236b0b71d4cf86ff8a5b158a896c75671f215a5da8c0faf23ad0`.
+No controller was attached, so tactile output and controller-driven gameplay
+remain unaccepted. A temporary retail-KPAD RKG experiment also diverged with
+an exact selectable staff configuration and was removed; it is not a product
+or completion path. A2 remains open. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`](artifacts/2026-09-03/android/a2-sdl-controller-rumble.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

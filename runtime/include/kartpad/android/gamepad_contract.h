@@ -55,6 +55,12 @@ struct ClassicInputState {
 
 inline constexpr int32_t kStickDeadzone = 8000;
 inline constexpr int32_t kTriggerThreshold = 16000;
+inline constexpr uint32_t kWpadMotorStop = 0;
+inline constexpr uint32_t kWpadMotorRumble = 1;
+
+inline constexpr bool WpadMotorCommandEnablesRumble(uint32_t command) {
+  return command == kWpadMotorRumble;
+}
 
 inline float NormalizeStickAxis(int16_t raw) {
   const int32_t value = raw;

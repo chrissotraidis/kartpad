@@ -1,0 +1,30 @@
+diff --git a/src/hle/input/wpad.cpp b/src/hle/input/wpad.cpp
+--- a/src/hle/input/wpad.cpp
++++ b/src/hle/input/wpad.cpp
+@@ -5,6 +5,11 @@
+ #include <cstdint>
+ #include <cstring>
+ 
++#if defined(__ANDROID__)
++#include <aurora/input.hpp>
++#include "kartpad/android/gamepad_contract.h"
++#endif
++
+ void NandQueueIosCallback(uint32_t callbackPtr, int32_t result, uint32_t callbackArg);
+ extern "C" bool KPAD_IsKeyboardChannelConnected(uint32_t chan);
+ 
+@@ -130,8 +135,14 @@
+ 
+ extern "C" void WPADControlMotor_HLE(uint32_t chan, uint32_t command)
+ {
++#if defined(__ANDROID__)
++    aurora::input::set_standard_gamepad_rumble(
++        chan, chan == 0,
++        kartpad::android::WpadMotorCommandEnablesRumble(command));
++#else
+     (void)chan;
+     (void)command;
++#endif
+ }
+ PPC_NATIVE_OVERRIDE(801C0EC4, WPADControlMotor_HLE, void, (uint32_t chan, uint32_t command), (chan, command));
+ 

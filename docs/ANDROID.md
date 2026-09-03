@@ -792,8 +792,12 @@ staging the validated ignored DATA directory outside the APK, setting its
 app-private path, and using the new Aurora-to-Classic SDL controller bridge to
 prove a complete controller-driven player race, results, and save/relaunch
 without weakening the package privacy boundary. The bridge's deterministic
-source-only contract passes on both page-size lanes, but no controller
-acceptance is claimed until an actual controller is attached.
+source-only contract passes on both page-size lanes, and Android
+`WPADControlMotor` now routes Start/Stop output to the same resolved SDL pad.
+No controller input or rumble acceptance is claimed until actual hardware is
+attached. Do not repeat the rejected retail-KPAD RKG replay unchanged: even
+the exact Baby Mario / Nanobike / Manual staff configuration diverged by guest
+time 8.580.
 
 The A0 commands and sanitized result are recorded in
 [`android/README.md`](../android/README.md) and
