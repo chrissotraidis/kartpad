@@ -3,7 +3,9 @@ package dev.kartpad.android
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
@@ -217,8 +219,22 @@ internal class RetroRewindInstallWorker(
             .setSmallIcon(R.drawable.ic_kartpad)
             .setContentTitle("KartPad")
             .setContentText(message)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    applicationContext,
+                    NOTIFICATION_ID,
+                    Intent(applicationContext, RetroRewindInstallActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                ),
+            )
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+        if (Build.VERSION.SDK_INT >= 31) {
+            notificationBuilder.setForegroundServiceBehavior(
+                Notification.FOREGROUND_SERVICE_IMMEDIATE,
+            )
+        }
         if (total > 0 && completed in 0..total) {
             notificationBuilder.setProgress(
                 PROGRESS_MAX,

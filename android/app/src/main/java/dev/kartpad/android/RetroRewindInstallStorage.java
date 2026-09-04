@@ -136,6 +136,10 @@ final class RetroRewindInstallStorage {
                 .toAbsolutePath().normalize();
     }
 
+    static Path installedRoot(File filesDirectory) {
+        return supportRoot(filesDirectory).resolve(INSTALLED_DIRECTORY);
+    }
+
     private static void requireToken(String token) {
         if (token == null || token.isEmpty() || token.length() > 64 ||
                 !token.matches("[A-Za-z0-9-]+")) {

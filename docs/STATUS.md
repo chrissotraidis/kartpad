@@ -377,6 +377,23 @@ archive. A3 remains open for that UI, production-size fault/gameplay proof, and
 physical hardware. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-worker-cancellation.md`](artifacts/2026-09-04/android/a3-worker-cancellation.md).
 
+Android now also has a production-owned Retro Rewind installer/status screen.
+It observes the persisted unique work, shows waiting and phase/byte progress,
+exposes Cancel and Retry, revalidates installed content off the main thread
+before reporting ready, and is the immutable return target for foreground-
+notification taps. Install start is gated on Android 13+ notification
+permission and requests immediate foreground display on Android 12+. A wiped
+API 36 run proved the visible actionable notification and its explicit target,
+then activated the real Cancel button through
+focus navigation, observed terminal `CANCELLED`, rejected false completion, and
+restored the cancelled state after force-stop/reopen. The release activity is
+non-exported; only the debug manifest grants privileged `DUMP` launch for the
+bounded no-data fixture. A3 remains open because the incomplete Android dual-
+mode chooser does not yet route normal game startup into this screen, and the
+official archive, production-size fault/gameplay proof, and physical hardware
+are untested. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-installer-ui.md`](artifacts/2026-09-04/android/a3-installer-ui.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

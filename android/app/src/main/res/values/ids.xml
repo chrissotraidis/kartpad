@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="retro_rewind_install_status" type="id" />
+    <item name="retro_rewind_install_detail" type="id" />
+    <item name="retro_rewind_install_progress" type="id" />
+    <item name="retro_rewind_install_primary" type="id" />
+    <item name="retro_rewind_install_cancel" type="id" />
+</resources>

@@ -2451,3 +2451,32 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   cancellation, remaining production faults/gameplay, and physical hardware
   remain open. No artifact or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-worker-cancellation.md`.
+
+## 2026-09-04 — Android A3 production installer UI
+
+- Added a release-owned, non-exported Retro Rewind installer/status activity.
+  It observes the persisted unique WorkManager chain, shows waiting and
+  determinate phase/byte progress, exposes production Cancel/Retry actions, and
+  is the immutable explicit destination for foreground-notification taps.
+- A prior successful work record is not enough to display ready: installed
+  content is rehashed against the pinned version/artifact contract on a private
+  executor. The debug fixture explicitly says that it installed no game data.
+- On a wiped API 36 AVD, UUID
+  `cf536fba-365b-446d-ba12-51f1884156e9` reached the visible running state. The
+  real Cancel control was activated by focus navigation, terminal `CANCELLED`
+  appeared with Retry, no completion marker was accepted, and an app force-
+  stop/reopen restored the cancelled state.
+- Android 13+ starts now require notification permission and Android 12+
+  requests immediate foreground display. The wiped run proved an active
+  actionable KartPad notification and its explicit installer-activity target.
+- A3 host contracts, the new UI harness, debug/release compile, API-28 lint,
+  package/privacy audit, builder tests, SunPad snapshot, repository safety,
+  shell, and diff checks pass. The exact source-only APK is 33,843,921 bytes at
+  SHA-256
+  `2e0e28fab71ea96e4d17e46fea5b7699b690284736010ff441f795be509d8079`.
+- Classification: **Pass for production UI ownership, visible observation and
+  cancellation, notification return, and validation before ready.** Normal
+  startup still lacks its dual-mode chooser route; production archive/fault,
+  gameplay, and physical acceptance remain open. No artifact or private data
+  was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-installer-ui.md`.

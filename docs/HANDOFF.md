@@ -245,6 +245,19 @@ not block offline Retro Rewind support.
    user-facing observer/cancel screen or official-archive cancellation.
    Evidence:
    `docs/artifacts/2026-09-04/android/a3-worker-cancellation.md`.
+   A production-owned, release-present installer/status activity now observes
+   the unique chain, displays waiting and determinate phase/byte progress,
+   exposes Cancel/Retry, validates installed content off-main before claiming
+   ready, and opens from the foreground notification. Android 13+ install
+   starts require notification permission, and the foreground notice requests
+   immediate display. A wiped API 36 fixture proved that actionable notice and
+   its explicit return target, then activated the real Cancel control, observed
+   terminal `CANCELLED`, rejected completion, and restored that state after
+   force-stop/reopen. Release keeps
+   the activity non-exported; debug ADB access is privileged and bounded. The
+   missing first-launch dual-mode chooser does not yet route normal startup to
+   this screen. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-installer-ui.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook
