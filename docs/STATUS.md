@@ -453,6 +453,165 @@ offline installed-content revalidation on the emulator, not Retro Rewind
 gameplay/mode switching or physical hardware. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-production-install.md`](artifacts/2026-09-04/android/a3-production-install.md).
 
+The complete Android Original/Retro Rewind graph now also compiles and links as
+one `libmain.so`, and the Retro Rewind profile passes an explicit offline
+runtime boot on the expanded API 36 ARM64 emulator. The first attempts exposed
+and fixed Android product over-building, an accidental standalone-base target
+dependency through precompiled-header reuse, and Windows-only section syntax in
+generated Retro blob assembly. With airplane mode enabled, the app selected the
+Retro Rewind translated profile, mounted 4,878 overlays, reached the branded
+title and main menu, preserved its save exactly across force-stop/cold relaunch,
+and did not fall back to Original mode. A base-mode control showed the wiped-
+NAND system-memory warning was shared; a format-valid diagnostic empty save was
+therefore used as a disclosed test precondition. This closes dual linking and
+offline title/menu relaunch, not a race, production mode chooser, general
+fresh-NAND creation, touch parity, or physical hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-dual-runtime-offline-boot.md`](artifacts/2026-09-04/android/a3-dual-runtime-offline-boot.md).
+
+A bounded follow-up now proves that Retro Rewind's native Replay path can load
+the official SNES Donut Plains 1 expert card, follow the expanded course, cross
+into lap 2, and reach a three-lap finish/results presentation on the API 36
+ARM64 emulator. The save hash changed after the result. Running the same RKG
+through KartPad's diagnostic live-controller bridge still diverges around 19
+seconds even when the base-course metadata override is disabled, so that
+override is ruled out and the fixture is not valid A3 acceptance. The replay's
+displayed result also differs from the official card time, so timing fidelity
+is not claimed. A second exact kart/default-transmission card diverged too,
+ruling out Retro Rewind's Inside/Outside bike choice. Delaying fixture
+consumption from countdown stage 1 to race stage 2 made divergence earlier
+(`00:07.383` versus roughly 21 seconds), so that experimental timing change was
+reverted. The remaining fault is still within the diagnostic RKG/player-state
+boundary; a controller-driven race remains open. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-retro-replay-isolation.md`](artifacts/2026-09-04/android/a3-retro-replay-isolation.md).
+
+The later simulator save-precondition diagnosis was revalidated and corrected.
+Guest-address-only instrumentation showed valid Mii-library heap allocations;
+with the redirected save absent, Retro populated it from the format-valid
+empty base save and reached the branded title. The exact clean build then
+remained alive with that byte-identical empty save and no leaderboard, followed
+by six of six identical cold-launch passes. Removing the leaderboard alone also
+did not reproduce the earlier exit. Those exits are transient evidence rather
+than a proven save/settings defect. At that checkpoint, full first-run license
+creation was still open; the controller-race fixture conclusion is unchanged.
+Evidence:
+[`docs/artifacts/2026-09-04/android/a3-retro-replay-isolation.md`](artifacts/2026-09-04/android/a3-retro-replay-isolation.md).
+
+The disclosed format-valid empty-save precondition is now removed for the
+fresh Retro emulator path. With `[network] enabled = false`, the runtime had
+incorrectly rejected every `/dev/net/*` device before classification, including
+the local Wii KD request/time and NCD services required during first-run
+system-memory initialization. The common runtime patch now leaves those local
+services available offline while continuing to gate only IP and SSL devices.
+Two independent fresh redirected-NAND launches visibly reached the Retro
+Rewind title and each created the exact 2,867,200-byte format-valid empty RKSYS
+with SHA-256 `708c7a040e0cfe6cd815690e63f46d1678f17899bce0e786f7480030830f1d13`;
+a cold relaunch also passed. The clean local APK passed package/privacy audit,
+and the original emulator saves were restored with exact hashes after the
+test. This closes fresh offline Retro system-memory creation on the API 36
+ARM64 emulator, not physical hardware/controller, audio/rumble quality,
+performance, or release acceptance.
+Evidence:
+[`docs/artifacts/2026-09-04/android/a3-fresh-save-offline-kd.md`](artifacts/2026-09-04/android/a3-fresh-save-offline-kd.md).
+
+The controller-driven continuation now closes first license creation on that
+fresh emulator state. Starting from the exact game-created empty RKSYS, an
+Android InputReader-visible virtual Xbox controller selected `NEW`, confirmed
+license creation, selected the existing KartPad Mii, and reached `Your new
+license is ready.` The resulting 2,867,200-byte save has valid `RKSD0006` and
+slot-zero `RKPD` structures, a matching core CRC-32, and SHA-256
+`4b83dc4a02dd351d1e594b1c9c13ecd7530e6c80520957d4c576c46c88b0972d`.
+After force-stop and a new production-chooser process, the save remained
+byte-identical and slot 1 visibly displayed the KartPad license. The original
+Retro save was then restored to its exact pre-test `9c6c7b52...` hash and the
+clean title relaunched. This is emulator controller evidence, not physical
+controller/device or release acceptance. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-fresh-save-offline-kd.md`](artifacts/2026-09-04/android/a3-fresh-save-offline-kd.md).
+
+Explicit Original to Retro Rewind to Original switching then reproduced the
+previously intermittent Mii exit once across eight observed pre-fix Original
+launches (six base-only controls and two within the switch sequence). The crash
+record showed an alarm callback had overwritten the
+interrupted translated caller's callee-saved r30 heap pointer. RFL alarm
+polling now runs callbacks against a private interrupt register context while
+briefly suppressing guest scheduler switching. The patched build passed ten of
+ten Original cold launches and a visible-emulator Original/Retro/Original
+sequence; the final Original process continued through the title attract
+sequence, both saves retained their exact hashes, and no new missing-target
+record appeared. Fresh patch reproduction, Apple arm64 compilation, and the
+strict package/privacy audit pass for local APK SHA-256
+`2ba4b4acf7a395c3d810ff81c0327ad15f9bfbbcbcd76da026ec37444ff7b7d2`.
+This closes the reproduced callback corruption and bounded emulator switch,
+not the production chooser, controller-driven Retro race/save, trustworthy
+timing, physical controller/audio/rumble, hardware, or release gates. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-rfl-alarm-context.md`](artifacts/2026-09-04/android/a3-rfl-alarm-context.md).
+
+Android now has a production-owned pre-SDL mode chooser. It validates the
+pinned Retro Rewind installation off the UI thread, presents Original and
+Retro choices together at landscape phone density, routes an unavailable
+Retro choice to the existing installer, and passes activity recreation after
+a landscape flip. The exact audited APK selected Retro without a debug extra,
+reached its branded title beyond 30 seconds, then cold-selected Original and
+reached its distinct title beyond 30 seconds. Both saves retained their exact
+hashes and no new missing-target record appeared. The production manifest
+exports only the chooser; the SDL activity is private, with protected shell
+access retained only in debug builds. Build, lint, four installer contracts,
+release-manifest merge, and package/privacy audit pass for local APK SHA-256
+`7088f683c9cc765c77a12203646af6d9ecdb13f1eb77f559b4bfdbc75e1caf94`.
+This closes the emulator production-chooser/mode-selection slice, not the
+controller-driven Retro race/save, timing, physical controller/audio/rumble,
+hardware, or release gates. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-production-mode-chooser.md`](artifacts/2026-09-04/android/a3-production-mode-chooser.md).
+
+The same production Retro profile now passes a complete controller-driven
+emulator race/results/save/cold-relaunch slice. An Android InputReader-visible
+Xbox-compatible virtual controller navigated the retail menus and drove Mario
+through Retro Rewind's GCN Baby Park to finish stage 4. The results reported
+`17:13.562`, best lap `00:19.742`, and ghost creation; advancing results changed
+the isolated Retro save from SHA-256 `3c4aeacd...` to `7279ad4d...`. A cold
+production-chooser relaunch with the controller already attached reached the
+branded title as a new process, retained the exact post-results hash, and
+accepted controller navigation back to Baby Park. The temporary controller's
+explicit one-hour registration expired mid-race; the runtime recorded an
+ordinary disconnect/reconnect and the same live race completed afterward.
+This closes the emulator controller gameplay, race/results, save mutation, and
+byte-stable cold-relaunch slice. A second visible force-stop/relaunch through
+the production chooser again selected Retro, reached the branded title, and
+returned to the course ghost screen. It still showed only `1/1`; read-only
+inspection of the exact cold-loaded, CRC-valid save found a zero personal-ghost
+bitfield and no Time Trial leaderboard timer in its only initialized license.
+The retained exact pre-race save was then recovered read-only from the emulator:
+the pre/post files differ by only 12 bytes, confined to ordinary race/statistic
+fields plus the core CRC, with no leaderboard or ghost payload change. Both
+variants of a matching packaged Baby Park RKG were rejected after visible
+live-player runs diverged and remained at race stage 2; neither changed the
+save.
+
+A subsequent ordinary-controller feedback run finished Baby Park in
+`02:31.465`, with three recorded lap splits and native finish stage 4. The game
+reported ghost creation and showed the new result ahead of `17:13.562` in the
+same-session leaderboard. Advancing results changed RKSYS from `7279ad4d...`
+to CRC-valid `9c6c7b52...`, again only in ordinary statistics and the core CRC.
+Inspection of Retro's actual custom-track storage corrected the earlier RKSYS-
+only conclusion: Baby Park is stored under Pulsar course key `d6cac6a4`, whose
+`ldb.pul` and `150/2m31s465.rkg` were written beside the already-retained
+`150/17m13s562.rkg`. All three survived force-stop and a new production-chooser
+process. The base game's 32-bit RKSYS personal-ghost field does not describe
+Retro Rewind's expanded course set. This closes durable custom-track record
+storage on the emulator. A subsequent controlled cold navigation selected GCN
+Baby Park, displayed `KartPad 02:31.465` as personal card `1/2`, selected
+Replay, and reached the exact `02:31.465` result with the original three lap
+splits. The save, Pulsar database, and RKG retained their exact pre-replay
+hashes, and the new-process console had no fatal signature. This also closes
+visible cold personal-ghost reload/replay on the emulator. The same PID then
+survived a forced 180-degree landscape change and a HOME/foreground cycle that
+logged `onPause`, `surfaceDestroyed`, `onStop`, followed by `onStart`,
+`onResume`, and `surfaceCreated`; rendering returned to the intact result and
+all three persistence hashes remained exact. This closes Retro runtime
+rotation/background surface recreation on the emulator. Trustworthy timing,
+physical controller/audio/rumble, physical hardware, and release acceptance
+remain open. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-retro-controller-race-save.md`](artifacts/2026-09-04/android/a3-retro-controller-race-save.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

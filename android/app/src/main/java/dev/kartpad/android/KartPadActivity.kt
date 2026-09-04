@@ -23,6 +23,7 @@ class KartPadActivity : SDLActivity() {
             KartPadRuntimeResources.install(this)
             Os.setenv("KARTPAD_ANDROID_FILES_DIR", filesDir.absolutePath, true)
             Os.setenv("KARTPAD_ANDROID_CACHE_DIR", cacheDir.absolutePath, true)
+            configureRuntimeProfile()
             configureDebugRkgInput()
             configureDebugStateTrace()
         }
@@ -39,6 +40,35 @@ class KartPadActivity : SDLActivity() {
         )
         mLayout.bringChildToFront(overlay)
         Log.i(TAG, "A0 SDLActivity shell created")
+    }
+
+    private fun configureRuntimeProfile() {
+        val debugRequested = if (BuildConfig.DEBUG) {
+            intent.getStringExtra(DEBUG_EXTRA_RUNTIME_PROFILE)
+        } else {
+            null
+        }
+        val requested = debugRequested ?: intent.getStringExtra(EXTRA_RUNTIME_PROFILE) ?: "base"
+
+        when (requested) {
+            "base" -> {
+                Os.setenv("KARTPAD_RUNTIME_PROFILE", requested, true)
+                Log.i(TAG, "A3 runtime profile requested=base")
+            }
+            "retro_rewind" -> {
+                val installed = RetroRewindInstallValidator.validate(
+                    RetroRewindInstallStorage.installedRoot(filesDir)
+                        .resolve(RetroRewindRelease.ROOT),
+                    RetroRewindInstallValidator.productionContract(),
+                )
+                check(installed.isValid) {
+                    "Retro Rewind launch requires a validated installed pack"
+                }
+                Os.setenv("KARTPAD_RUNTIME_PROFILE", requested, true)
+                Log.i(TAG, "A3 runtime profile requested=retro_rewind installed=valid")
+            }
+            else -> error("Unsupported runtime profile")
+        }
     }
 
     private fun configureDebugRkgInput() {
@@ -173,6 +203,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     companion object {
+        const val EXTRA_RUNTIME_PROFILE = "dev.kartpad.android.RUNTIME_PROFILE"
         private const val TAG = "KartPadFixture"
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
         private const val DEBUG_RKG_KEYBOARD_STEER_RELATIVE_PATH =
@@ -185,6 +216,8 @@ class KartPadActivity : SDLActivity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION"
         private const val DEBUG_EXTRA_RETRO_REWIND_WORKER =
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER"
+        private const val DEBUG_EXTRA_RUNTIME_PROFILE =
+            "dev.kartpad.android.TEST_RUNTIME_PROFILE"
         private const val DEBUG_RESUME_FIXTURE_SHA256 =
             "cb9d5fc3b83611af65032f73119285de4e97d4b2b9f7b2e9567443635358483a"
         private const val MIN_RKG_BYTES = 0x90L

@@ -18,17 +18,30 @@ diff --git a/cmake/PublicProducts.cmake b/cmake/PublicProducts.cmake
 index 111d354..366d43e 100644
 --- a/cmake/PublicProducts.cmake
 +++ b/cmake/PublicProducts.cmake
-@@ -282,9 +282,80 @@ else()
+@@ -282,9 +282,93 @@ else()
      message(STATUS "RetroRewind target disabled (run translate-mod and emit-build-shards)")
  endif()
  
 +if(MKW_HAVE_RETRO_REWIND)
-+    add_executable(KartPadDual
-+        "${MKW_KARTPAD_DUAL_PRODUCT_SOURCE}"
-+        ${MKW_BASE_REGISTRATION_SOURCES}
-+        ${MKW_RETRO_REGISTRATION_SOURCES})
++    if(ANDROID)
++        add_library(KartPadDual SHARED
++            "${MKW_KARTPAD_DUAL_PRODUCT_SOURCE}"
++            ${MKW_BASE_REGISTRATION_SOURCES}
++            ${MKW_RETRO_REGISTRATION_SOURCES})
++        set_target_properties(KartPadDual PROPERTIES OUTPUT_NAME main)
++    else()
++        add_executable(KartPadDual
++            "${MKW_KARTPAD_DUAL_PRODUCT_SOURCE}"
++            ${MKW_BASE_REGISTRATION_SOURCES}
++            ${MKW_RETRO_REGISTRATION_SOURCES})
++    endif()
 +    mkw_configure_product(KartPadDual)
-+    target_precompile_headers(KartPadDual REUSE_FROM WiiCompiled)
++    if(ANDROID)
++        target_precompile_headers(KartPadDual PRIVATE
++            "${MKW_RUNTIME_SOURCE_DIR}/include/mkw_pch.h")
++    else()
++        target_precompile_headers(KartPadDual REUSE_FROM WiiCompiled)
++    endif()
 +    if(TARGET mkw_base_sensitive)
 +        target_sources(KartPadDual PRIVATE $<TARGET_OBJECTS:mkw_base_sensitive>)
 +    endif()

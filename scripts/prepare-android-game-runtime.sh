@@ -47,6 +47,8 @@ patch --batch -p1 -d "$runtime_source" < \
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-private-paths.patch"
 patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-nand-open.patch"
+patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-surface-resume.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-keyboard-steer.patch"

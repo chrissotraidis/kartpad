@@ -1,0 +1,17 @@
+diff --git a/src/hle/storage/nand_api.cpp b/src/hle/storage/nand_api.cpp
+--- a/src/hle/storage/nand_api.cpp
++++ b/src/hle/storage/nand_api.cpp
+@@ -144,13 +144,4 @@
+     FILE* file = std::fopen(hostPath.c_str(), fopenMode);
+-    if (!file && mode >= 2) {
+-        // Try creating for write modes
+-        file = std::fopen(hostPath.c_str(), "w+b");
+-    }
+-    
+-    // Create parent directories and retry
+-    if (!file && CreateParentDirectories(hostPath)) {
+-        file = std::fopen(hostPath.c_str(), mode >= 2 ? "w+b" : "rb");
+-    }
+ 
+     if (!file) {
+         if (IsFaceLibSeedPath(path) && SeedFaceLibFile(path, hostPath)) {

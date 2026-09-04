@@ -165,6 +165,33 @@
  if(MKW_CPPWINRT_INCLUDE_DIR)
      if(NOT EXISTS "${MKW_CPPWINRT_INCLUDE_DIR}/winrt/base.h")
          message(FATAL_ERROR
+@@ -154,6 +165,26 @@ if(MKW_HAVE_RETRO_REWIND)
+         target_precompile_headers(mkw_retro_sensitive REUSE_FROM mkw_base_shared)
+     endif()
+ 
++    if(ANDROID)
++        set(MKW_ANDROID_RETRO_EXTRA_SOURCES)
++        foreach(source IN LISTS MKW_RETRO_EXTRA_SOURCES)
++            if(source MATCHES "\\.S$")
++                file(READ "${source}" MKW_ANDROID_RETRO_BLOB_CONTENT)
++                string(REPLACE ".section .rdata,\"dr\""
++                    ".section .rodata,\"a\",%progbits"
++                    MKW_ANDROID_RETRO_BLOB_CONTENT
++                    "${MKW_ANDROID_RETRO_BLOB_CONTENT}")
++                get_filename_component(source_name "${source}" NAME)
++                set(normalized_source "${CMAKE_CURRENT_BINARY_DIR}/android_${source_name}")
++                file(WRITE "${normalized_source}" "${MKW_ANDROID_RETRO_BLOB_CONTENT}")
++                list(APPEND MKW_ANDROID_RETRO_EXTRA_SOURCES "${normalized_source}")
++            else()
++                list(APPEND MKW_ANDROID_RETRO_EXTRA_SOURCES "${source}")
++            endif()
++        endforeach()
++        set(MKW_RETRO_EXTRA_SOURCES "${MKW_ANDROID_RETRO_EXTRA_SOURCES}")
++    endif()
++
+     set(MKW_RETRO_TRANSLATED_SOURCES ${MKW_RETRO_MOD_SHARDS} ${MKW_RETRO_EXTRA_SOURCES})
+     set(MKW_RETRO_BLOB_OBJECTS)
+     foreach(source IN LISTS MKW_RETRO_EXTRA_SOURCES)
 @@ -180,7 +191,7 @@
          "${MKW_RUNTIME_SOURCE_DIR}/.."
          "${MKW_RUNTIME_SOURCE_DIR}/../aurora-main/include")
@@ -232,7 +259,7 @@
  endfunction()
  
 -add_executable(WiiCompiled "${MKW_BASE_PRODUCT_SOURCE}" ${MKW_BASE_REGISTRATION_SOURCES})
-+if(ANDROID)
++if(ANDROID AND NOT MKW_HAVE_RETRO_REWIND)
 +    add_library(WiiCompiled SHARED "${MKW_BASE_PRODUCT_SOURCE}" ${MKW_BASE_REGISTRATION_SOURCES})
 +    set_target_properties(WiiCompiled PROPERTIES OUTPUT_NAME main)
 +else()

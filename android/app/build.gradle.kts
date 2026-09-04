@@ -9,6 +9,7 @@ val dawnAndroidRoot = providers.environmentVariable("DAWN_ANDROID_ROOT")
 val minizipAndroidRoot = providers.environmentVariable("MINIZIP_ANDROID_ROOT")
 val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orNull
 val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
+val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 
 android {
     namespace = "dev.kartpad.android"
@@ -44,6 +45,9 @@ android {
                     )
                 }
                 cppFlags += listOf("-std=c++20", "-fvisibility=hidden")
+                if (androidNativeTarget != null) {
+                    targets += listOf(androidNativeTarget)
+                }
             }
         }
     }

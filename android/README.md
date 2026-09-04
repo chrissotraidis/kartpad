@@ -19,6 +19,13 @@ checks. None of these paths use game data or generated translated code.
 Gameplay, physical-device support, performance, and release readiness remain
 unproven. A1 is complete; A2 is the next gate.
 
+Game-runtime builds launch through `KartPadLaunchActivity`, which validates the
+pinned Retro Rewind installation before presenting side-by-side Original and
+Retro Rewind choices. Selecting an unavailable Retro install opens the
+production installer; selecting either playable mode starts the private SDL
+activity with one immutable runtime profile. Debug builds retain protected
+direct SDL-activity access for device fixtures.
+
 The first A2 build slice can privately prepare and package the complete
 29,065-function Original runtime when the ignored translated graph already
 exists. This command never copies that graph or game data into Git and does

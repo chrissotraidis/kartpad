@@ -34,6 +34,12 @@ if [[ ! -f "$(dirname "$runtime_source")/generated/data_sections_init.cpp" ]]; t
   exit 1
 fi
 
+native_target="WiiCompiled"
+if grep -Eq '^set\(MKW_HAVE_RETRO_REWIND_SHARDS ON\)' \
+  "$translation_root/build_shards/shards.cmake"; then
+  native_target="KartPadDual"
+fi
+
 export JAVA_HOME="$repo_root/.android-bootstrap/jdk-$KARTPAD_ANDROID_JDK_VERSION/Contents/Home"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
 export DAWN_ANDROID_ROOT="$dawn_root"
@@ -42,6 +48,7 @@ export MINIZIP_ANDROID_ROOT="$minizip_root"
 "$repo_root/android/gradlew" --project-dir "$repo_root/android" --no-daemon \
   -PkartpadGameRuntimeSource="$runtime_source" \
   -PkartpadTranslatedShardManifest="$translation_root/build_shards/shards.cmake" \
+  -PkartpadAndroidNativeTarget="$native_target" \
   :app:assembleDebug
 
 apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"

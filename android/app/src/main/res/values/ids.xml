@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <item name="kartpad_mode_original" type="id" />
+    <item name="kartpad_mode_retro_rewind" type="id" />
+    <item name="kartpad_mode_status" type="id" />
     <item name="retro_rewind_install_status" type="id" />
     <item name="retro_rewind_install_detail" type="id" />
     <item name="retro_rewind_install_progress" type="id" />

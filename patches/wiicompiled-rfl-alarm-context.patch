@@ -1,0 +1,33 @@
+--- a/src/hle/os/os_alarm.cpp
++++ b/src/hle/os/os_alarm.cpp
+@@ -446,15 +446,22 @@
+ // returning 0 when the manager pointer (0x80386298) is null.
+ extern "C" uint32_t RFLiIsWorking_HLE_800bd860()
+ {
+-    // Pump alarms/callbacks on the current guest thread when available. Using a
+-    // detached persistent context here can leave the busy loop waiting on work
+-    // that completed on the wrong scheduling context.
+-    CpuContext* cpu = TryGetCpuContext();
+-    if (!cpu) {
+-        cpu = &GetPersistentCpuContext();
+-    }
++    // RFL polls from the middle of translated RFLInitRes. Alarm handlers are
++    // guest interrupts and must not publish their return registers into that
++    // live caller (notably its callee-saved heap pointer in r30). Seed a private
++    // interrupt context from the current thread so callbacks still observe the
++    // correct guest state while their register writes remain isolated.
++    GuestInterruptCallbackContext interrupt;
++    CpuContext* cpu = interrupt.get();
+     EnsureSda1Base(cpu);
+-    ProcessAlarmQueue(cpu, 32);
++    IncrementSchedulerDisableCount();
++    try {
++        ProcessAlarmQueue(cpu, 32);
++    } catch (...) {
++        DecrementSchedulerDisableCount();
++        throw;
++    }
++    DecrementSchedulerDisableCount();
+ 
+     // Now return the actual "working" status
+     constexpr uint32_t kRflManagerPtrAddr = 0x80386298u;

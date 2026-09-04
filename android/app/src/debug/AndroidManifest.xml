@@ -11,5 +11,10 @@
             android:exported="true"
             android:permission="android.permission.DUMP"
             tools:replace="android:exported" />
+        <activity
+            android:name=".KartPadActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            tools:replace="android:exported" />
     </application>
 </manifest>

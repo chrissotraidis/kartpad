@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -236,7 +237,8 @@ final class RetroRewindPipelineDeviceFixture {
             return;
         }
         try (var paths = Files.walk(root)) {
-            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+            for (Path path : paths.sorted(Comparator.reverseOrder())
+                    .collect(Collectors.toList())) {
                 Files.delete(path);
             }
         }

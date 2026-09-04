@@ -1,0 +1,37 @@
+--- a/src/hle/net/network_core.cpp
++++ b/src/hle/net/network_core.cpp
+@@ -675,15 +675,18 @@ extern "C" int32_t Network_HLE_OpenDevice(const char* path, uint32_t mode) {
+     if (!path) {
+         return -101;
+     }
+-    if (!RuntimeConfigFile::NetworkEnabled(true)) {
+-        // The guest opens several /dev/net nodes at boot and retries; report the
+-        // reason online will not work exactly once.
++    const bool isIpTop = std::strcmp(path, "/dev/net/ip/top") == 0;
++    const bool isSsl = std::strcmp(path, "/dev/net/ssl") == 0;
++    if ((isIpTop || isSsl) && !RuntimeConfigFile::NetworkEnabled(true)) {
++        // KD request/time and NCD are local Wii system services, not Internet
++        // access. They must remain available offline so first-run save and
++        // license initialization can complete. Gate only socket/TLS devices.
+         static bool reported = false;
+         if (!reported) {
+             reported = true;
+             NetFail("networking is disabled in Config.toml; online play is unavailable");
+         }
+         return 0;
+     }
+     DeviceKind kind;
+     if (std::strcmp(path, "/dev/net/kd/request") == 0) {
+@@ -693,10 +696,10 @@ extern "C" int32_t Network_HLE_OpenDevice(const char* path, uint32_t mode) {
+         kind = DeviceKind::KdTime;
+     } else if (std::strcmp(path, "/dev/net/ncd/manage") == 0) {
+         kind = DeviceKind::NcdManage;
+-    } else if (std::strcmp(path, "/dev/net/ip/top") == 0) {
++    } else if (isIpTop) {
+         kind = DeviceKind::IpTop;
+         EnsureSocketRuntime();
+-    } else if (std::strcmp(path, "/dev/net/ssl") == 0) {
++    } else if (isSsl) {
+         kind = DeviceKind::Ssl;
+         EnsureSocketRuntime();
+     } else {

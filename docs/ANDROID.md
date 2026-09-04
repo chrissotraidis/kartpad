@@ -32,15 +32,44 @@ covers twelve supported and rejected device states and proves that the ADB
 serial is not emitted; the current host has no attached ADB target, so this
 does not satisfy a physical A2 row.
 
-While that external A2 prerequisite is unavailable, the first independent A3
-source slice extracts archive member-path validation into
-`runtime/src/retro_rewind/archive_path.cpp`. The existing iOS/tvOS installer
+While that external A2 prerequisite is unavailable, A3 has advanced through
+the production installer and its first real dual-runtime gate. The complete
+Original/Retro Rewind graph now links into one Android `libmain.so`; an explicit
+validated Retro Rewind selection reaches its branded title and main menu
+offline on the ARM64 emulator and preserves the save across force-stop/cold
+relaunch without falling back to Original mode. A production launcher now
+validates the installed pack and presents side-by-side Original/Retro choices
+before SDL starts; both paths reach their distinct titles through the visible
+chooser. A virtual-controller-driven Retro Rewind Time Trial now reaches its
+ordinary result flow and persists a CRC-valid save mutation across a cold
+production-chooser relaunch. A second feedback-driven run finished in
+`02:31.465`; Retro Rewind wrote it as a course-scoped `2m31s465.rkg` beside the
+earlier `17m13s562.rkg` and updated Baby Park's `ldb.pul`. Those Pulsar files
+survived a force-stop and production-chooser cold relaunch. Retro custom-track
+records are not represented by the base game's 32-slot RKSYS ghost bitfield,
+which explains the earlier false negative. The new process then surfaced the
+`KartPad 02:31.465` personal card as `1/2`; its Replay path consumed the stored
+stream through the exact `02:31.465` finish while leaving the save, Pulsar
+database, and RKG byte-identical. The same live Retro result then survived a
+forced 180-degree landscape change and a complete HOME/foreground
+`surfaceDestroyed`/`surfaceCreated` cycle in the original process, again with
+all three persistence hashes unchanged. A subsequent clean runtime correction
+keeps Wii's local KD/NCD services available when Internet networking is
+disabled. Two independent fresh redirected-NAND launches then created the
+exact format-valid empty RKSYS and reached the Retro title. From that empty
+state, the Android InputReader/SDL controller path created a KartPad license,
+and a cold production-chooser relaunch displayed the same license with the
+save byte-identical and CRC-valid. Touch parity and physical-device acceptance
+remain open.
+
+The first independent A3 source slice extracted archive member-path validation
+into `runtime/src/retro_rewind/archive_path.cpp`. The existing iOS/tvOS installer
 now consumes that byte-oriented contract using minizip's explicit filename
 length, including embedded-NUL rejection. Host tests cover every prohibited
 path class, the pinned NDK compiles it for API-28 ARM64 with warnings as errors,
-and fresh Apple patch preparation succeeds. Android download,
-storage, extraction, activation, rollback, and gameplay remain unimplemented;
-this does not pass A3 or change A2's status.
+and fresh Apple patch preparation succeeds. This historical slice did not pass
+A3 or change A2's status; later sections record the implemented Android
+download, storage, extraction, activation, and rollback pipeline.
 
 The next source-only slice adds `ArchiveScan` beside that validator and wires
 the Apple installer through it. The portable scan rejects invalid paths,
@@ -127,32 +156,34 @@ current iOS functionality from the longer-term parity target.
 ## Architecture
 
 ```text
-KartPadActivity : SDLActivity
+KartPadLaunchActivity
++-- validated Original / Retro Rewind chooser
 |
-+-- SDL SurfaceView
-|   `-- Aurora -> Dawn -> Vulkan
-|
-+-- KartPadOverlayView
-|   +-- gameplay touch controls
-|   +-- mode chooser
-|   +-- menus and settings
-|   `-- import/install/status layers
-|
-+-- Android services
-|   +-- Storage Access Framework import
-|   +-- Retro Rewind download/install
-|   +-- sensors and haptics
-|   `-- diagnostics share intent
-|
-`-- JNI / stable mobile-host C ABI
-    `-- libmain.so (arm64-v8a)
-        +-- Original profile
-        +-- Retro Rewind profile
-        +-- WiiCompiled runtime and HLE
-        +-- Android guest memory and fibers
-        +-- SDL audio and controllers
-        +-- Android TLS and BSD sockets
-        `-- Aurora / Dawn Vulkan
+`-- KartPadActivity : SDLActivity
+    |
+    +-- SDL SurfaceView
+    |   `-- Aurora -> Dawn -> Vulkan
+    |
+    +-- KartPadOverlayView
+    |   +-- gameplay touch controls
+    |   +-- menus and settings
+    |   `-- import/install/status layers
+    |
+    +-- Android services
+    |   +-- Storage Access Framework import
+    |   +-- Retro Rewind download/install
+    |   +-- sensors and haptics
+    |   `-- diagnostics share intent
+    |
+    `-- JNI / stable mobile-host C ABI
+        `-- libmain.so (arm64-v8a)
+            +-- Original profile
+            +-- Retro Rewind profile
+            +-- WiiCompiled runtime and HLE
+            +-- Android guest memory and fibers
+            +-- SDL audio and controllers
+            +-- Android TLS and BSD sockets
+            `-- Aurora / Dawn Vulkan
 ```
 
 The current
@@ -172,6 +203,7 @@ every visible application screen.
 Do not introduce a second engine framework or an elaborate Android navigation
 stack. The shell needs only:
 
+- `KartPadLaunchActivity`, the pre-SDL validated mode chooser;
 - `KartPadActivity`, derived from `SDLActivity`;
 - `KartPadOverlayView`, a deterministic Canvas-based overlay;
 - a small state coordinator for setup, menus, and native-runtime readiness;
@@ -957,6 +989,31 @@ revalidated the installed 6.12.5 pack offline. This closes official pack
 installation on the emulator, not Retro Rewind gameplay, mode switching, or
 physical-device acceptance. Evidence is in
 `docs/artifacts/2026-09-04/android/a3-production-install.md`.
+
+The first dual-runtime A3 execution gate now passes as well. Android preparation
+normalizes generated Retro blob assembly to ELF section syntax, the dual product
+owns its shared-library output and precompiled header, and Gradle requests only
+the product represented by the prepared graph. The resulting 119,088,910-byte
+APK passes the strict privacy/package audit. With the production-validated pack
+and networking disabled, explicit `retro_rewind` selection reaches the branded
+title and main menu, mounts 4,878 overlays, and preserves the exact save hash
+across a force-stop/cold relaunch without Original-mode fallback. A base-mode
+control reproduced the wiped-NAND system-memory warning, so this bounded proof
+discloses its format-valid empty diagnostic save precondition. It does not prove
+a race, the production chooser, arbitrary fresh-NAND creation, touch/controller
+parity, or a physical device. Evidence is in
+`docs/artifacts/2026-09-04/android/a3-dual-runtime-offline-boot.md`.
+
+The next emulator isolation shows that Retro Rewind's native Replay path can
+execute the official SNES Donut Plains 1 expert through lap 2 and a three-lap
+finish/results presentation. The same RKG still diverges when converted into
+live Classic Controller state, whether the diagnostic base-course metadata
+override is enabled or disabled. The replay result time also does not match the
+official card, so this is execution-path evidence rather than timing or
+controller acceptance. Continue at the Retro Rewind transmission/RKG-to-live-
+input boundary; do not relabel the replay as the controller-driven A3 race.
+Evidence is in
+`docs/artifacts/2026-09-04/android/a3-retro-replay-isolation.md`.
 
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and

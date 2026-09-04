@@ -69,14 +69,21 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   set(MKW_KARTPAD_REPO_ROOT "${KARTPAD_REPO_ROOT}" CACHE PATH "" FORCE)
   set(MKW_TRANSLATED_COMPILE_JOBS 2 CACHE STRING "" FORCE)
   add_subdirectory("${KARTPAD_GAME_RUNTIME_SOURCE}" game-runtime)
-  target_sources(WiiCompiled PRIVATE
+  if(TARGET KartPadDual)
+    set(KARTPAD_GAME_RUNTIME_TARGET KartPadDual)
+  elseif(TARGET WiiCompiled)
+    set(KARTPAD_GAME_RUNTIME_TARGET WiiCompiled)
+  else()
+    message(FATAL_ERROR "Prepared game runtime has no Android product target")
+  endif()
+  target_sources(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     retro_rewind_archive_jni.cpp
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_extract.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_scan.cpp")
-  target_include_directories(WiiCompiled PRIVATE
+  target_include_directories(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     "${KARTPAD_REPO_ROOT}/runtime/include")
-  target_link_libraries(WiiCompiled PRIVATE MINIZIP::minizip)
+  target_link_libraries(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE MINIZIP::minizip)
 else()
   add_library(main SHARED
     fixture_main.cpp

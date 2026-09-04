@@ -30,8 +30,12 @@
         <activity
             android:name=".KartPadActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
-            android:exported="true"
+            android:exported="false"
             android:launchMode="singleTask"
+            android:screenOrientation="sensorLandscape" />
+        <activity
+            android:name=".KartPadLaunchActivity"
+            android:exported="true"
             android:screenOrientation="sensorLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
