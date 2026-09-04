@@ -2547,3 +2547,32 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   mode routing/gameplay, and physical hardware remain open. No production
   archive, private data, APK, or AAB was downloaded or published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-device-install-faults.md`.
+
+## 2026-09-04 — Android A3 real low-space preflight
+
+- Added a debug-only route to run the production `RetroRewindSpaceProbe`
+  against real Android `filesDir`/`cacheDir`, plus a wiped-AVD harness whose
+  byte requirement comes from the sole Retro Rewind profile.
+- The harness refuses an existing device, caps guest filling at 2 GiB, requires
+  8 GiB of host reserve, and deletes only its explicit disposable filler. The
+  first ShellCheck pass rejected an ambiguous compound assertion; an explicit
+  conditional fixed it before any low-space run began.
+- A wiped API 36 / 4 KiB ARM64 AVD used a controlled 1,121 MiB filler. The
+  production probe observed 4,186,030,080 bytes available against the exact
+  4,327,477,355-byte same-store requirement and returned
+  `INSUFFICIENT_SHARED_STORE`. The harness confirmed zero archive bytes/cache
+  state, deleted the filler, and stopped the emulator.
+- Android's image has no usable `fstrim`; the dedicated sparse AVD image keeps
+  allocated blocks for reuse. Host free space remains 44 GiB. Debug assemble,
+  strict APK/privacy audit, eight A3 source runners, release compile/API-28
+  lint, SunPad snapshot, repository safety, shell lint/syntax, and diff checks
+  pass. Source verification validates 446 hunks and every other pin before the
+  unchanged ignored `rr-pulsar` mismatch; it was not mutated. The exact
+  source-only APK is 33,843,921 bytes at SHA-256
+  `dda33041fd82e4db874562313dad5bdd583d9d164199d87dad55acc287779e7d`.
+- Classification: **Pass for real Android same-store preflight refusal under a
+  controlled byte deficit before archive acquisition.** Mid-transfer or
+  mid-extraction `ENOSPC`, the official production-size install, gameplay, and
+  physical hardware remain open. No production archive, private data, APK, or
+  AAB was downloaded or published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-device-low-space.md`.

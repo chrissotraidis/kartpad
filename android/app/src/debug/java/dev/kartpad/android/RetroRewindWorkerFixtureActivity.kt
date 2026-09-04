@@ -23,6 +23,22 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             }
             return
         }
+        if (intent.getBooleanExtra(EXTRA_SPACE_PROBE, false)) {
+            if (savedInstanceState == null) {
+                Thread {
+                    val result = RetroRewindSpaceProbe.check(filesDir, cacheDir)
+                    Log.i(
+                        LOG_TAG,
+                        "A3 Android space probe error=${result.error} " +
+                            "required_files=${result.requiredFilesBytes} " +
+                            "available_files=${result.availableFilesBytes} " +
+                            "required_cache=${result.requiredCacheBytes} " +
+                            "available_cache=${result.availableCacheBytes}",
+                    )
+                }.start()
+            }
+            return
+        }
         if (intent.getBooleanExtra(EXTRA_INIT_ONLY, false)) {
             Log.i(LOG_TAG, "A3 worker initializer activity created")
             return
@@ -147,5 +163,7 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_VERSION_CHECK"
         const val EXTRA_PIPELINE =
             "dev.kartpad.android.TEST_RETRO_REWIND_PIPELINE"
+        const val EXTRA_SPACE_PROBE =
+            "dev.kartpad.android.TEST_RETRO_REWIND_SPACE_PROBE"
     }
 }

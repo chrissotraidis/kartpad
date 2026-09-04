@@ -421,6 +421,15 @@ archive, real storage exhaustion, normal mode routing/gameplay, or physical
 hardware. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-device-install-faults.md`](artifacts/2026-09-04/android/a3-device-install-faults.md).
 
+Android's production same-store space probe now also has a real low-capacity
+execution on a wiped API 36 ARM64 AVD. A guarded 1,121 MiB disposable filler
+reduced available app storage to 4,186,030,080 bytes; the probe rejected that
+against the exact profile-derived 4,327,477,355-byte requirement and the
+harness confirmed zero archive cache state. The filler was removed and the
+emulator stopped. This closes the on-device preflight deficit case, not
+mid-transfer/mid-extraction `ENOSPC` or the production-size install. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-device-low-space.md`](artifacts/2026-09-04/android/a3-device-low-space.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

@@ -934,6 +934,12 @@ failure retains the previously validated install and cleans staging, and a
 valid replacement survives a recreated single-rollback process-death state;
 recovery restores it and removes stale staging with no transient directories. This is
 synthetic fault evidence, not a production-size install or gameplay result.
+The production same-store capacity probe now also rejects a real controlled
+deficit on a wiped API 36 ARM64 AVD. With 4,186,030,080 bytes available against
+the profile-derived 4,327,477,355-byte requirement, it reports
+`INSUFFICIENT_SHARED_STORE` and creates no archive state. The bounded filler is
+removed during cleanup. Mid-transfer/mid-extraction `ENOSPC` remains distinct
+and unproven.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

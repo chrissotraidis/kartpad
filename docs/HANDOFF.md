@@ -279,6 +279,15 @@ not block offline Retro Rewind support.
    production-size install, real full-disk behavior, gameplay/mode routing, or
    physical acceptance. Evidence:
    `docs/artifacts/2026-09-04/android/a3-device-install-faults.md`.
+   The production Android space probe now has a real controlled low-capacity
+   execution on a wiped API 36 ARM64 AVD. A safety-capped 1,121 MiB filler
+   reduced the shared app store to 4,186,030,080 available bytes, below the
+   profile-derived 4,327,477,355-byte requirement. The probe returned
+   `INSUFFICIENT_SHARED_STORE`, no archive cache state appeared, the filler was
+   removed, and the emulator stopped. This proves preflight refusal before
+   acquisition, not mid-transfer/mid-extraction `ENOSPC` or a production-size
+   install. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-device-low-space.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook
