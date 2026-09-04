@@ -135,15 +135,6 @@ class KartPadActivity : SDLActivity() {
             return
         }
         when {
-            intent.getBooleanExtra(DEBUG_EXTRA_RETRO_REWIND_WORKER_RESTART, false) -> {
-                val id = RetroRewindInstallWork.enqueueDebugFixture(
-                    this,
-                    steps = 60,
-                    delayMillis = 500,
-                    resumeProcessDeath = true,
-                )
-                Log.i(TAG, "A3 durable worker restart fixture enqueued id=$id")
-            }
             intent.getBooleanExtra(DEBUG_EXTRA_RETRO_REWIND_WORKER, false) -> {
                 runDebugRetroRewindResumeFixture()
                 RetroRewindInstallWork.enqueueDebugFixture(this)
@@ -194,8 +185,6 @@ class KartPadActivity : SDLActivity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION"
         private const val DEBUG_EXTRA_RETRO_REWIND_WORKER =
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER"
-        private const val DEBUG_EXTRA_RETRO_REWIND_WORKER_RESTART =
-            "dev.kartpad.android.TEST_RETRO_REWIND_WORKER_RESTART"
         private const val DEBUG_RESUME_FIXTURE_SHA256 =
             "cb9d5fc3b83611af65032f73119285de4e97d4b2b9f7b2e9567443635358483a"
         private const val MIN_RKG_BYTES = 0x90L

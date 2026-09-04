@@ -354,6 +354,18 @@ remains open for the official 1.86 GB server/transfer, the remaining production
 fault matrix, gameplay/mode switching, and physical hardware. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-resumable-download.md`](artifacts/2026-09-04/android/a3-resumable-download.md).
 
+A debug-only native installer-activity owner now proves the remaining
+activity-recreation interruption independently of SDL gameplay startup. On a
+wiped API 36 AVD, the activity recreated in the same PID, re-enqueued with
+`KEEP`, and the original foreground work UUID started and completed exactly
+once. The ADB-only fixture is absent from release builds and protected by the
+privileged `DUMP` permission in debug builds. A rejected first experiment
+correctly showed that explicitly recreating SDL during native window startup is
+not valid installer evidence, so that path was removed. A3 remains open for
+production UI observation/cancellation, the official archive/fault matrix,
+gameplay/mode switching, and physical hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-worker-activity-recreation.md`](artifacts/2026-09-04/android/a3-worker-activity-recreation.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

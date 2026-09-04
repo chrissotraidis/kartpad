@@ -230,6 +230,14 @@ not block offline Retro Rewind support.
    production fault matrix, gameplay/mode switching, and physical acceptance
    remain open. Evidence:
    `docs/artifacts/2026-09-04/android/a3-resumable-download.md`.
+   A debug-only native installer activity now recreates in the same PID while
+   work is active, re-enqueues with `KEEP`, and observes the original UUID
+   complete after exactly one start. It is absent from release and requires
+   privileged `DUMP` permission for ADB launch. This replaces a rejected
+   experiment that recreated SDL during game-window startup and therefore
+   restarted the native process rather than modeling installer UI lifecycle.
+   Evidence:
+   `docs/artifacts/2026-09-04/android/a3-worker-activity-recreation.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

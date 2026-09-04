@@ -2406,3 +2406,27 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   gameplay/mode switching, and physical acceptance remain open. No APK/AAB,
   archive, or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-resumable-download.md`.
+
+## 2026-09-04 — Android A3 install-worker activity recreation
+
+- Added a debug-source-only lightweight installer activity, absent from
+  release and protected by Android's privileged `DUMP` permission for ADB
+  launch. It runs outside SDL, requests recreation while work is active, and
+  re-enqueues after recreation to exercise unique `KEEP` behavior.
+- The final wiped API 36 run kept PID 4580, observed destruction/recreation,
+  and completed the original worker UUID after exactly one attempt-0 start.
+  The same harness first reconfirmed process-death resume from a six-byte
+  persisted prefix at attempt 1.
+- An initial experiment recreated `SDLActivity` during native window startup;
+  its expected game-window teardown caused process restart, so that code was
+  removed and is not claimed as installer activity evidence.
+- Public debug build, release compilation, API-28 lint, private game-source
+  compilation, package/privacy audit, relevant A3 tests, builder suite, SunPad
+  snapshot, safety, shell, and diff checks pass. The source-only APK is
+  33,843,921 bytes at SHA-256
+  `e1a06115225c52e9749349a14d6fa22fd9688dd84b084604ddc679fe31a52b84`.
+- Classification: **Pass for same-process installer activity recreation
+  without duplicate foreground work.** Production UI observation/cancellation,
+  official archive/fault execution, gameplay/mode switching, and physical
+  hardware remain open. No artifact or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-worker-activity-recreation.md`.

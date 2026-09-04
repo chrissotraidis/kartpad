@@ -905,7 +905,10 @@ restarts when a server returns the full representation, and publishes only a
 complete pinned digest. An injected process death preserved seven bytes and the
 same worker resumed from that exact offset. The official server's range
 behavior, production-size install, remaining fault matrix, and Retro Rewind
-gameplay remain open.
+gameplay remain open. A debug-only non-SDL installer activity also proves that
+active work retains one UUID/start across same-process activity destruction,
+recreation, and duplicate `KEEP` enqueue. This models setup UI lifecycle
+without conflating it with the game window.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from
