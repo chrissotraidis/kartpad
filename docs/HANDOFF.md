@@ -200,6 +200,14 @@ not block offline Retro Rewind support.
    and safety pass. No worker/UI calls this downloader and the production
    archive was not fetched. Evidence:
    `docs/artifacts/2026-09-04/android/a3-archive-download.md`.
+   Android now also has a pinned minizip-ng, two-pass bounded extraction core,
+   no-follow directory-relative output, JNI cancellation/progress, exact
+   staging cleanup, and a joined validation/atomic-activation pipeline. Host
+   faults, full private native linkage, public build/lint/audit, and wiped 4 KiB
+   plus 16 KiB AVD JNI execution pass. Production-size install, a durable
+   worker, injected process death, and Retro Rewind gameplay remain open.
+   Evidence:
+   `docs/artifacts/2026-09-04/android/a3-archive-extraction.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

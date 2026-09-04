@@ -2315,3 +2315,33 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   not downloaded, and ZIP extraction/process-death/runtime acceptance remain
   open. No APK/AAB or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-archive-download.md`.
+
+## 2026-09-04 — Android A3 bounded extraction and activation pipeline
+
+- Locked the official 772,757-byte minizip-ng 4.0.8 commit archive at SHA-256
+  `e0fa42896ad244261f100fd06fae7c64f6054ce02d143f4d0f55df5fced9f63d`
+  and added fail-closed bootstrap/CMake integration for both Android products.
+- Added a two-pass shared-policy extractor with strict UTF-8, no-follow
+  directory-relative output, exclusive files, exact byte/CRC enforcement,
+  cancellation, and progress. The Java pipeline revalidates the archive, then
+  joins extraction to content validation and atomic activation; failed staging
+  is removed without touching active content and startup recovery covers death.
+- Host extraction and Java pipeline fault matrices pass. Coverage includes
+  traversal, duplicates/aliases, links, encryption, slash data, invalid UTF-8,
+  missing root, limits, cancellation, CRC corruption, foreign entries, invalid
+  content/archive, and a pre-existing destination symlink.
+- Public build/release compile/API-28 lint, full private native linkage, strict
+  package/privacy/dependency/license audit, existing A3 tests, scoped shared
+  archive CTests, SunPad snapshot, 30 builder/tvOS tests, safety, shell, and diff
+  checks pass. An initial unscoped CTest command only found the two deliberately
+  built archive binaries; its scoped rerun passed both.
+- Wiped API 36 4 KiB and API 35 16 KiB ARM64 AVDs both passed the new JNI
+  extraction marker plus the complete existing A1/A2 fixture suite, then shut
+  down cleanly. No ADB target remains.
+- The source-only APK is 33,834,881 bytes with SHA-256
+  `dd891d78ffcd16fed258631ce9e92db95e343e2775e838ae97d3fe8d112ca3e2`.
+- Classification: **Pass for bounded extraction and validation-gated atomic
+  activation contracts, including Android JNI execution.** Production-size
+  download, durable worker/process-death behavior, Retro Rewind runtime, and
+  physical acceptance remain open. No artifact or private data was published.
+  Evidence: `docs/artifacts/2026-09-04/android/a3-archive-extraction.md`.

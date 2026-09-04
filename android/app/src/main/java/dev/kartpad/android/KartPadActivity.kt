@@ -6,6 +6,9 @@ import android.system.Os
 import android.util.Log
 import android.view.ViewGroup
 import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.libsdl.app.SDLActivity
 import org.libsdl.app.SDLSurface
 
@@ -22,6 +25,7 @@ class KartPadActivity : SDLActivity() {
             configureDebugStateTrace()
         }
         super.onCreate(savedInstanceState)
+        runDebugRetroRewindExtractionFixture()
         val overlay = KartPadOverlayView(this)
         mLayout.addView(
             overlay,
@@ -85,6 +89,44 @@ class KartPadActivity : SDLActivity() {
         }
     }
 
+    private fun runDebugRetroRewindExtractionFixture() {
+        if (!BuildConfig.DEBUG || BuildConfig.GAME_RUNTIME ||
+            !intent.getBooleanExtra(DEBUG_EXTRA_RETRO_REWIND_EXTRACTION, false)
+        ) {
+            return
+        }
+        val temporary = File(cacheDir, "RetroRewindExtractionFixture-${System.nanoTime()}")
+        try {
+            val staging = File(temporary, "stage")
+            check(staging.mkdirs())
+            val archive = File(temporary, "fixture.zip")
+            ZipOutputStream(FileOutputStream(archive)).use { zip ->
+                zip.putNextEntry(ZipEntry("${RetroRewindRelease.ROOT}/"))
+                zip.closeEntry()
+                zip.putNextEntry(ZipEntry("${RetroRewindRelease.ROOT}/version.txt"))
+                zip.write("${RetroRewindRelease.VERSION}\n".toByteArray(Charsets.UTF_8))
+                zip.closeEntry()
+            }
+            val result = RetroRewindArchiveExtractor.extract(
+                archive.toPath(),
+                staging.toPath(),
+                { false },
+                { _, _ -> },
+            )
+            val extracted = File(staging, "${RetroRewindRelease.ROOT}/version.txt")
+                .readText(Charsets.UTF_8)
+            check(result.isComplete() && result.selectedEntries == 2L &&
+                result.selectedBytes == extracted.toByteArray(Charsets.UTF_8).size.toLong() &&
+                result.extractedBytes == result.selectedBytes &&
+                extracted == "${RetroRewindRelease.VERSION}\n")
+            Log.i(TAG, "A3 JNI archive extraction passed entries=2 bytes=${result.extractedBytes}")
+        } catch (error: Exception) {
+            Log.e(TAG, "A3 JNI archive extraction failed", error)
+        } finally {
+            temporary.deleteRecursively()
+        }
+    }
+
     companion object {
         private const val TAG = "KartPadFixture"
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
@@ -94,6 +136,8 @@ class KartPadActivity : SDLActivity() {
             "KartPad/Diagnostics/StateTrace.enable"
         private const val DEBUG_STATE_TRACE_RELATIVE_PATH =
             "KartPad/Diagnostics/StateTrace.csv"
+        private const val DEBUG_EXTRA_RETRO_REWIND_EXTRACTION =
+            "dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION"
         private const val MIN_RKG_BYTES = 0x90L
         private const val MAX_RKG_BYTES = 1024L * 1024L
         private val RKG_MAGIC = byteArrayOf('R'.code.toByte(), 'K'.code.toByte(), 'G'.code.toByte(), 'D'.code.toByte())

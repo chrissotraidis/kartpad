@@ -59,6 +59,10 @@ expected_native_members="$(printf '%s\n' \
 asset_members="$(printf '%s\n' "$members" | grep '^assets/.' | sort || true)"
 if [[ -n "$asset_members" ]]; then
   expected_asset_members="$(printf '%s\n' \
+    assets/ThirdPartyLicenses/Minizip-NG.txt | sort)"
+  if printf '%s\n' "$asset_members" | grep -Fxq assets/dsp/dsp_coef.bin; then
+    expected_asset_members="$(printf '%s\n' \
+    assets/ThirdPartyLicenses/Minizip-NG.txt \
     assets/dsp/dsp_coef.bin \
     assets/pipeline/initial_pipeline_cache.db \
     assets/wii/README.md \
@@ -73,6 +77,7 @@ if [[ -n "$asset_members" ]]; then
     assets/wii/shared2/wc24/nwc24fls.bin \
     assets/wii/shared2/wc24/nwc24msg.cbk \
     assets/wii/shared2/wc24/nwc24msg.cfg | sort)"
+  fi
   [[ "$asset_members" == "$expected_asset_members" ]] || {
     echo "ERROR: APK asset set differs from the public runtime-resource allowlist" >&2
     exit 1
@@ -91,9 +96,15 @@ for library in libSDL3.so libc++_shared.so libmain.so; do
   fi
 done
 dynamic="$("$readelf" -d -l "$audit_root/libmain.so")"
-[[ "$dynamic" == *"Shared library: [libSDL3.so]"* ]]
-[[ "$dynamic" == *"Shared library: [libandroid.so]"* ]]
-[[ "$dynamic" == *"Shared library: [liblog.so]"* ]]
+needed="$(printf '%s\n' "$dynamic" |
+  sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
+expected_needed="$(printf '%s\n' \
+  libc++_shared.so libc.so libdl.so libm.so libSDL3.so \
+  libandroid.so liblog.so libz.so | sort)"
+[[ "$needed" == "$expected_needed" ]] || {
+  echo "ERROR: libmain.so dependency set differs from the allowlist" >&2
+  exit 1
+}
 [[ "$dynamic" == *"GNU_RELRO"* ]]
 if ! printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
   echo "ERROR: libmain.so does not have a non-executable stack" >&2
@@ -107,7 +118,8 @@ sdl_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libSDL3.so")"
 }
 for symbol in \
   Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation \
-  Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation; do
+  Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation \
+  Java_dev_kartpad_android_RetroRewindArchiveExtractor_nativeExtract; do
   [[ "$main_symbols" == *" $symbol"* ]] || {
     echo "ERROR: libmain.so does not export $symbol" >&2
     exit 1

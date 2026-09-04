@@ -30,6 +30,7 @@ DerivedData/
 
 # Android machine-local state and build products
 /android/.gradle/
+/android/.kotlin/
 /android/local.properties
 /android/**/build/
 /android/**/.cxx/

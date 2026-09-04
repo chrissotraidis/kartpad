@@ -889,6 +889,12 @@ uses HTTPS-only bounded redirects/timeouts, exact streamed length/SHA-256,
 cancellation, verified-cache reuse, and atomic publication. INTERNET is the
 only allowed manifest permission. A worker/UI and ZIP extraction still need to
 consume these layers before A3 can claim an install.
+Bounded ZIP extraction is now connected as well: the pinned minizip-ng core
+uses the shared scan, strict UTF-8, directory-relative no-follow/exclusive
+writes, CRC/byte checks, cancellation, and byte progress. A joined Java pipeline
+revalidates the archive and gates atomic activation on the installed-content
+contract. Fixture-sized JNI extraction passes on both supported AVD page sizes;
+production download/worker/process-death and Retro Rewind gameplay remain open.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

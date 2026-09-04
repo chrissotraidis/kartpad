@@ -64,7 +64,28 @@ if [[ "$sanitized_targets_sha256" != \
   exit 1
 fi
 
+minizip_commit="55db144e03027b43263e5ebcb599bf0878ba58de"
+minizip_archive="$cache_root/minizip-ng-$minizip_commit.tar.gz"
+fetch_locked \
+  "https://github.com/zlib-ng/minizip-ng/archive/$minizip_commit.tar.gz" \
+  "$minizip_archive" 772757 \
+  e0fa42896ad244261f100fd06fae7c64f6054ce02d143f4d0f55df5fced9f63d
+minizip_root="$cache_root/minizip-ng-$minizip_commit"
+if [[ ! -f "$minizip_root/CMakeLists.txt" ]]; then
+  temporary_minizip_root="$(mktemp -d "$cache_root/.minizip-ng-$minizip_commit.XXXXXX")"
+  tar -xzf "$minizip_archive" -C "$temporary_minizip_root" --strip-components=1
+  mv "$temporary_minizip_root" "$minizip_root"
+fi
+minizip_cmake_sha256="$(shasum -a 256 "$minizip_root/CMakeLists.txt" | awk '{print $1}')"
+if [[ "$minizip_cmake_sha256" != \
+      "7ed446837e293dbb61dd4e9a49566bde6408c7acd95c815e50680aeef4d60695" ]]; then
+  echo "ERROR: extracted minizip-ng source digest changed" >&2
+  exit 1
+fi
+
 echo "SDL3 Android AAR: $(shasum -a 256 "$repo_root/android/app/libs/SDL3-3.4.4.aar" | awk '{print $1}')"
 echo "Dawn archive: $(shasum -a 256 "$dawn_archive" | awk '{print $1}')"
 echo "Dawn sanitized targets: $sanitized_targets_sha256"
+echo "minizip-ng archive: $(shasum -a 256 "$minizip_archive" | awk '{print $1}')"
 echo "DAWN_ANDROID_ROOT=$dawn_root"
+echo "MINIZIP_ANDROID_ROOT=$minizip_root"

@@ -72,6 +72,22 @@ final class RetroRewindInstallStorage {
                 RetroRewindInstallStorage::atomicMove);
     }
 
+    static void discardStagingDirectory(File filesDirectory, Path staging, String token)
+            throws IOException {
+        requireToken(token);
+        Path support = supportRoot(filesDirectory).toAbsolutePath().normalize();
+        requireDirectory(support, "Retro Rewind support root is invalid");
+        Path expectedStaging = support.resolve(STAGING_PREFIX + token);
+        Path normalizedStaging = staging.toAbsolutePath().normalize();
+        if (!normalizedStaging.equals(expectedStaging)) {
+            throw new IOException("Retro Rewind staging directory is invalid");
+        }
+        if (exists(normalizedStaging)) {
+            requireDirectory(normalizedStaging, "Retro Rewind staging directory is invalid");
+            deleteTree(normalizedStaging);
+        }
+    }
+
     static void activateValidatedStaging(
             File filesDirectory, Path staging, String token, AtomicMover mover)
             throws IOException {

@@ -65,7 +65,8 @@ apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
 "$adb" install -r "$apk" >/dev/null
 "$adb" logcat -c
 "$adb" shell am force-stop dev.kartpad.android
-"$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity >/dev/null
+"$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION true >/dev/null
 wait_for_marker() {
   local marker="$1"
   for _ in {1..60}; do
@@ -85,6 +86,7 @@ wait_for_marker \
 wait_for_marker \
   "A1 ELF scheduler passed operations=2000000 hash=0x7287563387fb1677 fiber_switches=1000000"
 wait_for_marker "A2 SDL gamepad contract passed"
+wait_for_marker "A3 JNI archive extraction passed entries=2 bytes=7"
 wait_for_marker \
   "A1 Vulkan present passed abi=arm64-v8a page_size=$expected_page_size"
 

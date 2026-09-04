@@ -316,6 +316,17 @@ and repository safety pass. The production archive was not downloaded, and no
 worker or UI calls the downloader yet. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-archive-download.md`](artifacts/2026-09-04/android/a3-archive-download.md).
 
+Android now consumes verified archives through the shared bounded scan and a
+pinned minizip-ng extraction core. Directory-relative no-follow/exclusive
+writes, strict UTF-8, cancellation/progress, CRC and byte-count checks, scoped
+staging cleanup, installed-content validation, and atomic activation are joined
+and fault-tested. The JNI path passes on wiped 4 KiB and 16 KiB ARM64 AVDs, and
+the actual private game-runtime native target rebuilds with the same graph.
+This remains fixture-sized source proof; the production archive, durable worker
+lifecycle, process-death injection, and Retro Rewind gameplay are still open.
+Evidence:
+[`docs/artifacts/2026-09-04/android/a3-archive-extraction.md`](artifacts/2026-09-04/android/a3-archive-extraction.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first
