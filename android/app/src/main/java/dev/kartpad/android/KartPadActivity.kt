@@ -15,6 +15,8 @@ import org.libsdl.app.SDLActivity
 import org.libsdl.app.SDLSurface
 
 class KartPadActivity : SDLActivity() {
+    private lateinit var kartPadOverlay: KartPadOverlayView
+
     override fun createSDLSurface(context: Context): SDLSurface = KartPadSurface(context)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,16 +32,35 @@ class KartPadActivity : SDLActivity() {
         super.onCreate(savedInstanceState)
         runDebugRetroRewindExtractionFixture()
         runDebugRetroRewindWorkerFixture()
-        val overlay = KartPadOverlayView(this)
+        kartPadOverlay = KartPadOverlayView(this)
+        kartPadOverlay.visibility = if (BuildConfig.GAME_RUNTIME) {
+            android.view.View.VISIBLE
+        } else {
+            android.view.View.GONE
+        }
         mLayout.addView(
-            overlay,
+            kartPadOverlay,
             ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
-        mLayout.bringChildToFront(overlay)
+        mLayout.bringChildToFront(kartPadOverlay)
         Log.i(TAG, "A0 SDLActivity shell created")
+    }
+
+    override fun onPause() {
+        if (::kartPadOverlay.isInitialized) {
+            kartPadOverlay.clearTouchInput()
+        }
+        super.onPause()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        if (!hasFocus && ::kartPadOverlay.isInitialized) {
+            kartPadOverlay.clearTouchInput()
+        }
+        super.onWindowFocusChanged(hasFocus)
     }
 
     private fun configureRuntimeProfile() {

@@ -77,7 +77,9 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
     message(FATAL_ERROR "Prepared game runtime has no Android product target")
   endif()
   target_sources(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
+    kartpad_touch_input_jni.cpp
     retro_rewind_archive_jni.cpp
+    "${KARTPAD_REPO_ROOT}/runtime/src/android/touch_input.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_extract.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_scan.cpp")
@@ -90,7 +92,9 @@ else()
     guest_memory_fixture.cpp
     scheduler_fixture.cpp
     fiber_switch_android.S
+    kartpad_touch_input_jni.cpp
     retro_rewind_archive_jni.cpp
+    "${KARTPAD_REPO_ROOT}/runtime/src/android/touch_input.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/scheduler/guest_scheduler.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_extract.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"

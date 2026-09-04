@@ -3023,3 +3023,36 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   The emulator was left visibly running; no application package, save, private
   input, or screenshot was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-fresh-save-offline-kd.md`.
+
+## 2026-09-04 — Android A4 touch overlay and guest input
+
+- Added a transparent Canvas-owned phone overlay with stable pointer ownership,
+  the complete Classic control set, lifecycle clearing, normalized stick state,
+  and a native rising-edge latch for short touchscreen button taps.
+- Added JNI publication and an Android runtime patch that merges channel-zero
+  touch buttons/left-stick state into KPAD without disturbing other physical
+  controller channels. Portable and source-contract tests pass.
+- Simulator execution exposed a base/dual build mismatch before touch ran: the
+  first APK linked only `WiiCompiled`, so the launcher-selected Retro profile
+  failed as not linked. Corrected the Android builder so preparation product and
+  native target both follow the selected shard graph, then rebuilt against the
+  validated dual Retro graph as `KartPadDual`.
+- Reset a stale emulator `1280x720` size override. Android then reported its
+  native `1080x2400` panel rotated into a real `2400x1080` logical/app frame,
+  and the visible production chooser filled the wider display.
+- The initial audited 119,090,830-byte dual APK at SHA-256 `0d39e63d...f268c`
+  reached the Retro title with the overlay visible. A touchscreen A tap advanced
+  to Select License, then D-pad Right moved the live selection to the adjacent
+  NEW slot; the process remained healthy with no fatal signature.
+- Corrected R from the old wide pressure-trigger geometry to the same compact
+  digital pill as L. Added the iOS-parity A interaction: a one-second hold
+  turns cyan, confirms through Android haptics, remains asserted after lift,
+  and unlocks on the next tap. The exact final audited APK is
+  `258f8002...73b3b`; live hold/unlock screenshots and the retained process
+  confirm the state transition.
+- Classification: **Pass for initial Android emulator touch rendering and
+  A/D-pad guest input plus R and A-lock parity.** Layout editing, controller
+  handoff, accessibility nodes, C-stick guest behavior, physical haptic feel,
+  tablet/physical touch, motion, and physical-device acceptance remain open.
+  No APK, AAB, private content, save, or screenshot was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-touch-overlay-input.md`.
