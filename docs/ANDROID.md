@@ -947,6 +947,17 @@ reported `IO_FAILURE`. The pipeline removed partial staging and preserved the
 previous validated install. The loop image and temporary AVD were deleted.
 This closes the synthetic emulator full-disk fault, not production-size peak
 space or the official archive.
+
+The official production-size installer now also passes on a wiped API 36 ARM64
+emulator. It downloaded and exactly verified the pinned 1,859,041,899-byte
+archive, exposed and fixed a missing cold-worker JNI load plus cached-archive
+space double-counting on Retry, then reused the verified archive, activated
+2,110,038,016 bytes, and removed the cache. A force-stop/airplane-mode relaunch
+revalidated the installed 6.12.5 pack offline. This closes official pack
+installation on the emulator, not Retro Rewind gameplay, mode switching, or
+physical-device acceptance. Evidence is in
+`docs/artifacts/2026-09-04/android/a3-production-install.md`.
+
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

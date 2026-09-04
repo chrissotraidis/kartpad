@@ -17,6 +17,7 @@ internal object RetroRewindSpaceProbe {
                 sameStore,
                 RetroRewindRelease.ARCHIVE_BYTES,
                 RetroRewindRelease.MAXIMUM_EXPANDED_BYTES,
+                RetroRewindArchiveDownload.reusableBytes(cacheDirectory.toPath()),
             )
         } catch (_: ErrnoException) {
             RetroRewindSpacePreflight.probeFailed()

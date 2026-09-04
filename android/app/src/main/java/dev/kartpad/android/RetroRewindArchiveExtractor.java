@@ -9,6 +9,23 @@ import java.nio.file.Path;
 final class RetroRewindArchiveExtractor {
     private static final int MAXIMUM_ENTRIES = 10_000;
 
+    /**
+     * Loads the JNI owner only when extraction is actually requested.
+     *
+     * Keeping this lazy lets host-side policy tests use the Java result types,
+     * while ensuring a cold WorkManager process does not depend on an SDL
+     * Activity having loaded the library first.
+     */
+    private static final class NativeLibrary {
+        static {
+            System.loadLibrary("main");
+        }
+
+        private NativeLibrary() {}
+
+        static void ensureLoaded() {}
+    }
+
     interface Cancellation {
         boolean isCancelled();
     }
@@ -65,6 +82,7 @@ final class RetroRewindArchiveExtractor {
             throw new IOException("Retro Rewind extraction destination is not empty");
         }
 
+        NativeLibrary.ensureLoaded();
         long[] counts = new long[3];
         int code = nativeExtract(
                 archive.toAbsolutePath().toString(),

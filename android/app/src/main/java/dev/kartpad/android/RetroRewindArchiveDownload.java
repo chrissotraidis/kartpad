@@ -136,6 +136,25 @@ final class RetroRewindArchiveDownload {
                 ".RetroRewind-" + RetroRewindRelease.VERSION + ".part");
     }
 
+    /** Bytes already occupying the cache that the next transfer can reuse or replace in place. */
+    static long reusableBytes(Path cacheDirectory) {
+        Path archive = archivePath(cacheDirectory);
+        if (verifyFile(archive, RetroRewindRelease.ARCHIVE_BYTES,
+                RetroRewindRelease.ARCHIVE_SHA256) == Error.NONE) {
+            return RetroRewindRelease.ARCHIVE_BYTES;
+        }
+        Path partial = partialPath(cacheDirectory);
+        try {
+            if (!Files.isRegularFile(partial, LinkOption.NOFOLLOW_LINKS)) {
+                return 0;
+            }
+            long bytes = Files.size(partial);
+            return bytes >= 0 && bytes <= RetroRewindRelease.ARCHIVE_BYTES ? bytes : 0;
+        } catch (IOException | SecurityException exception) {
+            return 0;
+        }
+    }
+
     private static Result downloadPinned(
             Path partial, long resumeOffset, Cancellation cancellation, Progress progress) {
         URL initial;

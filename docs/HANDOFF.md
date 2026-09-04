@@ -297,6 +297,15 @@ not block offline Retro Rewind support.
    46 GiB. This closes the synthetic emulator fault, not the official
    production-size install. Evidence:
    `docs/artifacts/2026-09-04/android/a3-device-enospc.md`.
+   The official production-size installer now passes on a wiped API 36 ARM64
+   emulator. Its real 1,859,041,899-byte download matched the pinned digest.
+   Execution exposed a missing cold-worker JNI load and cached-archive space
+   double-counting on Retry; both are fixed with direct host/device regression
+   coverage. The patched retry reused the archive, activated 2,110,038,016
+   bytes, removed the cache, and revalidated version 6.12.5 after force-stop in
+   airplane mode. Gameplay/mode switching and physical acceptance remain open.
+   Evidence:
+   `docs/artifacts/2026-09-04/android/a3-production-install.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

@@ -440,6 +440,19 @@ space to 46 GiB. This closes the synthetic emulator full-disk fault, not the
 official production-size install. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-device-enospc.md`](artifacts/2026-09-04/android/a3-device-enospc.md).
 
+The official production-size A3 installer now passes on a wiped API 36 ARM64
+emulator. The foreground worker downloaded and exactly verified the pinned
+1,859,041,899-byte Retro Rewind 6.12.5 archive, then exposed and fixed two real
+recovery defects: a cold worker had not loaded the JNI extractor, and Retry
+double-counted an already cached archive during free-space preflight. The
+patched worker reused the verified cache, natively extracted and atomically
+activated 2,110,038,016 bytes, removed the archive, and validated the pinned
+`Code.pul` and XML. After force-stop and airplane mode, a cold launch again
+reported the installed pack ready. This closes official installation and
+offline installed-content revalidation on the emulator, not Retro Rewind
+gameplay/mode switching or physical hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-production-install.md`](artifacts/2026-09-04/android/a3-production-install.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

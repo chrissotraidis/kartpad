@@ -46,14 +46,33 @@ final class RetroRewindSpacePreflight {
             boolean sameStore,
             long archiveBytes,
             long maximumExpandedBytes) {
+        return evaluate(
+                availableFilesBytes,
+                availableCacheBytes,
+                sameStore,
+                archiveBytes,
+                maximumExpandedBytes,
+                0);
+    }
+
+    static Result evaluate(
+            long availableFilesBytes,
+            long availableCacheBytes,
+            boolean sameStore,
+            long archiveBytes,
+            long maximumExpandedBytes,
+            long reusableArchiveBytes) {
         if (availableFilesBytes < 0 || availableCacheBytes < 0 ||
-                archiveBytes < 0 || maximumExpandedBytes < 0) {
+                archiveBytes < 0 || maximumExpandedBytes < 0 ||
+                reusableArchiveBytes < 0 || reusableArchiveBytes > archiveBytes) {
             return result(Error.INVALID_REQUIREMENT, 0, 0,
                     availableFilesBytes, availableCacheBytes);
         }
 
+        long remainingArchiveBytes = archiveBytes - reusableArchiveBytes;
+
         if (sameStore) {
-            long required = checkedAdd(archiveBytes, maximumExpandedBytes);
+            long required = checkedAdd(remainingArchiveBytes, maximumExpandedBytes);
             required = checkedAdd(required, RESERVE_BYTES);
             if (required < 0) {
                 return result(Error.INVALID_REQUIREMENT, 0, 0,
@@ -66,7 +85,7 @@ final class RetroRewindSpacePreflight {
         }
 
         long requiredFiles = checkedAdd(maximumExpandedBytes, RESERVE_BYTES);
-        long requiredCache = checkedAdd(archiveBytes, RESERVE_BYTES);
+        long requiredCache = checkedAdd(remainingArchiveBytes, RESERVE_BYTES);
         if (requiredFiles < 0 || requiredCache < 0) {
             return result(Error.INVALID_REQUIREMENT, 0, 0,
                     availableFilesBytes, availableCacheBytes);

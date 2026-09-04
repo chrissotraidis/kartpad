@@ -22,6 +22,18 @@ public final class RetroRewindSpacePreflightTestMain {
                         true, archive, expanded),
                 RetroRewindSpacePreflight.Error.INSUFFICIENT_SHARED_STORE);
 
+        var sharedCached = RetroRewindSpacePreflight.evaluate(
+                expanded + reserve, 0, true, archive, expanded, archive);
+        expect(sharedCached.isReady(), "cached archive was charged twice");
+        expect(sharedCached.requiredFilesBytes == expanded + reserve,
+                "cached shared-store requirement is incorrect");
+
+        var sharedPartial = RetroRewindSpacePreflight.evaluate(
+                500 + expanded + reserve, 0, true, archive, expanded, 500);
+        expect(sharedPartial.isReady(), "partial archive credit was rejected");
+        expect(sharedPartial.requiredFilesBytes == 500 + expanded + reserve,
+                "partial shared-store requirement is incorrect");
+
         var separateReady = RetroRewindSpacePreflight.evaluate(
                 expanded + reserve, archive + reserve, false, archive, expanded);
         expect(separateReady.isReady(), "exact separate-store capacity was rejected");
@@ -51,6 +63,11 @@ public final class RetroRewindSpacePreflightTestMain {
                         -1, 0, true, archive, expanded),
                 RetroRewindSpacePreflight.Error.INVALID_REQUIREMENT);
         expectError(
+                RetroRewindSpacePreflight.evaluate(
+                        Long.MAX_VALUE, Long.MAX_VALUE, true,
+                        archive, expanded, archive + 1),
+                RetroRewindSpacePreflight.Error.INVALID_REQUIREMENT);
+        expectError(
                 RetroRewindSpacePreflight.probeFailed(),
                 RetroRewindSpacePreflight.Error.PROBE_FAILED);
 
@@ -61,6 +78,13 @@ public final class RetroRewindSpacePreflightTestMain {
         expect(production.isReady(), "production requirements overflowed");
         expect(production.requiredFilesBytes == 4_327_477_355L,
                 "production shared-store requirement drifted");
+        var productionCached = RetroRewindSpacePreflight.evaluate(
+                Long.MAX_VALUE, Long.MAX_VALUE, true,
+                RetroRewindRelease.ARCHIVE_BYTES,
+                RetroRewindRelease.MAXIMUM_EXPANDED_BYTES,
+                RetroRewindRelease.ARCHIVE_BYTES);
+        expect(productionCached.requiredFilesBytes == 2_468_435_456L,
+                "production cached-archive requirement drifted");
     }
 
     private static void expectError(

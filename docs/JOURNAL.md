@@ -2612,3 +2612,29 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   physical hardware remain open. No production archive, private data, APK, or
   AAB was downloaded or published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-device-enospc.md`.
+
+## 2026-09-04 — Android A3 official production install
+
+- Drove the release-owned installer on a wiped API 36 ARM64 AVD through the
+  real official Retro Rewind 6.12.5 transfer. All 1,859,041,899 bytes arrived
+  and matched the profile-pinned SHA-256.
+- The first run reached native extraction and failed because the cold
+  WorkManager process had not loaded `libmain.so`. The extractor now owns a
+  lazy JNI load; the non-SDL device pipeline fixture no longer preloads it and
+  passes from a cold process.
+- Retry then correctly exposed that preflight charged a verified cached
+  archive twice. The pure capacity evaluator now accepts bounded reusable
+  bytes; Android credits only a verified final archive or a safe regular
+  partial that the downloader can reuse/replace, while retaining the 2.2 GB
+  expansion ceiling and 256 MiB reserve.
+- The patched APK reused the verified cache, completed native extraction and
+  atomic activation, removed the archive, and reported 2,110,038,016 installed
+  bytes. The pinned `Code.pul` and XML size/hash checks pass.
+- Force-stop plus airplane mode still produced `Retro Rewind is ready` after a
+  cold validation. Focused host tests, debug build, and strict APK audit pass;
+  the current source-only APK SHA-256 is
+  `fca7cf95024310b40471b2b750e6571b1fb94fb31faa03abfd8af3bf9424358d`.
+- Classification: **Pass for official production-size installation and
+  offline pack revalidation on the ARM64 emulator.** Gameplay/mode switching,
+  physical acceptance, and publishing remain open. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-production-install.md`.

@@ -29,7 +29,8 @@ final class RetroRewindPipelineDeviceFixture {
         Path fixtureRoot = context.getCacheDir().toPath()
                 .resolve("RetroRewindPipelineDeviceFixture");
         try {
-            System.loadLibrary("main");
+            // Deliberately do not preload JNI here. This fixture starts in a
+            // non-SDL process and proves the extractor owns its cold load.
             deleteTree(fixtureRoot);
             Files.createDirectories(fixtureRoot);
             RetroRewindInstallStorage.recover(context.getFilesDir());

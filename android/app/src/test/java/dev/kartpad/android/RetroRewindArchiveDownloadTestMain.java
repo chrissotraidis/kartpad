@@ -29,6 +29,11 @@ public final class RetroRewindArchiveDownloadTestMain {
                             directory.resolve(".RetroRewind-" +
                                     RetroRewindRelease.VERSION + ".part")),
                     "partial path is not stable and version-scoped");
+            Path releasePartial = RetroRewindArchiveDownload.partialPath(directory);
+            Files.write(releasePartial, new byte[321]);
+            expect(RetroRewindArchiveDownload.reusableBytes(directory) == 321,
+                    "safe partial bytes were not credited for preflight");
+            Files.delete(releasePartial);
 
             long[] progress = {0, 0};
             expectError(RetroRewindArchiveDownload.transfer(
