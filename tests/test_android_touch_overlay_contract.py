@@ -42,6 +42,20 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         self.assertIn('button("R", "R", BUTTON_R, 94f, 46f', source)
         self.assertIn("const val BUTTON_R = 0x00000200", source)
 
+    def test_controller_handoff_clears_hides_and_restores_touch(self) -> None:
+        activity = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadActivity.kt").read_text()
+        overlay = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadOverlayView.kt").read_text()
+        self.assertIn("InputManager.InputDeviceListener", activity)
+        self.assertIn("InputDevice.SOURCE_GAMEPAD", activity)
+        self.assertIn("InputDevice.SOURCE_JOYSTICK", activity)
+        self.assertIn("registerInputDeviceListener", activity)
+        self.assertIn("unregisterInputDeviceListener", activity)
+        self.assertIn("setHiddenForController(controllerCount > 0)", activity)
+        self.assertIn("fun setHiddenForController(hidden: Boolean)", overlay)
+        self.assertIn("clearTouchInput()", overlay)
+        self.assertIn("visibility = INVISIBLE", overlay)
+        self.assertIn("visibility = VISIBLE", overlay)
+
     def test_runtime_preparation_applies_touch_bridge(self) -> None:
         script = (REPO / "scripts/prepare-android-game-runtime.sh").read_text()
         self.assertIn("wiicompiled-android-touch-input.patch", script)

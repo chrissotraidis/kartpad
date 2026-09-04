@@ -3056,3 +3056,27 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   tablet/physical touch, motion, and physical-device acceptance remain open.
   No APK, AAB, private content, save, or screenshot was published. Evidence:
   `docs/artifacts/2026-09-04/android/a4-touch-overlay-input.md`.
+
+## 2026-09-04 — Android A4 controller/touch handoff
+
+- Added an activity-scoped Android input-device listener that recognizes
+  gamepad and joystick sources, reconciles already-connected devices on resume,
+  and unregisters on pause.
+- Controller presence now clears the touch snapshot before hiding the overlay;
+  removal of the final controller restores a neutral visible overlay.
+- On the standalone API 36 ARM64 emulator, a temporary InputReader-visible Xbox
+  controller produced app counts `0 -> 1 -> 0`. The complete overlay visibly
+  hid and restored over the live Retro runtime.
+- Repeated the transition after a 1.4-second A hold left acceleration visibly
+  cyan and locked. Controller attach hid touch, and disconnect restored A green
+  and unlocked, directly proving stale held input was cleared.
+- The 119,090,830-byte local APK has SHA-256
+  `f777c271082b34a9896beda816ec85134cb3d7472a73d99607b311bcc10e994f`.
+  The virtual controller was disconnected after the test.
+- Native and source contracts, Android lint, strict APK and repository safety
+  audits, pinned source/input verification, and the Apple overlay snapshot pass.
+- Classification: **Pass for controller/touch hotplug and held-input clearing
+  on the emulator.** Configurable policy, physical controller/device behavior,
+  touch editing, accessibility, tablet layout, and physical acceptance remain
+  open. No package or private content was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-controller-handoff.md`.

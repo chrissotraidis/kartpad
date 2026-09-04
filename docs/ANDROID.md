@@ -64,9 +64,12 @@ complete phone control set renders over the dual Retro runtime at a true
 `2400x1080`, and direct touchscreen A and D-pad Right events advance the guest
 through title and license selection. R now matches L's compact digital pill,
 and a one-second A hold turns cyan, remains asserted after finger-up, invokes a
-light Android haptic, and unlocks on the next tap. Persistent layout editing,
-controller handoff, full accessibility, tablet/physical touch and haptic feel,
-motion, and physical-device acceptance remain open.
+light Android haptic, and unlocks on the next tap. Android gamepad/joystick
+hotplug now clears and hides touch, then restores a neutral overlay after the
+last controller disconnects; an emulator test starting from cyan locked A
+proved that stale acceleration does not survive the handoff. Persistent layout
+editing, a configurable handoff policy, full accessibility, tablet/physical
+touch and haptic feel, motion, and physical-device acceptance remain open.
 
 The first independent A3 source slice extracted archive member-path validation
 into `runtime/src/retro_rewind/archive_path.cpp`. The existing iOS/tvOS installer

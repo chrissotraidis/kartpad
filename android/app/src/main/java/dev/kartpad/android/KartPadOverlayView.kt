@@ -57,6 +57,7 @@ class KartPadOverlayView(context: Context) : View(context) {
     private var rightY = 0f
     private var gasHoldGeneration = 0
     private var gasLocked = false
+    private var hiddenForController = false
 
     init {
         setWillNotDraw(false)
@@ -151,6 +152,19 @@ class KartPadOverlayView(context: Context) : View(context) {
         updateGasAccessibility()
         nativeClearTouchState()
         invalidate()
+    }
+
+    fun setHiddenForController(hidden: Boolean) {
+        if (hiddenForController == hidden) return
+        hiddenForController = hidden
+        if (hidden) {
+            clearTouchInput()
+            visibility = INVISIBLE
+        } else {
+            visibility = VISIBLE
+            publishState(connected = true)
+            invalidate()
+        }
     }
 
     private fun buildControls() {

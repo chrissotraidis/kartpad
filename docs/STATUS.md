@@ -627,10 +627,16 @@ builds the dual product instead of silently preparing a base-only runtime. The
 and passes the strict package audit. This closes only the first emulator
 touch/JNI/KPAD slice. R visibly matches L's compact digital pill; a 1.3-second
 A hold turns cyan and stays asserted after finger-up, and the next A tap
-restores green/unlocked state. Persistent editing, controller handoff, virtual
-accessibility nodes, right-stick guest behavior, physical haptic feel, tablet
-and physical touch, motion, and physical-device acceptance remain open. Evidence:
+restores green/unlocked state. Android input-device hotplug now also clears all
+touch state and hides the overlay while a gamepad/joystick is present. A live
+emulator sequence proved visible touch, hidden-on-controller, and restored-on-
+disconnect states; a second sequence began with A cyan/locked and restored it
+green/unlocked after controller connect/disconnect. Persistent editing,
+configurable handoff policy, virtual accessibility nodes, right-stick guest
+behavior, physical haptic feel, tablet and physical touch, motion, and
+physical-device acceptance remain open. Evidence:
 [`docs/artifacts/2026-09-04/android/a4-touch-overlay-input.md`](artifacts/2026-09-04/android/a4-touch-overlay-input.md).
+[`docs/artifacts/2026-09-04/android/a4-controller-handoff.md`](artifacts/2026-09-04/android/a4-controller-handoff.md).
 
 ## Native tvOS work
 

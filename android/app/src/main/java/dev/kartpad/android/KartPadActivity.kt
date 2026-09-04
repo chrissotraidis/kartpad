@@ -2,8 +2,10 @@ package dev.kartpad.android
 
 import android.os.Bundle
 import android.content.Context
+import android.hardware.input.InputManager
 import android.system.Os
 import android.util.Log
+import android.view.InputDevice
 import android.view.ViewGroup
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -16,6 +18,13 @@ import org.libsdl.app.SDLSurface
 
 class KartPadActivity : SDLActivity() {
     private lateinit var kartPadOverlay: KartPadOverlayView
+    private lateinit var inputManager: InputManager
+    private var inputListenerRegistered = false
+    private val inputDeviceListener = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = refreshControllerHandoff()
+        override fun onInputDeviceRemoved(deviceId: Int) = refreshControllerHandoff()
+        override fun onInputDeviceChanged(deviceId: Int) = refreshControllerHandoff()
+    }
 
     override fun createSDLSurface(context: Context): SDLSurface = KartPadSurface(context)
 
@@ -30,6 +39,7 @@ class KartPadActivity : SDLActivity() {
             configureDebugStateTrace()
         }
         super.onCreate(savedInstanceState)
+        inputManager = getSystemService(InputManager::class.java)
         runDebugRetroRewindExtractionFixture()
         runDebugRetroRewindWorkerFixture()
         kartPadOverlay = KartPadOverlayView(this)
@@ -49,7 +59,20 @@ class KartPadActivity : SDLActivity() {
         Log.i(TAG, "A0 SDLActivity shell created")
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (::inputManager.isInitialized && !inputListenerRegistered) {
+            inputManager.registerInputDeviceListener(inputDeviceListener, null)
+            inputListenerRegistered = true
+        }
+        refreshControllerHandoff()
+    }
+
     override fun onPause() {
+        if (::inputManager.isInitialized && inputListenerRegistered) {
+            inputManager.unregisterInputDeviceListener(inputDeviceListener)
+            inputListenerRegistered = false
+        }
         if (::kartPadOverlay.isInitialized) {
             kartPadOverlay.clearTouchInput()
         }
@@ -61,6 +84,23 @@ class KartPadActivity : SDLActivity() {
             kartPadOverlay.clearTouchInput()
         }
         super.onWindowFocusChanged(hasFocus)
+    }
+
+    private fun refreshControllerHandoff() {
+        if (!BuildConfig.GAME_RUNTIME || !::kartPadOverlay.isInitialized ||
+            !::inputManager.isInitialized
+        ) return
+        val controllerCount = inputManager.inputDeviceIds.count { deviceId ->
+            inputManager.getInputDevice(deviceId)?.let(::isGameController) == true
+        }
+        kartPadOverlay.setHiddenForController(controllerCount > 0)
+        Log.i(TAG, "A4 controller handoff count=$controllerCount")
+    }
+
+    private fun isGameController(device: InputDevice): Boolean {
+        val sources = device.sources
+        return sources and InputDevice.SOURCE_GAMEPAD == InputDevice.SOURCE_GAMEPAD ||
+            sources and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
     }
 
     private fun configureRuntimeProfile() {
