@@ -170,6 +170,13 @@ not block offline Retro Rewind support.
    as defense in depth. Host, NDK, Apple SDK, safety, and contract tests pass.
    Evidence:
    `docs/artifacts/2026-09-04/android/a3-shared-archive-duplicates.md`.
+   Android now also has an app-private same-volume staging/atomic-activation/
+   rollback owner invoked during game-runtime startup. Its injected second-move
+   failure restores the prior install, cold recovery refuses ambiguous or
+   symlinked rollback state, and public/private build configurations, lint, and
+   the source-only APK audit pass. Only validated staging may use activation;
+   archive download/extraction/content validation are still absent. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-install-storage-recovery.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

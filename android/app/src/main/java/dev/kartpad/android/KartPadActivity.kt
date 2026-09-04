@@ -14,6 +14,7 @@ class KartPadActivity : SDLActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (BuildConfig.GAME_RUNTIME) {
+            RetroRewindInstallStorage.recover(filesDir)
             KartPadRuntimeResources.install(this)
             Os.setenv("KARTPAD_ANDROID_FILES_DIR", filesDir.absolutePath, true)
             Os.setenv("KARTPAD_ANDROID_CACHE_DIR", cacheDir.absolutePath, true)

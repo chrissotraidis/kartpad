@@ -2221,3 +2221,27 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   Apple consumer.** A2 and A3 remain open at their previously documented gates.
   No APK/AAB or private input was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-shared-archive-duplicates.md`.
+
+## 2026-09-04 — Android A3 install storage and recovery
+
+- Added an Android-owned storage coordinator beneath app-private
+  `filesDir/KartPad`. Production replacement uses same-volume atomic moves from
+  generated staging to active storage while retaining the old complete install
+  under a rollback name until activation succeeds.
+- Added cold recovery before game-runtime SDL startup: stale imports are
+  removed, exactly one rollback is restored when active storage is missing,
+  and ambiguous state is left untouched. Tokens and normalized paths are
+  bounded, and real-directory checks plus no-follow deletion reject symlink
+  escapes.
+- A pinned-JDK warning-as-error harness passes successful replacement and
+  injected second-move failure/restore, plus stale, ambiguous, scope, token, and
+  symlink cases. Public debug assemble, debug/release source compilation, lint,
+  private game-runtime configuration compilation, package/privacy audit,
+  repository safety, shell lint, and diff checks pass.
+- The source-only APK is 33,675,275 bytes with SHA-256
+  `ec5eefa73266e1dd15e76a9a76369093b3a4bb538022ffe5ea116d39c6bb5699`.
+- Classification: **Pass for Android same-volume staging, activation,
+  rollback, and startup recovery contracts.** A2 remains open, and A3 still
+  lacks archive download/extraction/content validation and runtime acceptance.
+  No APK/AAB or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-install-storage-recovery.md`.

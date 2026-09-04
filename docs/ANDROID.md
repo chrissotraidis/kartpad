@@ -56,6 +56,14 @@ file/directory trailing-slash alias cannot target one output twice; ignored
 foreign-root duplicates remain outside the selected policy. The existing Apple
 filesystem check remains a second line of defense.
 
+The Android owner now also has a same-volume app-private storage coordinator.
+It scopes staging and rollback names beneath `filesDir/KartPad`, uses atomic
+moves for old-install retention and activation, restores the prior install on
+an injected activation failure, clears stale imports, and restores only one
+unambiguous rollback during game-runtime startup. It refuses symlinked roots
+and out-of-scope staging. Content validation must succeed before its activation
+entry point is called; download, inspection, and extraction still remain.
+
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
 Mario Kart Wii and Retro Rewind profiles as the Apple `KartPadDual` product,

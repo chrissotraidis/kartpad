@@ -269,6 +269,19 @@ pass. The extraction-time filesystem check remains defense in depth. This
 closes only the shared duplicate-directory rule, not A3. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-shared-archive-duplicates.md`](artifacts/2026-09-04/android/a3-shared-archive-duplicates.md).
 
+Android now owns a tested app-private Retro Rewind storage coordinator. It
+creates same-volume staging under `filesDir/KartPad`, scopes activation to the
+exact generated token/path, atomically moves the prior install to rollback,
+atomically activates only caller-validated staging, restores the prior install
+after an injected second-move failure, removes stale imports, and restores only
+one unambiguous rollback on cold startup. Directory and cleanup operations
+refuse or avoid following symlinks. The game-runtime Activity invokes recovery
+before SDL startup. Its pinned-JDK fault matrix, fixture debug build, debug and
+release compilation, lint, strict 33,675,275-byte APK audit, and private game-
+configuration compile pass. This is storage/recovery evidence, not download,
+extraction, install validation, or gameplay. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-install-storage-recovery.md`](artifacts/2026-09-04/android/a3-install-storage-recovery.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first
