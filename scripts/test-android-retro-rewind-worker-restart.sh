@@ -70,7 +70,8 @@ worker_id="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
   echo "ERROR: could not parse durable worker id: $worker_id" >&2
   exit 1
 }
-wait_for_marker "A3 durable worker fixture started id=$worker_id attempt=0 steps=60"
+wait_for_marker "A3 durable resume fixture started id=$worker_id attempt=0 prefix=0"
+wait_for_marker "A3 durable resume fixture checkpoint id=$worker_id bytes="
 
 "$adb" shell am force-stop "$package"
 if "$adb" shell pidof "$package" | grep -q '[0-9]'; then
@@ -78,10 +79,19 @@ if "$adb" shell pidof "$package" | grep -q '[0-9]'; then
   exit 1
 fi
 "$adb" shell am start -W -n "$component" >/dev/null
-wait_for_marker "A3 durable worker fixture completed id=$worker_id attempt=1"
+wait_for_marker "A3 durable resume fixture started id=$worker_id attempt=1 prefix="
+resumed_from="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+  sed -n "s/.*A3 durable resume fixture started id=$worker_id attempt=1 prefix=\([0-9][0-9]*\).*/\1/p" |
+  tail -1)"
+if ! [[ "$resumed_from" =~ ^[0-9]+$ ]] ||
+    ! (( resumed_from > 0 && resumed_from < 92 )); then
+  echo "ERROR: persisted worker resumed from invalid offset: $resumed_from" >&2
+  exit 1
+fi
+wait_for_marker "A3 durable resume fixture completed id=$worker_id attempt=1"
 
 worker_starts="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
-  grep -Fc "A3 durable worker fixture started id=$worker_id")"
+  grep -Fc "A3 durable resume fixture started id=$worker_id")"
 [[ "$worker_starts" == 2 ]] || {
   echo "ERROR: persisted worker $worker_id started $worker_starts times; expected exactly 2" >&2
   exit 1
@@ -92,4 +102,4 @@ if "$adb" logcat -d -v brief KartPadFixture:E AndroidRuntime:E '*:S' | grep -q .
   exit 1
 fi
 
-echo "Android A3 durable worker restart passed: avd=$avd worker_id=$worker_id process_starts=$worker_starts final_state=completed"
+echo "Android A3 durable worker resume passed: avd=$avd worker_id=$worker_id process_starts=$worker_starts resumed_from=$resumed_from final_state=completed"

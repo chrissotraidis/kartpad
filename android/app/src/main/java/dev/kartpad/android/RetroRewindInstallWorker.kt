@@ -11,6 +11,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import java.io.InputStream
 import java.nio.file.Files
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -116,6 +117,13 @@ internal class RetroRewindInstallWorker(
     }
 
     private suspend fun runDebugFixture(): Result {
+        if (inputData.getBoolean(
+                RetroRewindInstallWork.KEY_DEBUG_RESUME_PROCESS_DEATH,
+                false,
+            )
+        ) {
+            return runDebugResumeProcessDeathFixture()
+        }
         val steps = inputData.getInt(RetroRewindInstallWork.KEY_DEBUG_FIXTURE_STEPS, 3)
         val delayMillis = inputData.getLong(
             RetroRewindInstallWork.KEY_DEBUG_FIXTURE_DELAY_MILLIS,
@@ -134,6 +142,52 @@ internal class RetroRewindInstallWorker(
             delay(delayMillis)
         }
         Log.i(LOG_TAG, "A3 durable worker fixture completed id=$id attempt=$runAttemptCount")
+        return Result.success(progressData("installed", 1, 1))
+    }
+
+    private suspend fun runDebugResumeProcessDeathFixture(): Result {
+        val content = DEBUG_RESUME_CONTENT.toByteArray(Charsets.UTF_8)
+        val partial = applicationContext.cacheDir.toPath().resolve(DEBUG_RESUME_PARTIAL)
+        val prefix = try {
+            RetroRewindArchiveDownload.preparePartial(
+                partial,
+                content.size.toLong(),
+                DEBUG_RESUME_SHA256,
+            )
+        } catch (_: Exception) {
+            return failure("fixture-storage")
+        }
+        Log.i(
+            LOG_TAG,
+            "A3 durable resume fixture started id=$id attempt=$runAttemptCount prefix=$prefix",
+        )
+        var checkpointLogged = false
+        val result = RetroRewindArchiveDownload.transferResuming(
+            SlowFixtureInputStream(content, prefix.toInt()),
+            partial,
+            content.size.toLong(),
+            DEBUG_RESUME_SHA256,
+            prefix,
+            { isStopped },
+            { completed, total ->
+                setProgressAsync(progressData("fixture-resume", completed, total))
+                if (!checkpointLogged && completed >= DEBUG_RESUME_CHECKPOINT) {
+                    checkpointLogged = true
+                    Log.i(
+                        LOG_TAG,
+                        "A3 durable resume fixture checkpoint id=$id bytes=$completed",
+                    )
+                }
+            },
+        )
+        if (result != RetroRewindArchiveDownload.Error.NONE) {
+            return failure("fixture-${result.name.lowercase()}")
+        }
+        Files.deleteIfExists(partial)
+        Log.i(
+            LOG_TAG,
+            "A3 durable resume fixture completed id=$id attempt=$runAttemptCount",
+        )
         return Result.success(progressData("installed", 1, 1))
     }
 
@@ -195,5 +249,31 @@ internal class RetroRewindInstallWorker(
         private const val NOTIFICATION_ID = 0x4b50
         private const val PROGRESS_MAX = 100
         private const val LOG_TAG = "KartPadFixture"
+        private const val DEBUG_RESUME_PARTIAL = ".kartpad-worker-resume-fixture.part"
+        private const val DEBUG_RESUME_CONTENT =
+            "durable-resume-fixture-durable-resume-fixture-" +
+                "durable-resume-fixture-durable-resume-fixture-"
+        private const val DEBUG_RESUME_SHA256 =
+            "4eba5a46f29cdb266bf45bfe41d037dfcbe7cfe9d785f12e59af84ea4ecd3e34"
+        private const val DEBUG_RESUME_CHECKPOINT = 4L
+    }
+
+    private class SlowFixtureInputStream(
+        private val content: ByteArray,
+        private var offset: Int,
+    ) : InputStream() {
+        override fun read(): Int {
+            if (offset >= content.size) return -1
+            Thread.sleep(250)
+            return content[offset++].toInt() and 0xff
+        }
+
+        override fun read(output: ByteArray, outputOffset: Int, length: Int): Int {
+            if (offset >= content.size) return -1
+            if (length == 0) return 0
+            Thread.sleep(250)
+            output[outputOffset] = content[offset++]
+            return 1
+        }
     }
 }

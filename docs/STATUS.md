@@ -341,6 +341,19 @@ installation and fault injection, Retro Rewind gameplay/mode switching, and
 physical hardware. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-install-worker.md`](artifacts/2026-09-04/android/a3-install-worker.md).
 
+Android's archive acquisition is now restartable rather than throwaway. A
+stable version-scoped partial is prefix-hashed and appended only after an exact
+HTTPS `206 Content-Range`; a server `200` fallback truncates and restarts,
+while malformed ranges fail without modifying the prefix. Network loss and
+cancellation preserve partial bytes, but full corrupt/oversized/link state is
+reset and final publication still requires the complete pinned digest. The
+actual durable-worker fault fixture persisted seven bytes, lost its process,
+then resumed the same UUID from byte 7 and completed. Host response/fault tests,
+both AVD page-size lanes, builds/lint, and package/privacy checks pass. A3
+remains open for the official 1.86 GB server/transfer, the remaining production
+fault matrix, gameplay/mode switching, and physical hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-resumable-download.md`](artifacts/2026-09-04/android/a3-resumable-download.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

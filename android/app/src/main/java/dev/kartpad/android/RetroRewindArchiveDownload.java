@@ -13,6 +13,8 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Downloads and verifies the one profile-pinned Retro Rewind archive. */
 final class RetroRewindArchiveDownload {
@@ -20,6 +22,8 @@ final class RetroRewindArchiveDownload {
     private static final int MAXIMUM_REDIRECTS = 5;
     private static final int CONNECT_TIMEOUT_MILLIS = 30_000;
     private static final int READ_TIMEOUT_MILLIS = 30_000;
+    private static final Pattern CONTENT_RANGE = Pattern.compile(
+            "bytes ([0-9]+)-([0-9]+)/([0-9]+)");
 
     interface Cancellation {
         boolean isCancelled();
@@ -71,21 +75,43 @@ final class RetroRewindArchiveDownload {
         Path archive = archivePath(cacheDirectory);
         if (verifyFile(archive, RetroRewindRelease.ARCHIVE_BYTES,
                 RetroRewindRelease.ARCHIVE_SHA256) == Error.NONE) {
+            deletePartial(partialPath(cacheDirectory));
             return result(Error.NONE, true);
         }
 
-        Path partial;
+        Path partial = partialPath(cacheDirectory);
+        long existingBytes;
         try {
-            partial = Files.createTempFile(cacheDirectory,
-                    ".RetroRewind-" + RetroRewindRelease.VERSION + "-", ".part");
+            existingBytes = preparePartial(partial, RetroRewindRelease.ARCHIVE_BYTES,
+                    RetroRewindRelease.ARCHIVE_SHA256);
         } catch (IOException exception) {
             return result(Error.STORAGE_FAILURE, false);
         }
 
+        if (existingBytes == RetroRewindRelease.ARCHIVE_BYTES) {
+            try {
+                Files.move(partial, archive, StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+                return result(Error.NONE, true);
+            } catch (IOException exception) {
+                return result(Error.STORAGE_FAILURE, false);
+            }
+        }
+
+        Result transfer = downloadPinned(partial, existingBytes, cancellation, progress);
+        if (!transfer.isReady()) {
+            if (transfer.error != Error.CANCELLED &&
+                    transfer.error != Error.NETWORK_FAILURE &&
+                    transfer.error != Error.STORAGE_FAILURE) {
+                deletePartial(partial);
+            }
+            return transfer;
+        }
         try {
-            Result transfer = downloadPinned(partial, cancellation, progress);
-            if (!transfer.isReady()) {
-                return transfer;
+            if (verifyFile(partial, RetroRewindRelease.ARCHIVE_BYTES,
+                    RetroRewindRelease.ARCHIVE_SHA256) != Error.NONE) {
+                deletePartial(partial);
+                return result(Error.HASH_MISMATCH, false);
             }
             try {
                 Files.move(partial, archive, StandardCopyOption.ATOMIC_MOVE,
@@ -94,12 +120,9 @@ final class RetroRewindArchiveDownload {
             } catch (IOException exception) {
                 return result(Error.STORAGE_FAILURE, false);
             }
-        } finally {
-            try {
-                Files.deleteIfExists(partial);
-            } catch (IOException ignored) {
-                // A private, unverified .part file is never treated as an archive.
-            }
+        } catch (RuntimeException exception) {
+            deletePartial(partial);
+            return result(Error.STORAGE_FAILURE, false);
         }
     }
 
@@ -108,17 +131,39 @@ final class RetroRewindArchiveDownload {
                 "RetroRewind-" + RetroRewindRelease.VERSION + ".zip");
     }
 
+    static Path partialPath(Path cacheDirectory) {
+        return cacheDirectory.resolve(
+                ".RetroRewind-" + RetroRewindRelease.VERSION + ".part");
+    }
+
     private static Result downloadPinned(
-            Path partial, Cancellation cancellation, Progress progress) {
-        URL current;
+            Path partial, long resumeOffset, Cancellation cancellation, Progress progress) {
+        URL initial;
         try {
-            current = new URL(RetroRewindRelease.ARCHIVE_URL);
+            initial = new URL(RetroRewindRelease.ARCHIVE_URL);
         } catch (IOException exception) {
             return result(Error.NETWORK_FAILURE, false);
         }
+        return downloadFrom(initial, partial, resumeOffset,
+                RetroRewindRelease.ARCHIVE_BYTES, RetroRewindRelease.ARCHIVE_SHA256,
+                cancellation, progress);
+    }
 
+    static Result downloadFrom(
+            URL initial,
+            Path partial,
+            long resumeOffset,
+            long expectedBytes,
+            String expectedSha256,
+            Cancellation cancellation,
+            Progress progress) {
+        if (resumeOffset < 0 || resumeOffset > expectedBytes ||
+                cancellation == null || progress == null) {
+            return result(Error.STORAGE_FAILURE, false);
+        }
+        URL current = initial;
         for (int redirects = 0; redirects <= MAXIMUM_REDIRECTS; redirects++) {
-            if (!"https".equalsIgnoreCase(current.getProtocol())) {
+            if (current == null || !"https".equalsIgnoreCase(current.getProtocol())) {
                 return result(Error.INSECURE_REDIRECT, false);
             }
 
@@ -129,6 +174,9 @@ final class RetroRewindArchiveDownload {
                 connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 connection.setReadTimeout(READ_TIMEOUT_MILLIS);
                 connection.setRequestProperty("Accept-Encoding", "identity");
+                if (resumeOffset > 0) {
+                    connection.setRequestProperty("Range", "bytes=" + resumeOffset + "-");
+                }
                 int response = connection.getResponseCode();
                 if (isRedirect(response)) {
                     if (redirects == MAXIMUM_REDIRECTS) {
@@ -141,7 +189,14 @@ final class RetroRewindArchiveDownload {
                     current = new URL(current, location);
                     continue;
                 }
-                if (response != HttpURLConnection.HTTP_OK) {
+                long transferOffset;
+                if (response == HttpURLConnection.HTTP_OK) {
+                    transferOffset = 0;
+                } else if (response == HttpURLConnection.HTTP_PARTIAL && resumeOffset > 0 &&
+                        isCompleteContentRange(connection.getHeaderField("Content-Range"),
+                                resumeOffset, expectedBytes)) {
+                    transferOffset = resumeOffset;
+                } else {
                     return result(Error.HTTP_FAILURE, false);
                 }
                 String encoding = connection.getContentEncoding();
@@ -149,12 +204,14 @@ final class RetroRewindArchiveDownload {
                     return result(Error.HTTP_FAILURE, false);
                 }
                 long declaredBytes = connection.getContentLengthLong();
-                if (declaredBytes >= 0 && declaredBytes != RetroRewindRelease.ARCHIVE_BYTES) {
+                long expectedResponseBytes = expectedBytes - transferOffset;
+                if (declaredBytes >= 0 && declaredBytes != expectedResponseBytes) {
                     return result(Error.SIZE_MISMATCH, false);
                 }
                 try (InputStream input = new BufferedInputStream(connection.getInputStream())) {
-                    Error error = transfer(input, partial, RetroRewindRelease.ARCHIVE_BYTES,
-                            RetroRewindRelease.ARCHIVE_SHA256, cancellation, progress);
+                    Error error = transferResuming(input, partial,
+                            expectedBytes, expectedSha256, transferOffset,
+                            cancellation, progress);
                     return result(error, false);
                 }
             } catch (IOException exception) {
@@ -185,9 +242,21 @@ final class RetroRewindArchiveDownload {
             String expectedSha256,
             Cancellation cancellation,
             Progress progress) {
+        return transferResuming(input, partial, expectedBytes, expectedSha256, 0,
+                cancellation, progress);
+    }
+
+    static Error transferResuming(
+            InputStream input,
+            Path partial,
+            long expectedBytes,
+            String expectedSha256,
+            long resumeOffset,
+            Cancellation cancellation,
+            Progress progress) {
         byte[] expectedDigest = decodeSha256(expectedSha256);
         if (expectedBytes < 0 || expectedDigest == null || cancellation == null ||
-                progress == null) {
+                progress == null || resumeOffset < 0 || resumeOffset > expectedBytes) {
             return Error.STORAGE_FAILURE;
         }
 
@@ -198,16 +267,50 @@ final class RetroRewindArchiveDownload {
             return Error.STORAGE_FAILURE;
         }
 
-        OutputStream openedOutput;
+        long total = 0;
+        byte[] buffer = new byte[BUFFER_BYTES];
         try {
-            openedOutput = Files.newOutputStream(partial,
-                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            if (!Files.isRegularFile(partial, LinkOption.NOFOLLOW_LINKS) ||
+                    (resumeOffset > 0 && Files.size(partial) != resumeOffset)) {
+                return Error.STORAGE_FAILURE;
+            }
+            if (resumeOffset > 0) {
+                try (InputStream prefix = Files.newInputStream(partial)) {
+                    while (total < resumeOffset) {
+                        if (cancellation.isCancelled()) {
+                            return Error.CANCELLED;
+                        }
+                        int request = (int) Math.min(buffer.length, resumeOffset - total);
+                        int count = prefix.read(buffer, 0, request);
+                        if (count <= 0) {
+                            return Error.STORAGE_FAILURE;
+                        }
+                        digest.update(buffer, 0, count);
+                        total += count;
+                        progress.onProgress(total, expectedBytes);
+                    }
+                    if (prefix.read() != -1) {
+                        return Error.STORAGE_FAILURE;
+                    }
+                }
+            }
         } catch (IOException exception) {
             return Error.STORAGE_FAILURE;
         }
 
-        long total = 0;
-        byte[] buffer = new byte[BUFFER_BYTES];
+        OutputStream openedOutput;
+        try {
+            if (resumeOffset == 0) {
+                openedOutput = Files.newOutputStream(partial,
+                        StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            } else {
+                openedOutput = Files.newOutputStream(partial,
+                        StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+            }
+        } catch (IOException exception) {
+            return Error.STORAGE_FAILURE;
+        }
+
         try (OutputStream output = openedOutput) {
             while (true) {
                 if (cancellation.isCancelled()) {
@@ -295,6 +398,58 @@ final class RetroRewindArchiveDownload {
                 response == HttpURLConnection.HTTP_MOVED_TEMP ||
                 response == HttpURLConnection.HTTP_SEE_OTHER ||
                 response == 307 || response == 308;
+    }
+
+    static boolean isCompleteContentRange(String value, long offset, long expectedBytes) {
+        if (value == null || offset <= 0 || offset >= expectedBytes) {
+            return false;
+        }
+        Matcher match = CONTENT_RANGE.matcher(value);
+        if (!match.matches()) {
+            return false;
+        }
+        try {
+            long first = Long.parseLong(match.group(1));
+            long last = Long.parseLong(match.group(2));
+            long total = Long.parseLong(match.group(3));
+            return first == offset && last == expectedBytes - 1 && total == expectedBytes;
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+    }
+
+    static long preparePartial(
+            Path partial, long expectedBytes, String expectedSha256) throws IOException {
+        if (Files.exists(partial, LinkOption.NOFOLLOW_LINKS)) {
+            if (!Files.isRegularFile(partial, LinkOption.NOFOLLOW_LINKS)) {
+                Files.delete(partial);
+                Files.createFile(partial);
+                return 0;
+            }
+            long bytes = Files.size(partial);
+            if (bytes < 0 || bytes > expectedBytes) {
+                Files.delete(partial);
+                Files.createFile(partial);
+                return 0;
+            }
+            if (bytes == expectedBytes &&
+                    verifyFile(partial, expectedBytes, expectedSha256) != Error.NONE) {
+                Files.delete(partial);
+                Files.createFile(partial);
+                return 0;
+            }
+            return bytes;
+        }
+        Files.createFile(partial);
+        return 0;
+    }
+
+    private static void deletePartial(Path partial) {
+        try {
+            Files.deleteIfExists(partial);
+        } catch (IOException ignored) {
+            // The stable app-private partial is never accepted without full verification.
+        }
     }
 
     private static byte[] decodeSha256(String value) {

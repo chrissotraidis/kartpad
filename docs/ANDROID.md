@@ -899,8 +899,13 @@ the unique worker now orders recovery, capacity, download, extraction,
 validation, activation, and cache cleanup, with persisted visible progress,
 cancellation, transport retry, and duplicate suppression. Fixture work passes
 on both page-size lanes, and the same UUID restarts after an injected app
-process death on API 36. Partial HTTP transfer is not yet resumable, and the
-production-size install and Retro Rewind gameplay remain open.
+process death on API 36. The downloader now retains a version-scoped partial,
+requires an exact HTTPS byte range before prefix-hashing and appending, safely
+restarts when a server returns the full representation, and publishes only a
+complete pinned digest. An injected process death preserved seven bytes and the
+same worker resumed from that exact offset. The official server's range
+behavior, production-size install, remaining fault matrix, and Retro Rewind
+gameplay remain open.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

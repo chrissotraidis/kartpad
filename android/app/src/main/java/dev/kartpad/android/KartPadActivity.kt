@@ -5,8 +5,10 @@ import android.content.Context
 import android.system.Os
 import android.util.Log
 import android.view.ViewGroup
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import org.libsdl.app.SDLActivity
@@ -138,14 +140,44 @@ class KartPadActivity : SDLActivity() {
                     this,
                     steps = 60,
                     delayMillis = 500,
+                    resumeProcessDeath = true,
                 )
                 Log.i(TAG, "A3 durable worker restart fixture enqueued id=$id")
             }
             intent.getBooleanExtra(DEBUG_EXTRA_RETRO_REWIND_WORKER, false) -> {
+                runDebugRetroRewindResumeFixture()
                 RetroRewindInstallWork.enqueueDebugFixture(this)
                 RetroRewindInstallWork.enqueueDebugFixture(this)
                 Log.i(TAG, "A3 durable worker fixture enqueued twice with KEEP")
             }
+        }
+    }
+
+    private fun runDebugRetroRewindResumeFixture() {
+        val content = "resume-fixture-content".toByteArray(Charsets.UTF_8)
+        val resumeOffset = 7
+        val partial = Files.createTempFile(cacheDir.toPath(), "resume-fixture-", ".part")
+        try {
+            Files.write(partial, content.copyOf(resumeOffset))
+            val result = RetroRewindArchiveDownload.transferResuming(
+                ByteArrayInputStream(content, resumeOffset, content.size - resumeOffset),
+                partial,
+                content.size.toLong(),
+                DEBUG_RESUME_FIXTURE_SHA256,
+                resumeOffset.toLong(),
+                { false },
+                { _, _ -> },
+            )
+            check(result == RetroRewindArchiveDownload.Error.NONE)
+            check(Files.readAllBytes(partial).contentEquals(content))
+            Log.i(
+                TAG,
+                "A3 resumable transfer passed prefix=$resumeOffset total=${content.size}",
+            )
+        } catch (error: Exception) {
+            Log.e(TAG, "A3 resumable transfer failed", error)
+        } finally {
+            Files.deleteIfExists(partial)
         }
     }
 
@@ -164,6 +196,8 @@ class KartPadActivity : SDLActivity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER"
         private const val DEBUG_EXTRA_RETRO_REWIND_WORKER_RESTART =
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER_RESTART"
+        private const val DEBUG_RESUME_FIXTURE_SHA256 =
+            "cb9d5fc3b83611af65032f73119285de4e97d4b2b9f7b2e9567443635358483a"
         private const val MIN_RKG_BYTES = 0x90L
         private const val MAX_RKG_BYTES = 1024L * 1024L
         private val RKG_MAGIC = byteArrayOf('R'.code.toByte(), 'K'.code.toByte(), 'G'.code.toByte(), 'D'.code.toByte())

@@ -216,9 +216,20 @@ not block offline Retro Rewind support.
    Wiped 4 KiB and 16 KiB AVDs each prove exactly one start after two enqueues.
    A separate API 36 fault run kills the application during active work; the
    same persisted UUID restarts at attempt 1 after relaunch and completes.
-   Partial HTTP resume, production-size installation/faults, Retro Rewind
-   gameplay/mode switching, and physical acceptance remain open. Evidence:
+   At that checkpoint, partial HTTP resume, production-size
+   installation/faults, Retro Rewind gameplay/mode switching, and physical
+   acceptance remained open. Evidence:
    `docs/artifacts/2026-09-04/android/a3-install-worker.md`.
+   The downloader now retains a stable version-scoped partial and accepts
+   append only after an exact HTTPS `206 Content-Range`; a full `200`
+   response safely truncates/restarts and final publication still requires the
+   complete pinned digest. Host faults cover range negotiation and repeated
+   network-loss resume, both AVD page sizes execute prefix append, and the
+   process-death worker test now resumes the same UUID from a measured nonzero
+   prefix (seven bytes in the final run). The official 1.86 GB server/transfer,
+   production fault matrix, gameplay/mode switching, and physical acceptance
+   remain open. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-resumable-download.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

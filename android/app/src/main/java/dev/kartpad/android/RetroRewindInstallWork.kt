@@ -21,6 +21,7 @@ internal object RetroRewindInstallWork {
     const val KEY_DEBUG_FIXTURE = "debug_fixture"
     const val KEY_DEBUG_FIXTURE_STEPS = "debug_fixture_steps"
     const val KEY_DEBUG_FIXTURE_DELAY_MILLIS = "debug_fixture_delay_millis"
+    const val KEY_DEBUG_RESUME_PROCESS_DEATH = "debug_resume_process_death"
 
     fun enqueue(context: Context) {
         val token = UUID.randomUUID().toString()
@@ -48,6 +49,7 @@ internal object RetroRewindInstallWork {
         context: Context,
         steps: Int = 3,
         delayMillis: Long = 250,
+        resumeProcessDeath: Boolean = false,
     ): UUID {
         check(BuildConfig.DEBUG && !BuildConfig.GAME_RUNTIME)
         check(steps in 1..120)
@@ -59,6 +61,7 @@ internal object RetroRewindInstallWork {
                     KEY_DEBUG_FIXTURE to true,
                     KEY_DEBUG_FIXTURE_STEPS to steps,
                     KEY_DEBUG_FIXTURE_DELAY_MILLIS to delayMillis,
+                    KEY_DEBUG_RESUME_PROCESS_DEATH to resumeProcessDeath,
                 ),
             )
             .addTag(TAG)

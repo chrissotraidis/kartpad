@@ -88,6 +88,7 @@ wait_for_marker \
   "A1 ELF scheduler passed operations=2000000 hash=0x7287563387fb1677 fiber_switches=1000000"
 wait_for_marker "A2 SDL gamepad contract passed"
 wait_for_marker "A3 JNI archive extraction passed entries=2 bytes=7"
+wait_for_marker "A3 resumable transfer passed prefix=7 total=22"
 wait_for_marker "A3 durable worker fixture enqueued twice with KEEP"
 wait_for_marker "A3 durable worker fixture started id="
 worker_id="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |

@@ -2373,3 +2373,36 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   switching, and physical hardware remain open. No APK/AAB, production archive,
   or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-install-worker.md`.
+
+## 2026-09-04 — Android A3 resumable archive download
+
+- Replaced random disposable download files with one version-scoped
+  app-private partial. Resume rehashes the exact existing prefix, requests the
+  remaining range, appends only after an exact `206 Content-Range`, and safely
+  truncates when a conforming server ignores Range and returns `200`.
+- Oversized, complete-corrupt, symlinked, or non-regular partial state resets
+  without following links. Network loss/cancellation preserves progress;
+  permanent protocol/integrity faults discard it. Atomic publication still
+  requires the complete profile size and SHA-256.
+- Host tests cover exact request headers, valid/malformed/overflowing ranges,
+  safe full restart, a second resume after injected network loss, offset
+  mismatch, progress, corrupt/oversized reset, and an untouched symlink target.
+- Wiped 4 KiB and 16 KiB AVDs execute a seven-byte prefix append through the
+  Android API. The durable API 36 fault run additionally persisted seven bytes,
+  killed the app process, and observed the same UUID restart at attempt 1 from
+  byte 7 and finish the fully verified fixture.
+- A body-free HTTPS `HEAD` request to the profile URL returned 200, the exact
+  pinned 1,859,041,899-byte length, ZIP content type, and
+  `Accept-Ranges: bytes`. No production archive bytes were downloaded, and a
+  real ranged GET remains unproven.
+- All A3 contract runners, public/private source configurations, release
+  compilation, lint, package/privacy audit, builder suite, SunPad snapshot,
+  safety, shell, and diff checks pass. The source-only APK is 33,843,921 bytes
+  at SHA-256
+  `f5b001c206abb5dd05bc0c58f8f6e6f2b5c684361ccaaa0f079f259e9f173364`.
+- Classification: **Pass for bounded resumable acquisition and verified
+  nonzero-prefix recovery after real app-process death on the emulator.** The
+  official production server/1.86 GB transfer, remaining production faults,
+  gameplay/mode switching, and physical acceptance remain open. No APK/AAB,
+  archive, or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-resumable-download.md`.
