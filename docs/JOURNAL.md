@@ -2153,3 +2153,31 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   hands-on rows. No APK/AAB, raw log, device identifier, package UID,
   controller name, save, or game data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a2-uid-scoped-capture.md`.
+
+## 2026-09-04 — Android A3 shared archive-path validation
+
+- Kept A2 open because no physical Android target is attached, then selected
+  the independent source-only portion of A3 authorized by the goal loop.
+- Extracted the Apple Retro Rewind installer's ZIP member-path policy into a
+  byte-oriented portable C++ validator. It rejects empty and absolute names,
+  backslashes, embedded NULs, repeated/empty components, `.`/`..`, and colons
+  while allowing one trailing directory slash.
+- Wired the existing iOS/tvOS installer and every Apple product variant to the
+  shared implementation immediately. The wrapper now validates minizip's
+  explicit filename byte span before UTF-8 decoding, closing the prior
+  C-string truncation gap for embedded NULs.
+- The focused C++ contract passes. A targeted iOS Simulator SDK Objective-C++
+  compile, pinned NDK API-28 ARM64 warning-as-error compile, fresh dual-product
+  patch preparation, 29 builder/tvOS contracts, repository diff validation,
+  and source wiring checks pass; one private
+  payload test remains skipped because its optional input is not cached.
+- A full dual iOS Simulator link stopped before compilation because the cached
+  Dawn archive does not match the script's pinned SHA-256. The fail-closed
+  check was preserved and the cache was not trusted or modified.
+- Classification: **Pass for the portable path policy and immediate Apple
+  consumer; full Apple link inconclusive due to an unrelated dependency-cache
+  mismatch.** A2 remains the lowest incomplete goal, and A3 remains open for
+  the Android owner, remaining shared installer rules, failure recovery, and
+  complete emulator/physical offline acceptance. No APK/AAB or private input
+  was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-shared-archive-path.md`.

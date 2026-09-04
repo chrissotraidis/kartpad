@@ -235,6 +235,20 @@ contract passes. No device is attached, so physical execution remains open.
 Evidence:
 [`docs/artifacts/2026-09-04/android/a2-uid-scoped-capture.md`](artifacts/2026-09-04/android/a2-uid-scoped-capture.md).
 
+Independent source-only A3 work has begun without relabeling the blocked A2
+physical row. The Retro Rewind archive member-path policy is now portable C++
+and is consumed by the existing iOS/tvOS installer using minizip's explicit
+filename byte length. Its contract rejects absolute paths, backslashes,
+embedded NULs, empty/repeated components, dot traversal, and colons/drive
+prefixes; a direct host test, pinned NDK ARM64 compile, Apple SDK syntax
+compile, fresh dual-product patch preparation, and 29 Apple/builder contracts
+pass. A full dual iOS link
+stopped fail-closed before compilation because the local cached Dawn archive
+does not match its pinned hash. This is one shared validation slice, not an
+Android installer or A3 acceptance result. A2 remains the lowest incomplete
+goal and A3 remains open. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-shared-archive-path.md`](artifacts/2026-09-04/android/a3-shared-archive-path.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

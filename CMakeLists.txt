@@ -293,6 +293,17 @@ if(MKW_BUILD_IOS_SIMULATOR OR MKW_BUILD_IOS_DEVICE)
 endif()
 
 if(BUILD_TESTING)
+  add_executable(kartpad_retro_rewind_archive_path_tests
+    runtime/tests/retro_rewind_archive_path_tests.cpp
+    runtime/src/retro_rewind/archive_path.cpp)
+  target_include_directories(kartpad_retro_rewind_archive_path_tests PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/runtime/include")
+  target_compile_features(kartpad_retro_rewind_archive_path_tests PRIVATE cxx_std_20)
+  target_compile_options(kartpad_retro_rewind_archive_path_tests PRIVATE
+    -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME kartpad.retro-rewind.archive-path
+    COMMAND kartpad_retro_rewind_archive_path_tests)
+
   add_executable(kartpad_mii_database_tests runtime/tests/mii_database_tests.cpp)
   target_include_directories(kartpad_mii_database_tests PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/runtime/include")

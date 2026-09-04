@@ -150,7 +150,15 @@ not block offline Retro Rewind support.
    `docs/artifacts/2026-09-04/android/a2-physical-device-preflight.md`, plus
    `docs/artifacts/2026-09-04/android/a2-runtime-signal-sanitizer.md` and
    `docs/artifacts/2026-09-04/android/a2-uid-scoped-capture.md`.
-   A2 remains open.
+   A2 remains open. While no device is attached, an independent A3 source
+   slice moved ZIP member-path validation into portable C++ already consumed
+   by iOS/tvOS. Its host matrix, pinned NDK ARM64 compile, SDK-targeted
+   installer compile, and fresh Apple patch preparation pass; a full Apple
+   link stopped at an unrelated
+   fail-closed cached-Dawn hash mismatch. Continue the remaining shared
+   installer rules and thin Android owner only when they are immediately
+   consumed and tested. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-shared-archive-path.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

@@ -32,6 +32,16 @@ covers twelve supported and rejected device states and proves that the ADB
 serial is not emitted; the current host has no attached ADB target, so this
 does not satisfy a physical A2 row.
 
+While that external A2 prerequisite is unavailable, the first independent A3
+source slice extracts archive member-path validation into
+`runtime/src/retro_rewind/archive_path.cpp`. The existing iOS/tvOS installer
+now consumes that byte-oriented contract using minizip's explicit filename
+length, including embedded-NUL rejection. Host tests cover every prohibited
+path class, the pinned NDK compiles it for API-28 ARM64 with warnings as errors,
+and fresh Apple patch preparation succeeds. Android download,
+storage, extraction, activation, rollback, and gameplay remain unimplemented;
+this does not pass A3 or change A2's status.
+
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
 Mario Kart Wii and Retro Rewind profiles as the Apple `KartPadDual` product,

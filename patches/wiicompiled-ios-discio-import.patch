@@ -1,6 +1,6 @@
 --- a/cmake/PublicProducts.cmake
 +++ b/cmake/PublicProducts.cmake
-@@ -271,16 +271,55 @@
+@@ -271,16 +271,56 @@
  
  set(MKW_KARTPAD_REPO_ROOT "" CACHE PATH
      "KartPad repository root used to embed the exact mobile UIKit host")
@@ -53,10 +53,11 @@
 +        "${MKW_KARTPAD_IOS_DIR}/KartPadDiscExtractor.mm"
 +        "${MKW_KARTPAD_IOS_DIR}/KartPadDiscFormats.cpp"
 +        "${MKW_KARTPAD_IOS_DIR}/KartPadRetroRewindInstaller.mm"
++        "${MKW_KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
          "${MKW_KARTPAD_MOBILE_DIR}/KartPadClassicInput.mm"
          "${MKW_KARTPAD_MOBILE_DIR}/KartPadPhysicalControllers.mm"
          "${MKW_KARTPAD_MOBILE_DIR}/KartPadMotionSteering.mm"
-@@ -306,20 +346,34 @@
+@@ -306,20 +347,34 @@
          "${MKW_KARTPAD_IOS_DIR}"
          "${MKW_KARTPAD_MOBILE_DIR}"
          "${MKW_KARTPAD_SHARED_DIR}"
