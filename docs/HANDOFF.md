@@ -204,10 +204,21 @@ not block offline Retro Rewind support.
    no-follow directory-relative output, JNI cancellation/progress, exact
    staging cleanup, and a joined validation/atomic-activation pipeline. Host
    faults, full private native linkage, public build/lint/audit, and wiped 4 KiB
-   plus 16 KiB AVD JNI execution pass. Production-size install, a durable
-   worker, injected process death, and Retro Rewind gameplay remain open.
+   plus 16 KiB AVD JNI execution pass. At that checkpoint, production-size
+   install, durable orchestration, and Retro Rewind gameplay remained open.
    Evidence:
    `docs/artifacts/2026-09-04/android/a3-archive-extraction.md`.
+   The next stacked slice adds that durable owner: one unique AndroidX
+   foreground worker now sequences recovery, capacity preflight, pinned
+   download, extraction, validation, activation, and cache cleanup. It persists
+   phase/byte progress, updates its data-sync notification, exposes
+   cancellation, retries transport loss, and suppresses duplicate enqueue.
+   Wiped 4 KiB and 16 KiB AVDs each prove exactly one start after two enqueues.
+   A separate API 36 fault run kills the application during active work; the
+   same persisted UUID restarts at attempt 1 after relaunch and completes.
+   Partial HTTP resume, production-size installation/faults, Retro Rewind
+   gameplay/mode switching, and physical acceptance remain open. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-install-worker.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

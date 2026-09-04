@@ -26,6 +26,7 @@ class KartPadActivity : SDLActivity() {
         }
         super.onCreate(savedInstanceState)
         runDebugRetroRewindExtractionFixture()
+        runDebugRetroRewindWorkerFixture()
         val overlay = KartPadOverlayView(this)
         mLayout.addView(
             overlay,
@@ -127,6 +128,27 @@ class KartPadActivity : SDLActivity() {
         }
     }
 
+    private fun runDebugRetroRewindWorkerFixture() {
+        if (!BuildConfig.DEBUG || BuildConfig.GAME_RUNTIME) {
+            return
+        }
+        when {
+            intent.getBooleanExtra(DEBUG_EXTRA_RETRO_REWIND_WORKER_RESTART, false) -> {
+                val id = RetroRewindInstallWork.enqueueDebugFixture(
+                    this,
+                    steps = 60,
+                    delayMillis = 500,
+                )
+                Log.i(TAG, "A3 durable worker restart fixture enqueued id=$id")
+            }
+            intent.getBooleanExtra(DEBUG_EXTRA_RETRO_REWIND_WORKER, false) -> {
+                RetroRewindInstallWork.enqueueDebugFixture(this)
+                RetroRewindInstallWork.enqueueDebugFixture(this)
+                Log.i(TAG, "A3 durable worker fixture enqueued twice with KEEP")
+            }
+        }
+    }
+
     companion object {
         private const val TAG = "KartPadFixture"
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
@@ -138,6 +160,10 @@ class KartPadActivity : SDLActivity() {
             "KartPad/Diagnostics/StateTrace.csv"
         private const val DEBUG_EXTRA_RETRO_REWIND_EXTRACTION =
             "dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION"
+        private const val DEBUG_EXTRA_RETRO_REWIND_WORKER =
+            "dev.kartpad.android.TEST_RETRO_REWIND_WORKER"
+        private const val DEBUG_EXTRA_RETRO_REWIND_WORKER_RESTART =
+            "dev.kartpad.android.TEST_RETRO_REWIND_WORKER_RESTART"
         private const val MIN_RKG_BYTES = 0x90L
         private const val MAX_RKG_BYTES = 1024L * 1024L
         private val RKG_MAGIC = byteArrayOf('R'.code.toByte(), 'K'.code.toByte(), 'G'.code.toByte(), 'D'.code.toByte())

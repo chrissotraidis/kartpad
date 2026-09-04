@@ -2345,3 +2345,31 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   download, durable worker/process-death behavior, Retro Rewind runtime, and
   physical acceptance remain open. No artifact or private data was published.
   Evidence: `docs/artifacts/2026-09-04/android/a3-archive-extraction.md`.
+
+## 2026-09-04 — Android A3 durable foreground install worker
+
+- Locked AndroidX WorkManager 2.11.1 and added one unique connected-network
+  foreground job that orders recovery, exact space preflight, pinned download,
+  bounded extraction, content validation, atomic activation, and cache cleanup.
+- Work phase and byte progress are persisted and mirrored in the visible
+  data-sync notification. Duplicate enqueue uses `KEEP`; transport faults
+  retry, integrity/storage/install faults fail closed, and a stable facade
+  exposes cancellation for the future A4 setup UI.
+- Wiped 4 KiB and 16 KiB AVDs each started one fixture after two enqueue calls
+  and completed it. A separate wiped API 36 run force-stopped the app during
+  active work, confirmed the process was absent, then observed the same work
+  UUID restart at attempt 1 and complete after an ordinary activity relaunch.
+- All seven underlying A3 contract runners, public build/release compilation,
+  lint, private game-source compilation, strict package/privacy audit, the
+  22-test builder suite, SunPad snapshot, safety, shell, and diff checks pass.
+  The source verifier reaches the known unrelated ignored `rr-pulsar`
+  checkout/lock mismatch.
+- The source-only APK is 33,843,921 bytes with SHA-256
+  `5ee1edf08ceb2173f9fc32824872c1489d80e1fddf6dd8f41738a73b5cfa19a7`.
+- Classification: **Pass for unique foreground orchestration, progress,
+  cancellation/retry policy, duplicate suppression, and injected app-process
+  death recovery on the emulator.** Partial HTTP resume, the production
+  download/install and interruption matrix, Retro Rewind gameplay/mode
+  switching, and physical hardware remain open. No APK/AAB, production archive,
+  or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-install-worker.md`.

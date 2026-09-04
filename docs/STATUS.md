@@ -327,6 +327,20 @@ lifecycle, process-death injection, and Retro Rewind gameplay are still open.
 Evidence:
 [`docs/artifacts/2026-09-04/android/a3-archive-extraction.md`](artifacts/2026-09-04/android/a3-archive-extraction.md).
 
+The next A3 layer now joins recovery, capacity preflight, verified download,
+bounded extraction, content validation, activation, and cache cleanup behind
+one unique AndroidX WorkManager foreground job. It persists phase/byte progress,
+updates a data-sync notification, suppresses duplicate enqueue with `KEEP`,
+retries transport loss, and exposes cancellation for the future setup UI.
+Wiped 4 KiB and 16 KiB AVDs each started exactly one fixture after two
+enqueues. A separate API 36 run force-stopped KartPad during active work; the
+same persisted UUID restarted at attempt 1 after a plain relaunch and completed.
+Package, build/lint, private-source configuration, and all underlying A3
+contracts pass. A3 remains open for resumable partial transfer, production-size
+installation and fault injection, Retro Rewind gameplay/mode switching, and
+physical hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-install-worker.md`](artifacts/2026-09-04/android/a3-install-worker.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

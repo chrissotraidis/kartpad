@@ -24,8 +24,23 @@ badging="$("$aapt2" dump badging "$apk")"
 permissions="$("$aapt2" dump permissions "$apk")"
 permission_names="$(printf '%s\n' "$permissions" |
   sed -n "s/^uses-permission: name='\([^']*\)'.*$/\1/p" | sort)"
-if [[ "$permission_names" != "android.permission.INTERNET" ]]; then
-  echo "ERROR: KartPad Android permission set differs from the network-only allowlist" >&2
+expected_permission_names="$(printf '%s\n' \
+  android.permission.ACCESS_NETWORK_STATE \
+  android.permission.FOREGROUND_SERVICE \
+  android.permission.FOREGROUND_SERVICE_DATA_SYNC \
+  android.permission.INTERNET \
+  android.permission.RECEIVE_BOOT_COMPLETED \
+  android.permission.WAKE_LOCK \
+  dev.kartpad.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | sort)"
+if [[ "$permission_names" != "$expected_permission_names" ]]; then
+  echo "ERROR: KartPad Android permission set differs from the install-worker allowlist" >&2
+  exit 1
+fi
+declared_permissions="$(printf '%s\n' "$permissions" |
+  sed -n "s/^permission: \([^[:space:]]*\).*$/\1/p" | sort)"
+if [[ "$declared_permissions" != \
+      "dev.kartpad.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" ]]; then
+  echo "ERROR: KartPad Android declared-permission set differs from the allowlist" >&2
   exit 1
 fi
 

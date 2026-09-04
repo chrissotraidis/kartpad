@@ -881,20 +881,26 @@ Independent A3 source work now includes generated release pins, validated
 same-volume activation/recovery, installed-content validation, and an
 overflow-safe filesystem-aware free-space preflight. The current production
 profile requires 4,327,477,355 bytes when cache and files share storage. The
-download/extraction worker is still absent, so these are tested contracts rather
-than an installed Retro Rewind runtime. Evidence is under
+source-only contracts are now consumed by a unique AndroidX foreground worker,
+but they still do not constitute an installed Retro Rewind runtime. Evidence is under
 [`docs/artifacts/2026-09-04/android/`](artifacts/2026-09-04/android/).
 Pinned archive acquisition is also implemented as a source-only contract: it
 uses HTTPS-only bounded redirects/timeouts, exact streamed length/SHA-256,
 cancellation, verified-cache reuse, and atomic publication. INTERNET is the
-only allowed manifest permission. A worker/UI and ZIP extraction still need to
-consume these layers before A3 can claim an install.
+network permission required directly by KartPad; WorkManager adds its bounded
+network-state, foreground-service, wake/boot, and app-scoped receiver
+permissions. The strict audit rejects anything outside that exact set.
 Bounded ZIP extraction is now connected as well: the pinned minizip-ng core
 uses the shared scan, strict UTF-8, directory-relative no-follow/exclusive
 writes, CRC/byte checks, cancellation, and byte progress. A joined Java pipeline
 revalidates the archive and gates atomic activation on the installed-content
 contract. Fixture-sized JNI extraction passes on both supported AVD page sizes;
-production download/worker/process-death and Retro Rewind gameplay remain open.
+the unique worker now orders recovery, capacity, download, extraction,
+validation, activation, and cache cleanup, with persisted visible progress,
+cancellation, transport retry, and duplicate suppression. Fixture work passes
+on both page-size lanes, and the same UUID restarts after an injected app
+process death on API 36. Partial HTTP transfer is not yet resumable, and the
+production-size install and Retro Rewind gameplay remain open.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

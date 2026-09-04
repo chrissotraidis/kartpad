@@ -131,6 +131,14 @@
       "role": "Pinned ZIP directory and decompression implementation for the bounded Android Retro Rewind installer"
     },
     {
+      "name": "AndroidX WorkManager",
+      "repository": "https://android.googlesource.com/platform/frameworks/support",
+      "version": "2.11.1",
+      "coordinates": "androidx.work:work-runtime-ktx:2.11.1",
+      "releaseNotes": "https://developer.android.com/jetpack/androidx/releases/work#2.11.1",
+      "role": "Unique durable foreground orchestration, retry, cancellation, constraints, and persisted progress for Android Retro Rewind installation"
+    },
+    {
       "name": "sse2neon",
       "repository": "https://github.com/DLTcollab/sse2neon.git",
       "commit": "13a42df35dc7fcc94f987568e7274a998bb6cc86",

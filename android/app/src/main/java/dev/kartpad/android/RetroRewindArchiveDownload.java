@@ -25,6 +25,10 @@ final class RetroRewindArchiveDownload {
         boolean isCancelled();
     }
 
+    interface Progress {
+        void onProgress(long downloadedBytes, long totalBytes);
+    }
+
     enum Error {
         NONE,
         CANCELLED,
@@ -55,12 +59,16 @@ final class RetroRewindArchiveDownload {
     private RetroRewindArchiveDownload() {}
 
     static Result downloadRelease(Path cacheDirectory, Cancellation cancellation) {
+        return downloadRelease(cacheDirectory, cancellation, (downloaded, total) -> {});
+    }
+
+    static Result downloadRelease(
+            Path cacheDirectory, Cancellation cancellation, Progress progress) {
         if (!isRealDirectory(cacheDirectory)) {
             return result(Error.INVALID_CACHE, false);
         }
 
-        Path archive = cacheDirectory.resolve(
-                "RetroRewind-" + RetroRewindRelease.VERSION + ".zip");
+        Path archive = archivePath(cacheDirectory);
         if (verifyFile(archive, RetroRewindRelease.ARCHIVE_BYTES,
                 RetroRewindRelease.ARCHIVE_SHA256) == Error.NONE) {
             return result(Error.NONE, true);
@@ -75,7 +83,7 @@ final class RetroRewindArchiveDownload {
         }
 
         try {
-            Result transfer = downloadPinned(partial, cancellation);
+            Result transfer = downloadPinned(partial, cancellation, progress);
             if (!transfer.isReady()) {
                 return transfer;
             }
@@ -95,7 +103,13 @@ final class RetroRewindArchiveDownload {
         }
     }
 
-    private static Result downloadPinned(Path partial, Cancellation cancellation) {
+    static Path archivePath(Path cacheDirectory) {
+        return cacheDirectory.resolve(
+                "RetroRewind-" + RetroRewindRelease.VERSION + ".zip");
+    }
+
+    private static Result downloadPinned(
+            Path partial, Cancellation cancellation, Progress progress) {
         URL current;
         try {
             current = new URL(RetroRewindRelease.ARCHIVE_URL);
@@ -140,7 +154,7 @@ final class RetroRewindArchiveDownload {
                 }
                 try (InputStream input = new BufferedInputStream(connection.getInputStream())) {
                     Error error = transfer(input, partial, RetroRewindRelease.ARCHIVE_BYTES,
-                            RetroRewindRelease.ARCHIVE_SHA256, cancellation);
+                            RetroRewindRelease.ARCHIVE_SHA256, cancellation, progress);
                     return result(error, false);
                 }
             } catch (IOException exception) {
@@ -160,8 +174,20 @@ final class RetroRewindArchiveDownload {
             long expectedBytes,
             String expectedSha256,
             Cancellation cancellation) {
+        return transfer(input, partial, expectedBytes, expectedSha256,
+                cancellation, (downloaded, total) -> {});
+    }
+
+    static Error transfer(
+            InputStream input,
+            Path partial,
+            long expectedBytes,
+            String expectedSha256,
+            Cancellation cancellation,
+            Progress progress) {
         byte[] expectedDigest = decodeSha256(expectedSha256);
-        if (expectedBytes < 0 || expectedDigest == null || cancellation == null) {
+        if (expectedBytes < 0 || expectedDigest == null || cancellation == null ||
+                progress == null) {
             return Error.STORAGE_FAILURE;
         }
 
@@ -209,6 +235,7 @@ final class RetroRewindArchiveDownload {
                 }
                 digest.update(buffer, 0, count);
                 total += count;
+                progress.onProgress(total, expectedBytes);
             }
         } catch (IOException exception) {
             return Error.STORAGE_FAILURE;

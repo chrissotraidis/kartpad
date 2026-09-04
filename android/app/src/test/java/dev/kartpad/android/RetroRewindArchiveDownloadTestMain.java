@@ -21,8 +21,17 @@ public final class RetroRewindArchiveDownloadTestMain {
             Path partial = directory.resolve("fixture.part");
             Files.write(partial, new byte[0]);
 
-            expectError(transfer(content, partial, content.length, hash, () -> false),
+            long[] progress = {0, 0};
+            expectError(RetroRewindArchiveDownload.transfer(
+                            new ByteArrayInputStream(content), partial,
+                            content.length, hash, () -> false,
+                            (downloaded, total) -> {
+                                progress[0] = downloaded;
+                                progress[1] = total;
+                            }),
                     RetroRewindArchiveDownload.Error.NONE);
+            expect(progress[0] == content.length && progress[1] == content.length,
+                    "successful transfer did not report final progress");
             expect(java.util.Arrays.equals(content, Files.readAllBytes(partial)),
                     "successful transfer bytes changed");
             expectError(RetroRewindArchiveDownload.verifyFile(

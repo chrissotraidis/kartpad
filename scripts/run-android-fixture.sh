@@ -66,7 +66,8 @@ apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
 "$adb" logcat -c
 "$adb" shell am force-stop dev.kartpad.android
 "$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity \
-  --ez dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION true >/dev/null
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION true \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_WORKER true >/dev/null
 wait_for_marker() {
   local marker="$1"
   for _ in {1..60}; do
@@ -87,6 +88,22 @@ wait_for_marker \
   "A1 ELF scheduler passed operations=2000000 hash=0x7287563387fb1677 fiber_switches=1000000"
 wait_for_marker "A2 SDL gamepad contract passed"
 wait_for_marker "A3 JNI archive extraction passed entries=2 bytes=7"
+wait_for_marker "A3 durable worker fixture enqueued twice with KEEP"
+wait_for_marker "A3 durable worker fixture started id="
+worker_id="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+  sed -n 's/.*A3 durable worker fixture started id=\([^ ]*\).*/\1/p' |
+  tail -1)"
+[[ "$worker_id" =~ ^[0-9a-f-]{36}$ ]] || {
+  echo "ERROR: could not parse unique worker id: $worker_id" >&2
+  exit 1
+}
+wait_for_marker "A3 durable worker fixture completed id=$worker_id attempt=0"
+worker_starts="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+  grep -Fc "A3 durable worker fixture started id=$worker_id")"
+[[ "$worker_starts" == 1 ]] || {
+  echo "ERROR: unique worker fixture started $worker_starts times" >&2
+  exit 1
+}
 wait_for_marker \
   "A1 Vulkan present passed abi=arm64-v8a page_size=$expected_page_size"
 

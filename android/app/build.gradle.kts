@@ -88,4 +88,5 @@ kotlin {
 
 dependencies {
     implementation(files("libs/SDL3-3.4.4.aar"))
+    implementation("androidx.work:work-runtime-ktx:2.11.1")
 }
