@@ -2576,3 +2576,39 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   physical hardware remain open. No production archive, private data, APK, or
   AAB was downloaded or published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-device-low-space.md`.
+
+## 2026-09-04 — Android A3 mid-extraction ENOSPC
+
+- Added a debug-only two-phase fixture that installs a valid existing pack,
+  then runs a separately verified synthetic replacement through the production
+  JNI extraction/validation/activation pipeline after the backing filesystem
+  is deliberately constrained.
+- The guarded harness creates an exact temporary API 36 AVD, mounts a 512 MiB
+  ext4 loop image at app-private `KartPad`, derives ownership/SELinux context
+  from the installed package, and proves app access. The replacement archive
+  is created first, and an 8 GiB host reserve remains mandatory.
+- A 368,544 KiB filler left insufficient expansion capacity. JNI wrote
+  117,440,519 bytes of a validated 402,653,184-byte payload before
+  `IO_FAILURE`; the pipeline reported extraction failure, deleted partial
+  staging, and the prior installed pack still passed exact validation.
+- An attempted smaller emulator data partition was ignored by the system image
+  and the unchanged 6 GiB partition was observed before stopping it; no 5 GiB
+  fill was attempted. The bounded loop mount replaced that disproportionate
+  route. One manual cleanup used an unset SDK variable, then deleted the exact
+  temporary AVD with the resolved pinned path before the automated run.
+- Cleanup unmounted/deleted the loop image, stopped the emulator, deleted the
+  temporary AVD and host fixtures, and left no ADB target. Host free space
+  returned to 46 GiB. Debug assemble/package audit pass; the exact source-only
+  APK is 33,843,921 bytes at SHA-256
+  `120eb052dbe10d3967ff8a58ea3032526d5d1d2982e580ccdf92092d30b49e1a`.
+- All eight A3 source contracts, source-only release compile/API-28 lint,
+  private game-runtime debug Kotlin/Java compile, SunPad snapshot, repository
+  safety, shell, and diff checks pass. Source verification validates 446 hunks
+  and every other pin before the unchanged ignored `rr-pulsar` mismatch; it
+  was not mutated.
+- Classification: **Pass for real Android mid-extraction ENOSPC with measured
+  JNI progress, partial-staging cleanup, and preservation of a previous valid
+  install.** Production-size archive/peak-space, gameplay/mode switching, and
+  physical hardware remain open. No production archive, private data, APK, or
+  AAB was downloaded or published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-device-enospc.md`.

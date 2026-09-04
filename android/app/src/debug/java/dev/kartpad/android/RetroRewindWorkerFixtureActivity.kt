@@ -39,6 +39,32 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             }
             return
         }
+        if (intent.getBooleanExtra(EXTRA_ENOSPC_PREPARE, false)) {
+            if (savedInstanceState == null) {
+                Thread {
+                    RetroRewindEnospcDeviceFixture.prepare(applicationContext)
+                }.start()
+            }
+            return
+        }
+        if (intent.getBooleanExtra(EXTRA_ENOSPC_RUN, false)) {
+            if (savedInstanceState == null) {
+                val archiveBytes = intent.getLongExtra(EXTRA_ARCHIVE_BYTES, -1)
+                val archiveSha256 = intent.getStringExtra(EXTRA_ARCHIVE_SHA256)
+                val payloadBytes = intent.getLongExtra(EXTRA_PAYLOAD_BYTES, -1)
+                val payloadSha256 = intent.getStringExtra(EXTRA_PAYLOAD_SHA256)
+                Thread {
+                    RetroRewindEnospcDeviceFixture.run(
+                        applicationContext,
+                        archiveBytes,
+                        archiveSha256,
+                        payloadBytes,
+                        payloadSha256,
+                    )
+                }.start()
+            }
+            return
+        }
         if (intent.getBooleanExtra(EXTRA_INIT_ONLY, false)) {
             Log.i(LOG_TAG, "A3 worker initializer activity created")
             return
@@ -165,5 +191,17 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_PIPELINE"
         const val EXTRA_SPACE_PROBE =
             "dev.kartpad.android.TEST_RETRO_REWIND_SPACE_PROBE"
+        const val EXTRA_ENOSPC_PREPARE =
+            "dev.kartpad.android.TEST_RETRO_REWIND_ENOSPC_PREPARE"
+        const val EXTRA_ENOSPC_RUN =
+            "dev.kartpad.android.TEST_RETRO_REWIND_ENOSPC_RUN"
+        const val EXTRA_ARCHIVE_BYTES =
+            "dev.kartpad.android.TEST_RETRO_REWIND_ARCHIVE_BYTES"
+        const val EXTRA_ARCHIVE_SHA256 =
+            "dev.kartpad.android.TEST_RETRO_REWIND_ARCHIVE_SHA256"
+        const val EXTRA_PAYLOAD_BYTES =
+            "dev.kartpad.android.TEST_RETRO_REWIND_PAYLOAD_BYTES"
+        const val EXTRA_PAYLOAD_SHA256 =
+            "dev.kartpad.android.TEST_RETRO_REWIND_PAYLOAD_SHA256"
     }
 }

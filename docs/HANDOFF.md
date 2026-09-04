@@ -288,6 +288,15 @@ not block offline Retro Rewind support.
    acquisition, not mid-transfer/mid-extraction `ENOSPC` or a production-size
    install. Evidence:
    `docs/artifacts/2026-09-04/android/a3-device-low-space.md`.
+   The after-preflight full-disk fault now executes through the real Android
+   pipeline on a temporary API 36 ARM64 AVD. A 512 MiB app-private ext4 mount
+   accepted 117,440,519 bytes of a validated 402,653,184-byte synthetic file
+   before JNI returned `IO_FAILURE`; exact staging was removed and the prior
+   validated install remained intact. Cleanup deleted the loop image, host
+   fixtures, emulator, and exact temporary AVD, returning host free space to
+   46 GiB. This closes the synthetic emulator fault, not the official
+   production-size install. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-device-enospc.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

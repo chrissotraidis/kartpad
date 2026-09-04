@@ -430,6 +430,16 @@ emulator stopped. This closes the on-device preflight deficit case, not
 mid-transfer/mid-extraction `ENOSPC` or the production-size install. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-device-low-space.md`](artifacts/2026-09-04/android/a3-device-low-space.md).
 
+The real Android installation pipeline now also survives storage exhaustion
+after preflight. A temporary API 36 AVD mounted a 512 MiB ext4 filesystem at
+the app-private support root; the JNI extractor wrote 117,440,519 bytes of a
+validated 402,653,184-byte synthetic payload before native `IO_FAILURE`. The
+pipeline removed partial staging and the previous validated install remained
+unchanged. The loop image and temporary AVD were deleted, returning host free
+space to 46 GiB. This closes the synthetic emulator full-disk fault, not the
+official production-size install. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-device-enospc.md`](artifacts/2026-09-04/android/a3-device-enospc.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

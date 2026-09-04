@@ -940,6 +940,13 @@ the profile-derived 4,327,477,355-byte requirement, it reports
 `INSUFFICIENT_SHARED_STORE` and creates no archive state. The bounded filler is
 removed during cleanup. Mid-transfer/mid-extraction `ENOSPC` remains distinct
 and unproven.
+The after-preflight storage-exhaustion path now has real Android execution as
+well. On a temporary API 36 AVD, a 512 MiB app-private ext4 mount accepted
+117,440,519 bytes of a validated 402,653,184-byte synthetic payload before JNI
+reported `IO_FAILURE`. The pipeline removed partial staging and preserved the
+previous validated install. The loop image and temporary AVD were deleted.
+This closes the synthetic emulator full-disk fault, not production-size peak
+space or the official archive.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from
