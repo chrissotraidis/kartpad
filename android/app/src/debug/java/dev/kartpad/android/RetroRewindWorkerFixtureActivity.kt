@@ -15,6 +15,14 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             finish()
             return
         }
+        if (intent.getBooleanExtra(EXTRA_PIPELINE, false)) {
+            if (savedInstanceState == null) {
+                Thread {
+                    RetroRewindPipelineDeviceFixture.run(applicationContext)
+                }.start()
+            }
+            return
+        }
         if (intent.getBooleanExtra(EXTRA_INIT_ONLY, false)) {
             Log.i(LOG_TAG, "A3 worker initializer activity created")
             return
@@ -137,5 +145,7 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER_CANCEL"
         const val EXTRA_VERSION_CHECK =
             "dev.kartpad.android.TEST_RETRO_REWIND_VERSION_CHECK"
+        const val EXTRA_PIPELINE =
+            "dev.kartpad.android.TEST_RETRO_REWIND_PIPELINE"
     }
 }

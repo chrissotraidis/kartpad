@@ -65,9 +65,6 @@ apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
 "$adb" install -r "$apk" >/dev/null
 "$adb" logcat -c
 "$adb" shell am force-stop dev.kartpad.android
-"$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity \
-  --ez dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION true \
-  --ez dev.kartpad.android.TEST_RETRO_REWIND_WORKER true >/dev/null
 wait_for_marker() {
   local marker="$1"
   for _ in {1..60}; do
@@ -81,6 +78,17 @@ wait_for_marker() {
   "$adb" logcat -d -v brief KartPadFixture:V SDL:V AndroidRuntime:E libc:F '*:S' >&2
   return 1
 }
+
+"$adb" shell am start -W \
+  -n dev.kartpad.android/.RetroRewindWorkerFixtureActivity \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_PIPELINE true >/dev/null
+wait_for_marker \
+  "A3 device install faults passed existing=preserved replacement=valid recovery=restored"
+"$adb" shell am force-stop dev.kartpad.android
+
+"$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_EXTRACTION true \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_WORKER true >/dev/null
 
 wait_for_marker \
   "A1 guest memory passed reserve_bytes=4294967296"

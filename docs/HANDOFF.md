@@ -266,6 +266,19 @@ not block offline Retro Rewind support.
    were requested. Normal startup's chooser/installed fallback remains absent.
    Evidence:
    `docs/artifacts/2026-09-04/android/a3-version-freshness.md`.
+   The real Android install pipeline now also runs an existing-valid-install
+   fault sequence with bounded synthetic content on wiped 4 KiB and 16 KiB
+   ARM64 AVDs. It rejects a corrupt archive before extraction, preserves the
+   validated active install across an injected activation failure, cleans the
+   failed staging tree, atomically replaces the pack on success, and
+   then recreates the single-rollback/no-active-install crash window. Startup
+   recovery restores the valid pack and removes stale staging with no
+   transient state. The trigger and
+   implementation are debug-only; release compilation and API-28 lint remain
+   clean. This closes the emulator form of that fault, not the official
+   production-size install, real full-disk behavior, gameplay/mode routing, or
+   physical acceptance. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-device-install-faults.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

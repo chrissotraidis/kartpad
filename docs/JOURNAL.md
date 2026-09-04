@@ -2510,3 +2510,40 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   execution, gameplay/mode switching, and physical hardware remain open. No
   artifact or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-version-freshness.md`.
+
+## 2026-09-04 — Android A3 device install fault execution
+
+- Added a debug-only Android fixture that loads the APK's real JNI extraction
+  library and drives the production archive verifier, extractor, content
+  validator, same-volume activation, and startup recovery against bounded
+  synthetic packs in app-private storage.
+- The device sequence installs and validates an initial pack, rejects an
+  appended corrupt archive before extraction, and confirms the active install
+  is unchanged. A token-scoped rollback collision then injects activation
+  failure; the old valid install remains and only failed staging is removed.
+  A final valid replacement activates, then is moved into the exact
+  single-rollback/no-active-install crash window alongside stale staging.
+  Startup recovery restores it and removes stale staging with no transient
+  entries.
+- The first compile rejected two checked file-metadata calls inside the
+  non-throwing verifier lambda. Moving those values outside the lambda fixed
+  the error. Review then moved the fixture trigger out of production
+  `KartPadActivity` and into the debug-only fixture activity so the release
+  source graph and artifact remain free of the test implementation.
+- Final wiped API 36 / 4 KiB and API 35 / 16 KiB ARM64 AVD runs both observed
+  `A3 device install faults passed existing=preserved replacement=valid
+  recovery=restored` and
+  all surrounding memory/fiber/controller/worker/Vulkan/lifecycle markers.
+  Both emulators shut down; no ADB target remains.
+- All eight A3 source runners, release compile, API-28 lint, debug assemble,
+  strict APK/privacy audit, SunPad snapshot, repository safety, shell, and diff
+  checks pass. Source verification validates 446 patch hunks and every other
+  pin before the unchanged ignored `rr-pulsar` checkout mismatch; it was not
+  mutated. The exact source-only APK is 33,843,921 bytes at SHA-256
+  `f9f9a83182b9de5ff76f6751355677c3f97c90eb6246b7bdffb87c95c7b95b65`.
+- Classification: **Pass for the existing-valid-install fault and atomic
+  replacement through Android's real app-private/JNI path on both page-size
+  lanes.** The official archive, production-size/full-disk execution, normal
+  mode routing/gameplay, and physical hardware remain open. No production
+  archive, private data, APK, or AAB was downloaded or published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-device-install-faults.md`.

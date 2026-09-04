@@ -408,6 +408,19 @@ archive and fault execution, gameplay/mode switching, and physical hardware.
 Evidence:
 [`docs/artifacts/2026-09-04/android/a3-version-freshness.md`](artifacts/2026-09-04/android/a3-version-freshness.md).
 
+The existing-valid-install fault now also runs through Android's real
+app-private filesystem and JNI extraction pipeline on wiped 4 KiB and 16 KiB
+ARM64 AVDs. Bounded synthetic content proves initial activation, rejection of
+a corrupt archive before extraction, retention of the validated active pack
+after an injected activation failure, and a final atomic replacement that
+is moved into the interrupted single-rollback state. Startup recovery restores
+that validated pack and removes stale staging without transient state. The
+fixture is debug-only; release compile and API-28 lint remain clean. This
+strengthens A3 fault evidence but does not substitute for the official 1.86 GB
+archive, real storage exhaustion, normal mode routing/gameplay, or physical
+hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-device-install-faults.md`](artifacts/2026-09-04/android/a3-device-install-faults.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

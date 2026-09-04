@@ -926,6 +926,14 @@ strict UTF-8 parsing. A valid newer release blocks installation with a KartPad-
 update message; invalid/unavailable responses fail without changing installed
 or partial data. The host JVM and wiped API 36 AVD both currently observe
 official version `6.12.5`, matching the compiled profile.
+The existing-valid-install fault now executes beyond the host matrix as well.
+A debug-only bounded fixture runs the production pipeline through the APK's
+JNI extractor and real app-private filesystem on wiped 4 KiB and 16 KiB ARM64
+AVDs. Corrupt input is refused before extraction, an injected activation
+failure retains the previously validated install and cleans staging, and a
+valid replacement survives a recreated single-rollback process-death state;
+recovery restores it and removes stale staging with no transient directories. This is
+synthetic fault evidence, not a production-size install or gameplay result.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from
