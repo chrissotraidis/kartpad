@@ -2245,3 +2245,29 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   lacks archive download/extraction/content validation and runtime acceptance.
   No APK/AAB or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-install-storage-recovery.md`.
+
+## 2026-09-04 — Android A3 profile-derived content validation
+
+- Added a deterministic Java release-contract renderer and checked-in output
+  for every Android-visible Retro Rewind profile pin. A builder test requires
+  byte equality with the sole profile, preventing stale hand-copied constants.
+- Added bounded strict-UTF-8 version reading and streaming SHA-256/size checks
+  for the installed `Code.pul` and Riivolution XML. Unsafe relative requirements
+  and symlinked directory/file nodes fail closed without returning absolute
+  app-private paths.
+- Joined validation to atomic activation. The test activates and revalidates a
+  complete staged tree, then proves a missing-artifact tree remains staged and
+  leaves the valid active install unchanged. Wrong/invalid/oversize version,
+  missing, short, same-size tampered, unsafe, and symlinked cases also pass.
+- The generated payload pin documents the exact already validated translated-
+  build input; Android does not download that executable input at runtime.
+- Pinned-JDK warning-as-error tests, 22 builder tests, public debug/release
+  compilation, lint, private game-runtime configuration compilation, package/
+  privacy audit, repository safety, shell lint, and diff checks pass. The
+  source-only APK is 33,675,275 bytes at SHA-256
+  `2c6ad2c220444e61ce36826f7b90116fa29be369ba43831d44af9dc670b15e5f`.
+- Classification: **Pass for profile-derived release constants and installed-
+  content validation gating activation.** A2 remains open; A3 still lacks
+  download/free-space/ZIP extraction/worker lifecycle and runtime acceptance.
+  No APK/AAB or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-content-validation.md`.

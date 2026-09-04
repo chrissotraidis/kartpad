@@ -282,6 +282,19 @@ configuration compile pass. This is storage/recovery evidence, not download,
 extraction, install validation, or gameplay. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-install-storage-recovery.md`](artifacts/2026-09-04/android/a3-install-storage-recovery.md).
 
+Android's release constants are now deterministically rendered from the sole
+repository Retro Rewind profile and checked byte-for-byte in the builder suite.
+A bounded installed-tree validator enforces strict UTF-8/exact version, safe
+relative paths, no symlinked nodes, exact `Code.pul` and XML byte counts, and
+streamed SHA-256 before the storage coordinator may activate staging. The
+generated contract also carries the already builder-validated production
+payload pin; that translated-build input is not redownloaded as pack content.
+Valid staging activates and revalidates in the fault harness, while missing,
+short, tampered, unsafe, or symlinked content remains inactive. Pinned-JDK
+tests, 22 builder tests, public debug/release compilation, lint, private game-
+configuration compile, and the strict source-only APK audit pass. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-content-validation.md`](artifacts/2026-09-04/android/a3-content-validation.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

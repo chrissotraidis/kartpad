@@ -177,6 +177,13 @@ not block offline Retro Rewind support.
    the source-only APK audit pass. Only validated staging may use activation;
    archive download/extraction/content validation are still absent. Evidence:
    `docs/artifacts/2026-09-04/android/a3-install-storage-recovery.md`.
+   Android's exact release constants are now generated and regression-checked
+   against the sole profile. A bounded strict-UTF-8/version and streamed-size/
+   SHA-256 validator for `Code.pul` and XML gates atomic activation and rejects
+   unsafe or symlinked content; the generated contract also retains the build-
+   validated production payload pin. Public/private compile configurations,
+   lint, content fault tests, and package audit pass. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-content-validation.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

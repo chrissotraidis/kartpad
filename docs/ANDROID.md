@@ -64,6 +64,14 @@ unambiguous rollback during game-runtime startup. It refuses symlinked roots
 and out-of-scope staging. Content validation must succeed before its activation
 entry point is called; download, inspection, and extraction still remain.
 
+Android's release constants are now generated from the same profile and checked
+byte-for-byte against it. A bounded validator gates activation on strict UTF-8
+exact version plus exact size and streamed SHA-256 for `Code.pul` and the
+Riivolution XML, while rejecting unsafe requirement paths and symlinked nodes.
+The generated contract also carries the production payload pin whose signature
+and hash remain enforced by the translated-build pipeline; the payload is not
+an installed pack file. Invalid staging cannot call the atomic activation path.
+
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
 Mario Kart Wii and Retro Rewind profiles as the Apple `KartPadDual` product,

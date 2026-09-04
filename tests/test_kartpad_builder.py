@@ -10,6 +10,7 @@ import zipfile
 from pathlib import Path
 
 from kartpad_builder.packaging import PackageError, audit_app, package_unsigned_ipa
+from kartpad_builder.android_release_contract import render_android_release_contract
 from kartpad_builder.pipeline import cache_key, dependency_cache_key
 from kartpad_builder.profiles import Profile, ProfileError, load_profiles, select_profile, validate_profile
 from kartpad_builder.release_header import render_retro_rewind_header
@@ -96,6 +97,15 @@ class ProfileTests(unittest.TestCase):
             retro["archive"]["url"],
             "the visible version and immutable archive URL must advance together",
         )
+
+    def test_android_release_contract_matches_profile(self) -> None:
+        profile = load_profiles(PROFILES)[0]
+        expected = render_android_release_contract(profile.data)
+        generated = (
+            REPO
+            / "android/app/src/main/java/dev/kartpad/android/RetroRewindRelease.java"
+        ).read_text()
+        self.assertEqual(generated, expected)
 
     def test_device_archive_hashing_uses_heap_storage(self) -> None:
         source = (REPO / "apple/ios/KartPadRetroRewindInstaller.mm").read_text()
