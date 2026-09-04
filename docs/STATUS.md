@@ -260,6 +260,15 @@ runtime proof, and the full Apple link remains blocked before configuration by
 the already recorded local Dawn cache hash mismatch. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-shared-archive-scan.md`](artifacts/2026-09-04/android/a3-shared-archive-scan.md).
 
+The shared scan now also rejects duplicate selected paths before extraction,
+including file/directory spellings that resolve to the same component sequence.
+Duplicate failure leaves selected totals unchanged and latches the scan;
+foreign-root duplicates remain ignored. Host contracts, the pinned NDK ARM64
+compile, Apple SDK syntax compilation, repository safety, and Apple contracts
+pass. The extraction-time filesystem check remains defense in depth. This
+closes only the shared duplicate-directory rule, not A3. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-shared-archive-duplicates.md`](artifacts/2026-09-04/android/a3-shared-archive-duplicates.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

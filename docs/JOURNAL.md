@@ -2205,3 +2205,19 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   content verification, Android ownership, fault recovery, and offline runtime
   acceptance. No APK/AAB or private input was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-shared-archive-scan.md`.
+
+## 2026-09-04 — Android A3 shared duplicate-entry rejection
+
+- Extended the portable archive scan to reject a repeated selected component
+  path before extraction. A file and directory spelling that differ only by a
+  trailing slash intentionally collide; foreign-root duplicates remain ignored.
+- Duplicate failure occurs before counters mutate and latches the scan. The
+  existing Apple filesystem existence check remains defense in depth against a
+  changed second pass or staging interference.
+- Both direct archive contracts, pinned NDK API-28 ARM64 and Apple SDK
+  warning-as-error compiles, builder/tvOS contracts, repository safety, the
+  SunPad snapshot, and diff checks pass.
+- Classification: **Pass for shared pre-extraction duplicate rejection and its
+  Apple consumer.** A2 and A3 remain open at their previously documented gates.
+  No APK/AAB or private input was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-shared-archive-duplicates.md`.

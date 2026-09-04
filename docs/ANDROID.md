@@ -50,6 +50,12 @@ Its host and NDK contracts pass. Duplicate detection, content hashes, atomic
 installation/recovery, and the Android platform owner remain subsequent A3
 work.
 
+Duplicate selected entry paths are now rejected in that same portable scan
+before staging is mutated. The key is built from validated components, so a
+file/directory trailing-slash alias cannot target one output twice; ignored
+foreign-root duplicates remain outside the selected policy. The existing Apple
+filesystem check remains a second line of defense.
+
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
 Mario Kart Wii and Retro Rewind profiles as the Apple `KartPadDual` product,

@@ -165,6 +165,11 @@ not block offline Retro Rewind support.
    Host, pinned NDK ARM64, Apple SDK, fresh patch preparation, and source
    contracts pass. Evidence:
    `docs/artifacts/2026-09-04/android/a3-shared-archive-scan.md`.
+   A third stacked slice rejects duplicate selected component paths during the
+   portable scan, before extraction, while retaining the Apple filesystem check
+   as defense in depth. Host, NDK, Apple SDK, safety, and contract tests pass.
+   Evidence:
+   `docs/artifacts/2026-09-04/android/a3-shared-archive-duplicates.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

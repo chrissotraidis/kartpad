@@ -365,17 +365,20 @@ BOOL KartPadFileMatches(NSString *path, uint64_t expectedBytes,
         mz_zip_attrib_is_symlink(info->external_fa,
                                  info->version_madeby) == MZ_OK,
         (info->flag & MZ_ZIP_FLAG_ENCRYPTED) != 0);
-    if (!observation &&
-        observation.error ==
-            kartpad::retro_rewind::ArchiveScanError::UnsupportedEntry) {
-      workError = KartPadRetroRewindError(25,
-          [NSString stringWithFormat:@"The ZIP contains an unsupported entry: %@",
-                                     name]);
-      break;
-    }
     if (!observation) {
-      workError = KartPadRetroRewindError(26,
-          @"The ZIP expands beyond this build's safety limits.");
+      if (observation.error ==
+          kartpad::retro_rewind::ArchiveScanError::UnsupportedEntry) {
+        workError = KartPadRetroRewindError(25,
+            [NSString stringWithFormat:
+                @"The ZIP contains an unsupported entry: %@", name]);
+      } else if (observation.error ==
+                 kartpad::retro_rewind::ArchiveScanError::DuplicateEntry) {
+        workError = KartPadRetroRewindError(31,
+                                            @"The ZIP contains duplicate files.");
+      } else {
+        workError = KartPadRetroRewindError(26,
+            @"The ZIP expands beyond this build's safety limits.");
+      }
       break;
     }
     status = mz_zip_reader_goto_next_entry(reader);

@@ -56,6 +56,30 @@ int main() {
                    size_limit.error == ArchiveScanError::ExpandedSizeLimit,
                "expanded-size limit did not fail closed");
 
+  ArchiveScan duplicate_scan{"RetroRewind6.12.5", 10, 100};
+  const auto directory = duplicate_scan.Observe(
+      ValidateArchiveMemberPath("RetroRewind6.12.5/content/"), 0, false,
+      false);
+  const auto duplicate = duplicate_scan.Observe(
+      ValidateArchiveMemberPath("RetroRewind6.12.5/content"), 1, false,
+      false);
+  ok &= Expect(directory && directory.selected && !duplicate &&
+                   duplicate.error == ArchiveScanError::DuplicateEntry,
+               "duplicate selected entry was accepted");
+  ok &= Expect(duplicate_scan.selected_entries() == 1 &&
+                   duplicate_scan.selected_bytes() == 0,
+               "duplicate entry changed selected totals");
+
+  ArchiveScan foreign_duplicate_scan{"RetroRewind6.12.5", 10, 100};
+  const auto foreign_path = ValidateArchiveMemberPath("Other/content");
+  const auto foreign_first =
+      foreign_duplicate_scan.Observe(foreign_path, 1, false, false);
+  const auto foreign_second =
+      foreign_duplicate_scan.Observe(foreign_path, 1, false, false);
+  ok &= Expect(foreign_first && !foreign_first.selected && foreign_second &&
+                   !foreign_second.selected,
+               "foreign-root duplicate should remain ignored");
+
   ArchiveScan overflow_scan{"RetroRewind6.12.5", 10,
                             std::numeric_limits<std::uint64_t>::max()};
   const auto large = overflow_scan.Observe(

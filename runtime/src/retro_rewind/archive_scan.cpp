@@ -41,6 +41,17 @@ ArchiveScanObservation ArchiveScan::Observe(
     return Fail(ArchiveScanError::ExpandedSizeLimit);
   }
 
+  std::string path_key;
+  for (const std::string& component : path.components) {
+    if (!path_key.empty()) {
+      path_key.push_back('/');
+    }
+    path_key.append(component);
+  }
+  if (!selected_paths_.insert(std::move(path_key)).second) {
+    return Fail(ArchiveScanError::DuplicateEntry);
+  }
+
   ++selected_entries_;
   selected_bytes_ += entry_bytes;
   return {.error = ArchiveScanError::None, .selected = true};

@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <unordered_set>
 
 namespace kartpad::retro_rewind {
 
@@ -12,6 +13,7 @@ enum class ArchiveScanError {
   None,
   InvalidPath,
   UnsupportedEntry,
+  DuplicateEntry,
   EntryLimit,
   ExpandedSizeLimit,
 };
@@ -44,6 +46,7 @@ class ArchiveScan {
   std::uint64_t maximum_expanded_bytes_ = 0;
   std::size_t selected_entries_ = 0;
   std::uint64_t selected_bytes_ = 0;
+  std::unordered_set<std::string> selected_paths_;
   ArchiveScanError error_ = ArchiveScanError::None;
 };
 
