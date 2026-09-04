@@ -1951,3 +1951,33 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   and physical Android acceptance remain open. No APK/AAB or private data was
   published. Evidence:
   `docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`.
+
+## 2026-09-03 — Android A2 complete trace-guided emulator race
+
+- Added a debug-only Android marker that binds the existing content-free
+  native state trace to a fixed app-private output before SDL starts. Marker
+  absence clears the environment variable; release builds do not inspect it.
+- A local feedback loop read only position, velocity, orientation, speed, and
+  stage counters, then emitted ordinary Android `U`/`M`/`A`/`D` key events
+  through the existing Classic/KPAD path. It never wrote guest state or forced
+  checkpoints, laps, or finish. Supervised normal-input recoveries spent one
+  collected mushroom and reversed/steered away from the final outer wall.
+- Mario completed all three N64 Mario Raceway Time Trial laps. Native stage 4
+  and a retail `05:17.517` result were visible; the summarizer accepts one
+  19,032-sample race segment from race time 240 through 19,271 and finish.
+- The game reported `Ghost data could not be saved.`, so no new ghost or race
+  record save is claimed. A force-stop/cold relaunch retained the staged save
+  byte-for-byte and reached title, but injected keys did not then advance the
+  title despite app focus. Controller-after-relaunch remains open.
+- One earlier restart in the same session ended silently without Java fatal,
+  signal, tombstone, or OOM; a controlled retry completed the race. The exact
+  pre-test save was restored by matching SHA-256, all app-private diagnostic
+  files were removed, and the emulator was stopped.
+- Debug/release Kotlin compilation, lint, full private ARM64 build, and strict
+  package/privacy audit pass. The local-only APK is 103,434,784 bytes with
+  SHA-256
+  `94b7049a855cba90f9040f55fd56c894c989186832b3f63eb67ac29e48d4584a`.
+  Classification: **Pass for the trace gate and a complete normal-input
+  emulator race/results; open for post-race save, controller-after-relaunch,
+  real controller/rumble, audible audio, and physical hardware.** Evidence:
+  `docs/artifacts/2026-09-03/android/a2-state-trace-player-race.md`.

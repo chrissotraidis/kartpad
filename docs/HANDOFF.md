@@ -98,9 +98,12 @@ not block offline Retro Rewind support.
    survives repeated title/demo and live-race surface recreation, and sustains
    a clean retail staff replay. The debug-only app-private RKG bridge works,
    and an Android-only marker can replace only its steering with the debug
-   keyboard stick, but neither route completes a race. Exact GCN Mario Circuit
-   metadata and the macOS-proven SNES Mario Circuit 3 stream also diverge on
-   Android and must not be used as completion evidence. Aurora's discovered
+   keyboard stick. Those fixed replays diverge, but a content-free native
+   trace feedback run using ordinary Android key events completed all three
+   N64 Mario Raceway laps and reached retail results. The game declined ghost
+   saving, and injected keys did not advance the title after its cold relaunch,
+   so post-race save creation and controller-after-relaunch remain open.
+   Aurora's discovered
    SDL pads now feed the Android Classic/KPAD path through a deterministic
    mapping contract, and `WPADControlMotor` now reaches that same resolved pad
    through a fail-closed SDL rumble bridge. Surface loss/backgrounding now
@@ -108,17 +111,19 @@ not block offline Retro Rewind support.
    rumble; a corrected process retained its PID through four emulator cycles.
    One earlier corrected process ended silently after one cycle and remains an
    unexplained non-reproduced exit. No controller was attached, so
-   input and tactile behavior remain implementation/compile evidence only. A
+   attached-controller input and tactile behavior remain implementation/compile
+   evidence only. A
    temporary exact-configuration retail-KPAD RKG replay also diverged by guest
    time 8.580 and was removed; do not repeat it unchanged. Establish a complete
-   player race, results, post-race save/relaunch,
-   then repeat with a real controller and physical Android hardware. Evidence
+   reproducible post-race save/relaunch, then repeat the complete race with a
+   real controller and physical Android hardware. Evidence
    is in `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` and
    `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`, plus
    `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md` and
    `docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`, plus
    `docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`, plus
-   `docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`. A2
+   `docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`, plus
+   `docs/artifacts/2026-09-03/android/a2-state-trace-player-race.md`. A2
    remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.

@@ -139,6 +139,21 @@ attached, so actual neutral input and motor-stop behavior remain unaccepted.
 Evidence:
 [`docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`](artifacts/2026-09-03/android/a2-controller-lifecycle.md).
 
+An app-private debug marker now exposes the existing content-free native
+state trace at a fixed sandbox path before SDL starts. On the API 36 ARM64
+emulator, a feedback driver consumed only that trace and emitted ordinary
+Android keyboard events through the Classic/KPAD bridge. Mario completed all
+three N64 Mario Raceway Time Trial laps, reached native finish stage 4, and
+displayed retail results for `05:17.517`; the strict trace summarizer accepts
+one 19,032-sample race segment from countdown through finish. No guest-state
+write or forced finish was used. The game reported that ghost data could not
+be saved, and injected keys did not advance the title after the subsequent
+cold relaunch, so post-race save creation and controller-after-relaunch remain
+open. The original in-sandbox save was restored byte-for-byte and all debug
+markers were removed. A2 also remains open for attached-controller input and
+rumble, audible audio, and physical Android hardware. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-state-trace-player-race.md`](artifacts/2026-09-03/android/a2-state-trace-player-race.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

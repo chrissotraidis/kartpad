@@ -18,6 +18,7 @@ class KartPadActivity : SDLActivity() {
             Os.setenv("KARTPAD_ANDROID_FILES_DIR", filesDir.absolutePath, true)
             Os.setenv("KARTPAD_ANDROID_CACHE_DIR", cacheDir.absolutePath, true)
             configureDebugRkgInput()
+            configureDebugStateTrace()
         }
         super.onCreate(savedInstanceState)
         val overlay = KartPadOverlayView(this)
@@ -69,11 +70,29 @@ class KartPadActivity : SDLActivity() {
         }
     }
 
+    private fun configureDebugStateTrace() {
+        if (!BuildConfig.DEBUG) return
+
+        val marker = File(filesDir, DEBUG_STATE_TRACE_MARKER_RELATIVE_PATH)
+        if (marker.isFile) {
+            val output = File(filesDir, DEBUG_STATE_TRACE_RELATIVE_PATH)
+            output.parentFile?.mkdirs()
+            Os.setenv("KARTPAD_STATE_TRACE", output.absolutePath, true)
+            Log.i(TAG, "Debug app-private state trace enabled")
+        } else {
+            Os.unsetenv("KARTPAD_STATE_TRACE")
+        }
+    }
+
     companion object {
         private const val TAG = "KartPadFixture"
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
         private const val DEBUG_RKG_KEYBOARD_STEER_RELATIVE_PATH =
             "KartPad/Diagnostics/TestInput.keyboard-steer"
+        private const val DEBUG_STATE_TRACE_MARKER_RELATIVE_PATH =
+            "KartPad/Diagnostics/StateTrace.enable"
+        private const val DEBUG_STATE_TRACE_RELATIVE_PATH =
+            "KartPad/Diagnostics/StateTrace.csv"
         private const val MIN_RKG_BYTES = 0x90L
         private const val MAX_RKG_BYTES = 1024L * 1024L
         private val RKG_MAGIC = byteArrayOf('R'.code.toByte(), 'K'.code.toByte(), 'G'.code.toByte(), 'D'.code.toByte())

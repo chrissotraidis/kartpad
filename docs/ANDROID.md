@@ -789,17 +789,21 @@ AArch64 scheduler/register stress pass on both pinned AVDs. A2's private
 Its exact public resources install before SDL loads, and a cleared API 36
 launch reaches translated constructors and Vulkan using only app-private
 config/cache/NAND paths before the expected missing-DVD failure. Continue A2 by
-staging the validated ignored DATA directory outside the APK, setting its
-app-private path, and using the new Aurora-to-Classic SDL controller bridge to
-prove a complete controller-driven player race, results, and save/relaunch
-without weakening the package privacy boundary. The bridge's deterministic
+staging the validated ignored DATA directory outside the APK and setting its
+app-private path. One content-free trace feedback run now proves a complete
+three-lap emulator player race and retail results through ordinary Android key
+events without guest-state writes. Next reproduce post-race save creation and
+controller input after cold relaunch, then use the Aurora-to-Classic SDL
+controller bridge to repeat the complete race without weakening the package
+privacy boundary. The bridge's deterministic
 source-only contract passes on both page-size lanes, and Android
 `WPADControlMotor` now routes Start/Stop output to the same resolved SDL pad.
 Surface loss/backgrounding suspends the bridge and stops active rumble; a
 corrected API 36 process retained its PID through four such cycles, although
 one preceding process ended silently after one cycle and remains unexplained.
-No controller input or rumble acceptance is claimed until actual hardware is
-attached. Do not repeat the rejected retail-KPAD RKG replay unchanged: even
+No attached-controller input or rumble acceptance is claimed until actual
+hardware is attached. Do not repeat the rejected retail-KPAD RKG replay
+unchanged: even
 the exact Baby Mario / Nanobike / Manual staff configuration diverged by guest
 time 8.580.
 
