@@ -109,11 +109,17 @@ class ProfileTests(unittest.TestCase):
         installer = (REPO / "apple/ios/KartPadRetroRewindInstaller.mm").read_text()
         ios_patch = (REPO / "patches/wiicompiled-ios-discio-import.patch").read_text()
         tvos_patch = (REPO / "patches/wiicompiled-tvos-runtime.patch").read_text()
-        shared_source = "runtime/src/retro_rewind/archive_path.cpp"
+        shared_sources = (
+            "runtime/src/retro_rewind/archive_path.cpp",
+            "runtime/src/retro_rewind/archive_scan.cpp",
+        )
         self.assertIn('"kartpad/retro_rewind/archive_path.h"', installer)
+        self.assertIn('"kartpad/retro_rewind/archive_scan.h"', installer)
         self.assertIn("ValidateArchiveMemberPath", installer)
-        self.assertIn(shared_source, ios_patch)
-        self.assertIn(shared_source, tvos_patch)
+        self.assertIn("ArchiveScan", installer)
+        for shared_source in shared_sources:
+            self.assertIn(shared_source, ios_patch)
+            self.assertIn(shared_source, tvos_patch)
 
     def test_dual_mode_chooser_keeps_a_width_on_wide_ipads(self) -> None:
         source = (REPO / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()

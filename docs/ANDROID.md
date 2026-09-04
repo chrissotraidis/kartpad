@@ -42,6 +42,14 @@ and fresh Apple patch preparation succeeds. Android download,
 storage, extraction, activation, rollback, and gameplay remain unimplemented;
 this does not pass A3 or change A2's status.
 
+The next source-only slice adds `ArchiveScan` beside that validator and wires
+the Apple installer through it. The portable scan rejects invalid paths,
+symlinks, encryption, negative sizes, excess selected entries, excess expanded
+bytes, and unsigned-total overflow while selecting only the exact pinned root.
+Its host and NDK contracts pass. Duplicate detection, content hashes, atomic
+installation/recovery, and the Android platform owner remain subsequent A3
+work.
+
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
 Mario Kart Wii and Retro Rewind profiles as the Apple `KartPadDual` product,

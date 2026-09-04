@@ -27,6 +27,7 @@ class TvOSContractTests(unittest.TestCase):
         )
         self.assertIn("MINIZIP::minizip", patch)
         self.assertIn("runtime/src/retro_rewind/archive_path.cpp", patch)
+        self.assertIn("runtime/src/retro_rewind/archive_scan.cpp", patch)
         self.assertIn("KARTPAD_TVOS_BUNDLE_IDENTIFIER", patch)
 
     def test_tvos_host_keeps_rebuildable_and_durable_state_separate(self):

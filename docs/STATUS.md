@@ -249,6 +249,17 @@ Android installer or A3 acceptance result. A2 remains the lowest incomplete
 goal and A3 remains open. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-shared-archive-path.md`](artifacts/2026-09-04/android/a3-shared-archive-path.md).
 
+The next shared A3 slice moves ZIP entry policy into a portable stateful scan.
+The Apple installer now uses it to reject symlinks, encryption, negative sizes,
+invalid paths, excess entries, excess expansion, and 64-bit total overflow;
+safe foreign-root entries remain ignored and selected totals drive extraction
+progress. Direct host tests, pinned NDK ARM64 warning-as-error compiles, Apple
+SDK syntax compilation, fresh dual-product patch preparation, repository
+safety, and Apple contracts pass. This still is not an Android installer or A3
+runtime proof, and the full Apple link remains blocked before configuration by
+the already recorded local Dawn cache hash mismatch. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-shared-archive-scan.md`](artifacts/2026-09-04/android/a3-shared-archive-scan.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

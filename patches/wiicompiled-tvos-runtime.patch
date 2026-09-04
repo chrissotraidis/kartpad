@@ -36,7 +36,7 @@
          _DISABLE_STRING_ANNOTATION _DISABLE_VECTOR_ANNOTATION TARGET_PC)
      target_compile_features(${target} PRIVATE cxx_std_20)
      mkw_apply_common_compile_options(${target})
-@@ -390,7 +390,105 @@
+@@ -390,7 +390,106 @@
          XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
          XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
  endif()
@@ -85,6 +85,7 @@
 +        "${MKW_KARTPAD_TVOS_DIR}/KartPadTVRuntimeHost.mm"
 +        "${MKW_KARTPAD_IOS_DIR}/KartPadRetroRewindInstaller.mm"
 +        "${MKW_KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
++        "${MKW_KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_scan.cpp"
 +        "${MKW_KARTPAD_MOBILE_DIR}/KartPadClassicInput.mm"
 +        "${MKW_KARTPAD_MOBILE_DIR}/KartPadPhysicalControllers.mm"
 +        "${MKW_KARTPAD_SUNPAD_DIR}/SunPadControllerMapping.mm"
@@ -142,7 +143,7 @@
  if(MKW_HAVE_RETRO_REWIND)
      add_executable(RetroRewind "${MKW_RETRO_REWIND_PRODUCT_SOURCE}" ${MKW_RETRO_REGISTRATION_SOURCES})
      mkw_configure_product(RetroRewind)
-@@ -455,6 +545,10 @@
+@@ -455,6 +546,10 @@
              XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
              XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
      endif()
@@ -153,7 +154,7 @@
      add_custom_target(mkw_release DEPENDS WiiCompiled RetroRewind)
  else()
      add_custom_target(mkw_release DEPENDS WiiCompiled)
-@@ -529,6 +623,10 @@
+@@ -529,6 +624,10 @@
              XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
              XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
      endif()

@@ -2181,3 +2181,27 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   complete emulator/physical offline acceptance. No APK/AAB or private input
   was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-shared-archive-path.md`.
+
+## 2026-09-04 — Android A3 shared archive scan
+
+- Selected the next independent source-only A3 rule set while A2 remains open
+  for unavailable physical Android hardware.
+- Added a portable stateful archive scan for globally unsupported entry types,
+  exact-root selection, maximum selected entries, and maximum expanded bytes.
+  Checked-before-add accounting closes the Apple loop's theoretical unsigned
+  total wrap; the first error latches so callers cannot resume a failed scan.
+- Wired the Apple installer's preflight and extraction progress totals through
+  the shared scan without changing the pinned root or public limits. iOS/tvOS
+  and Original/Retro/dual product graphs all include the new implementation.
+- Both direct archive contracts pass. Pinned NDK API-28 ARM64 and Apple SDK
+  warning-as-error compiles, a fresh dual-product patch preparation, 29
+  builder/tvOS contracts, repository safety, the SunPad snapshot, and diff
+  checks pass. One optional private-payload test remains skipped because the
+  input is not cached.
+- The full Apple link remains unavailable at the previously recorded
+  fail-closed local Dawn cache hash mismatch; no pin or cache was weakened.
+- Classification: **Pass for the shared archive scan and immediate Apple
+  consumer.** A2 remains open, and A3 remains incomplete for duplicate entries,
+  content verification, Android ownership, fault recovery, and offline runtime
+  acceptance. No APK/AAB or private input was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-shared-archive-scan.md`.

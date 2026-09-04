@@ -159,6 +159,12 @@ not block offline Retro Rewind support.
    installer rules and thin Android owner only when they are immediately
    consumed and tested. Evidence:
    `docs/artifacts/2026-09-04/android/a3-shared-archive-path.md`.
+   A second stacked slice adds a portable stateful archive scan now consumed by
+   Apple for symlink/encryption/negative-size rejection, exact-root selection,
+   entry and expansion caps, overflow-safe totals, and progress accounting.
+   Host, pinned NDK ARM64, Apple SDK, fresh patch preparation, and source
+   contracts pass. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-shared-archive-scan.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook
