@@ -2,7 +2,7 @@
 
 ## Status and decision
 
-- **Assessment updated:** 3 September 2026.
+- **Assessment updated:** 4 September 2026.
 - **Assessment type:** repository review plus A0 source-only implementation and
   ARM64 emulator execution.
 - **Runtime proof:** A0 passes. The local non-playable source-only APK now also
@@ -19,8 +19,18 @@
   runtime and now cold-starts through translated constructors and Vulkan using
   versioned public resources plus Context-derived app-private config/cache/
   NAND paths. Its SDL controller bridge now also fails neutral and stops rumble
-  across Android surface loss/backgrounding. Continue A2 with controller-driven
-  gameplay; keep emulator and physical-device claims separate.
+  across Android surface loss/backgrounding, survives virtual hotplug/reconnect,
+  accepts short controller presses after a controller-attached cold launch,
+  and completes a three-lap controller-driven emulator race with a durable
+  ghost that reloads after force-stop/relaunch. Continue A2 on a real
+  controller and physical Android device; keep emulator and physical-device
+  claims separate.
+
+The next physical session starts with the read-only
+`scripts/check-android-physical-device.sh` intake gate. Its mocked contract
+covers twelve supported and rejected device states and proves that the ADB
+serial is not emitted; the current host has no attached ADB target, so this
+does not satisfy a physical A2 row.
 
 KartPad can be ported to Android without changing its defining architecture.
 The Android build should contain the same ahead-of-time translated Original
@@ -788,24 +798,39 @@ AArch64 scheduler/register stress pass on both pinned AVDs. A2's private
 29,065-function Original runtime compiles, links, and packages through Gradle.
 Its exact public resources install before SDL loads, and a cleared API 36
 launch reaches translated constructors and Vulkan using only app-private
-config/cache/NAND paths before the expected missing-DVD failure. Continue A2 by
-staging the validated ignored DATA directory outside the APK and setting its
-app-private path. One content-free trace feedback run now proves a complete
-three-lap emulator player race and retail results through ordinary Android key
-events without guest-state writes. Next reproduce post-race save creation and
-controller input after cold relaunch, then use the Aurora-to-Classic SDL
-controller bridge to repeat the complete race without weakening the package
-privacy boundary. The bridge's deterministic
-source-only contract passes on both page-size lanes, and Android
-`WPADControlMotor` now routes Start/Stop output to the same resolved SDL pad.
-Surface loss/backgrounding suspends the bridge and stops active rumble; a
-corrected API 36 process retained its PID through four such cycles, although
-one preceding process ended silently after one cycle and remains unexplained.
-No attached-controller input or rumble acceptance is claimed until actual
-hardware is attached. Do not repeat the rejected retail-KPAD RKG replay
-unchanged: even
+config/cache/NAND paths before the expected missing-DVD failure. Validated
+ignored DATA staged outside the APK now boots the complete game. One content-
+free trace feedback run first proved a complete three-lap emulator player race
+and retail results through ordinary Android key events without guest-state
+writes. The bridge's deterministic source-only contract passes on
+both page-size lanes, and Android `WPADControlMotor` routes Start/Stop output
+to the same resolved SDL pad. A temporary emulator virtual gamepad now proves
+Android InputReader/SDL discovery, mapped button and analog input, disconnect,
+reconnect, and same-PID HOT background/foreground behavior. That test exposed
+and fixed ART CheckJNI aborts caused by Java-backed SDL polling from switched
+Wii guest-fiber stacks; Android polling is now scheduler-stack-only and KPAD
+reads cached event state. The earlier cold-title input observation was a
+cadence false alarm. The same exact APK now also completes a three-lap
+controller-driven N64 Mario Raceway run at `04:28.063`, saves the KartPad
+ghost, retains the changed save hash across a controller-attached force-stop
+and cold launch, and visibly reloads the record. Continue with a physical
+Bluetooth/USB controller plus tactile rumble, audible-output confirmation,
+performance acceptance, and the complete run on physical Android hardware;
+the emulator virtual pad is not physical acceptance. Do not repeat the
+rejected retail-KPAD RKG replay unchanged: even
 the exact Baby Mario / Nanobike / Manual staff configuration diverged by guest
 time 8.580.
+
+For that physical run, retain raw logcat only in an ignored path and use
+`scripts/summarize-android-a2-session.py --require-signal-matrix` to emit the
+bounded controller/audio/lifecycle/fatal-signal record. The strict summary is
+supporting evidence only; audible quality, tactile rumble, race/save behavior,
+and performance remain hands-on acceptance.
+
+Prefer `scripts/capture-android-a2-session.sh start|summarize` for the actual
+session: it keeps raw logcat in Android's volatile buffer, scopes retrieval to
+KartPad's UID from a device-sourced timestamp, and streams directly into that
+strict sanitizer without emitting the UID or ADB serial.
 
 The A0 commands and sanitized result are recorded in
 [`android/README.md`](../android/README.md) and

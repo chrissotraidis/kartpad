@@ -40,6 +40,8 @@ patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-rumble.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-lifecycle.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-android-gamepad-event-cache.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-runtime.patch"
 patch --batch -p1 -d "$runtime_source" < \
@@ -52,6 +54,8 @@ patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-sdl-controller.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-sdl-rumble.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-sdl-fiber-poll.patch"
 
 generated_link="$(dirname "$runtime_source")/generated"
 if [[ -e "$generated_link" && ! -L "$generated_link" ]]; then

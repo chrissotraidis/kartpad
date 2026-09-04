@@ -2,6 +2,15 @@
 
 Date: 2026-09-03
 
+> Subsequent correction (2026-09-03): the cold-relaunch input observation
+> below was a cadence false alarm. The same fresh process advanced through
+> title, license selection, and Main Menu with normally spaced events. A later
+> virtual-controller run also proved SDL button/analog input, disconnect,
+> reconnect, and hot lifecycle behavior; see
+> [`a2-virtual-controller-hotplug.md`](a2-virtual-controller-hotplug.md).
+> The ghost-save failure remains unaccepted as save proof and is consistent
+> with the native slow-run ghost-recorder overflow precedent.
+
 ## Subgoal
 
 Expose the existing content-free native race-state trace to Android debug

@@ -1,0 +1,41 @@
+{
+  "audio": {
+    "channel_counts": [
+      2
+    ],
+    "host_playback_events": 1,
+    "maximum_peak": 3988,
+    "most_advanced_queue_sample": {
+      "checks": 507904,
+      "dropped_blocks": 465,
+      "dropped_bytes": 178560,
+      "empty_before_push": 0,
+      "final": false,
+      "limit_bytes": 15360,
+      "maximum_queued_bytes": 15260,
+      "minimum_queued_bytes": 0,
+      "queued_bytes": 5916,
+      "submitted_bytes": 194856192
+    },
+    "non_silent_events": 1,
+    "queue_sample_count": 62,
+    "sample_rates_hz": [
+      32000
+    ]
+  },
+  "automated_signal_matrix_passed": false,
+  "controller": {
+    "channel_0_connected_events": 2,
+    "channel_0_disconnected_events": 1
+  },
+  "fatal_signature_counts": {},
+  "lifecycle": {
+    "gamepads_resumed": 0,
+    "gamepads_suspended": 0,
+    "native_pause": 0,
+    "native_resume": 0,
+    "surface_created": 0,
+    "surface_destroyed": 0
+  },
+  "schema_version": 1
+}

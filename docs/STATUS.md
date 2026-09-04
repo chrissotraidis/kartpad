@@ -1,6 +1,6 @@
 # KartPad status
 
-Updated: 2026-09-03
+Updated: 2026-09-04
 
 ## Native Android work
 
@@ -147,12 +147,93 @@ three N64 Mario Raceway Time Trial laps, reached native finish stage 4, and
 displayed retail results for `05:17.517`; the strict trace summarizer accepts
 one 19,032-sample race segment from countdown through finish. No guest-state
 write or forced finish was used. The game reported that ghost data could not
-be saved, and injected keys did not advance the title after the subsequent
-cold relaunch, so post-race save creation and controller-after-relaunch remain
-open. The original in-sandbox save was restored byte-for-byte and all debug
-markers were removed. A2 also remains open for attached-controller input and
-rumble, audible audio, and physical Android hardware. Evidence:
+be saved, consistent with the previously observed native recorder overflow on
+a slow unguided run; this is not post-race save proof. A later same-process
+cold-input retry advanced title, license, and Main Menu with normally spaced
+key events, correcting the earlier stuck-title observation. The original
+in-sandbox save was restored byte-for-byte and all debug markers were removed.
+A2 remains open for a natural controller race/save, audible audio, and
+physical Android hardware. Evidence:
 [`docs/artifacts/2026-09-03/android/a2-state-trace-player-race.md`](artifacts/2026-09-03/android/a2-state-trace-player-race.md).
+
+Android's real InputReader-to-SDL discovery path is now exercised with a
+temporary emulator virtual gamepad. The first hotplug exposed an ART CheckJNI
+abort: game-side SDL queries crossed into Java from a switched Wii guest-fiber
+stack. Event-backed controller snapshots, queued rumble, scheduler-only
+Android event polling, and removal of the opportunistic Android pump close
+both that query path and a separately reproduced reconnect crash. Exact-final
+PID `5007` retained button and analog input through connect, disconnect,
+reconnect, HOME/background, HOT foreground resume, post-resume input, and
+final disconnect without an Android fatal. This passes emulator controller
+hotplug and lifecycle behavior, not physical controller, motor, latency, OEM,
+or device-performance acceptance. A2 remains open. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-virtual-controller-hotplug.md`](artifacts/2026-09-03/android/a2-virtual-controller-hotplug.md).
+
+A controller-only follow-up drove the complete Time Trial setup flow and
+entered live N64 Mario Raceway gameplay. Keeping the virtual controller
+attached across a force-stop/cold launch then exposed a second scheduler
+boundary: guest-fiber polls were safely skipped but never reliably serviced on
+Android's original JNI stack. Guest requests are now handed off to the
+scheduler fiber after a host-fiber return. Because one safe poll can collect a
+short press and release together, event-backed button presses are latched for
+one game snapshot so the edge is not collapsed. On the exact uninstrumented
+PID `6595`, a 250 ms south-button tap from a controller attached before process
+startup advanced to Select License, and another advanced to Main Menu. Fresh
+patch preparation reproduces the changed source byte-for-byte; the host
+gamepad contract, repository safety, overlay snapshot, diff check, full ARM64
+build, and strict package audit pass. The exact local-only APK is 103,440,032
+bytes with SHA-256
+`2c11450996f33a35ba3aa85dcf16c1c467bf6fd4a0943edef966557639d7a6e7`.
+One first launch of the clean scheduler build independently hit the known
+intermittent untranslated Mii callback at `MiiManager::Init+0x134`; a controlled
+retry and the final latch build remained live. This closes emulator
+controller-after-cold-launch navigation, not a complete controller race/save,
+physical controller, tactile rumble, audible output, performance, or physical
+Android acceptance. A2 remains open. Evidence:
+[`docs/artifacts/2026-09-03/android/a2-controller-cold-relaunch.md`](artifacts/2026-09-03/android/a2-controller-cold-relaunch.md).
+
+The exact same APK now also passes the complete controller-driven emulator
+race/save/relaunch gate. An InputReader/SDL virtual controller selected the
+Time Trial configuration and supplied every race acceleration and analog-
+steering input while a content-free state trace provided feedback only. Mario
+finished all three N64 Mario Raceway laps at `04:28.063`; the retail results
+screen reported `Saved ghost data for KartPad!`, and the trace transitioned
+from race stage 2 to results stage 4. The isolated save changed from SHA-256
+`40f5d5ae5ad93c39253559628a34359aa4627ebdc1b04605327cf2c59a5ff7e1`
+to `23c15850daace1587661aa07a99f08e450313963b469e683f13ae5dc0d6af005`.
+After a force-stop and controller-attached cold launch, the save retained that
+exact hash, the new process logged controller channel 0 connected, and both the
+course list and ghost chooser displayed KartPad's `04:28.063` record. This
+closes the emulator controller race/results/save/relaunch slice, not physical
+controller, rumble, audible output, performance, or physical-device
+acceptance. A2 remains open. Evidence:
+[`docs/artifacts/2026-09-04/android/a2-controller-complete-race-save.md`](artifacts/2026-09-04/android/a2-controller-complete-race-save.md).
+
+The first physical-device session now has a read-only, serial-redacting intake
+gate. It rejects emulators and unsupported API, ABI, page-size, or free-space
+configurations, and reports sanitized model plus controller-source,
+installed-package, and Vulkan-inventory state. Its twelve-case fake-ADB contract
+passes. The live host had no ADB target, so this is tooling evidence only and
+does not change A2's open physical acceptance rows. Evidence:
+[`docs/artifacts/2026-09-04/android/a2-physical-device-preflight.md`](artifacts/2026-09-04/android/a2-physical-device-preflight.md).
+
+A bounded Android session-log sanitizer now converts a private capture into an
+allowlist-only JSON signal summary. Its self-test passes and strict mode cannot
+merge separate logs. Applied retrospectively to the exact controller-race
+console, it confirms 32 kHz stereo initialization, non-silent PCM, 194,856,192
+submitted bytes with zero post-start empty observations, controller events,
+and no fatal signature while retaining 465 dropped blocks. The combined matrix
+correctly remains false because that capture lacks lifecycle events; none of
+this replaces listening or physical acceptance. Evidence:
+[`docs/artifacts/2026-09-04/android/a2-runtime-signal-sanitizer.md`](artifacts/2026-09-04/android/a2-runtime-signal-sanitizer.md).
+
+The physical session now also has a tested two-phase capture wrapper. It keeps
+raw logcat in Android's volatile buffer, scopes retrieval to KartPad's package
+UID and a device-sourced start timestamp, streams directly into the strict
+sanitizer, and emits neither UID nor ADB serial. Its start/summary/redaction
+contract passes. No device is attached, so physical execution remains open.
+Evidence:
+[`docs/artifacts/2026-09-04/android/a2-uid-scoped-capture.md`](artifacts/2026-09-04/android/a2-uid-scoped-capture.md).
 
 ## Native tvOS work
 

@@ -101,8 +101,17 @@ not block offline Retro Rewind support.
    keyboard stick. Those fixed replays diverge, but a content-free native
    trace feedback run using ordinary Android key events completed all three
    N64 Mario Raceway laps and reached retail results. The game declined ghost
-   saving, and injected keys did not advance the title after its cold relaunch,
-   so post-race save creation and controller-after-relaunch remain open.
+   saving. A later controller-only pass navigated the full Time Trial setup and
+   entered live N64 Mario Raceway. A controller retained across cold process
+   startup exposed deferred SDL polling and short-edge collapse; scheduler-
+   fiber handoff plus a one-snapshot press latch now let exact uninstrumented
+   250 ms taps advance cold title/intro, Select License, and Main Menu.
+   Controller-after-relaunch is therefore green on the emulator. The same
+   exact APK subsequently completed all three N64 Mario Raceway laps through
+   Android's virtual InputReader/SDL controller path at `04:28.063`, reached
+   results, saved the KartPad ghost, retained the changed save hash across a
+   force-stop/cold launch with the controller attached, and visibly reloaded
+   that result.
    Aurora's discovered
    SDL pads now feed the Android Classic/KPAD path through a deterministic
    mapping contract, and `WPADControlMotor` now reaches that same resolved pad
@@ -110,21 +119,38 @@ not block offline Retro Rewind support.
    makes that bridge neutral, rejects new rumble starts, and stops active
    rumble; a corrected process retained its PID through four emulator cycles.
    One earlier corrected process ended silently after one cycle and remains an
-   unexplained non-reproduced exit. No controller was attached, so
-   attached-controller input and tactile behavior remain implementation/compile
-   evidence only. A
+   unexplained non-reproduced exit. Virtual attached-controller input and
+   lifecycle behavior now pass on the emulator; tactile output and all physical
+   controller/device behavior remain unaccepted. A
    temporary exact-configuration retail-KPAD RKG replay also diverged by guest
-   time 8.580 and was removed; do not repeat it unchanged. Establish a complete
-   reproducible post-race save/relaunch, then repeat the complete race with a
-   real controller and physical Android hardware. Evidence
-   is in `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` and
+   time 8.580 and was removed; do not repeat it unchanged. Repeat the complete
+   race with a real controller and physical Android hardware, verify tactile
+   rumble and audible output there, and retain emulator performance as a
+   separate non-acceptance observation. Run
+   `scripts/check-android-physical-device.sh` before installing or mutating the
+   first device; it rejects emulators/unsupported hardware and redacts the ADB
+   serial. Its twelve-case contract passes, while the live host currently has no
+   ADB target. Use `scripts/capture-android-a2-session.sh start` immediately
+   before the run and its `summarize` phase afterward; the tested wrapper keeps
+   raw logcat off the host, scopes retrieval to KartPad's UID, and sends it
+   directly through the strict sanitizer. Strict mode requires the automated
+   controller/audio/lifecycle/crash-free signals in that single capture but
+   does not replace listening, tactile, race/save, or performance judgment.
+   Evidence is in
+   `docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` and
    `docs/artifacts/2026-09-03/android/a2-debug-input-replay.md`, plus
    `docs/artifacts/2026-09-03/android/a2-keyboard-steer-diagnostic.md` and
    `docs/artifacts/2026-09-03/android/a2-sdl-controller-bridge.md`, plus
    `docs/artifacts/2026-09-03/android/a2-sdl-controller-rumble.md`, plus
    `docs/artifacts/2026-09-03/android/a2-controller-lifecycle.md`, plus
-   `docs/artifacts/2026-09-03/android/a2-state-trace-player-race.md`. A2
-   remains open.
+   `docs/artifacts/2026-09-03/android/a2-state-trace-player-race.md`, plus
+   `docs/artifacts/2026-09-03/android/a2-virtual-controller-hotplug.md`, plus
+   `docs/artifacts/2026-09-03/android/a2-controller-cold-relaunch.md`, plus
+   `docs/artifacts/2026-09-04/android/a2-controller-complete-race-save.md` and
+   `docs/artifacts/2026-09-04/android/a2-physical-device-preflight.md`, plus
+   `docs/artifacts/2026-09-04/android/a2-runtime-signal-sanitizer.md` and
+   `docs/artifacts/2026-09-04/android/a2-uid-scoped-capture.md`.
+   A2 remains open.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

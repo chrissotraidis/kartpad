@@ -46,10 +46,59 @@ With an already validated ignored RMCP01 DATA directory staged separately in
 that private storage, the API 36 emulator now boots and renders the Original
 title/demo loop. Six consecutive HOME/foreground surface generations retained
 one process and resumed presentation; three more did the same in a live race,
-and a saved license survived three cold launches. See
-`docs/artifacts/2026-09-03/android/a2-emulator-boot-lifecycle.md` for the exact
-evidence and open failures. A2 remains open: the complete race/results,
-save/relaunch, real-controller, and physical-device rows are not yet proven.
+and a saved license survived three cold launches. A controller-driven emulator
+run also completed a three-lap race, saved a ghost, and visibly reloaded it
+after force-stop/relaunch. See
+`docs/artifacts/2026-09-04/android/a2-controller-complete-race-save.md` for the
+latest evidence and open failures. A2 remains open for a physical Android
+device and controller, tactile rumble, audible output, and performance.
+
+Before changing or installing anything on a physical device, connect exactly
+one authorized ADB target and run the read-only A2 intake check:
+
+```sh
+./scripts/check-android-physical-device.sh
+./scripts/test-android-physical-device-preflight.sh
+```
+
+The check rejects emulators and unsupported API, ABI, page-size, or free-space
+configurations. It reports whether Android currently exposes a controller
+source, the KartPad package, and Vulkan inventory without printing the ADB
+serial. A pass is only preflight evidence: the printed manual rows still
+require a hands-on physical race, save/relaunch, lifecycle checks, listening,
+and tactile rumble confirmation.
+
+Keep a full session log only in an ignored private path, then create a bounded
+publishable signal summary without copying arbitrary log lines:
+
+```sh
+./scripts/summarize-android-a2-session.py --require-signal-matrix \
+  private/android-a2-physical-session.log
+```
+
+Strict mode accepts only one capture (or standard input) and requires
+controller connection, initialized and non-silent SDL audio with submitted
+bytes, one complete surface pause/resume cycle, and no fatal signature. Its
+strict lifecycle row also requires the standard-gamepad suspend/resume pair.
+Its result is automated runtime evidence only; audible quality, tactile
+rumble, race completion, saved-result reload, and performance remain hands-on
+checks.
+
+For the physical run, the preferred two-phase wrapper avoids writing raw
+logcat to the host at all:
+
+```sh
+./scripts/capture-android-a2-session.sh start
+# Complete the controller race, lifecycle, listening, and rumble checks.
+./scripts/capture-android-a2-session.sh summarize \
+  > .android-bootstrap/android-a2-physical-runtime-signals.json
+```
+
+`start` records only the device's log timestamp in the ignored bootstrap
+directory. `summarize` requests logs from that timestamp for KartPad's package
+UID, streams them directly through the strict sanitizer, and emits only JSON
+on stdout. ADB errors are suppressed or serial-redacted. Review the JSON before
+copying it into a publishable evidence directory.
 
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
 AVDs, then verify it:

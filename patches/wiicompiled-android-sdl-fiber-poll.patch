@@ -1,0 +1,84 @@
+--- a/include/fiber_manager.h
++++ b/include/fiber_manager.h
+@@ -58,6 +58,11 @@
+     
+     // Check if fiber system is initialized
+     static bool IsInitialized();
++
++    // True only while execution is on the original host stack. Android JNI
++    // transition frames are stack-bound, so Java-calling SDL work must stay
++    // on this fiber rather than a switched guest thread stack.
++    static bool IsOnSchedulerFiber();
+     
+     // Create a fiber for a guest thread (called from OSCreateThread HLE).
+     // OSCreateThread's stackSize/priority are not passed: the host fiber models
+--- a/src/fiber_manager.cpp
++++ b/src/fiber_manager.cpp
+@@ -1,4 +1,5 @@
+ #include "fiber_manager.h"
++#include "aurora_events.h"
+ #include "memory.h"
+ #include "abi_bridge.h"
+ #include "hle_stubs.h"
+@@ -463,6 +464,14 @@
+ 
+ bool GuestFiberManager::IsInitialized() {
+     return s_initialized;
++}
++
++bool GuestFiberManager::IsOnSchedulerFiber() {
++#if defined(_WIN32) || defined(__APPLE__) || defined(__ANDROID__)
++    return !s_initialized || CurrentHostFiber() == s_schedulerFiber;
++#else
++    return true;
++#endif
+ }
+ 
+ bool GuestFiberManager::CreateGuestFiber(uint32_t guestThreadAddr, uint32_t entryPoint,
+@@ -715,5 +724,9 @@
+     // Switch to the target fiber (the target fiber will load its own context)
+     SwitchHostFiber(fiberHandle);
++#if defined(__ANDROID__)
++    // A guest fiber may have deferred Java-backed SDL work to this stack.
++    ServicePendingAuroraEventsOnScheduler();
++#endif
+     
+     // When we return here, the fiber that issued SwitchToThread has resumed.
+     // That does not automatically mean the previous guest thread became runnable
+--- a/include/aurora_events.h
++++ b/include/aurora_events.h
+@@ -2,6 +2,7 @@
+ 
+ #include "settings_overlay.h"
+ #include "runtime_config.h"
++#include "fiber_manager.h"
+ 
+ #include <aurora/aurora.h>
+ #include <aurora/event.h>
+@@ -139,6 +140,26 @@
+ }
+ 
++#if defined(__ANDROID__)
++inline std::atomic_bool g_androidAuroraPollPending{false};
++#endif
++
+ // Poll Aurora events and update cached window/framebuffer dimensions.
+ inline void UpdateAuroraAndProcessEvents() {
++#if defined(__ANDROID__)
++    if (!Fiber::GuestFiberManager::IsOnSchedulerFiber()) {
++        g_androidAuroraPollPending.store(true, std::memory_order_release);
++        return;
++    }
++    g_androidAuroraPollPending.store(false, std::memory_order_release);
++#endif
+     ProcessAuroraEvents(aurora_update());
+ }
++
++inline void ServicePendingAuroraEventsOnScheduler() {
++#if defined(__ANDROID__)
++    if (Fiber::GuestFiberManager::IsOnSchedulerFiber() &&
++        g_androidAuroraPollPending.exchange(false, std::memory_order_acq_rel)) {
++        ProcessAuroraEvents(aurora_update());
++    }
++#endif
++}
