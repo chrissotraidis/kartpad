@@ -22,6 +22,7 @@ internal object RetroRewindInstallWork {
     const val KEY_DEBUG_FIXTURE_STEPS = "debug_fixture_steps"
     const val KEY_DEBUG_FIXTURE_DELAY_MILLIS = "debug_fixture_delay_millis"
     const val KEY_DEBUG_RESUME_PROCESS_DEATH = "debug_resume_process_death"
+    const val DEBUG_RESUME_PARTIAL = ".kartpad-worker-resume-fixture.part"
 
     fun enqueue(context: Context) {
         val token = UUID.randomUUID().toString()

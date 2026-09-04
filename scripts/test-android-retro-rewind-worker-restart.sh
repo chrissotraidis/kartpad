@@ -140,4 +140,45 @@ if "$adb" logcat -d -v brief KartPadFixture:E AndroidRuntime:E '*:S' | grep -q .
   exit 1
 fi
 
-echo "Android A3 durable worker interruptions passed: avd=$avd resume_worker_id=$worker_id process_starts=$worker_starts resumed_from=$resumed_from recreation_worker_id=$recreation_worker_id recreation_starts=$recreation_starts recreation_pid=$first_pid final_state=completed"
+"$adb" shell am force-stop "$package"
+"$adb" logcat -c
+"$adb" shell am start -W -n "$fixture_component" \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_WORKER_CANCEL true >/dev/null
+wait_for_marker "A3 worker cancellation fixture enqueued id="
+cancellation_worker_id="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+  sed -n 's/.*A3 worker cancellation fixture enqueued id=\([^ ]*\).*/\1/p' |
+  tail -1)"
+[[ "$cancellation_worker_id" =~ ^[0-9a-f-]{36}$ ]] || {
+  echo "ERROR: could not parse cancellation worker id: $cancellation_worker_id" >&2
+  exit 1
+}
+wait_for_marker "A3 durable resume fixture started id=$cancellation_worker_id attempt=0 prefix=0"
+wait_for_marker "A3 durable resume fixture checkpoint id=$cancellation_worker_id bytes="
+wait_for_marker "A3 worker cancellation requested id=$cancellation_worker_id"
+wait_for_marker "A3 worker cancellation observed id=$cancellation_worker_id state=CANCELLED partial="
+partial_bytes="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+  sed -n "s/.*A3 worker cancellation observed id=$cancellation_worker_id state=CANCELLED partial=\([0-9][0-9]*\).*/\1/p" |
+  tail -1)"
+if ! [[ "$partial_bytes" =~ ^[0-9]+$ ]] ||
+    ! (( partial_bytes > 0 && partial_bytes < 92 )); then
+  echo "ERROR: cancellation preserved invalid partial size: $partial_bytes" >&2
+  exit 1
+fi
+cancellation_starts="$("$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+  grep -Fc "A3 durable resume fixture started id=$cancellation_worker_id")"
+[[ "$cancellation_starts" == 1 ]] || {
+  echo "ERROR: cancellation worker $cancellation_worker_id started $cancellation_starts times" >&2
+  exit 1
+}
+if "$adb" logcat -d -v brief KartPadFixture:I '*:S' |
+    grep -Fq "A3 durable resume fixture completed id=$cancellation_worker_id"; then
+  echo "ERROR: cancelled worker emitted a completion marker" >&2
+  exit 1
+fi
+if "$adb" logcat -d -v brief KartPadFixture:E AndroidRuntime:E '*:S' | grep -q .; then
+  echo "ERROR: worker cancellation fixture emitted an error" >&2
+  "$adb" logcat -d -v brief KartPadFixture:V AndroidRuntime:E '*:S' >&2
+  exit 1
+fi
+
+echo "Android A3 durable worker interruptions passed: avd=$avd resume_worker_id=$worker_id process_starts=$worker_starts resumed_from=$resumed_from recreation_worker_id=$recreation_worker_id recreation_starts=$recreation_starts recreation_pid=$first_pid cancellation_worker_id=$cancellation_worker_id cancellation_starts=$cancellation_starts cancellation_partial=$partial_bytes final_state=cancelled"

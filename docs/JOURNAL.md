@@ -2430,3 +2430,24 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   official archive/fault execution, gameplay/mode switching, and physical
   hardware remain open. No artifact or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-worker-activity-recreation.md`.
+
+## 2026-09-04 — Android A3 install-worker cancellation
+
+- Added a cancellation mode to the shell-protected debug installer activity.
+  It starts the actual resumable worker fixture, calls the production
+  unique-work cancellation facade during append, and observes the request by
+  UUID until WorkManager reaches a terminal state.
+- The final wiped API 36 run cancelled one attempt-0 worker after seven bytes,
+  observed terminal `CANCELLED`, retained the seven-byte partial, and found no
+  worker completion or application fatal. The same run reconfirmed nonzero
+  process-death resume and same-PID activity recreation.
+- Debug/release compilation, API-28 lint, private game-source compilation,
+  package/privacy audit, relevant A3 and builder tests, SunPad snapshot,
+  repository safety, shell syntax/lint, and diff checks pass. The source-only
+  APK is 33,843,921 bytes at SHA-256
+  `b18b26c878a94b071859d389730f9e37ed7526f40739552a814e245fea7f3d6b`.
+- Classification: **Pass for explicit worker cancellation, partial retention,
+  and no false success on the emulator.** The production UI, official archive
+  cancellation, remaining production faults/gameplay, and physical hardware
+  remain open. No artifact or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-worker-cancellation.md`.

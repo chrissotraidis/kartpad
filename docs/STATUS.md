@@ -366,6 +366,17 @@ production UI observation/cancellation, the official archive/fault matrix,
 gameplay/mode switching, and physical hardware. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-worker-activity-recreation.md`](artifacts/2026-09-04/android/a3-worker-activity-recreation.md).
 
+The worker's production cancellation facade now passes an Android runtime
+fault. A shell-protected debug installer activity cancelled one active UUID
+after seven bytes; WorkManager reached terminal `CANCELLED`, the partial
+remained nonzero, the worker started once, and no success marker appeared. The
+same final wiped API 36 run reconfirmed nonzero process-death resume and
+same-PID activity recreation. This proves the control/state boundary, not the
+missing user-facing installer screen or cancellation against the official
+archive. A3 remains open for that UI, production-size fault/gameplay proof, and
+physical hardware. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-worker-cancellation.md`](artifacts/2026-09-04/android/a3-worker-cancellation.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

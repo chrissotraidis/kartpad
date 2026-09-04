@@ -238,6 +238,13 @@ not block offline Retro Rewind support.
    restarted the native process rather than modeling installer UI lifecycle.
    Evidence:
    `docs/artifacts/2026-09-04/android/a3-worker-activity-recreation.md`.
+   The production cancellation facade now has an Android runtime proof: one
+   active UUID was cancelled after seven appended bytes, WorkManager reported
+   terminal `CANCELLED`, the partial was retained, and no success marker was
+   accepted. This closes the worker control/state contract, not the missing
+   user-facing observer/cancel screen or official-archive cancellation.
+   Evidence:
+   `docs/artifacts/2026-09-04/android/a3-worker-cancellation.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

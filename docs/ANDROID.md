@@ -908,7 +908,10 @@ behavior, production-size install, remaining fault matrix, and Retro Rewind
 gameplay remain open. A debug-only non-SDL installer activity also proves that
 active work retains one UUID/start across same-process activity destruction,
 recreation, and duplicate `KEEP` enqueue. This models setup UI lifecycle
-without conflating it with the game window.
+without conflating it with the game window. The production cancellation facade
+also reaches WorkManager's terminal `CANCELLED` state during active append,
+preserves the nonzero partial, and emits no false completion in the emulator
+fault harness. A user-facing observer and cancel action remain A3/A4 work.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

@@ -147,7 +147,9 @@ internal class RetroRewindInstallWorker(
 
     private suspend fun runDebugResumeProcessDeathFixture(): Result {
         val content = DEBUG_RESUME_CONTENT.toByteArray(Charsets.UTF_8)
-        val partial = applicationContext.cacheDir.toPath().resolve(DEBUG_RESUME_PARTIAL)
+        val partial = applicationContext.cacheDir.toPath().resolve(
+            RetroRewindInstallWork.DEBUG_RESUME_PARTIAL,
+        )
         val prefix = try {
             RetroRewindArchiveDownload.preparePartial(
                 partial,
@@ -249,7 +251,6 @@ internal class RetroRewindInstallWorker(
         private const val NOTIFICATION_ID = 0x4b50
         private const val PROGRESS_MAX = 100
         private const val LOG_TAG = "KartPadFixture"
-        private const val DEBUG_RESUME_PARTIAL = ".kartpad-worker-resume-fixture.part"
         private const val DEBUG_RESUME_CONTENT =
             "durable-resume-fixture-durable-resume-fixture-" +
                 "durable-resume-fixture-durable-resume-fixture-"
@@ -264,16 +265,24 @@ internal class RetroRewindInstallWorker(
     ) : InputStream() {
         override fun read(): Int {
             if (offset >= content.size) return -1
-            Thread.sleep(250)
+            if (!sleep()) return -1
             return content[offset++].toInt() and 0xff
         }
 
         override fun read(output: ByteArray, outputOffset: Int, length: Int): Int {
             if (offset >= content.size) return -1
             if (length == 0) return 0
-            Thread.sleep(250)
+            if (!sleep()) return -1
             output[outputOffset] = content[offset++]
             return 1
+        }
+
+        private fun sleep(): Boolean = try {
+            Thread.sleep(250)
+            true
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            false
         }
     }
 }
