@@ -258,6 +258,14 @@ not block offline Retro Rewind support.
    missing first-launch dual-mode chooser does not yet route normal startup to
    this screen. Evidence:
    `docs/artifacts/2026-09-04/android/a3-installer-ui.md`.
+   The worker now performs a profile-generated, bounded HTTPS version check
+   before capacity preflight or archive acquisition. Strict UTF-8/numeric
+   parsing, five redirects, 15-second timeouts, a 512 KiB cap, cancellation,
+   and stale-profile blocking have direct host fault coverage. The host JVM and
+   wiped API 36 Android TLS path each report official `6.12.5`; no archive bytes
+   were requested. Normal startup's chooser/installed fallback remains absent.
+   Evidence:
+   `docs/artifacts/2026-09-04/android/a3-version-freshness.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

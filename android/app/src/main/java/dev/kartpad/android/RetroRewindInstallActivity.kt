@@ -204,7 +204,8 @@ internal class RetroRewindInstallActivity : Activity() {
             WorkInfo.State.FAILED -> {
                 logState("failed")
                 val error = data.getString(RetroRewindInstallWork.KEY_ERROR) ?: "unknown"
-                renderRetry(friendlyError(error))
+                val latest = data.getString(RetroRewindInstallWork.KEY_LATEST_VERSION)
+                renderRetry(friendlyError(error, latest))
             }
         }
     }
@@ -244,6 +245,7 @@ internal class RetroRewindInstallActivity : Activity() {
     private fun renderProgress(phase: String, completed: Long, total: Long) {
         logState("running-$phase")
         status.text = when (phase) {
+            "version" -> "Checking Retro Rewind version…"
             "space" -> "Checking free space…"
             "extract" -> "Installing Retro Rewind…"
             else -> "Downloading Retro Rewind…"
@@ -297,7 +299,11 @@ internal class RetroRewindInstallActivity : Activity() {
         primary.contentDescription = primary.text
     }
 
-    private fun friendlyError(error: String): String = when {
+    private fun friendlyError(error: String, latestVersion: String?): String = when {
+        error == "version-update-required" ->
+            "Retro Rewind ${latestVersion ?: "a newer release"} requires a newer KartPad build before installation or online play."
+        error.startsWith("version-") ->
+            "KartPad could not verify the current official Retro Rewind version. Try again before installing."
         error.startsWith("space-") -> "Not enough safe app storage is available for this installation."
         error.startsWith("download-network_failure") -> "The download could not reach the official server."
         error.startsWith("download-") -> "The official download failed its pinned integrity or protocol checks."

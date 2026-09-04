@@ -18,6 +18,7 @@ internal object RetroRewindInstallWork {
     const val KEY_COMPLETED_BYTES = "completed_bytes"
     const val KEY_TOTAL_BYTES = "total_bytes"
     const val KEY_ERROR = "error"
+    const val KEY_LATEST_VERSION = "latest_version"
     const val KEY_DEBUG_FIXTURE = "debug_fixture"
     const val KEY_DEBUG_FIXTURE_STEPS = "debug_fixture_steps"
     const val KEY_DEBUG_FIXTURE_DELAY_MILLIS = "debug_fixture_delay_millis"

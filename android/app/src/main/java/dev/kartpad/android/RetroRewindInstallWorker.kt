@@ -42,6 +42,22 @@ internal class RetroRewindInstallWorker(
             return@withContext failure("recovery")
         }
 
+        setForeground(foregroundInfo("Checking Retro Rewind version…"))
+        setPhase("version", 0, 0)
+        val version = RetroRewindVersionCheck.checkRelease { isStopped }
+        if (!version.isReady) {
+            return@withContext failure(
+                if (version.error == RetroRewindVersionCheck.Error.CANCELLED) {
+                    "cancelled"
+                } else {
+                    "version-${version.error.name.lowercase()}"
+                },
+            )
+        }
+        if (version.updateRequired) {
+            return@withContext failure("version-update-required", version.latestVersion)
+        }
+
         setPhase("space", 0, 0)
         val space = RetroRewindSpaceProbe.check(
             applicationContext.filesDir,
@@ -195,12 +211,16 @@ internal class RetroRewindInstallWorker(
         return Result.success(progressData("installed", 1, 1))
     }
 
-    private fun failure(error: String): Result = Result.failure(
-        workDataOf(
+    private fun failure(error: String, latestVersion: String? = null): Result {
+        val values = mutableMapOf<String, Any>(
             RetroRewindInstallWork.KEY_PHASE to "failed",
             RetroRewindInstallWork.KEY_ERROR to error,
-        ),
-    )
+        )
+        if (latestVersion != null) {
+            values[RetroRewindInstallWork.KEY_LATEST_VERSION] = latestVersion
+        }
+        return Result.failure(androidx.work.Data.Builder().putAll(values).build())
+    }
 
     private fun foregroundInfo(
         message: String,

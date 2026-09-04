@@ -20,6 +20,7 @@ def render_android_release_contract(profile_data: dict) -> str:
     payload = config["payload"]
     strings = {
         "VERSION": config["version"],
+        "VERSION_MANIFEST_URL": config["versionManifestUrl"],
         "ROOT": config["root"],
         "ARCHIVE_URL": archive["url"],
         "ARCHIVE_SHA256": archive["sha256"],

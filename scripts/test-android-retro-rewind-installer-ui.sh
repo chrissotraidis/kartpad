@@ -10,6 +10,7 @@ emulator="$sdk_root/emulator/emulator"
 avd="$KARTPAD_ANDROID_PHONE_AVD"
 package="dev.kartpad.android"
 component="$package/.RetroRewindInstallActivity"
+fixture_component="$package/.RetroRewindWorkerFixtureActivity"
 
 if "$adb" devices | sed -n '2,$p' | grep -q '[[:space:]]device$'; then
   echo "ERROR: an Android device/emulator is already connected; preserve the one-emulator rule" >&2
@@ -59,6 +60,25 @@ wait_for_marker() {
   "$adb" logcat -d -v brief KartPadInstaller:V KartPadFixture:V AndroidRuntime:E '*:S' >&2
   return 1
 }
+
+network_ready=0
+for _ in {1..45}; do
+  if "$adb" shell ping -c 1 -W 1 update.rwfc.net >/dev/null 2>&1; then
+    network_ready=1
+    break
+  fi
+  sleep 1
+done
+[[ "$network_ready" == 1 ]] || {
+  echo "ERROR: emulator network/DNS did not become ready for the official version check" >&2
+  exit 1
+}
+
+"$adb" shell am start -W -n "$fixture_component" \
+  --ez dev.kartpad.android.TEST_RETRO_REWIND_VERSION_CHECK true >/dev/null
+wait_for_marker "A3 Android official version check latest=6.12.5 update_required=false"
+"$adb" shell am force-stop "$package"
+"$adb" logcat -c
 
 "$adb" shell am start -W -n "$component" >/dev/null
 wait_for_marker "A3 installer UI state=not-installed"

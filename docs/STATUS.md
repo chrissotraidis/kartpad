@@ -394,6 +394,20 @@ official archive, production-size fault/gameplay proof, and physical hardware
 are untested. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-installer-ui.md`](artifacts/2026-09-04/android/a3-installer-ui.md).
 
+The Android install worker now also fails closed on Retro Rewind version
+freshness before capacity preflight or archive acquisition. The official feed
+URL is generated from the sole profile; its HTTPS client bounds redirects,
+timeouts, encoding, strict UTF-8, and a 512 KiB body, and numeric comparison
+cannot overflow. A newer valid release produces a specific KartPad-update
+requirement, while unavailable/invalid checks preserve all existing install
+state and expose Retry. Host fault tests pass, and both the host JVM and a
+wiped API 36 AVD reached the official service through their real TLS stacks and
+reported the current pinned `6.12.5`. No archive bytes were requested. A3
+remains open for the normal dual-mode route/installed fallback, production
+archive and fault execution, gameplay/mode switching, and physical hardware.
+Evidence:
+[`docs/artifacts/2026-09-04/android/a3-version-freshness.md`](artifacts/2026-09-04/android/a3-version-freshness.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

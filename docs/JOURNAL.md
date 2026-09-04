@@ -2480,3 +2480,33 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   gameplay, and physical acceptance remain open. No artifact or private data
   was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-installer-ui.md`.
+
+## 2026-09-04 — Android A3 Retro Rewind version freshness
+
+- Added the profile's official version-manifest URL to Android's generated
+  release contract and placed a fail-closed freshness check after recovery but
+  before capacity preflight/archive acquisition.
+- The HTTPS client permits only secure bounded redirects, identity transfer,
+  15-second timeouts, cancellation, strict UTF-8, and at most 512 KiB. Version
+  comparison handles two to four arbitrary-length numeric components without
+  overflow; any malformed nonempty line invalidates the feed.
+- Direct faults cover current/newer/older and padded versions, huge components,
+  malformed/oversized/encoded bodies, insecure/looping redirects, HTTP/network
+  failure, and cancellation. A newer valid feed returns a specific KartPad-
+  update-required result before any archive state can change.
+- The host JVM and wiped API 36 AVD independently reached the official service
+  and reported `6.12.5`, equal to the compiled profile. The wiped run also
+  reconfirmed PR #55 notification/UI cancellation and persistence with bounded
+  worker UUID `0b41fe6c-0508-4315-a41f-85e777ce577d`. No archive was requested.
+- Eight A3 source contracts, public/private compile configurations, API-28
+  lint, APK audit, builder tests, SunPad snapshot, repository safety, shell,
+  and diff checks pass. Source verification reaches only the unchanged ignored
+  `rr-pulsar` checkout mismatch after all 446 hunks and other pins pass. The
+  source-only APK is 33,843,921 bytes at SHA-256
+  `391f183e6fd4aebb540ad561c6fef436a4bf9cfe1857f205e7480e3e911389e2`.
+- Classification: **Pass for generated version authority, bounded official-
+  feed handling, Android TLS execution, and stale-profile blocking before
+  acquisition.** The normal chooser/installed fallback, archive/install fault
+  execution, gameplay/mode switching, and physical hardware remain open. No
+  artifact or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-version-freshness.md`.

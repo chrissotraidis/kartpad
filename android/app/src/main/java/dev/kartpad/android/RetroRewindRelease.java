@@ -5,6 +5,7 @@ final class RetroRewindRelease {
     private RetroRewindRelease() {}
 
     static final String VERSION = "6.12.5";
+    static final String VERSION_MANIFEST_URL = "https://update.rwfc.net/RetroRewind/RetroRewindVersion.txt";
     static final String ROOT = "RetroRewind6";
     static final String ARCHIVE_URL = "https://cdn.update.rwfc.net/RetroRewind/zip/6.12.5-full.zip";
     static final String ARCHIVE_SHA256 = "d8f7c61636ef76f8a451f4071ec5bbdcfea9d5f2500cfc6c245431f04580f9d9";

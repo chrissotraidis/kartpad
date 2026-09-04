@@ -19,6 +19,26 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             Log.i(LOG_TAG, "A3 worker initializer activity created")
             return
         }
+        if (intent.getBooleanExtra(EXTRA_VERSION_CHECK, false)) {
+            if (savedInstanceState == null) {
+                Thread {
+                    val result = RetroRewindVersionCheck.checkRelease { false }
+                    if (result.isReady) {
+                        Log.i(
+                            LOG_TAG,
+                            "A3 Android official version check latest=${result.latestVersion} " +
+                                "update_required=${result.updateRequired}",
+                        )
+                    } else {
+                        Log.e(
+                            LOG_TAG,
+                            "A3 Android official version check failed error=${result.error}",
+                        )
+                    }
+                }.start()
+            }
+            return
+        }
         if (intent.getBooleanExtra(EXTRA_RESUME_PROCESS_DEATH, false)) {
             if (savedInstanceState == null) {
                 val id = RetroRewindInstallWork.enqueueDebugFixture(
@@ -115,5 +135,7 @@ internal class RetroRewindWorkerFixtureActivity : Activity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER_INIT_ONLY"
         const val EXTRA_CANCEL =
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER_CANCEL"
+        const val EXTRA_VERSION_CHECK =
+            "dev.kartpad.android.TEST_RETRO_REWIND_VERSION_CHECK"
     }
 }

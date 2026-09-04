@@ -920,6 +920,12 @@ immediate foreground display. Its wiped-AVD fixture proves the actionable
 notification target, visible Cancel action, and persisted cancelled state
 without downloading game data. The first-launch dual-mode chooser is
 still missing, so normal game startup does not yet route into this screen.
+Before the worker performs capacity checks or requests archive bytes, it now
+fetches the profile-generated official version feed through bounded HTTPS and
+strict UTF-8 parsing. A valid newer release blocks installation with a KartPad-
+update message; invalid/unavailable responses fail without changing installed
+or partial data. The host JVM and wiped API 36 AVD both currently observe
+official version `6.12.5`, matching the compiled profile.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from
