@@ -2291,3 +2291,27 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   probe.** No downloader/worker invokes it yet, and A2/A3 runtime acceptance
   remains open. No APK/AAB or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-space-preflight.md`.
+
+## 2026-09-04 — Android A3 pinned archive download
+
+- Added a pinned HTTPS archive owner with at most five secure redirects,
+  bounded timeouts, identity encoding, declared/exact byte checks, streamed
+  SHA-256, cancellation, verified-cache reuse, and same-directory atomic
+  publication. Unverified partial bytes are never promoted.
+- Added INTERNET as Android's sole manifest permission and changed the package
+  audit to require that exact allowlist. Any additional permission fails.
+- The first lint run rejected the host-Java `HexFormat` API because it requires
+  Android API 34. The replacement uses API-28-safe digest decoding/comparison;
+  the complete compile/lint rerun passes.
+- Warning-as-error transfer tests cover exact content, existing revalidation,
+  short/long streams, wrong hash, cancellation, injected network loss, and a
+  symlink. Earlier A3 matrices, 30 builder/tvOS tests, public assemble/release
+  compilation, private source configuration, package audit, shell/diff checks,
+  and repository safety pass.
+- The source-only APK is 33,675,275 bytes with SHA-256
+  `88129b305de90f0588cbd93978ede89fc061010b2420f3beb344522607052b65`.
+- Classification: **Pass for pinned acquisition and verified atomic cache
+  publication contracts.** No worker/UI invokes it, the production archive was
+  not downloaded, and ZIP extraction/process-death/runtime acceptance remain
+  open. No APK/AAB or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-archive-download.md`.

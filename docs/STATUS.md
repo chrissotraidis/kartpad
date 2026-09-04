@@ -306,6 +306,16 @@ probe yet, so this is capacity-policy evidence rather than an install or runtime
 claim. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-space-preflight.md`](artifacts/2026-09-04/android/a3-space-preflight.md).
 
+The next A3 layer adds pinned HTTPS archive acquisition with bounded redirects,
+timeouts, identity encoding, exact length/SHA-256 verification, cancellation,
+existing-cache revalidation, and atomic publication of only verified bytes.
+The manifest requests only INTERNET, and the package audit now enforces that
+exact permission set. Transfer faults, all earlier A3 contracts, public/private
+source configurations, API-28 lint, builder/tvOS tests, package/privacy audit,
+and repository safety pass. The production archive was not downloaded, and no
+worker or UI calls the downloader yet. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-archive-download.md`](artifacts/2026-09-04/android/a3-archive-download.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

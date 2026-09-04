@@ -884,6 +884,11 @@ profile requires 4,327,477,355 bytes when cache and files share storage. The
 download/extraction worker is still absent, so these are tested contracts rather
 than an installed Retro Rewind runtime. Evidence is under
 [`docs/artifacts/2026-09-04/android/`](artifacts/2026-09-04/android/).
+Pinned archive acquisition is also implemented as a source-only contract: it
+uses HTTPS-only bounded redirects/timeouts, exact streamed length/SHA-256,
+cancellation, verified-cache reuse, and atomic publication. INTERNET is the
+only allowed manifest permission. A worker/UI and ZIP extraction still need to
+consume these layers before A3 can claim an install.
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

@@ -192,6 +192,14 @@ not block offline Retro Rewind support.
    matrices, and package audit pass. The future download worker does not yet
    invoke it. Evidence:
    `docs/artifacts/2026-09-04/android/a3-space-preflight.md`.
+   The next layer adds HTTPS-only bounded redirects/timeouts, exact streamed
+   byte/hash verification, cancellation, verified-cache reuse, and atomic
+   publication of only a verified archive. Android now requests INTERNET and
+   the package audit enforces it as the sole permission. Direct fault tests,
+   earlier A3 matrices, public/private compilation, API-28 lint, package audit,
+   and safety pass. No worker/UI calls this downloader and the production
+   archive was not fetched. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-archive-download.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook

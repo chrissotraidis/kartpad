@@ -22,8 +22,10 @@ badging="$("$aapt2" dump badging "$apk")"
 [[ "$badging" == *"targetSdkVersion:'36'"* ]]
 [[ "$badging" == *"native-code: 'arm64-v8a'"* ]]
 permissions="$("$aapt2" dump permissions "$apk")"
-if [[ "$permissions" == *"uses-permission:"* ]]; then
-  echo "ERROR: KartPad Android package unexpectedly requests a permission" >&2
+permission_names="$(printf '%s\n' "$permissions" |
+  sed -n "s/^uses-permission: name='\([^']*\)'.*$/\1/p" | sort)"
+if [[ "$permission_names" != "android.permission.INTERNET" ]]; then
+  echo "ERROR: KartPad Android permission set differs from the network-only allowlist" >&2
   exit 1
 fi
 
