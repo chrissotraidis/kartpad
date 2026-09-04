@@ -877,6 +877,13 @@ The A0 commands and sanitized result are recorded in
 [`a0-source-only-fixture.md`](artifacts/2026-09-03/android/a0-source-only-fixture.md).
 A1 evidence is under
 [`docs/artifacts/2026-09-03/android/`](artifacts/2026-09-03/android/).
+Independent A3 source work now includes generated release pins, validated
+same-volume activation/recovery, installed-content validation, and an
+overflow-safe filesystem-aware free-space preflight. The current production
+profile requires 4,327,477,355 bytes when cache and files share storage. The
+download/extraction worker is still absent, so these are tested contracts rather
+than an installed Retro Rewind runtime. Evidence is under
+[`docs/artifacts/2026-09-04/android/`](artifacts/2026-09-04/android/).
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

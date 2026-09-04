@@ -2271,3 +2271,23 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   download/free-space/ZIP extraction/worker lifecycle and runtime acceptance.
   No APK/AAB or private data was published. Evidence:
   `docs/artifacts/2026-09-04/android/a3-content-validation.md`.
+
+## 2026-09-04 — Android A3 free-space preflight
+
+- Added an overflow-safe pure Java storage evaluator and a thin Android probe
+  that uses filesystem device IDs rather than path assumptions to distinguish
+  shared app files/cache storage from separate stores.
+- The policy retains a 256 MiB reserve. Shared storage must hold archive plus
+  maximum expansion plus one reserve; separate stores independently require
+  expansion plus reserve and archive plus reserve. The exact generated 6.12.5
+  shared-store requirement is 4,327,477,355 bytes.
+- Exact-boundary, one-byte-short, invalid, overflow, probe-failure, and
+  production-drift tests pass with Java warnings treated as errors. Existing
+  content/storage matrices, 30 builder/tvOS tests, public assemble and release
+  compilation, lint, repository safety, and the strict APK audit also pass.
+- The source-only APK is 33,675,275 bytes with SHA-256
+  `700b899ed7ee22ecb87837542100427dd99ed5829b8b8d0615a50c38a3df7994`.
+- Classification: **Pass for free-space accounting and the Android capacity
+  probe.** No downloader/worker invokes it yet, and A2/A3 runtime acceptance
+  remains open. No APK/AAB or private data was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a3-space-preflight.md`.

@@ -295,6 +295,17 @@ tests, 22 builder tests, public debug/release compilation, lint, private game-
 configuration compile, and the strict source-only APK audit pass. Evidence:
 [`docs/artifacts/2026-09-04/android/a3-content-validation.md`](artifacts/2026-09-04/android/a3-content-validation.md).
 
+Android now also has a pure, overflow-safe Retro Rewind free-space evaluator
+and an Android probe that compares exact filesystem device IDs before applying
+shared- or separate-store accounting. The policy retains a 256 MiB reserve and
+requires exactly 4,327,477,355 bytes for the current same-store production
+profile. Boundary/failure tests, the existing content and recovery matrices,
+30 builder/tvOS tests, public build/release compilation, lint, repository
+safety, and the strict source-only APK audit pass. No download worker calls the
+probe yet, so this is capacity-policy evidence rather than an install or runtime
+claim. Evidence:
+[`docs/artifacts/2026-09-04/android/a3-space-preflight.md`](artifacts/2026-09-04/android/a3-space-preflight.md).
+
 ## Native tvOS work
 
 The maintainer-owned `codex/tvos-retro-rewind` branch contains the first

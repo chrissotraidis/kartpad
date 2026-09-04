@@ -184,6 +184,14 @@ not block offline Retro Rewind support.
    validated production payload pin. Public/private compile configurations,
    lint, content fault tests, and package audit pass. Evidence:
    `docs/artifacts/2026-09-04/android/a3-content-validation.md`.
+   A further stacked slice adds overflow-safe Android free-space accounting and
+   probes exact filesystem device IDs to distinguish shared from separate app
+   files/cache stores. It retains a 256 MiB reserve and locks the current
+   same-store production requirement to 4,327,477,355 bytes. Direct boundary
+   tests, public build/release compilation, lint, safety, existing A3 fault
+   matrices, and package audit pass. The future download worker does not yet
+   invoke it. Evidence:
+   `docs/artifacts/2026-09-04/android/a3-space-preflight.md`.
 2. Collect the first physical Apple TV report against `v0.4.0` using
    `docs/TVOS-TESTING.md`.
 3. Await the Issue #1 Feather-signed iPad import retest and the Issue #5 MacBook
