@@ -1,0 +1,23 @@
+--- a/lib/gfx/pipeline_cache.cpp
++++ b/lib/gfx/pipeline_cache.cpp
+@@ -15,0 +16,4 @@
++#if defined(__ANDROID__)
++#include <android/api-level.h>
++#endif
++
+@@ -1045,0 +1050,10 @@
++static bool pipeline_workers_supported() {
++#if defined(__ANDROID__)
++  // Android 10's Goldfish Vulkan transport serializes object-handle mapping
++  // internally and can deadlock when pipeline creation races submission.
++  return android_get_device_api_level() > 29;
++#else
++  return true;
++#endif
++}
++
+@@ -1178,2 +1194,2 @@
+-  if (webgpu::g_backendType == wgpu::BackendType::OpenGL || webgpu::g_backendType == wgpu::BackendType::OpenGLES ||
+-      webgpu::g_backendType == wgpu::BackendType::WebGPU) {
++  if (webgpu::g_backendType == wgpu::BackendType::OpenGL || webgpu::g_backendType == wgpu::BackendType::OpenGLES ||
++      webgpu::g_backendType == wgpu::BackendType::WebGPU || !pipeline_workers_supported()) {

@@ -52,6 +52,15 @@
       "pushDisabled": true
     },
     {
+      "name": "PostgreSQL local WFC fixture",
+      "repository": "https://hub.docker.com/_/postgres",
+      "version": "17-alpine",
+      "image": "postgres@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193",
+      "imageId": "sha256:8ee7c900f4de054e8f0a3b42b8f5da38b8fba57c3ccd7c1a02be28cb0b06494f",
+      "license": "PostgreSQL",
+      "role": "Disposable tmpfs-backed database for the isolated Android local-WFC emulator fixture"
+    },
+    {
       "name": "Retro Rewind WFC patcher",
       "repository": "https://github.com/Retro-Rewind-Team/wfc-patcher-wii.git",
       "commit": "9ee5c2dfdcbe97408786184566ab50c9bee0d1eb",
@@ -131,12 +140,34 @@
       "role": "Pinned ZIP directory and decompression implementation for the bounded Android Retro Rewind installer"
     },
     {
+      "name": "Mbed TLS Android",
+      "repository": "https://github.com/Mbed-TLS/mbedtls",
+      "version": "4.1.1",
+      "artifact": "mbedtls-4.1.1.tar.bz2",
+      "url": "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-4.1.1/mbedtls-4.1.1.tar.bz2",
+      "bytes": 7099934,
+      "sha256": "3359a349e23db3d5536fcee032ae7b2ecbfc08972fab643089b5cbf2a375c98c",
+      "license": "Apache-2.0 OR GPL-2.0-or-later",
+      "role": "Pinned maintained native TLS engine for Android guest networking"
+    },
+    {
       "name": "AndroidX WorkManager",
       "repository": "https://android.googlesource.com/platform/frameworks/support",
       "version": "2.11.1",
       "coordinates": "androidx.work:work-runtime-ktx:2.11.1",
       "releaseNotes": "https://developer.android.com/jetpack/androidx/releases/work#2.11.1",
       "role": "Unique durable foreground orchestration, retry, cancellation, constraints, and persisted progress for Android Retro Rewind installation"
+    },
+    {
+      "name": "Android bundletool",
+      "repository": "https://github.com/google/bundletool",
+      "version": "1.18.1",
+      "artifact": "bundletool-all-1.18.1.jar",
+      "url": "https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar",
+      "bytes": 32505571,
+      "sha256": "675786493983787ffa11550bdb7c0715679a44e1643f3ff980a529e9c822595c",
+      "license": "Apache-2.0",
+      "role": "Pinned validation and manifest inspection for unpublished Android App Bundle outputs"
     },
     {
       "name": "sse2neon",

@@ -1,4 +1,5 @@
 #include "kartpad/android/gamepad_contract.h"
+#include "kartpad/android/controller_mapping.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -42,10 +43,36 @@ int main() {
   constexpr uint32_t kAllExpected =
       kClassicA | kClassicB | kClassicX | kClassicY | kClassicMinus |
       kClassicPlus | kClassicL | kClassicR | kClassicUp | kClassicDown |
-      kClassicLeft | kClassicRight | kClassicZl | kClassicZr;
+      kClassicLeft | kClassicRight | kClassicZr;
   passed &= Require(mapped_buttons.connected &&
                         mapped_buttons.buttons == kAllExpected,
                     "standard SDL buttons must map to Classic buttons");
+
+  const ControllerButtonMapping swapped{1, 0, 2, 3, 4};
+  passed &= Require(IsValidControllerButtonMapping(swapped),
+                    "A/B swap must be a valid permutation");
+  passed &= Require(
+      ApplyControllerButtonMapping(kGamepadSouth, swapped) == kGamepadEast &&
+          ApplyControllerButtonMapping(kGamepadEast, swapped) == kGamepadSouth,
+      "assigning a used physical button must swap game assignments");
+  const ControllerButtonMapping invalid{0, 0, 2, 3, 4};
+  passed &= Require(!IsValidControllerButtonMapping(invalid) &&
+                        ApplyControllerButtonMapping(kGamepadSouth, invalid) ==
+                            kGamepadSouth,
+                    "invalid mappings must fail closed to default");
+
+  RawGamepadState direct;
+  direct.connected = true;
+  direct.buttons = kGamepadLeftShoulder | kGamepadRightShoulder;
+  direct.left_trigger = kTriggerThreshold;
+  direct.right_trigger = kTriggerThreshold;
+  const auto directMapped = MapGamepadToClassic(direct);
+  passed &= Require(
+      (directMapped.buttons & kClassicZr) != 0 &&
+          (directMapped.buttons & kClassicL) != 0 &&
+          (directMapped.buttons & kClassicR) != 0 &&
+          (directMapped.buttons & kClassicZl) == 0,
+      "KartPad shoulders and triggers must match the iOS direct mapping");
 
   buttons.left_trigger = kTriggerThreshold - 1;
   buttons.right_trigger = kTriggerThreshold - 1;

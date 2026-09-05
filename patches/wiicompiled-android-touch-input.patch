@@ -63,6 +63,17 @@
  #endif
      const uint32_t previous = g_previousButtons[chan];
      const uint32_t previousClassic = g_previousClassicButtons[chan];
+@@ -922,6 +944,10 @@
+     try {
+         WriteClassicStatus(statusPtr, hold, trigger, release, classicHold,
+                            classicTrigger, classicRelease, stick);
++#if defined(__ANDROID__)
++        Memory::WriteFloat32(statusPtr + 0x74, touchInput.right_stick_x);
++        Memory::WriteFloat32(statusPtr + 0x78, touchInput.right_stick_y);
++#endif
+     } catch (const Memory::AccessViolation&) {
+         return 0;
+     }
 @@ -959,10 +981,13 @@
  #if defined(__ANDROID__)
      const auto androidInput = ReadAndroidClassicInput(chan);
@@ -91,4 +102,16 @@
  #endif
          Memory::Write16(statusPtr + 0x00,
                          static_cast<uint16_t>(coreButtons));
-
+@@ -1004,6 +1037,12 @@
+         const auto stickY = static_cast<int16_t>(stick[1] * 511.0f);
+         Memory::Write16(statusPtr + 0x2C, static_cast<uint16_t>(stickX));
+         Memory::Write16(statusPtr + 0x2E, static_cast<uint16_t>(stickY));
++#if defined(__ANDROID__)
++        const auto rightStickX = static_cast<int16_t>(touchInput.right_stick_x * 511.0f);
++        const auto rightStickY = static_cast<int16_t>(touchInput.right_stick_y * 511.0f);
++        Memory::Write16(statusPtr + 0x30, static_cast<uint16_t>(rightStickX));
++        Memory::Write16(statusPtr + 0x32, static_cast<uint16_t>(rightStickY));
++#endif
+         // In Mario Kart's 2008 SDK this byte follows the 0x36-byte WPADCLStatus.
+         Memory::Write8(statusPtr + 0x36, kWpadFormatClassic);
+     } catch (const Memory::AccessViolation&) {

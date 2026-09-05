@@ -1,0 +1,20 @@
+--- a/src/hle/input/kpad.cpp
++++ b/src/hle/input/kpad.cpp
+@@ -9,5 +9,6 @@
+ #if defined(__ANDROID__)
+ #include <aurora/input.hpp>
++#include "kartpad/android/controller_mapping.hpp"
+ #include "kartpad/android/gamepad_contract.h"
+ #include "kartpad/android/touch_input.h"
+ #endif
+@@ -703,7 +704,9 @@
+     }
+ 
+     raw.connected = snapshot.connected;
+-    raw.buttons = snapshot.buttons;
++    raw.buttons = kartpad::android::ApplyControllerButtonMapping(
++        snapshot.buttons,
++        kartpad::android::ReadControllerButtonMapping());
+     raw.left_x = snapshot.leftX;
+     raw.left_y = snapshot.leftY;
+     raw.left_trigger = snapshot.leftTrigger;

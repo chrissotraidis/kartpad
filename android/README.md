@@ -108,7 +108,7 @@ on stdout. ADB errors are suppressed or serial-redacted. Review the JSON before
 copying it into a publishable evidence directory.
 
 On an Apple Silicon Mac, explicitly install the pinned public toolchain and
-AVDs, then verify it:
+phone, tablet, and 16 KiB AVDs, then verify them:
 
 ```sh
 ./scripts/bootstrap-android-host.sh
@@ -131,6 +131,13 @@ Repeat the same cold-boot lane on the pinned Android 15 / 16 KiB image:
 
 ```sh
 ./scripts/run-android-fixture.sh KartPad_API_35_PS16K_ARM64
+```
+
+The pinned API 36 Pixel Tablet lane used for A4 layout, hit-map, accessibility,
+and lifecycle acceptance is:
+
+```sh
+./scripts/run-android-fixture.sh KartPad_API_36_TABLET_ARM64
 ```
 
 The runner refuses to start when another Android device or emulator is

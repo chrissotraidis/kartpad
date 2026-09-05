@@ -1,0 +1,16 @@
+diff --git a/lib/imgui.cpp b/lib/imgui.cpp
+index 44e4d56..ebc3774 100644
+--- a/lib/imgui.cpp
++++ b/lib/imgui.cpp
+@@ -73,6 +73,11 @@ void initialize() noexcept {
+ 
+ void shutdown() noexcept {
+   ZoneScoped;
++  // Runtime profile validation can fail before Aurora initializes, while the
++  // common exception path still asks Aurora to shut down. ImGui's backends
++  // assert when shut down without a context, so make this boundary safely
++  // idempotent for both pre-initialization failure and repeated cleanup.
++  if (ImGui::GetCurrentContext() == nullptr) return;
+   if (g_useSdlRenderer) {
+     ImGui_ImplSDLRenderer3_Shutdown();
+   } else {

@@ -50,6 +50,12 @@ case "$*" in
     [[ "$scenario" == minimal ]] && exit 1
     echo 'package:/data/app/dev.kartpad.android/base.apk'
     ;;
+  'pm list features')
+    [[ "$scenario" == no-vulkan ]] && echo 'feature:android.hardware.opengles.aep' || {
+      echo 'feature:android.hardware.vulkan.level=1'
+      echo 'feature:android.hardware.vulkan.version=4198403'
+    }
+    ;;
   'cmd gpu vkjson')
     [[ "$scenario" == minimal ]] && exit 1
     echo '{"deviceName":"Example GPU","apiVersion":1}'
@@ -86,7 +92,7 @@ run_case() {
 }
 
 run_case pass 0 'input_controller_candidates=1'
-run_case minimal 0 'package=not-installed input_controller_candidates=1 vulkan_inventory=unavailable'
+run_case minimal 0 'package=not-installed input_controller_candidates=1 vulkan_feature=declared vulkan_inventory=unavailable'
 run_case no-controller 0 'no gamepad/joystick source is visible'
 run_case absent 1 'ready=0 unavailable=0'
 run_case unauthorized 1 'ready=0 unavailable=1'
@@ -97,5 +103,6 @@ run_case old-api 1 'below KartPad'
 run_case wrong-abi 1 'expected arm64-v8a'
 run_case wrong-page 1 'expected 4096 or 16384'
 run_case low-space 1 'A2 preflight requires'
+run_case no-vulkan 1 'does not declare android.hardware.vulkan.version'
 
-echo 'Android physical-device preflight contract passed (12 cases; ADB serial redacted).'
+echo 'Android physical-device preflight contract passed (13 cases; ADB serial redacted).'

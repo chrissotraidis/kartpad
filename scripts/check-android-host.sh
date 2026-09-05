@@ -79,12 +79,24 @@ require_directory "$KARTPAD_ANDROID_PS16K_IMAGE" \
 avd_root="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
 require_file "AVD $KARTPAD_ANDROID_PHONE_AVD" \
   "$avd_root/$KARTPAD_ANDROID_PHONE_AVD.avd/config.ini"
+require_file "AVD $KARTPAD_ANDROID_TABLET_AVD" \
+  "$avd_root/$KARTPAD_ANDROID_TABLET_AVD.avd/config.ini"
 require_file "AVD $KARTPAD_ANDROID_PS16K_AVD" \
   "$avd_root/$KARTPAD_ANDROID_PS16K_AVD.avd/config.ini"
 if [[ -f "$avd_root/$KARTPAD_ANDROID_PHONE_AVD.avd/config.ini" ]] &&
    ! grep -Eq '^image\.sysdir\.1=.*android-36/google_apis/arm64-v8a' \
       "$avd_root/$KARTPAD_ANDROID_PHONE_AVD.avd/config.ini"; then
   fail "AVD $KARTPAD_ANDROID_PHONE_AVD does not use the pinned API 36 ARM64 image"
+fi
+if [[ -f "$avd_root/$KARTPAD_ANDROID_TABLET_AVD.avd/config.ini" ]] &&
+   ! grep -Eq '^image\.sysdir\.1=.*android-36/google_apis/arm64-v8a' \
+      "$avd_root/$KARTPAD_ANDROID_TABLET_AVD.avd/config.ini"; then
+  fail "AVD $KARTPAD_ANDROID_TABLET_AVD does not use the pinned API 36 ARM64 image"
+fi
+if [[ -f "$avd_root/$KARTPAD_ANDROID_TABLET_AVD.avd/config.ini" ]] &&
+   ! grep -Eq '^hw\.device\.name=pixel_tablet$' \
+      "$avd_root/$KARTPAD_ANDROID_TABLET_AVD.avd/config.ini"; then
+  fail "AVD $KARTPAD_ANDROID_TABLET_AVD is not the pinned Pixel Tablet profile"
 fi
 if [[ -f "$avd_root/$KARTPAD_ANDROID_PS16K_AVD.avd/config.ini" ]] &&
    ! grep -Eq '^image\.sysdir\.1=.*android-35/google_apis_ps16k/arm64-v8a' \

@@ -28,6 +28,11 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
         <activity
+            android:name=".KartPadGameDataActivity"
+            android:exported="false"
+            android:process=":launcher"
+            android:screenOrientation="sensorLandscape" />
+        <activity
             android:name=".KartPadActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
             android:exported="false"
@@ -36,6 +41,7 @@
         <activity
             android:name=".KartPadLaunchActivity"
             android:exported="true"
+            android:process=":launcher"
             android:screenOrientation="sensorLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

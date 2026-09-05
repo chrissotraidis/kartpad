@@ -3080,3 +3080,1327 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   touch editing, accessibility, tablet layout, and physical acceptance remain
   open. No package or private content was published. Evidence:
   `docs/artifacts/2026-09-04/android/a4-controller-handoff.md`.
+
+## 2026-09-04 — Android A4 touch settings/menu paused checkpoint
+
+- Added the uncommitted Android touch-settings/editor slice: persistent move,
+  resize, per-control Hide/Show, grouped D-pad editing, reset, presentation
+  controls, configurable controller handoff, and modern C-stick direction.
+- Live emulator work before the pause proved editing, persistence, reset, and
+  both controller-visibility policy states with the prior incremental APK.
+- Moved Z upward to separate it from X and expanded the one-item overflow into
+  KartPad's iOS-derived Multiplayer, FPS, Controls, Display, Game Data & Saves,
+  and diagnostics hierarchy. Live FPS/aspect/resolution, Retro management,
+  multiplayer status, installation status, and bounded report sharing are
+  wired. Remaining motion, custom mapping, game-data/save, and Mii work is
+  disclosed in-product.
+- Focused source contracts (17 tests), all 460 patch hunks, and diff whitespace
+  pass. The fresh dual runtime build was interrupted after about 23 minutes at
+  the user's pause request, before link/package. No current APK exists, so the
+  newest Z/menu/JNI changes are not emulator-accepted or committed.
+- Classification: **documented work-in-progress, not a pass.** Resume from
+  `docs/artifacts/2026-09-04/android/a4-touch-settings-menu-checkpoint.md`.
+
+## 2026-09-04 — Android A4 selector, consolidated menu, and motion steering
+
+- Completed the paused dual build and exercised its production selector on the
+  standalone API 36 ARM64 emulator. Original and installed Retro Rewind are
+  explicit choices; Switch Game Version returns to that selector through an
+  isolated launcher process.
+- Emulator use exposed and fixed two Android-specific issues: display settings
+  previously crossed the renderer thread boundary, and a message-plus-items
+  AlertDialog hid every motion action. Runtime settings now use a synchronized
+  render-thread consumer, and Motion Steering uses visible accessible buttons.
+- Added persistent gravity motion steering with iOS-equivalent calibration,
+  dead zone, sensitivity, inversion, touch-stick precedence, lifecycle clearing,
+  and physical-controller priority. Virtual sensor injection proved neutral
+  `0.0`, one tilt near `-0.30`, the opposite near `+0.30`, and the first tilt
+  near `+0.30` after inversion. On/inverted/2.0x restored after a full process
+  restart; the emulator was returned to Off/standard/1.0x and neutral.
+- The exact local dual APK SHA-256 is
+  `ae96d3e2bcd340b64d9b76cb6a05059bef99b90b24ac7111d159b7d4e05f51e5`.
+  A fresh runtime preparation applied the full patch stack and a new CMake
+  directory completed the dual build in 25m46s. That fresh artifact passed the
+  strict audit and its own selector/Retro/menu/motion emulator smoke.
+  Android/Apple focused contracts pass 18 tests; lint, the strict package/privacy
+  audit, repository safety, all 462 patch hunks, pinned sources/input, the iOS
+  overlay snapshot, and diff whitespace pass.
+- Classification: **Pass for this selector/menu/display/touch-settings/motion
+  emulator slice.** Custom mapping, full game-data/save and Mii management,
+  accessibility nodes, tablet/physical touch and haptics, and physical-device
+  acceptance remain open. No APK, AAB, private content, save, or screenshot was
+  published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-touch-settings-menu-checkpoint.md`.
+
+## 2026-09-04 — Android A4 controller mapping parity
+
+- Replaced the Controls submenu's disclosure-only controller mapping item with
+  persistent A/B/X/Y/Z assignments, swap-on-collision behavior, accessible
+  choices, connected-controller status, and reset-to-default.
+- Routed the saved permutation through JNI into the live SDL snapshot before
+  Classic Controller adaptation. Corrected the Android shoulder/trigger contract
+  to match iOS: left shoulder is Z, left trigger is L, and right shoulder or
+  trigger is R.
+- On the standalone API 36 ARM64 emulator, saved A↔B, restarted the process, and
+  attached an InputReader-visible virtual Xbox controller. The native producer
+  and consumer both observed `1,0,2,3,4`; physical A left the Retro title
+  unchanged as game B, and physical B advanced to license selection as game A.
+  Defaults were restored afterward.
+- The exact clean local APK SHA-256 is
+  `30493adced96cad0edcb9d90354596dc59550be0522735f1356758124cb8686a`.
+  A fresh runtime preparation applied all 464 hunks across 54 patches and
+  reproduced the expected KPAD source. Nineteen Android/Apple source contracts,
+  the native touch contract, host gamepad contract, package/privacy audit,
+  repository safety, pinned sources/input, SunPad snapshot, lint, and whitespace
+  checks pass.
+- Classification: **Pass for persisted single-controller button remapping on
+  the emulator.** Multi-controller assignment/setup, game-data/save and Mii
+  management, accessibility nodes, physical controllers/devices, and full menu
+  parity remain open. No APK, AAB, private data, save, log, or screenshot was
+  published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-controller-mapping.md`.
+
+## 2026-09-04 — Android A4 Mii management parity
+
+- Replaced the Game Data & Saves submenu's Mii placeholder with a live manager
+  that lists validated records, imports bounded standard 74-byte `.mii` files
+  through Android's document picker, stages named removals, explains the same
+  no-creation boundary as iOS, and offers immediate restart.
+- Reused the portable Mii parser/mutator through JNI. Kotlin owns app-private
+  atomic staging, independent RNOD/CRC validation before startup application,
+  timestamped backups, and sanitized errors. Pending changes are applied before
+  SDL loads the translated runtime; the active database is never edited while
+  the game is running.
+- On the standalone API 36 ARM64 emulator, the manager initially listed one Mii.
+  A generated non-personal `Android` Mii imported through DocumentsUI, staged as
+  a 779,968-byte CRC-valid database, and appeared as the second named record after
+  restart. The pre-import database was backed up byte-for-byte. Removing Android
+  and restarting restored the exact original database SHA-256
+  `6212cbf744e28d8e0687c9e8a7d8b22343ef37291b8dc5c031f04f1c45e5b3b7`;
+  attempting to remove the remaining KartPad Mii was rejected in-product.
+- The synthetic document and test-created backups were removed, no pending edit
+  remains, and the exact clean APK SHA-256 is
+  `24dbe0768dc07fa3d3cf8a27c7fcd163bff5cd53615dce5cddfc51207b580545`.
+  Twenty-four focused source contracts, portable Mii/gamepad and native touch
+  contracts, lint, package/privacy and repository audits, all patch hunks, pinned
+  inputs, SunPad snapshot, and whitespace checks pass.
+- Classification: **Pass for Android Mii list/import/remove/restart/backup on the
+  emulator.** In-app Mii creation remains intentionally unavailable as on iOS.
+  Game-data/save management, accessibility nodes, multi-controller setup,
+  physical controllers/devices, and full A4 parity remain open. No APK, AAB,
+  private data, save, log, or screenshot was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-mii-management.md`.
+
+## 2026-09-04 — Android A4 game-data, save, and selector parity
+
+- Replaced the remaining Game Data & Saves placeholder with direct import,
+  save-preserving removal, Retro management, save backup/restore, and Mii
+  actions. The isolated chooser now validates game data, blocks both profiles
+  from launching without it, and provides Manage Game Data as the recovery path.
+- Added bounded SAF extracted-folder traversal, RMCP01/revision/header and pinned
+  main-DOL validation, same-volume staging, rollback-safe activation, atomic
+  removal markers, and a narrow deletion allowlist that excludes NAND and saves.
+- Added exact RKSYS export and restore with size, `RKSD0006`, and CRC-32 checks.
+  Restores are staged while playing, backed up, and atomically applied before SDL.
+- On the API 36 ARM64 emulator, DocumentsUI opened for both game data and saves.
+  An invalid folder failed closed without changing the exact installed game data.
+  The active 2,867,200-byte save exported byte-identically at SHA-256 `708c7a...`,
+  restored through a selector restart, retained an exact backup, and returned to
+  the Retro runtime. Removal schedule/Undo preserved both game data and save.
+  Switching through the visible chooser then selected `base` and reached the
+  Original attract scene.
+- The exact local-only APK SHA-256 is
+  `6aa904883b174940f728b672bee971a6367dc6008d7c9837eeb7cf684e043203`.
+  Build, lint, strict APK/privacy audit, 24 focused contracts, native/portable
+  contracts, repository safety, pinned inputs, all 464 patch hunks, the SunPad
+  snapshot, and whitespace checks pass. ISO/WBFS extraction and a positive
+  multi-gigabyte import run remain open. All temporary emulator files and the
+  test backup were removed; no private content or package was published.
+  Evidence: `docs/artifacts/2026-09-04/android/a4-game-data-save-parity.md`.
+
+## 2026-09-04 — Android A4 touch accessibility
+
+- Added 14 virtual accessibility children to the Canvas overlay with distinct
+  labels and bounds, button clicks, four directional actions per stick, focus
+  and hover handling, hidden-control filtering, and an A acceleration-lock
+  action with a live state description.
+- The API 36 ARM64 emulator exposed every virtual node through its real
+  accessibility hierarchy. A temporary UI Automator test called the A node's
+  custom action directly through `AccessibilityNodeInfo.performAction`; the
+  node reported `Acceleration locked` and A visibly turned cyan. A normal tap
+  restored unlocked green. TalkBack and the temporary test jar were removed.
+- The exact dual local APK SHA-256 is
+  `35ca72fab4c2c3737f373b25e6374daa7edfc13607d23afeaa8091e09b8c3fdf`.
+  Kotlin compilation, lint, the strict package/privacy audit, 49 source
+  contracts, and whitespace checks pass. Game data, save, and Mii hashes stayed
+  exact. No APK, private content, log, test jar, or screenshot was published.
+  Evidence: `docs/artifacts/2026-09-04/android/a4-touch-accessibility.md`.
+
+## 2026-09-04 — Android A4 touch-settings visibility and render parity
+
+- Added iOS's live 1x/2x/3x/4x render selector to Android Touch Control
+  Settings and reorganized the landscape dialog into two columns so every
+  setting, Move Controls, and Reset is visible without scrolling.
+- Corrected reset scope to preserve hide-on-controller and modern C-stick
+  preferences, matching iOS's separation between layout and behavior settings.
+- The API 36 emulator showed every item with accessible bounds. Selecting 2x
+  changed the checked node, then 1x restored the persistent value. The exact
+  dual local APK is
+  `0217707c7410afe19923ae868bcc058dd14d9449cf8f03b2fb4c1b60f8db931f`.
+  Compilation, lint, strict package/privacy audit, 49 contracts, and whitespace
+  checks pass; private game/save/Mii hashes stayed exact. No package or private
+  artifact was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-touch-settings-visibility.md`.
+
+## 2026-09-04 — Android A4 reporting parity
+
+- Replaced the empty Android diagnostic template with iOS-equivalent problem,
+  context, and frequency fields. Share output now includes a bounded report ID
+  and technical summary; GitHub output safely pre-fills the same answers and
+  platform metadata through encoded query parameters.
+- The API 36 emulator displayed all fields and actions with accessible bounds.
+  The flow was canceled, so no chooser, browser, report, issue, or message was
+  opened or sent. Private game/save/Mii hashes stayed exact.
+- The exact local dual APK is
+  `539d9bf73e617c052b4439db0c017d1d5bc425288d2852a7fec6146241e78577`.
+  Compilation, lint, strict package/privacy audit, 49 contracts, and whitespace
+  checks pass. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-reporting-parity.md`.
+
+## 2026-09-05 — Android A4 disc-image, selector, and menu parity
+
+- Added a source-built Dolphin DiscIO JNI bridge for RMCP01 revision-zero ISO
+  and WBFS documents. The Android document-picker path now extracts into bounded
+  app-private same-volume staging, validates the result, and activates it
+  atomically while preserving installed data on failure.
+- Split game-data import into explicit raw-disc and extracted-folder actions in
+  both the launcher manager and in-game Game Data & Saves submenu. The complete
+  submenu also retains removal, Retro Rewind, save, and Mii management.
+- Replaced Android's flat panel and stock gray mode buttons with the iOS
+  selector's diagonal dark gradient, orange mark, centered title hierarchy, and
+  equal rounded blue/pink cards with leading icons and styled subtitles. The
+  Manage Game Data recovery action remains available as a subordinate control.
+- Installed the final dual APK on the API 36 ARM64 emulator. Its selector showed
+  both Original and Retro Rewind 6.12.5. A deliberately empty ISO selected
+  through DocumentsUI produced a bounded in-product error, left the app alive,
+  retained the exact installed `main.dol`, and left no staging residue.
+- A clean 1,197-step native build, patch dry-run, Android lint, strict package/
+  privacy audit, shell syntax, whitespace, and the 72-test Python suite pass
+  (one skipped). The final local-only APK SHA-256 is
+  `09cdb68124a1e346a003b7c3e42b75b3f6b5f9fa2dcd1a7461500f5e57fd3204`.
+- Classification: **Pass for selector visibility, expanded menu actions, native
+  disc-image plumbing, and rollback-safe invalid-import behavior on the
+  emulator.** A positive multi-gigabyte ISO/WBFS import remains open because no
+  owned source image was available. No package or private artifact was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-disc-image-selector-menu-parity.md`.
+
+## 2026-09-05 — Android A4 Pixel Tablet overlay parity
+
+- Added a reproducibly pinned API 36 ARM64 Pixel Tablet AVD and made the common
+  fixture runner understand its naturally different orientation sensor axis.
+- Replaced stretched phone controls on large Android tablets with the accepted
+  iPad sizes and normalized centers. Final frames are safe-area bounded, so the
+  280 dp R trigger remains completely operable on the narrower Pixel Tablet.
+- A visible 2560x1600 source-only render matched the iPad control family. UI
+  Automator exposed all 14 named targets; R measured exactly 560 px at 320 dpi
+  with bounds `[2000,950][2560,1075]`.
+- The real chooser also passed a visible Pixel Tablet inspection: its two-column
+  Original/Retro composition, title hierarchy, and recovery action remained
+  centered and unclipped at 2560x1600.
+- The full tablet cold-boot fixture passed guarded 4 GiB memory, scheduler and
+  controller contracts, Dawn/Vulkan readback/presentation, reverse-landscape
+  recreation, three background/foreground cycles, and the new hit-map gate.
+  The source-only APK SHA-256 is
+  `25890fbfc3e43a247dc6ebfc6165db37a8ba857e374040229178f5c56219ae62`.
+- Classification: **Pass for canonical tablet geometry and emulator hit-map/
+  lifecycle coverage.** Physical tablet ergonomics and a touch-only race remain
+  open. No package, private content, save, raw log, UI dump, or screenshot was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-tablet-overlay-parity.md`.
+
+## 2026-09-05 — Android A4 controller player setup
+
+- Added Controller Player Setup to Android's Controls submenu and exposed a
+  bounded production Aurora/JNI bridge for connected-controller enumeration,
+  persistent Player 1--4 assignment, occupied-slot replacement, and clearing.
+- Added a source-only two-controller fixture rather than representing emulator
+  devices as physical hardware. On the visible API 36 ARM64 Pixel Tablet, the
+  accessible dialog assigned distinct P1/P2 controllers, moved P1 into occupied
+  P2 while clearing the old slot, and explicitly cleared P2.
+- A fresh dual-runtime preparation reproduced the patch. The complete translated
+  runtime compiled and linked; its strict-audited local APK SHA-256 is
+  `b41b7b3b33a9c3eec2e8a66d0a9d11e8f96d71a4be6d05e727a57fc83ca5a14c`.
+  Android lint, 17 focused contracts, the 74-test suite (one skipped), repository
+  safety, privacy/package, and whitespace checks pass.
+- Classification: **Pass for emulator Player 1--4 setup UI and assignment
+  semantics.** Physical multi-controller input, reconnect identity, handoff,
+  rumble, and physical-device acceptance remain open. No package or private
+  artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-controller-player-setup.md`.
+
+## 2026-09-05 — Android A4 selector owned icon parity
+
+- Replaced Android's legacy compass, directions, and undo assets with
+  KartPad-owned steering-wheel, checkered-flag, and go-backward vectors matching
+  the current iOS selector source.
+- The visible 2560x1600 Pixel Tablet showed the complete centered selector and
+  bounded accessible rows with the new icon language. The local screenshot
+  remains untracked at SHA-256 `d0b259f3...`.
+- The complete translated dual-runtime APK rebuilt and passed the strict audit
+  at SHA-256
+  `0d0dccc38878a9937a09d3b770dad16792654c1d5c86d72edafbd98710b778f7`.
+  The 74-test suite (one skipped), lint, safety, and whitespace checks pass.
+- Classification: **Pass for owned selector icon parity on the emulator.** No
+  package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-selector-owned-icons.md`.
+
+## 2026-09-05 — Android A4 selector visual contract
+
+- Added a production-gated source-fixture state and standard-library raw RGBA
+  verifier for the real launch activity. It checks selector labels, mark size,
+  centered equal cards, exact iOS-derived blue/pink fills, viewport/format, and
+  the diagonal navy-to-wine gradient.
+- The visible API 36 ARM64 Pixel 6 passed at 2400x1080 with 973 px cards; the
+  visible Pixel Tablet passed at 2560x1600 with 742 px cards. A first tablet run
+  correctly exposed a phone-only rotation assumption; the final wrapper uses
+  each pinned device's native landscape rotation.
+- The complete translated dual-runtime APK rebuilt and passed strict audit at
+  SHA-256
+  `2244ca5d1cf74d85d1b98279f36aa67a165e30dd3510c05612beb48a7b58da94`.
+  Android lint, 74 tests (one skipped), safety, syntax, and whitespace pass.
+- Classification: **Pass for automated selector visual coverage on canonical
+  emulator phone/tablet lanes.** Touch-overlay goldens and physical screens
+  remain separate. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-selector-visual-contract.md`.
+
+## 2026-09-05 — Android A4 four-pointer replay
+
+- Added a production-gated source fixture that sends real four-pointer Android
+  events through the laid-out left stick, A, R, and Z controls and checks the
+  normal published Classic mask and analog state after every transition.
+- The visible API 36 ARM64 Pixel 6 and Pixel Tablet both passed exact
+  `steer=0.75`, `all=0x214`, `afterA=0x204`, `afterZ=0x200`,
+  `steerOnly=0x0`, and `neutral=0x0` states. Steering remained active until its
+  own pointer lifted and the final pointer-owner table was empty.
+- The complete translated dual-runtime APK rebuilt and passed strict audit at
+  SHA-256
+  `205abbb668872500975e734ca52f3132fb18122e80905c35211883f01b4c5967`.
+  Android lint, 86 tests (one skipped), safety, syntax, and whitespace pass.
+- Classification: **Pass for automated four-pointer gameplay ownership on
+  canonical emulator phone/tablet lanes.** Physical digitizer/haptic feel and
+  touch-only races remain open. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-multipointer-replay.md`.
+
+## 2026-09-05 — Android A4 real motion-sensor flow
+
+- Added a debug/source-only flow that enables the production motion owner,
+  requires successful Android gravity-sensor registration, and changes the
+  emulator's real accelerometer vector.
+- Visible Pixel 6 and Pixel Tablet runs both converted one tilt to positive
+  steering in standard mode and negative steering in an independent inverted
+  process. The script restores the original sensor vector on exit.
+- The translated runtime rebuilt at APK SHA-256
+  `79eb1ac8da137b63e9060ae08f688a63bade1fb19777a25d85330bf6d1ef0750`;
+  strict package/privacy audit, Android lint, and 89 tests with one intentional
+  skip passed.
+- Classification: **Pass for canonical emulator SensorManager registration and
+  standard/inverted steering direction.** Physical steering feel, latency,
+  sensor noise, and motion-assisted racing remain open. No package or private
+  artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-motion-sensor-flow.md`.
+
+## 2026-09-05 — Android A4 repeatable accessibility actions
+
+- Added a debug/source-only fixture that calls the production virtual
+  `AccessibilityNodeProvider` rather than relying on a temporary external jar.
+- Visible Pixel 6 and Pixel Tablet runs focus A, pulse B, move the left stick
+  right and wait for neutral, lock A, verify its accessibility state, unlock
+  through the normal A click, clear focus, and finish neutral.
+- Each lane reports four virtual-key haptic dispatches and the exact marker
+  `focus=A b=pulse move=right lock=on click=unlock haptics=4 neutral=true`.
+- The translated runtime rebuilt at APK SHA-256
+  `40907268f2b4047e93e8e0e7e7affacc0d02e5f84fa75a7461f81ab9b21d44b9`;
+  strict package/privacy audit, Android lint, and 88 tests with one intentional
+  skip passed.
+- Classification: **Pass for repeatable canonical emulator accessibility-node
+  actions.** Physical screen-reader usability and tactile haptic feel remain
+  open. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-04/android/a4-touch-accessibility.md`.
+
+## 2026-09-05 — Android A4 touch hit map
+
+- Added a debug/source-only real-event fixture that resolves every one of 14
+  control centers and near-edge points against the actual laid-out overlay.
+- A real `ACTION_DOWN` at empty gameplay center must remain unconsumed with no
+  pointer owner and a neutral published Classic button state.
+- Visible Pixel 6 and Pixel Tablet runs both passed
+  `centers=14 edges=14 outside=passed`.
+- The translated runtime rebuilt at APK SHA-256
+  `7edb51da87682525093db9cedcd80d1eab795572371443d4aa4a8f857f16ac6e`;
+  strict package/privacy audit, Android lint, and 87 tests with one intentional
+  skip passed.
+- Classification: **Pass for canonical emulator hit maps and empty-space
+  pass-through.** Physical digitizer behavior and touch-only racing remain
+  open. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-hit-map.md`.
+
+## 2026-09-05 — Android A4 selector, menu, and touch visual parity
+
+- Removed the Android-only Manage Game Data control from the mode chooser and
+  made both iOS-equivalent cards actionable without installed data. A selected
+  profile now enters the shared importer and is retained for a successful
+  return; the no-data selector still settles its Retro Rewind version subtitle.
+- Added six KartPad-owned menu vectors and applied symbols to switching,
+  multiplayer, FPS, Controls, Display, Game Data & Saves, reporting, and their
+  submenu actions. API 29+ forces symbols visible; API 28 retains the complete
+  functional text hierarchy.
+- Added a source-only raw RGBA/accessibility verifier for the touch overlay.
+  The visible Pixel 6 passed all 14 targets, a 32 px X/Z gap, equal 237 px L/R
+  pills, and palette checks. The visible Pixel Tablet passed all 14 targets, its
+  iOS-derived reversed X/Z ordering with a 212 px gap, the exact 560 px R pill,
+  grouped D-pad geometry, and palette checks.
+- On the visible Pixel Tablet, the selector contract passed at 2560x1600; an
+  empty-data card tap opened Game Data & Saves. The iconized top menu rendered
+  all seven destinations/sections, and opening Controls exposed all five
+  control routes.
+- The complete translated runtime rebuilt. Android lint, 77 tests with one
+  intentional skip, repository safety, strict package/privacy audit, and
+  whitespace checks pass. That final APK's settled selector was also visibly
+  rechecked after installation on the same Pixel Tablet. Its SHA-256 is
+  `5c0554814023e3cd80c035a5b2c21c882e2bfce511e2c780c817e6e53279eaf9`.
+- Classification: **Pass for canonical emulator selector interaction, iconized
+  consolidated menu, and phone/tablet touch visual contracts.** Physical touch,
+  haptics, vendor rendering, and touch-only race acceptance remain open. No
+  package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-selector-menu-touch-visual-parity.md`.
+
+## 2026-09-05 — Android A4 touch modal and lifecycle clearing
+
+- Added a production-gated source fixture that sends a real A-button
+  `MotionEvent.ACTION_DOWN` through the normal overlay, requiring `0x10` and one
+  pointer owner before any clear is accepted.
+- Opening the actual three-dot menu passed on the visible Pixel Tablet and
+  Pixel 6: both changed held A to neutral and removed the final pointer owner.
+- A separate Pixel 6 run armed the same held touch, sent Android Home, and
+  passed through the normal `onPause` path with neutral state and zero owners.
+- The complete translated runtime rebuilt. Android lint, 79 tests with one
+  intentional skip, strict package/privacy audit, repository safety, shell
+  syntax, and whitespace checks pass. The local-only APK SHA-256 is
+  `760b440accaaf430b13f3346cae39632411cb53a678b288c12694059152b43b3`.
+- Classification: **Pass for canonical emulator modal clearing and phone
+  lifecycle clearing.** OEM lifecycle ordering and physical touch remain
+  physical-device gates. No package or private artifact was published.
+  Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-modal-lifecycle-clearing.md`.
+
+## 2026-09-05 — Android A4 touch state persistence
+
+- Added a production-gated source fixture that writes A position `(0.55,0.55)`,
+  A size `1.25`, and B hidden through the normal touch-settings owner, then
+  force-stops the app before a separate verification process starts.
+- The new process refuses to pass unless it reloads all three settings, places
+  A at the corresponding safe-frame center, and omits B from the virtual
+  accessibility tree. Fixture preferences reset after verification.
+- The visible Pixel 6 passed with A center `1378,588`; the visible Pixel Tablet
+  passed with A center `1408,866`. Both retained A size 1.25 and hidden B.
+- The complete translated runtime rebuilt. Android lint, 80 tests with one
+  intentional skip, strict package/privacy audit, repository safety, shell
+  syntax, and whitespace checks pass. The local-only APK SHA-256 is
+  `254b2614f7ae17d24a1547563b77f543bafd996f0f7030a7d3cad3266d70df61`.
+- Classification: **Pass for per-control position, size, and visibility across
+  process restart on canonical phone/tablet emulators.** Update-in-place and
+  physical-device persistence remain separate gates. No package or private
+  artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-state-persistence.md`.
+
+## 2026-09-05 — Android A4 Touch Control Settings visual contract
+
+- Added a debug/source-only launcher fixture for the real Touch Control
+  Settings dialog plus a standard-library accessibility/raw-frame verifier.
+- The gate requires all iOS-parity render, opacity, size, controller-hiding,
+  C-stick, move, reset, and Done controls in the viewport; it also checks the
+  default 1x selection and the landscape two-column composition.
+- The visible Pixel Tablet passed at 2560x1600 and the visible Pixel 6 passed at
+  2400x1080. A first tablet attempt exposed an API 36 UiAutomation registration
+  collision from rapid dumps; bounded three-second retries resolved the test
+  harness failure without changing the product dialog.
+- The complete translated runtime rebuilt locally at APK SHA-256
+  `188c235d9a324a84e0fee38cc37ec192687741da4273616f83028a9ab5b8ff93`.
+- Classification: **Pass for canonical emulator dialog visibility,
+  accessibility, containment, and composition.** Physical-device rendering,
+  touch feel, and editor ergonomics remain open. No package or private artifact
+  was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-settings-visual-contract.md`.
+
+## 2026-09-05 — Android A4 touch layout editor flow
+
+- Added a debug/source-only end-to-end fixture for the production touch layout
+  editor controls.
+- The real Move Controls button enters editing, a real Android down/up event on
+  rendered A selects it, Hide/Show updates and restores its persisted state,
+  selected sizing propagates to 1.25x, and the real Back button must reopen
+  Touch Control Settings.
+- The visible Pixel 6 and Pixel Tablet both passed the exact
+  `selected=A hide=shown size=1.25 back=settings` sequence. Disposable fixture
+  preferences reset after success.
+- The complete translated runtime rebuilt locally at APK SHA-256
+  `8d4bf7f24fd411edfa1a957dada33dfd425de495bbf6a53e2ce9570493c66c40`.
+- Classification: **Pass for the canonical emulator editor control round
+  trip.** Physical finger-drag ergonomics and touch-only races remain open. No
+  package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-editor-flow.md`.
+
+## 2026-09-05 — Android A4 touch acceleration-lock replay
+
+- Added a debug/source-only timed real-event fixture for holding A through the
+  production touch overlay.
+- Both visible canonical emulator lanes remained unlocked at 900 ms, changed
+  to cyan/accessibility-locked A at about 1.1 seconds, issued exactly one
+  Android virtual-key haptic request, retained locked A after release, and
+  returned neutral after the next A tap.
+- Pixel Tablet passed at 1106 ms and Pixel 6 at 1102 ms. This proves Android
+  haptic dispatch, not physical vibration strength or subjective feel.
+- The complete translated runtime rebuilt locally at APK SHA-256
+  `f970b77c37030d2f0d4eb48ed770bb7309ccd866fbae18e4d7553465f510c505`.
+- Classification: **Pass for canonical emulator acceleration-lock timing,
+  state, and dispatch.** Physical haptic feel and touch-only races remain open.
+  No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-gas-lock-replay.md`.
+
+## 2026-09-05 — Android A4 Display menu label parity
+
+- Replaced Android's generic aspect choices with the iOS-equivalent Original
+  4:3 and explicit Experimental labels for 16:9 and Fill Screen.
+- Replaced `Native (1x)`/ASCII scale rows with the iOS-equivalent `1× (Native)`
+  through `4×` labels without changing their setting indices.
+- Traversed the real Pixel 6 three-dot popup into Display, Aspect Ratio, and
+  Render Resolution. All exact rows were visible and bounded; 1x Native was
+  selected by default after clearing fixture preferences.
+- The complete translated runtime rebuilt locally at APK SHA-256
+  `3a14664a60a3f656a0f46e669ef575b9f2a67d0797c099fbb3e5f08bb9ce1934`.
+- Classification: **Pass for iOS-equivalent Display labels and real emulator
+  traversal.** Physical rendering/performance acceptance is unchanged. No
+  package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-display-menu-label-parity.md`.
+
+## 2026-09-05 — Android A4 touch editor drag and reset
+
+- Strengthened the real editor flow with an A-button down/move/up drag that
+  requires both rendered position and normalized persisted origin to match.
+- The same flow now activates Reset This Device Layout and its real positive
+  confirmation, then requires A's dragged origin and 1.25x size to return to
+  defaults while remaining shown.
+- An initial Pixel 6 check ran before Android's queued dialog callback and
+  correctly saw the pre-reset values. Moving verification to the next main-loop
+  turn models the real callback ordering; Pixel 6 and Pixel Tablet then passed
+  the exact `selected=A dragged=A hide=shown size=1.25 back=settings
+  reset=defaults` sequence.
+- The complete translated runtime rebuilt locally at APK SHA-256
+  `8cc43a1f0ab1889caaeee4010322e48295bc5b599f36658d52d9e2b12c6cab33`.
+- Classification: **Pass for canonical emulator drag persistence and confirmed
+  device-layout reset.** Physical finger ergonomics and touch-only races remain
+  open. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-editor-drag-reset.md`.
+
+## 2026-09-05 — Android A4 settings state and selector geometry
+
+- Added a source-only real-widget fixture for render resolution, opacity,
+  global size, controller hiding, and Modern C-stick, followed by force-stop
+  and independent-process verification on Pixel 6 and Pixel Tablet.
+- The fixture's JNI receiver proved the selected 3x scale reached the native
+  display-setting boundary. The comparison also corrected Android's fresh
+  aspect default from Fill Screen to iOS's Original 4:3 without changing stored
+  user choices.
+- Replaced Android's edge-stranded compound card symbols with accessible
+  centered icon/label groups and matched iOS's exact stack gaps, card insets,
+  card height, body size, and upward offset.
+- Strengthened the selector verifier to check that geometry and content
+  centering. Both visible canonical emulator lanes pass, and a real tablet tap
+  selected the base profile.
+- The translated dual-runtime APK was installed and its production selector
+  rendered on the visible tablet. Its SHA-256 is
+  `a221911feec75a9eb295fa418980635f8811fa64524269e7b7f610cf56391abe`.
+  Android lint, 85 tests with one skip, strict audit, repository safety, shell
+  syntax, and whitespace pass.
+- Classification: **Pass for canonical emulator global-setting persistence and
+  iOS-derived selector geometry.** Physical rendering/touch/haptic acceptance
+  remains open. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-settings-state-selector-geometry.md`.
+
+## 2026-09-05 — Android A4 menu hierarchy reachability
+
+- Added a source-only emulator gate that opens the real three-dot menu and
+  traverses Controls, Display, and Game Data & Saves independently.
+- Both visible canonical emulators expose the full 21-row hierarchy: 8 top,
+  5 Controls, 2 Display, and 6 Game Data & Saves rows.
+- The strengthened run reopens the menu for 16 representative actions and
+  requires each intended destination. It also scrolls the mapping dialog to
+  prove Reset/Done remain reachable and verifies the honest empty-database Mii
+  and source-build disc-import boundaries. Extracted-folder import reaches
+  Android DocumentsUI without selecting any data.
+- From a cleared preference store, activating Show FPS Counter persists the
+  expected toggled-off state rather than merely changing its visible checkmark.
+- Classification: **Pass for rendered hierarchy and action reachability on
+  Pixel 6 and Pixel Tablet.** Physical-device actions remain open. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-menu-hierarchy-reachability.md`.
+
+## 2026-09-05 — Android A4 phone X/Z spacing
+
+- Shifted only the untouched phone X fallback slightly left, increasing the
+  canonical Pixel 6 X/Z edge gap from 32 px to 49 px while retaining Z at the
+  right safe edge.
+- The separate iPad-derived tablet branch remained byte-for-byte unchanged and
+  retained its 212 px gap. Persisted custom origins remain authoritative.
+- Visible Pixel 6 and Pixel Tablet raw-frame/accessibility contracts passed.
+- The translated runtime rebuilt at APK SHA-256
+  `a1b88fc4f74d860ba97d530f8defff988995d73cd7fd4245617f50f4d79096bc`;
+  strict package/privacy audit, Android lint, 86 tests with one intentional
+  skip, repository safety, shell syntax, and whitespace passed.
+- Classification: **Pass for canonical emulator phone spacing and tablet
+  regression coverage.** Physical ergonomics remain open. No package or
+  private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-phone-xz-spacing.md`.
+
+## 2026-09-05 — Android A4 menu semantic icons
+
+- Replaced reused generic row art with KartPad-owned hand, gyroscope, antenna,
+  refresh, trash, and Mii vectors matching the current iOS symbol meanings.
+- Strengthened the real menu traversal to require 7 top-level, 5 Controls, 2
+  Display, and 6 data-submenu icons in addition to its 21 rows and 16 action
+  destinations.
+- Visible Pixel 6 and Pixel Tablet menu passes remained green with the narrower
+  phone submenus fully reachable.
+- The translated runtime rebuilt at APK SHA-256
+  `a5310650f970ea45ea26d7414392215fb7912915bc601401df162c9c23d4093f`;
+  strict package/privacy audit, Android lint, and 86 tests with one intentional
+  skip passed.
+- Classification: **Pass for canonical emulator semantic icon and menu-action
+  parity.** Platform-native popup styling and physical-device acceptance remain
+  distinct. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-menu-hierarchy-reachability.md`.
+
+## 2026-09-05 — Android A4 touch activity recreation
+
+- Added a source-only real `Activity.recreate()` fixture that arms held A,
+  requires neutral state from the outgoing overlay, and requires the recreated
+  overlay to start neutral.
+- The first run exposed SDL 3's default recreation guard: after the old
+  activity cleared input, SDL rejected the second activity and exited the
+  process. KartPad now sets `SDL_HINT_ANDROID_ALLOW_RECREATE_ACTIVITY` through
+  its linked native runtime before recreation can occur.
+- The replacement overlay also reloads normalized A position, 1.25x selected
+  size, and hidden B state, proving settings restoration across the new view.
+- Visible Pixel 6 and Pixel Tablet runs passed in one PID per lane. The complete
+  translated runtime rebuilt at APK SHA-256
+  `7e85ffc806a14db2e0954f4da8481f9e8ab9f1728c3e64e2cd74203c82af87d1`.
+- Android lint, 89 tests with one intentional skip, strict package/privacy
+  audit, repository safety, shell syntax, and whitespace passed.
+- Classification: **Pass for canonical-emulator same-process SDL activity
+  recreation and touch-state/settings restoration.** Physical interruption and
+  process-death acceptance remain open. No package or private artifact was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-touch-activity-recreation.md`.
+
+## 2026-09-05 — Android A5 native TLS primitive
+
+- Reviewed the current prepared runtime and confirmed Android still selects the
+  unsupported `SSL_ERR_FAILED` branch while Windows and Apple own native TLS
+  implementations.
+- Selected the official Mbed TLS 4.1.1 LTS release, supported through at least
+  March 2029, rather than Dolphin's historical 2.28.0 snapshot. Locked its
+  7,099,934-byte official archive at SHA-256
+  `3359a349e23db3d5536fcee032ae7b2ecbfc08972fab643089b5cbf2a375c98c`.
+- Added the dependency to the shared Android preparation/build path and a native
+  ARM64 fixture requiring PSA initialization, 32 bytes of nonconstant entropy,
+  `MBEDTLS_SSL_VERIFY_REQUIRED`, SSL context setup, and hostname assignment.
+- The visible Pixel Tablet passed with `Mbed TLS 4.1.1`, 32 entropy bytes, and
+  required verification. The exact source APK SHA-256 is
+  `37e2ec9876a3e27d1914f2f8a9bdd527683dff057eb862ac2353d500d0a7983d`.
+- The first fixture audit rejected Mbed TLS build paths embedded in debug
+  strings. File/macro prefix mapping removed the local checkout, and the audit
+  now also accounts for the exact TLS parser-delimiter multiplicity without
+  allowing an additional private key block.
+- The complete translated product rebuild and audit pass at SHA-256
+  `56fd0ea5760f83df6240248ebb4c1a53bdf2d7e0d507fad4486d5627dd7986c0`; Android lint, 92 tests with one intentional skip,
+  repository safety, shell syntax, and whitespace pass.
+- Classification: **Pass for the maintained Android TLS dependency and native
+  client-context primitive.** Guest SSL sessions, CA parsing, handshake and
+  hostname-failure fixtures, and WFC connectivity remain open. No APK/AAB or
+  private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-native-tls-primitive.md`.
+
+## 2026-09-05 — Android A5 guest TLS backend
+
+- Replaced Android's translated `/dev/net/ssl` unsupported branch with a
+  KartPad-owned Mbed TLS 4 session wrapper. Android sessions now bind the guest
+  hostname, parse the guest-provided DER root CA, attach the existing native
+  socket, require peer verification, and map read/write, close, socket, date,
+  trust-chain, and hostname outcomes to Wii SSL result values.
+- Added the change as a reproducible WiiCompiled patch and required every fresh
+  Android runtime preparation to apply it. A fresh prepared tree reproduced the
+  exact working `network_ssl.cpp`, and the complete translated dual product
+  compiled and linked the backend.
+- The first host-local exchange exposed Mbed TLS 1.3's post-handshake new-session
+  ticket result. Classifying that continuation correctly produced a complete
+  encrypted HTTP exchange and retained the wrong-hostname `-9` result.
+- Added a dormant source-only ARM64 loopback fixture and repeatable runner. It
+  creates one-run certificates outside the repository, copies only the public
+  DER CA into app-private storage, and connects to the host through emulator
+  alias `10.0.2.2`. The visible Pixel Tablet passed both exact markers:
+  `trusted handshake passed response_bytes=4096` and
+  `hostname rejection passed result=-9`.
+- The exact source-fixture APK SHA-256 is
+  `2deb2e52d1c980680285c910f43187c117a9bb05a880f5ef97f14efb7e56564b`.
+  Its strict audit, the host TLS fixture, 94 tests with one intentional skip,
+  shell syntax/lint, and whitespace checks pass. The clean translated product
+  rebuild and strict audit pass at APK SHA-256
+  `c978ef4619cb59756854460f992c19a2c4da99ebcb6e080eba96b4905eedc9f2`;
+  that exact APK was installed and left on the visible production selector.
+- Classification: **Pass for the Android guest TLS backend, deterministic
+  local encrypted traffic, CA/hostname verification, failure mapping, and ARM64
+  emulator execution.** This is not yet retail guest IOCTLV/WFC, built-in Wii
+  CA/client certificates, interruption recovery, public service, or physical
+  hardware acceptance. No APK/AAB, key, or private artifact was published.
+  Evidence:
+  `docs/artifacts/2026-09-05/android/a5-guest-tls-backend.md`.
+
+## 2026-09-05 — Android A5 translated guest TLS IOCTLV path
+
+- Added an opt-in product-runtime fixture that snapshots a guarded guest-memory
+  window and invokes the real translated SSL handler with guest vectors for
+  new-session, DER root CA, runtime socket connect, handshake, write, read, and
+  shutdown.
+- Added a non-destructive emulator runner. It requires the exact approved
+  app-private `main.dol` hash, reinstalls without clearing storage, generates
+  one-run host certificates, copies only the public DER CA to the emulator,
+  removes the exact fixture afterward, and restores the production selector.
+- The visible Pixel Tablet consumed the complete 4,797-byte encrypted response,
+  observed orderly peer close as guest `-6`, and passed the wrong-host `-9`
+  path. The private game-data hash was unchanged, no key
+  reached the device, and the corrected relative `[paths]` configuration
+  remained installed.
+- Replaced Android's false-success `SETBUILTINROOTCA` behavior with a
+  size-bounded loader for the exact fixed-hash Wii `rootca.pem` in managed
+  app-private NAND. Missing or wrong content now fails as guest `-1`, and
+  unimplemented client-certificate commands also fail instead of claiming
+  configuration. The clean emulator proves the missing-root path; valid
+  user-owned root loading and mutual TLS remain open.
+- A fresh runtime preparation reproduced the exact source. The product APK
+  SHA-256 is
+  `aa227e2b2232c2d36d86044f44a26caa310325f42ca9774216a1a62dde94df89`;
+  96 tests with one intentional skip, product-configured Android lint, strict
+  package/privacy audit, repository safety, shell lint/syntax, and whitespace
+  checks pass.
+- Classification: **Pass for actual product guest-memory IOCTLV translation
+  and socket-table/TLS execution on the emulator.** The fixture runs before the
+  guest and is not retail Mario Kart/WFC-initiated traffic. Built-in Wii
+  certificates, local/public WFC, interruption, and physical-device networking
+  remain open. No APK/AAB, key, or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-guest-tls-ioctlv.md`.
+
+## 2026-09-05 — Android A6 clean APK reproducibility
+
+- An immediate same-state product rebuild retained its APK hash, but the first
+  scoped Gradle app clean produced a different outer archive. Extracting both
+  packages proved all 149 entries byte-identical; only ZIP order/alignment and
+  container size differed. Incremental and clean hashes are therefore not
+  interchangeable.
+- The app output/native object tree was cleaned independently a second time.
+  Both clean builds produced byte-identical APKs at SHA-256
+  `aa227e2b2232c2d36d86044f44a26caa310325f42ca9774216a1a62dde94df89`;
+  direct `cmp` passed. The second clean build took 10 minutes 28 seconds.
+- The first clean artifact passed the product guest TLS IOCTLV fixture and
+  strict package/privacy audit before comparison. The emulator preserved the
+  approved game-data hash and returned to the production selector.
+- Classification: **Pass for local unsigned clean APK byte reproducibility.**
+  Signed reproducibility, update-in-place/save recovery, physical acceptance,
+  and release authorization remain open. No package or private artifact was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-clean-apk-reproducibility.md`.
+
+## 2026-09-05 — Android A6 emulator update-in-place preservation
+
+- Added a non-destructive emulator runner that requires two APKs with distinct
+  byte hashes, installs each with `adb install -r`, never clears package data,
+  verifies the approved app-private `main.dol`, and always restores the visible
+  production selector.
+- The runner compares a private aggregate covering configuration, the approved
+  game entry point, managed NAND, saves, shared preferences, and the Retro
+  version marker without printing private state content or individual hashes.
+- The visible API 36 ARM64 Pixel Tablet preserved its complete baseline state
+  while replacing the incremental APK `08c016da…` with the clean reproducible
+  APK `aa227e2b…`.
+- Classification: **Pass for same-version emulator durable-state preservation.**
+  The profile had no retail save, custom touch preferences, or installed Retro
+  version, and both APKs had the same application version. Populated-state and
+  version-code migration, signing, physical acceptance, and release
+  authorization remain open. No APK/AAB or private artifact was published.
+  Evidence:
+  `docs/artifacts/2026-09-05/android/a6-emulator-update-in-place.md`.
+
+## 2026-09-05 — Android A6 forward-version emulator upgrade
+
+- Added a validated positive version-code override to the product builder while
+  retaining version code 1 for ordinary builds. Strengthened the replacement
+  runner to verify both APKs use the exact KartPad package, confirm each
+  installed version, and optionally require a strictly increasing version.
+- The visible API 36 ARM64 Pixel Tablet passed version code 1-to-2, 2-to-3,
+  and hardened 3-to-4 upgrades with no package-data clear. Before the second
+  upgrade, the actual product menu persisted `Show FPS Counter=false`; that
+  semantic preference and the full private state aggregate remained unchanged
+  afterward.
+- The exact version 4 fixture APK SHA-256 is
+  `4efee32c73ba0f5832733d4059316d9c4389c7358f2ff71f8f15dea0e2118ed7`.
+  It passed the strict package/privacy audit and remained installed with the
+  production selector visibly resumed.
+- Classification: **Pass for emulator forward-version and populated-preference
+  preservation.** Retail-save, full Retro installation, signed release,
+  physical-device migration, and publication remain open. No APK/AAB or
+  private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-emulator-version-upgrade.md`.
+
+## 2026-09-05 — Android A6 emulator save-storage recovery
+
+- Added a debug-only save-storage fixture using deterministic, valid synthetic
+  RKSYS images entirely below an isolated app-cache root. It exercises the
+  production `KartPadSaveStorage` implementation without touching a user save.
+- The visible API 36 ARM64 Pixel Tablet proved exact size/magic/CRC validation,
+  export-read bytes, staged restore, atomic activation, one exact prior-save
+  backup, pending cleanup, and corrupt-checksum rejection.
+- The non-destructive runner verifies the approved app-private game fixture,
+  never clears storage, removes its cache fixture, and restores the production
+  selector. The exact audited and installed version-code 5 APK SHA-256 is
+  `67bc86e5c0e1ad5ea7fa9c93744a78279e046caba6a7336736fcd6d2e68cfd04`.
+- Classification: **Pass for emulator save-storage and recovery semantics.**
+  Android document-picker export/import, a real retail save, physical hardware,
+  signed release, and publication remain open. No APK/AAB or private artifact
+  was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-emulator-save-storage.md`.
+
+## 2026-09-05 — Android A6 system document-picker save round trip
+
+- Added a guarded emulator runner for the production KartPad menu and Android
+  DocumentsUI export/import path. It requires an initialized active save,
+  refuses pending/recovery/public-path collisions, installs without clearing
+  data, and verifies the approved app-private game fixture.
+- Before UI work it creates and verifies an app-private recovery copy. Failed
+  attempts retain that recovery while removing the exact public export; the
+  passing run identifies and removes only its new automatic backup and exact
+  recovery/public/UI artifacts.
+- The visible API 36 ARM64 Pixel Tablet exported its initialized RKSYS through
+  `ACTION_CREATE_DOCUMENT`, re-imported it through `ACTION_OPEN_DOCUMENT`,
+  staged the validated bytes, restarted through the selector, and applied the
+  pending restore before SDL startup. The export, restored active save, and
+  automatic prior-save backup matched the protected original byte-for-byte.
+- Classification: **Pass for end-to-end emulator DocumentsUI save
+  export/import/restart recovery.** The active save remained, no private hash or
+  bytes were printed, and the production selector was visibly restored.
+  Physical provider/device acceptance, signed release, and publication remain
+  open. No APK/AAB, save, or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-emulator-save-document-picker.md`.
+
+## 2026-09-05 — Android A6 deterministic unsigned release AAB
+
+- Added an explicit `aab` product-builder mode and pinned official bundletool
+  1.18.1 at 32,505,571 bytes and SHA-256
+  `675786493983787ffa11550bdb7c0715679a44e1643f3ff980a529e9c822595c`.
+- The first byte-reproducible unsigned debug intermediary failed strict privacy
+  review because `base/resources.pb` contained absolute Gradle-cache paths. A
+  clean rebuild with general path mapping reproduced the same failure, ruling
+  out stale output.
+- Moved the AAB lane to unsigned `bundleRelease` and enabled release
+  resource-source exclusion. The complete resulting AAB and `resources.pb`
+  contain no developer path.
+- Two independent scoped app cleans and release product builds produced
+  byte-identical AABs at SHA-256
+  `f1c107a7b2cf853f77ef245164821fa46e3502a83be8a3881d794edca7cf9e3e`.
+  Pinned bundletool validation and strict package/manifest/permission,
+  ARM64-only, 16 KiB ELF, export/dependency, asset, private-data/path, and exact
+  key-marker audits pass.
+- Classification: **Pass for clean unsigned release AAB reproducibility and
+  audit.** Signing, store-derived APK execution, physical acceptance, and
+  publication remain open. No APK/AAB or private artifact was published.
+  Evidence: `docs/artifacts/2026-09-05/android/a6-clean-unsigned-aab.md`.
+
+## 2026-09-05 — Android A6 bundle-derived release APK execution
+
+- Added a guarded emulator runner that audits the exact unsigned AAB, preserves
+  a recoverable copy of the installed debug package, uses pinned bundletool to
+  make a locally debug-signed universal APK, verifies that APK is
+  non-debuggable, and audits it before installation.
+- The first gate rejected bundletool's two generated `assets/dexopt` baseline-
+  profile files. They map exactly to the AAB's two AGP profile metadata entries;
+  the APK audit now accepts the complete exact pair if either appears and no
+  additional asset.
+- Release correctly denied ADB direct access to its non-exported gameplay
+  activity. The final runner enters through the exported KartPad selector,
+  locates the real Original-card bounds, waits for asynchronous validation to
+  enable it, and taps it as a user would.
+- The visible Pixel Tablet presented both game cards and SDL reported execution
+  of `SDL_main` from the installed ARM64 `libmain.so`. The exact derived APK
+  SHA-256 is
+  `ebfcbd0c8fc1471451e72b226480b3792c0a217938b482b705790311e143ac2e`;
+  its source AAB remains
+  `f1c107a7b2cf853f77ef245164821fa46e3502a83be8a3881d794edca7cf9e3e`.
+- The runner restored the prior version-code 5 debug APK, proved the private
+  durable-state aggregate unchanged, removed its exact temporary output, and
+  restored the production selector.
+- The focused contract, 103-test Python suite with one intentional skip,
+  strict AAB audit, source/input verification, repository safety, shell
+  syntax/lint, and whitespace checks pass.
+- Classification: **Pass for locally signed, bundle-derived, non-debuggable
+  universal APK execution and update preservation on the emulator.** Play
+  split delivery, release-candidate signing, physical hardware, and publication
+  remain open. No package or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-bundle-derived-apk-emulator.md`.
+
+## 2026-09-05 — Android A6 versioned local hardware preview
+
+- Replaced the stale `0.0.1-a0` Android version name with the explicit
+  `0.4.0-android-preview.1` default and added validated version-name overrides
+  to Gradle and the product builder. Strict APK/AAB audits now require the
+  expected name.
+- Built version code 6, forward from the populated emulator's installed version
+  5. Two independent scoped cleans and release bundle builds matched exactly at
+  SHA-256
+  `eaf16573290b5e27c161e47ede4641944545d7e8deb07c20671c185df7996110`.
+- The bundle-derived gate performed the real version 5-to-6 update, confirmed a
+  non-debuggable package, traversed the enabled production selector, and
+  executed `SDL_main` from installed ARM64 `libmain.so`. It restored version 5
+  and proved the private durable-state aggregate unchanged.
+- Retained the exact audited 90,477,735-byte, locally debug-signed ARM64/API-28+
+  hardware-preview APK outside Git at
+  `.android-bootstrap/hardware-preview/KartPad-0.4.0-android-preview.1-v6-arm64.apk`.
+  Its SHA-256 is
+  `24e977d497d5c587eb79771d09e3176932633fe0671f6e5444ddca335bc8bd92`.
+- The 103-test suite with one intentional skip, strict AAB and retained-APK
+  audits, pinned-source/input verification, repository safety, shell
+  syntax/lint, and whitespace checks pass.
+- Classification: **Pass for versioned clean AAB reproducibility, local preview
+  derivation, and forward emulator upgrade/runtime preservation.** Physical
+  hardware, release-key signing, Play split delivery, and publication remain
+  open. The preview contains no game data and no package or private artifact
+  was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-versioned-hardware-preview.md`.
+
+## 2026-09-05 — Android A6 device-specific split APK execution
+
+- Extended the guarded bundle-derived runner to query the connected emulator's
+  real device specification and produce a targeted APK set with pinned
+  bundletool after the universal release path passes.
+- The Pixel Tablet set contained exactly base, ARM64, English, and xhdpi APKs.
+  All four passed signature and 16 KiB-aware alignment checks, shared one
+  signer, and the ABI split's four native libraries matched the audited AAB
+  bytes exactly.
+- Package Manager installed exactly four components. The production selector
+  showed both games, Original launched through its enabled card, and SDL
+  executed the installed ARM64 `libmain.so` from the split form.
+- The runner suppressed tool-internal temporary paths, restored debug version
+  5 and the visible selector, removed its exact device spec/APK set/splits, and
+  proved the private durable-state aggregate unchanged.
+- The 103-test suite with one intentional skip, strict AAB/preview-APK audits,
+  pinned-source/input verification, repository safety, shell syntax/lint, and
+  whitespace checks pass.
+- Classification: **Pass for local device-specific split selection, audit,
+  install, and native execution.** Actual Play service delivery, release-key
+  signing, physical hardware, and publication remain open. No package, split,
+  device spec, private artifact, or identifier was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-device-split-emulator.md`.
+
+## 2026-09-05 — Android A6 guarded physical-preview handoff
+
+- Added `scripts/install-android-hardware-preview.sh` to bind the exact audited
+  preview APK to the existing physical preflight and UID-scoped capture flow.
+- It refuses emulators or unsupported/ambiguous targets before mutation,
+  requires the approved digest, strict APK audit, installed preview metadata,
+  and visible two-game selector, then starts the physical capture marker.
+- Any different existing KartPad package requires explicit update opt-in. The
+  script never uninstalls, clears app data, or downgrades; a signing mismatch
+  fails without removing the prior package. Raw ADB failure output and the
+  target serial are suppressed.
+- A live negative run against the sole connected Pixel Tablet emulator failed
+  at the physical preflight as intended, emitted no serial, and left installed
+  version 5 unchanged. The source contract passed.
+- The 104-test suite with one intentional skip, strict AAB/preview-APK audits,
+  source/input verification, repository safety, shell syntax/lint, and
+  whitespace checks pass.
+- Classification: **Pass for guarded physical-preview installation handoff,
+  not physical execution.** No phone is attached; gameplay, performance,
+  touch, motion, audio, haptics, controller, thermal, lifecycle, and long-soak
+  hardware rows remain open. No package or private artifact was published.
+  Evidence:
+  `docs/artifacts/2026-09-05/android/a6-physical-preview-handoff.md`.
+
+## 2026-09-05 — Android A6 product runtime on 16 KiB kernel
+
+- Identified that full product packages had 16 KiB alignment but only source
+  fixtures had actually executed on the pinned 16,384-byte kernel lane.
+- Created a separate disposable API 35 ARM64 Pixel 7 AVD and transferred only
+  the approved GameData/runtime configuration/resources from the persistent
+  tablet. Every regular-file content hash matched through one private aggregate;
+  saves, logs, preferences, and unrelated state were excluded.
+- The first fresh-state preservation run correctly detected selector-created
+  default preferences. The runner now initializes the debug selector before
+  baseline capture and can report only changed category names on mismatch.
+- Strengthened release execution beyond `SDL_main`: the same PID must survive
+  at least 15 seconds, SDL surface and low-latency audio must initialize, the
+  accessible KartPad Menu must exist, no fatal signature may appear, and a
+  private frame must cross content-free color/luma/nonblack thresholds within a
+  bounded retry window.
+- Universal and four-part device-split version 6 packages passed every stronger
+  gate at page size 16,384, restored debug version 5, and preserved durable
+  state. The identical gate then passed again at page size 4,096 on the
+  persistent Pixel Tablet.
+- Deleted the exact temporary AVD, restricted 2.7 GB transfer, recovery APK,
+  device specs/splits, private frames, and raw log. The persistent tablet ends
+  on the visible two-game selector.
+- The 106-test suite with one intentional skip, strict AAB/preview-APK audits,
+  source/input verification, repository safety, Python/shell syntax, shell
+  lint, and whitespace checks pass.
+- Classification: **Pass for complete non-debuggable product runtime and
+  rendering on Android 16 KiB and 4 KiB emulator kernels.** Physical hardware,
+  vendor Vulkan/performance, hands-on audio/haptics/controller, signing, and
+  publication remain open. No package or private artifact was published.
+  Evidence: `docs/artifacts/2026-09-05/android/a6-product-16k-runtime.md`.
+
+## 2026-09-05 — Android A6 API 28 product-runtime probe
+
+- Created a disposable official API 28 `google_apis` ARM64 AVD and privately
+  verified all 4,185 restricted product-fixture files after staging.
+- Hardened page-size probing for Android 9's missing `getconf`, routed
+  app-private existence checks through the shell, and made early process loss
+  produce the runner's explicit bounded diagnostic.
+- The release selector, ARM64 `SDL_main`, SDL surface, and audio initialized,
+  but the image's Vulkan inventory was empty. Dawn returned
+  `VK_ERROR_INCOMPATIBLE_DRIVER` under default and explicit host-GPU modes;
+  Aurora then correctly stopped on its fatal null-renderer path.
+- Classification: **Blocked by this official emulator image's unusable Vulkan
+  implementation; not an API 28 pass and not a physical-device failure.** API
+  28 remains provisional pending Vulkan-capable physical hardware.
+- Restored debug version 5, deleted the temporary AVD, restricted transfer,
+  trace, and private log, then restarted the API 36 tablet on its selector. No
+  APK/AAB or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-api28-product-runtime-probe.md`.
+
+## 2026-09-05 — Android A6 API 29 Vulkan compatibility and preview 2
+
+- The official API 29 ARM64 image exposed a usable Vulkan adapter, but the
+  existing product stalled on a nearly black frame. Native stacks localized a
+  deadlock to concurrent Dawn pipeline creation and submission in Goldfish's
+  Vulkan handle mapping.
+- Serializing both pipeline and frame work avoided the deadlock but overflowed
+  SDL's small native thread during synchronous compilation, so that broad
+  workaround was rejected. The final patch disables only Aurora's priority
+  pipeline-worker pool on API 29 and lower; asynchronous frame submission and
+  presentation remain enabled, and API 30+ behavior is unchanged.
+- Fresh preparation reproduced the patch. The corrected API 29 runtime stayed
+  alive, rendered diverse frames through 60 seconds, completed 1,214-pipeline
+  prewarm, and reached later telemetry near 60 FPS without a bounded fatal
+  signature.
+- Promoted the local preview to `0.4.0-android-preview.2`, version code 7. Two
+  scoped clean release builds produced byte-identical AABs at SHA-256
+  `d03f1791989142e109f2a3101a3bca629e80d3b8b1fdde54269b17b21d554f4a`.
+  The retained 90,477,735-byte non-debuggable universal APK is
+  `cfb32065650a15e9d3ddab9aa2705ea62e9930626445c7e568e1ef29b8e53420`.
+- Universal and exact four-part device-split installs passed stable runtime,
+  diverse-frame, signer/native-byte, upgrade, and durable-state gates on API
+  29. The identical AAB passed the complete gate again on API 36 and restored
+  debug version 5 plus the visible selector.
+- Deleted the disposable API 29 AVD, restricted 2.7 GB transfer, raw logs and
+  frames, and temporary AAB/preparation copies. Classification: **Pass for the
+  complete release product on the Android 10 emulator, with modern regression
+  retained.** API 28 and every physical-device acceptance row remain open. No
+  APK/AAB or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-api29-product-runtime.md`.
+
+## 2026-09-05 — Android A5 guest TLS interruption recovery
+
+- Extended the guarded guest IOCTLV runner with a one-shot host peer that
+  publishes a kernel-selected port only after listening, waits for TCP
+  establishment, then aborts during TLS negotiation.
+- The first attempts correctly exposed harness problems rather than product
+  failures: a cached prepared source lacked the opt-in fixture; rapid relaunches
+  could reuse one transcript filename; loopback binding was not reachable
+  through this emulator's `10.0.2.2`; and an immediate reset could race native
+  `connect()`. Fresh preparation, package-marker verification, byte-offset log
+  scanning, wildcard IPv4 binding, and a bounded post-accept delay resolved
+  those distinct boundaries.
+- The translated `/dev/net/ssl` handler reported interrupted handshake `-5`.
+  The following clean process completed the verified 4,797-byte exchange,
+  observed orderly peer close as `-6`, and retained wrong-host rejection `-9`.
+  The version-code 7 debug APK SHA-256 was
+  `81b46c904ae2a81ed9b0a2edaa2fc2b4c472b3d70b56dbc10c3cafa69231744b`.
+- Classification: **Pass for cold-process guest TLS interruption recovery on
+  the API 36 emulator.** Same-process reconnect, network transitions, local or
+  production WFC, and physical-device networking remain open. The runner
+  preserved app-private game data, copied no key to Android, removed the exact
+  fixture, and returned to the selector. No APK or private artifact was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.
+
+## 2026-09-05 — Android A5 same-process guest TLS recovery
+
+- Added optional fixture-only recovery routing to the translated guest TLS
+  gate. An expected-success handshake failure now drives production shutdown,
+  cleans every Wii/native socket, restores guest scratch bytes, and enters one
+  guarded recursive session against the trusted peer. Recovery cannot recurse
+  again, and ordinary hostname rejection does not use it.
+- A fresh complete dual-runtime preparation reproduced the updated IOCTLV and
+  API 29 Vulkan patches. The packaged same-process marker was verified before
+  installation; the strict-audited version-code 7 debug APK SHA-256 was
+  `a5a09e08b0374810566181b59fe19d88572e2303b4327f40320dfbcedb1556dd`.
+- One API 36 product fixture invocation reported primary handshake `-5`, then
+  completed the trusted 4,797-byte response and orderly close `-6` from its
+  second session before reporting same-process recovery. Wrong-host rejection
+  remained `-9`.
+- Classification: **Pass for controlled same-process translated guest TLS
+  session/socket recovery on the emulator.** Network transitions, WFC
+  reconnect, retail guest initiation, and physical networking remain open.
+  The runner kept keys off Android, preserved game data, removed its trigger,
+  restored the selector, and the temporary source was deleted. No APK or
+  private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.
+
+## 2026-09-05 — Android A5 translated guest DNS IOCTL
+
+- Added an opt-in product fixture around the production deferred
+  `SO_GETHOSTBYNAME` path. It opens `/dev/net/ip/top`, copies a Wii request from
+  guarded guest memory, launches the existing detached resolver worker, and
+  applies the normal Wii `hostent` encoder; the fixture does not invoke
+  `getaddrinfo` directly.
+- Added a bounded fixture completion route and cancellation token so an overdue
+  worker cannot fabricate an IOS callback or write after guest scratch is
+  restored.
+- Fresh dual-runtime preparation reproduced the patch and the complete ARM64
+  product built successfully. On the visible API 36 Pixel Tablet emulator,
+  guest `localhost` resolved to `127.0.0.1`; canonical name, IPv4 family,
+  address size, guest pointer list, and address bytes all matched.
+- The exact debug APK SHA-256 is
+  `5bf5018de8d8e8c2b59dfaf381bdade5668c40a890f483ca248f81ca5e244411`.
+  It also repeated the translated TLS interruption, trusted exchange,
+  same-process recovery, orderly close, and hostname-rejection cases.
+- The 109-test suite with one intentional skip, strict APK audit, all 493 patch
+  hunks, pinned source/input verification, SunPad snapshot, shell lint,
+  repository safety, and whitespace checks pass.
+- Classification: **Pass for deterministic translated guest DNS marshalling on
+  the Android emulator.** Retail guest initiation, Retro-WFC routing, local
+  WFC, network transitions, cross-client play, and physical networking remain
+  open. The runner preserved app-private game data, removed the trigger, and
+  restored the selector. No APK/AAB or private artifact was published.
+  Evidence: `docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
+
+## 2026-09-05 — Android A5 isolated local-WFC server boundary
+
+- Reconstructed the clean pinned Retro WFC server against a disposable
+  PostgreSQL 17 container. The database image is locked by immutable digest,
+  stores data only in a 512 MiB tmpfs, and publishes an ephemeral loopback
+  database port.
+- The first schema attempt exposed that upstream assigns ownership to a
+  `wiilink` role it does not create. The runner now creates that non-login role
+  before importing the unchanged pin and requires four public tables.
+- A first automated startup then exposed a second boundary: PostgreSQL's
+  temporary initialization server could satisfy `pg_isready` and shut down
+  before schema import. The final gate waits for the image's init-complete
+  marker plus readiness from the final server.
+- The clean final cycle built server commit
+  `fbd30fa41a35fe8a407e3a49bc83fe4ff91fd35b`, brought up frontend/backend RPC,
+  NAS, four GameSpy TCP listeners, QR2 UDP, and NATNEG UDP, and received the
+  isolated `KartPad Local WFC` NAS response from both the Mac and the API 36
+  emulator through `10.0.2.2:29980`.
+- Server binary SHA-256 was
+  `7eac61307cf3c8e8ccad38830202c7af1a7185224905bd0702c63ee5bffccfd1`.
+  No fixture container, process, listener, or temporary server directory
+  remained after cleanup.
+- The 110-test repository suite passes with one intentional skip, together with
+  shell lint, JSON validation, 493 patch hunks, pinned source/input
+  verification, repository safety, and whitespace checks.
+- Classification: **Pass for pinned local-server startup and Android emulator
+  reachability, not translated guest login or gameplay.** Payload/bootstrap,
+  client routing/auth/profile state, matchmaking, race/results, reconnect, and
+  physical Android networking remain open. No public service, APK/AAB,
+  credential, or private game data was used or published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
+
+## 2026-09-05 — Android A5 dual Retro phone-emulator launch
+
+- Preserved the storage-constrained Pixel Tablet and booted the visible API 36
+  phone AVD with its 10 GiB data partition. Streamed the already approved
+  Original and Retro 6.12.5 inputs directly into the app sandbox, then verified
+  accepted `main.dol`, `Code.pul`, profile XML, and version values on-device.
+- The first selector launch exposed that the current DNS-fixture APK was
+  base-only. Its expected `selected profile is not linked` failure then exposed
+  an unsafe secondary ImGui shutdown assertion before Aurora initialization.
+  Added an idempotent no-context cleanup guard and rebuilt `KartPadDual`.
+- The dual retry reached Vulkan/audio and the translated Retro registry, then
+  correctly stopped at missing content-root configuration. The game-data
+  importer already owns `dvd_root`; the successful Retro install worker now
+  atomically persists its relative installed-pack root and fails closed if that
+  update cannot be committed. The selector also repairs that root after
+  validating a pack retained from an earlier app version.
+- The exact final unpublished APK SHA-256 is
+  `9c20099ab98f04dfde1d83e16fcb229936ccf7d1a596dbb0b1245ad1aa5cb4c7`.
+  It reached and held the branded Retro title with the production touch overlay
+  at about 34 FPS under the temporary 1280x720 performance size. Native
+  2400x1080 metrics were restored and the installed selector was left visible.
+- Fresh dual preparation, 110 tests with one skip, strict APK/privacy audit,
+  repository safety, and whitespace checks pass. Classification: **Pass for
+  dual selector-to-Retro rendered-title launch on the API 36 phone emulator and
+  durable runtime-path ownership.** Physical device, online flow, performance,
+  and release acceptance remain open. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`.
+
+## 2026-09-05 — Android A5 translated Retro local-WFC request
+
+- Added a debug-only Android route owner that activates only for the Retro
+  profile on `ranchu`/`goldfish`, fixes the destination to
+  `10.0.2.2:29980`, and accepts no arbitrary host or port. Release builds
+  cannot activate it.
+- Added an opt-in hold mode to the disposable local-WFC runner plus a sanitized
+  future marker for QR2 availability and the `RMCPD00` NAS payload request.
+- Built and installed the complete dual runtime. Exact unpublished debug APK
+  SHA-256:
+  `fdb3cb3c995ddeaf1daef37acfb82dc45f1ffffe41f764fdc6362bcc21ae9a9c`.
+- On the visible API 36 phone, the real translated Retro product entered
+  **Retro WFC — 1 Player**, explicitly accepted its privacy prompt, sent an
+  18-byte QR2 availability request, received the 7-byte response, and caused
+  the isolated server to receive `GET /payload?g=RMCPD00&…`.
+- The server intentionally had no executable payload or production signing
+  key. It reported `Failed to read payload file`, and the game stopped at
+  `20913`, narrowing the next boundary to a locally controlled payload/client
+  pair with a matching test key.
+- The first full-suite command omitted the repository builder module path: 89
+  tests ran, then discovery failed with `ModuleNotFoundError:
+  kartpad_builder`. The changed invocation used `PYTHONPATH=builder` and
+  passed all 110 tests with one intentional skip. The strict APK audit, pinned
+  source/input and 494-hunk patch verification, repository safety, shell lint,
+  shell syntax, and whitespace checks also pass.
+- Classification: **Pass for translated guest routing and first local QR2/NAS
+  traffic; incomplete for payload validation, login, matchmaking, race,
+  reconnect, cross-client play, and physical networking.** The prior fresh
+  save was restored byte-for-byte, its temporary backup was removed, native
+  display size and the visible selector were restored, and no service process,
+  container, listener, or temporary directory remained. No public service or
+  production key was used, and no APK/AAB or private artifact was published.
+  Evidence:
+  `docs/artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md`.
+
+## 2026-09-05 — Android A4 iOS-shaped in-game menu
+
+- Replaced Android's platform `PopupMenu` with a right-anchored KartPad-owned
+  rounded card modeled on the current iOS menu presentation.
+- Added compact icon rows, separators, FPS checkmark, submenu chevrons,
+  viewport-bounded scrolling, and Controls/Display/Game Data replacement pages
+  with a working back header. Existing action handlers and touch-input clearing
+  remain intact.
+- Built the fixture and exercised the visible native 2400x1080 API 36 phone.
+  The complete walker passed eight title/top rows, five Controls rows, two
+  Display rows, six Game Data rows, and 16 functional action destinations.
+- The repository suite passes all 110 tests with one intentional skip, plus
+  changed-script lint/syntax and whitespace checks.
+- The first run exposed that the legacy menu walker still used `pm clear` from
+  its fixture-only era. Removed that destructive reset, made FPS/Mii assertions
+  state-aware, and restored the already-approved local Retro pack after the
+  run. Future menu checks preserve shared package data.
+- The exact audited, unpublished `KartPadDual` debug APK SHA-256 is
+  `898a03bed41a95af41537f626ffee6928b609aec397bde7643cdc48c136517d7`.
+- Classification: **Pass for iOS-shaped phone-emulator menu presentation and
+  complete action reachability; not physical-device, large-font,
+  accessibility-service, or OEM-windowing acceptance.** No APK/AAB or private
+  artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-ios-shaped-menu-surface.md`.
+
+## 2026-09-05 — Android A6 physical Vulkan/storage intake
+
+- Changed the read-only physical gate to require Android's declared Vulkan
+  version and level rather than allowing a phone with no Vulkan declaration to
+  pass on an unavailable diagnostic inventory.
+- Raised the one-command preview installer to a 6 GiB minimum free-space floor;
+  callers may raise but cannot lower it.
+- Expanded the isolated fake-ADB matrix to 13 cases with explicit no-Vulkan
+  rejection. The entire contract passes with serial redaction.
+- Ran the guarded installer with exact audited dual APK `898a03be…` while the
+  API 36 emulator was the sole target. It rejected the emulator before install,
+  retained the exact installed APK hash, and left the selector active.
+- Classification: **Pass for fail-closed physical Vulkan/storage intake and
+  live negative safety; not physical Android execution or acceptance.** No
+  APK/AAB was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-physical-vulkan-storage-preflight.md`.
+
+## 2026-09-05 — Android A4 menu at 200% system text
+
+- Tested the new in-game menu at Android `font_scale=2.0` on the visible native
+  2400x1080 phone. The first row-height formula was rejected because the actual
+  screenshot showed clipped wrapped labels.
+- Replaced it with real text-width measurement at 16 sp, precise trailing-icon
+  reservations, one/two-line adaptive heights, a 44 dp minimum touch target,
+  and bounded two-line ellipsis. Added pause-time popup dismissal.
+- The accepted top card scrolled cleanly. The Controls page exposed all five
+  actions across top and bottom positions without vertical text clipping,
+  including its two longest labels.
+- Restored font scale 1.0, installed the new exact dual APK with `-r`, rechecked
+  the retained Retro/save hashes, and left the selector active. The temporary
+  backup APK and setting marker were moved to Trash.
+- Exact audited unpublished dual APK SHA-256:
+  `bbb0d08deb58017bd68a354037b232d1449c77a54fa28c120baaae8e9cb659f4`.
+  The 110-test suite passes with one skip, along with package/privacy and
+  repository safety/whitespace audits.
+- Classification: **Pass for 200% text containment/reachability on the API 36
+  phone emulator; not TalkBack, switch access, tablet/OEM font, or physical
+  hardware acceptance.** No APK/AAB was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-menu-large-text.md`.
+
+## 2026-09-05 — Android A4 menu safe insets
+
+- Replaced the three-dot trigger's fixed top/end placement with Android
+  system-bar and display-cutout insets. API 30+ reserves bars even while they
+  are transiently hidden; API 28--29 uses stable/system/cutout fallbacks.
+- The first safe placement put the card below the trigger and was rejected by
+  the existing walker because the short landscape viewport hid the final
+  action. The accepted card begins inside the safe top, covers its trigger
+  while open, and reserves the bottom navigation inset.
+- On the visible native 2400x1080 API 36 phone, WindowManager reported 63 px
+  top/bottom system regions. The card rendered at y=84--975, above navigation
+  beginning at y=1017, with the final row fully present.
+- Emulator accelerometer input then drove the sensor-landscape activity to
+  rotation 3. The 128 px cutout moved to the right/menu edge and the card moved
+  left exactly 128 px. Added that safe-bound assertion and orientation restore
+  to the complete phone menu walker.
+- A stronger live-transition probe then exposed stale popup geometry when the
+  rotation changed with the card already open. Resource orientation remained
+  landscape, so Android did not send a configuration callback. Inset-edge
+  changes now also dismiss the card and clear touch state. The automated gate
+  requires dismissal, the inset trigger at x=2124--2240, and the reopened card
+  at x=1400--2240.
+- The complete menu walker passed 8 top/title rows, 5 Controls, 2 Display, 6
+  Game Data rows, and 16 action destinations. The source-only and exact dual
+  builds, strict APK audit, 110 tests with one skip, repository safety, and
+  whitespace checks pass.
+- Reinstalled unpublished exact dual APK
+  `ab10b1e9bbd201ad2866d4f9b92d3349db2e541d32b9437f68504eb560b547d6`
+  with `-r`; retained Retro/version/save hashes match and the visible selector
+  shows Installed 6.12.5. Temporary captures/APK were moved to Trash.
+- Classification: **Pass for API 36 phone-emulator system-bar/cutout-safe menu
+  layout in both landscape orientations and complete action reachability; not
+  OEM cutout, foldable, multi-window, or physical-device acceptance.** No
+  APK/AAB was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
+
+## 2026-09-05 — Android A6 retained Original runtime-root repair
+
+- A release-derived Original launch with retained validated game data crashed
+  on the SDL thread because `Config.toml` lacked `dvd_root`; selector validation
+  had enabled a path the runtime could not use.
+- Added a fail-closed selector repair that writes the relative `GameData` root.
+  A subsequent repeat exposed blank-line drift, so the repair now returns
+  unchanged when the installed line is already present.
+- Three selector launches preserve the exact configuration hash. The final
+  bundle-derived universal and device-split API 36 ARM64 gates both show the
+  selector, render stable/diverse Original frames, and preserve durable state.
+- Strict APK/AAB audits and all 110 repository tests pass with one intentional
+  skip. Exact unpublished debug APK SHA-256 is `1db15ed1033e39f3fef7bced0039320dd57e6cc21edfe1d01e3fea50906a1535`;
+  unsigned AAB SHA-256 is `25346d13084154ff75e4fdfd70c7a832a55d664a5679bea86900b49ad33f34d1`.
+- Classification: **Pass for retained Original path repair and release-derived
+  emulator runtime/state stability; not physical-device stability.** No build
+  or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-retained-game-data-runtime-root.md`.

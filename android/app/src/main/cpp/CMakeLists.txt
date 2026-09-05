@@ -11,6 +11,10 @@ if(NOT DEFINED MINIZIP_ANDROID_ROOT OR MINIZIP_ANDROID_ROOT STREQUAL "" OR
    NOT EXISTS "${MINIZIP_ANDROID_ROOT}/CMakeLists.txt")
   message(FATAL_ERROR "MINIZIP_ANDROID_ROOT must name the prepared pinned minizip-ng source")
 endif()
+if(NOT DEFINED MBEDTLS_ANDROID_ROOT OR MBEDTLS_ANDROID_ROOT STREQUAL "" OR
+   NOT EXISTS "${MBEDTLS_ANDROID_ROOT}/CMakeLists.txt")
+  message(FATAL_ERROR "MBEDTLS_ANDROID_ROOT must name the prepared pinned Mbed TLS source")
+endif()
 
 find_package(Threads REQUIRED)
 find_package(SDL3 REQUIRED CONFIG)
@@ -42,6 +46,15 @@ set(MZ_ICONV OFF CACHE BOOL "" FORCE)
 set(MZ_DECOMPRESS_ONLY ON CACHE BOOL "" FORCE)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
 add_subdirectory("${MINIZIP_ANDROID_ROOT}" minizip-ng EXCLUDE_FROM_ALL)
+set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)
+set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(USE_SHARED_MBEDTLS_LIBRARY OFF CACHE BOOL "" FORCE)
+set(USE_STATIC_MBEDTLS_LIBRARY ON CACHE BOOL "" FORCE)
+set(MBEDTLS_FATAL_WARNINGS OFF CACHE BOOL "" FORCE)
+add_compile_options(
+  "-ffile-prefix-map=${MBEDTLS_ANDROID_ROOT}=mbedtls-4.1.1"
+  "-fmacro-prefix-map=${MBEDTLS_ANDROID_ROOT}=mbedtls-4.1.1")
+add_subdirectory("${MBEDTLS_ANDROID_ROOT}" mbedtls EXCLUDE_FROM_ALL)
 
 set(KARTPAD_GAME_RUNTIME_SOURCE "" CACHE PATH
   "Prepared private WiiCompiled source; empty builds the source-only fixture")
@@ -78,23 +91,35 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   endif()
   target_sources(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     kartpad_touch_input_jni.cpp
+    kartpad_runtime_settings_jni.cpp
+    kartpad_controller_slots_jni.cpp
+    kartpad_mii_jni.cpp
     retro_rewind_archive_jni.cpp
     "${KARTPAD_REPO_ROOT}/runtime/src/android/touch_input.cpp"
+    "${KARTPAD_REPO_ROOT}/runtime/src/android/runtime_settings.cpp"
+    "${KARTPAD_REPO_ROOT}/runtime/src/android/controller_mapping.cpp"
+    "${KARTPAD_REPO_ROOT}/runtime/src/hle/net/android_mbedtls.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_extract.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_scan.cpp")
   target_include_directories(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     "${KARTPAD_REPO_ROOT}/runtime/include")
-  target_link_libraries(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE MINIZIP::minizip)
+  target_link_libraries(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
+    MINIZIP::minizip mbedtls)
 else()
   add_library(main SHARED
     fixture_main.cpp
     guest_memory_fixture.cpp
     scheduler_fixture.cpp
+    android_tls_fixture.cpp
+    android_tls_loopback_fixture.cpp
     fiber_switch_android.S
+    kartpad_controller_slots_fixture_jni.cpp
+    kartpad_runtime_settings_fixture_jni.cpp
     kartpad_touch_input_jni.cpp
     retro_rewind_archive_jni.cpp
     "${KARTPAD_REPO_ROOT}/runtime/src/android/touch_input.cpp"
+    "${KARTPAD_REPO_ROOT}/runtime/src/hle/net/android_mbedtls.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/scheduler/guest_scheduler.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_extract.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
@@ -104,7 +129,7 @@ else()
   target_include_directories(main PRIVATE
     "${KARTPAD_REPO_ROOT}/runtime/include")
   target_link_libraries(main PRIVATE SDL3::SDL3 dawn::webgpu_dawn
-    MINIZIP::minizip android log dl)
+    MINIZIP::minizip mbedtls android log dl)
 
   set_target_properties(main PROPERTIES
     CXX_VISIBILITY_PRESET hidden

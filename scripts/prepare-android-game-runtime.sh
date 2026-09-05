@@ -35,6 +35,8 @@ KARTPAD_PREPARE_ONLY=1 "$repo_root/scripts/prepare-ios-game-runtime.sh" \
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-public-sdl-surface-lock.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-android-api29-serialized-vulkan.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-snapshot.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-rumble.patch"
@@ -42,6 +44,10 @@ patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-lifecycle.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-event-cache.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-android-gamepad-assignment.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-idempotent-imgui-shutdown.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-runtime.patch"
 patch --batch -p1 -d "$runtime_source" < \
@@ -60,6 +66,16 @@ patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-sdl-fiber-poll.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-touch-input.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-controller-mapping.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-runtime-settings.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-network-tls.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-tls-ioctlv-fixture.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/wiicompiled-android-dns-ioctl-fixture.patch"
 
 generated_link="$(dirname "$runtime_source")/generated"
 if [[ -e "$generated_link" && ! -L "$generated_link" ]]; then

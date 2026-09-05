@@ -1,0 +1,178 @@
+--- a/src/hle/net/network_ssl.cpp
++++ b/src/hle/net/network_ssl.cpp
+@@ -2,7 +2,12 @@
+ 
+ #ifdef __APPLE__
+ #include <kartpad/network/apple_secure_transport.h>
++#elif defined(__ANDROID__)
++#include <kartpad/network/android_mbedtls.h>
++#include "nand_path.h"
+ #endif
++
++#include <memory>
+ 
+ namespace NetworkHle {
+ 
+@@ -62,6 +67,8 @@
+     SecPkgContext_StreamSizes sizes{};
+ #elif defined(__APPLE__)
+     SSLContextRef context = nullptr;
++#elif defined(__ANDROID__)
++    std::unique_ptr<kartpad::network::AndroidMbedTlsSession> context;
+ #endif
+ };
+ 
+@@ -682,7 +689,72 @@
+         return static_cast<int32_t>(processed);
+     }
+     return AppleSslResult(status, false);
++}
++#elif defined(__ANDROID__)
++static void ClearSslSession(SslSession& ssl) {
++    if (ssl.context) {
++        ssl.context->Close();
++    }
++    ssl = {};
++}
++
++static int32_t SslHandshakeImpl(SslSession& ssl) {
++    if (ssl.plaintextWfc) {
++        ssl.handshaked = true;
++        return SSL_OK;
++    }
++    if (ssl.handshaked) {
++        return SSL_OK;
++    }
++    if (!ssl.context) {
++        return SSL_ERR_FAILED;
++    }
++    const int32_t result = ssl.context->Handshake();
++    if (result == SSL_OK) {
++        ssl.handshaked = true;
++    }
++    return result;
+ }
++
++static int32_t SslWrite(SslSession& ssl, const uint8_t* data, uint32_t size) {
++    if (!data || size == 0) {
++        return SSL_ERR_ZERO;
++    }
++    const int32_t handshakeResult = SslHandshake(ssl);
++    if (handshakeResult != SSL_OK) {
++        return handshakeResult;
++    }
++    if (ssl.plaintextWfc) {
++        const ssize_t sent = send(ssl.native, data, size, MSG_NOSIGNAL);
++        if (sent > 0) {
++            return static_cast<int32_t>(sent);
++        }
++        return sent == 0 ? SSL_ERR_ZERO
++                         : (errno == EAGAIN || errno == EWOULDBLOCK
++                                ? SSL_ERR_WAGAIN : SSL_ERR_SYSCALL);
++    }
++    return ssl.context->Write(data, size);
++}
++
++static int32_t SslRead(SslSession& ssl, uint8_t* out, uint32_t size) {
++    if (!out || size == 0) {
++        return SSL_ERR_ZERO;
++    }
++    const int32_t handshakeResult = SslHandshake(ssl);
++    if (handshakeResult != SSL_OK) {
++        return handshakeResult;
++    }
++    if (ssl.plaintextWfc) {
++        const ssize_t received = recv(ssl.native, out, size, 0);
++        if (received > 0) {
++            return static_cast<int32_t>(received);
++        }
++        return received == 0 ? SSL_ERR_ZERO
++                             : (errno == EAGAIN || errno == EWOULDBLOCK
++                                    ? SSL_ERR_RAGAIN : SSL_ERR_SYSCALL);
++    }
++    return ssl.context->Read(out, size);
++}
+ #else
+ static void ClearSslSession(SslSession& ssl) {
+     ssl = {};
+@@ -739,6 +811,15 @@
+                 ClearSslSession(g_sslSessions[i]);
+                 g_sslSessions[i].active = true;
+                 g_sslSessions[i].hostname = hostname;
++#ifdef __ANDROID__
++                g_sslSessions[i].context =
++                    std::make_unique<kartpad::network::AndroidMbedTlsSession>();
++                if (g_sslSessions[i].context->SetHostname(hostname) != SSL_OK) {
++                    ClearSslSession(g_sslSessions[i]);
++                    WriteSslReturn(in, SSL_ERR_FAILED);
++                    return 0;
++                }
++#endif
+                 WriteSslReturn(in, i + 1);
+                 return 0;
+             }
+@@ -782,6 +863,13 @@
+             ssl.native = socket->native;
+             ssl.plaintextWfc = true;
+         }
++#ifdef __ANDROID__
++        if (!ssl.plaintextWfc &&
++            (!ssl.context || ssl.context->AttachSocket(ssl.native) != SSL_OK)) {
++            WriteSslReturn(in, SSL_ERR_FAILED);
++            return 0;
++        }
++#endif
+ #ifdef _WIN32
+         const int timeoutMs = 15000;
+         setsockopt(socket->native, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeoutMs), sizeof(timeoutMs));
+@@ -795,6 +883,12 @@
+                    sizeof(timeout));
+         setsockopt(socket->native, SOL_SOCKET, SO_SNDTIMEO, &timeout,
+                    sizeof(timeout));
++#elif defined(__ANDROID__)
++        const timeval timeout{15, 0};
++        setsockopt(socket->native, SOL_SOCKET, SO_RCVTIMEO, &timeout,
++                   sizeof(timeout));
++        setsockopt(socket->native, SOL_SOCKET, SO_SNDTIMEO, &timeout,
++                   sizeof(timeout));
+ #endif
+         WriteSslReturn(in, SSL_OK);
+         return 0;
+@@ -884,7 +978,36 @@
+     case IOCTLV_NET_SSL_SETBUILTINCLIENTCERT:
+     case IOCTLV_NET_SSL_DISABLEVERIFYOPTIONFORDEBUG: {
+         const int sslId = ReadSslId(out);
+-        WriteSslReturn(in, IsSslIdValid(sslId) ? SSL_OK : SSL_ERR_ID);
++        int32_t result = IsSslIdValid(sslId) ? SSL_OK : SSL_ERR_ID;
++#ifdef __ANDROID__
++        if (result == SSL_OK && cmd == IOCTLV_NET_SSL_SETROOTCA) {
++            if (out.size() < 2 || !out[1].address || out[1].size == 0 ||
++                !g_sslSessions[sslId].context) {
++                result = SSL_ERR_FAILED;
++            } else {
++                const auto* certificate =
++                    Memory::GetPointer(out[1].address, out[1].size);
++                result = g_sslSessions[sslId].context->SetRootCaDer(
++                    certificate, out[1].size);
++            }
++        } else if (result == SSL_OK && cmd == IOCTLV_NET_SSL_SETBUILTINROOTCA) {
++            if (!g_sslSessions[sslId].context) {
++                result = SSL_ERR_FAILED;
++            } else {
++                const std::filesystem::path rootCa =
++                    RuntimeNandPath::DiscoverNandRootPath() / "rootca.pem";
++                result = g_sslSessions[sslId].context->SetBuiltinRootCaFile(
++                    rootCa.string());
++            }
++        } else if (result == SSL_OK &&
++                   (cmd == IOCTLV_NET_SSL_SETCLIENTCERT ||
++                    cmd == IOCTLV_NET_SSL_SETBUILTINCLIENTCERT)) {
++            // Do not acknowledge a client certificate that Android has not
++            // actually configured. Mutual TLS support remains a separate gate.
++            result = SSL_ERR_FAILED;
++        }
++#endif
++        WriteSslReturn(in, result);
+         return 0;
+     }
+     case IOCTLV_NET_SSL_DEBUGGETVERSION:

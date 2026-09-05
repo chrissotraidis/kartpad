@@ -93,17 +93,17 @@ inline ClassicInputState MapGamepadToClassic(const RawGamepadState& input) {
   map(kGamepadNorth, kClassicY);
   map(kGamepadBack, kClassicMinus);
   map(kGamepadStart, kClassicPlus);
-  map(kGamepadLeftShoulder, kClassicL);
+  map(kGamepadLeftShoulder, kClassicZr);
   map(kGamepadRightShoulder, kClassicR);
   map(kGamepadDpadUp, kClassicUp);
   map(kGamepadDpadDown, kClassicDown);
   map(kGamepadDpadLeft, kClassicLeft);
   map(kGamepadDpadRight, kClassicRight);
   if (input.left_trigger >= kTriggerThreshold) {
-    output.buttons |= kClassicZl;
+    output.buttons |= kClassicL;
   }
   if (input.right_trigger >= kTriggerThreshold) {
-    output.buttons |= kClassicZr;
+    output.buttons |= kClassicR;
   }
 
   output.left_stick_x =

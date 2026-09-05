@@ -74,14 +74,16 @@ avd_root="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
 create_avd() {
   local name="$1"
   local package="$2"
+  local device="$3"
   if [[ -f "$avd_root/$name.avd/config.ini" ]]; then
     echo "Keeping existing AVD $name"
     return
   fi
   printf 'no\n' | "$avdmanager" create avd --name "$name" \
-    --package "$package" --device "pixel_6"
+    --package "$package" --device "$device"
 }
-create_avd "$KARTPAD_ANDROID_PHONE_AVD" "$KARTPAD_ANDROID_PHONE_IMAGE"
-create_avd "$KARTPAD_ANDROID_PS16K_AVD" "$KARTPAD_ANDROID_PS16K_IMAGE"
+create_avd "$KARTPAD_ANDROID_PHONE_AVD" "$KARTPAD_ANDROID_PHONE_IMAGE" "pixel_6"
+create_avd "$KARTPAD_ANDROID_TABLET_AVD" "$KARTPAD_ANDROID_PHONE_IMAGE" "pixel_tablet"
+create_avd "$KARTPAD_ANDROID_PS16K_AVD" "$KARTPAD_ANDROID_PS16K_IMAGE" "pixel_6"
 
 "$repo_root/scripts/check-android-host.sh"

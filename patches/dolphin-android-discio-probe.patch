@@ -1,0 +1,50 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,6 +23,34 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+ 
+ project(dolphin-emu)
+ 
++if(DEFINED KARTPAD_ANDROID_DISCIO_PROBE_SOURCE)
++  add_executable(kartpad-android-discio-probe
++    "${KARTPAD_ANDROID_DISCIO_PROBE_SOURCE}"
++    "${CMAKE_CURRENT_SOURCE_DIR}/Source/UnitTests/StubHost.cpp"
++  )
++  target_link_libraries(kartpad-android-discio-probe PRIVATE
++    discio uicommon android log)
++  set_target_properties(kartpad-android-discio-probe PROPERTIES
++    CXX_STANDARD 23
++    CXX_STANDARD_REQUIRED YES)
++endif()
++
++if(DEFINED KARTPAD_ANDROID_DISCIO_JNI_SOURCE)
++  add_compile_definitions(KARTPAD_DISCIO_STANDALONE=1)
++  add_library(kartpad_discio SHARED
++    "${KARTPAD_ANDROID_DISCIO_JNI_SOURCE}"
++    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Android/jni/Input/CoreDevice.cpp"
++    "${CMAKE_CURRENT_SOURCE_DIR}/Source/UnitTests/StubHost.cpp"
++  )
++  target_link_libraries(kartpad_discio PRIVATE discio uicommon android log)
++  target_link_options(kartpad_discio PRIVATE "-Wl,--exclude-libs,ALL")
++  set_target_properties(kartpad_discio PROPERTIES
++    CXX_STANDARD 23
++    CXX_STANDARD_REQUIRED YES
++    CXX_VISIBILITY_PRESET hidden
++    VISIBILITY_INLINES_HIDDEN YES)
++endif()
++
+ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+ 
+ # Support functions
+--- a/Source/Android/jni/AndroidCommon/IDCache.cpp
++++ b/Source/Android/jni/AndroidCommon/IDCache.cpp
+@@ -729,6 +729,10 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
+ {
+   s_java_vm = vm;
+ 
++#if defined(KARTPAD_DISCIO_STANDALONE)
++  return JNI_VERSION;
++#endif
++
+   JNIEnv* env;
+   if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION) != JNI_OK)
+     return JNI_ERR;

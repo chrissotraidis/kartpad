@@ -1,0 +1,146 @@
+--- a/include/aurora/input.hpp
++++ b/include/aurora/input.hpp
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <cstddef>
+ #include <cstdint>
+ 
+ namespace aurora::input {
+@@ -45,4 +46,22 @@
+ // Rumble stop requests remain accepted while suspended.
+ void set_standard_gamepads_active(bool active) noexcept;
+ 
++// Takes a stable, instance-id-sorted snapshot of currently open SDL gamepads.
++// The return value is the number written, capped by capacity.
++uint32_t list_standard_gamepads(uint32_t* instances, int32_t* players,
++                                uint32_t capacity) noexcept;
++
++// Copies a bounded display name for one currently connected instance.
++bool copy_standard_gamepad_name(uint32_t instance, char* name,
++                                size_t capacity) noexcept;
++
++// Assigns one connected SDL instance to P1-P4, evicting any prior controller
++// from that port and persisting the controller identity. The persisted old
++// port is cleared when a controller moves.
++bool assign_standard_gamepad(uint32_t instance, uint32_t player) noexcept;
++
++// Persists an explicitly empty P1-P4 port and clears any connected controller
++// currently assigned to it.
++bool clear_standard_gamepad_player(uint32_t player) noexcept;
++
+ }  // namespace aurora::input
+--- a/lib/input.cpp
++++ b/lib/input.cpp
+@@ -11,11 +11,13 @@
+ 
+ #include <absl/container/flat_hash_map.h>
+ #include <algorithm>
+ #include <array>
+ #include <atomic>
++#include <cstring>
+ #include <mutex>
+ #include <string>
+ #include <utility>
++#include <vector>
+ 
+ using namespace std::string_view_literals;
+ 
+@@ -442,6 +444,97 @@
+   Log.info("Standard gamepads {}", active ? "resumed" : "suspended");
+ }
+ 
++uint32_t list_standard_gamepads(uint32_t* instances, int32_t* players,
++                                uint32_t capacity) noexcept {
++  if (capacity != 0 && (instances == nullptr || players == nullptr)) {
++    return 0;
++  }
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  std::vector<uint32_t> ordered;
++  ordered.reserve(g_GameControllers.size());
++  for (const auto& [instance, controller] : g_GameControllers) {
++    (void)controller;
++    ordered.push_back(instance);
++  }
++  std::sort(ordered.begin(), ordered.end());
++  const uint32_t written = std::min<uint32_t>(
++      capacity, static_cast<uint32_t>(ordered.size()));
++  for (uint32_t index = 0; index < written; ++index) {
++    instances[index] = ordered[index];
++    players[index] = g_GameControllers.at(ordered[index]).m_playerIndex;
++  }
++  return written;
++}
++
++bool copy_standard_gamepad_name(uint32_t instance, char* name,
++                                size_t capacity) noexcept {
++  if (name == nullptr || capacity == 0) {
++    return false;
++  }
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  const auto found = g_GameControllers.find(instance);
++  if (found == g_GameControllers.end() || found->second.m_controller == nullptr) {
++    name[0] = '\0';
++    return false;
++  }
++  const char* source = SDL_GetGamepadName(found->second.m_controller);
++  if (source == nullptr) {
++    source = "Controller";
++  }
++  const size_t length = std::min(std::strlen(source), capacity - 1);
++  std::memcpy(name, source, length);
++  name[length] = '\0';
++  return true;
++}
++
++bool assign_standard_gamepad(uint32_t instance, uint32_t player) noexcept {
++  if (player >= PAD_MAX_CONTROLLERS) {
++    return false;
++  }
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  const auto found = g_GameControllers.find(instance);
++  if (found == g_GameControllers.end()) {
++    return false;
++  }
++  ensure_port_preferences_loaded();
++  GameController& selected = found->second;
++  const int32_t oldPlayer = selected.m_playerIndex;
++  if (oldPlayer >= 0 && oldPlayer < PAD_MAX_CONTROLLERS &&
++      oldPlayer != static_cast<int32_t>(player)) {
++    g_portPreferences[oldPlayer].state = PortPreferenceState::None;
++    g_portPreferences[oldPlayer].identity = {};
++  }
++  for (auto& [otherInstance, controller] : g_GameControllers) {
++    if (otherInstance != instance &&
++        controller.m_playerIndex == static_cast<int32_t>(player)) {
++      assign_player_index(controller, -1);
++    }
++  }
++  assign_player_index(selected, static_cast<int32_t>(player));
++  g_portPreferences[player].state = PortPreferenceState::Controller;
++  g_portPreferences[player].identity = controller_identity(selected);
++  save_port_preferences();
++  return true;
++}
++
++bool clear_standard_gamepad_player(uint32_t player) noexcept {
++  if (player >= PAD_MAX_CONTROLLERS) {
++    return false;
++  }
++  std::scoped_lock lock(g_standardGamepadBridgeMutex);
++  ensure_port_preferences_loaded();
++  for (auto& [instance, controller] : g_GameControllers) {
++    (void)instance;
++    if (controller.m_playerIndex == static_cast<int32_t>(player)) {
++      assign_player_index(controller, -1);
++    }
++  }
++  g_portPreferences[player].state = PortPreferenceState::None;
++  g_portPreferences[player].identity = {};
++  save_port_preferences();
++  return true;
++}
++
+ namespace {
+ uint32_t standard_button_mask(Uint8 button) noexcept {
+   switch (static_cast<SDL_GamepadButton>(button)) {

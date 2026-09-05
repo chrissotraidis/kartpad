@@ -1,5 +1,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+
+#include "android_tls_fixture.h"
+#include "android_tls_loopback_fixture.h"
 #include <SDL3/SDL_vulkan.h>
 #include <android/log.h>
 #include <jni.h>
@@ -45,7 +48,7 @@ bool RunAndroidGamepadContract() {
   constexpr uint32_t kExpectedButtons =
       kClassicA | kClassicB | kClassicX | kClassicY | kClassicMinus |
       kClassicPlus | kClassicL | kClassicR | kClassicUp | kClassicDown |
-      kClassicLeft | kClassicRight | kClassicZl | kClassicZr;
+      kClassicLeft | kClassicRight | kClassicZr;
   return mapped.connected && mapped.buttons == kExpectedButtons &&
          mapped.left_stick_x == 1.0f && mapped.left_stick_y == 1.0f &&
          !MapGamepadToClassic({}).connected;
@@ -338,6 +341,14 @@ extern "C" __attribute__((visibility("default"))) int SDL_main(int, char**) {
   if (!RunGuestMemoryFixture()) {
     SDL_Quit();
     return 2;
+  }
+  if (!RunAndroidTlsFixture()) {
+    SDL_Quit();
+    return 11;
+  }
+  if (!RunAndroidTlsLoopbackFixture()) {
+    SDL_Quit();
+    return 12;
   }
   if (!RunSchedulerFixture()) {
     SDL_Quit();

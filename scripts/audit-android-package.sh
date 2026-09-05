@@ -16,7 +16,12 @@ for tool in "$aapt2" "$zipalign" "$readelf"; do
 done
 
 badging="$("$aapt2" dump badging "$apk")"
+expected_version_name="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-0.4.0-android-preview.2}"
 [[ "$badging" == *"package: name='dev.kartpad.android'"* ]]
+[[ "$badging" == *"versionName='$expected_version_name'"* ]] || {
+  echo "ERROR: APK version name is not $expected_version_name" >&2
+  exit 1
+}
 [[ "$badging" == *"compileSdkVersion='36'"* ]]
 [[ "$badging" == *"minSdkVersion:'28'"* ]]
 [[ "$badging" == *"targetSdkVersion:'36'"* ]]
@@ -68,6 +73,12 @@ expected_native_members="$(printf '%s\n' \
   lib/arm64-v8a/libSDL3.so \
   lib/arm64-v8a/libc++_shared.so \
   lib/arm64-v8a/libmain.so | sort)"
+has_discio=0
+if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libkartpad_discio.so; then
+  has_discio=1
+  expected_native_members="$(printf '%s\n' "$expected_native_members" \
+    lib/arm64-v8a/libkartpad_discio.so | sort)"
+fi
 [[ "$native_members" == "$expected_native_members" ]] || {
   echo "ERROR: APK native-library set differs from the A0 allowlist" >&2
   exit 1
@@ -75,9 +86,11 @@ expected_native_members="$(printf '%s\n' \
 asset_members="$(printf '%s\n' "$members" | grep '^assets/.' | sort || true)"
 if [[ -n "$asset_members" ]]; then
   expected_asset_members="$(printf '%s\n' \
+    assets/ThirdPartyLicenses/Mbed-TLS.txt \
     assets/ThirdPartyLicenses/Minizip-NG.txt | sort)"
   if printf '%s\n' "$asset_members" | grep -Fxq assets/dsp/dsp_coef.bin; then
     expected_asset_members="$(printf '%s\n' \
+    assets/ThirdPartyLicenses/Mbed-TLS.txt \
     assets/ThirdPartyLicenses/Minizip-NG.txt \
     assets/dsp/dsp_coef.bin \
     assets/pipeline/initial_pipeline_cache.db \
@@ -94,6 +107,14 @@ if [[ -n "$asset_members" ]]; then
     assets/wii/shared2/wc24/nwc24msg.cbk \
     assets/wii/shared2/wc24/nwc24msg.cfg | sort)"
   fi
+  if printf '%s\n' "$asset_members" | grep -Eq '^assets/dexopt/baseline\.profm?$'; then
+    # bundletool materializes AGP's two audited BUNDLE-METADATA baseline-profile
+    # entries under assets/dexopt in store-derived APKs. Require the complete,
+    # exact pair if either member is present.
+    expected_asset_members="$(printf '%s\n' "$expected_asset_members" \
+      assets/dexopt/baseline.prof \
+      assets/dexopt/baseline.profm | sort)"
+  fi
   [[ "$asset_members" == "$expected_asset_members" ]] || {
     echo "ERROR: APK asset set differs from the public runtime-resource allowlist" >&2
     exit 1
@@ -103,7 +124,11 @@ fi
 "$zipalign" -c -P 16 -v 4 "$apk" >/dev/null
 audit_root="$repo_root/.android-bootstrap/audit"
 mkdir -p "$audit_root"
-for library in libSDL3.so libc++_shared.so libmain.so; do
+audit_libraries=(libSDL3.so libc++_shared.so libmain.so)
+if [[ "$has_discio" == 1 ]]; then
+  audit_libraries+=(libkartpad_discio.so)
+fi
+for library in "${audit_libraries[@]}"; do
   unzip -p "$apk" "lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |
       awk '$1 == "LOAD" && $NF != "0x4000" { bad = 1 } END { exit bad ? 0 : 1 }'; then
@@ -126,6 +151,23 @@ if ! printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
   echo "ERROR: libmain.so does not have a non-executable stack" >&2
   exit 1
 fi
+if [[ "$has_discio" == 1 ]]; then
+  discio_dynamic="$("$readelf" -d -l "$audit_root/libkartpad_discio.so")"
+  discio_needed="$(printf '%s\n' "$discio_dynamic" |
+    sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
+  expected_discio_needed="$(printf '%s\n' \
+    libc++_shared.so libc.so libdl.so libm.so libEGL.so libOpenSLES.so \
+    libandroid.so liblog.so | sort)"
+  [[ "$discio_needed" == "$expected_discio_needed" ]] || {
+    echo "ERROR: libkartpad_discio.so dependency set differs from the allowlist" >&2
+    exit 1
+  }
+  [[ "$discio_dynamic" == *"GNU_RELRO"* ]]
+  if ! printf '%s\n' "$discio_dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
+    echo "ERROR: libkartpad_discio.so does not have a non-executable stack" >&2
+    exit 1
+  fi
+fi
 main_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libmain.so")"
 sdl_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libSDL3.so")"
 [[ "$main_symbols" == *" SDL_main"* ]] || {
@@ -141,14 +183,49 @@ for symbol in \
     exit 1
   }
 done
+if [[ "$has_discio" == 1 ]]; then
+  discio_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libkartpad_discio.so")"
+  [[ "$discio_symbols" == *" Java_dev_kartpad_android_KartPadDiscImageImporter_nativeExtract"* ]] || {
+    echo "ERROR: libkartpad_discio.so does not export the disc-image importer" >&2
+    exit 1
+  }
+fi
 [[ "$sdl_symbols" == *" JNI_OnLoad@@"* ]] || {
   echo "ERROR: libSDL3.so does not export its JNI registration entry" >&2
   exit 1
 }
 unzip -p "$apk" | strings > "$audit_root/apk.strings"
-if grep -Eq '/Users/|Mario Kart Wii\.(iso|wbfs)|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' \
-    "$audit_root/apk.strings"; then
-  echo "ERROR: APK contains a private path, game-data name, or key marker" >&2
+if grep -Eq '/Users/|Mario Kart Wii\.(iso|wbfs)' "$audit_root/apk.strings"; then
+  echo "ERROR: APK contains a private path or game-data name" >&2
+  exit 1
+fi
+key_markers="$(grep -E -- '-----(BEGIN|END) (RSA |EC |OPENSSH )?PRIVATE KEY-----' \
+  "$audit_root/apk.strings" | sort || true)"
+expected_key_markers=""
+# Every Android target links KartPad's pinned Mbed TLS 4 parser archives.
+key_marker_repetitions=2
+if [[ "$has_discio" == 1 ]]; then
+  # Product APKs additionally carry Dolphin DiscIO's historical parser.
+  key_marker_repetitions=$((key_marker_repetitions + 1))
+fi
+if (( key_marker_repetitions > 0 )); then
+  # mbedTLS's PEM parser contains these six format delimiters as code strings;
+  # exact cardinality prevents an actual packaged PEM block from hiding there.
+  private_key_suffix='PRIVATE KEY-----'
+  expected_key_markers="$(
+    for ((index = 0; index < key_marker_repetitions; ++index)); do
+      printf '%s\n' \
+        "-----BEGIN EC $private_key_suffix" \
+        "-----BEGIN $private_key_suffix" \
+        "-----BEGIN RSA $private_key_suffix" \
+        "-----END EC $private_key_suffix" \
+        "-----END $private_key_suffix" \
+        "-----END RSA $private_key_suffix"
+    done | sort
+  )"
+fi
+if [[ "$key_markers" != "$expected_key_markers" ]]; then
+  echo "ERROR: APK contains an unexpected private-key marker" >&2
   exit 1
 fi
 

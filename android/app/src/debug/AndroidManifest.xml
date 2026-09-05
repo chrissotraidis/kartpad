@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
     <application>
         <activity
+            android:name=".KartPadSaveStorageFixtureActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+        <activity
             android:name=".RetroRewindWorkerFixtureActivity"
             android:exported="true"
             android:permission="android.permission.DUMP" />

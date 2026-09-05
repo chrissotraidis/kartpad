@@ -1,0 +1,42 @@
+diff --git a/src/settings_overlay.cpp b/src/settings_overlay.cpp
+--- a/src/settings_overlay.cpp
++++ b/src/settings_overlay.cpp
+@@ -11,7 +11,12 @@
+ #include "kartpad_mobile_runtime_host.h"
+ #include <dolphin/gx/GXAurora.h>
+ #endif
+ #endif
++#if defined(__ANDROID__)
++#include "aurora_events.h"
++#include "kartpad/android/runtime_settings.hpp"
++#include <dolphin/gx/GXAurora.h>
++#endif
+ #include "runtime_log.h"
+ 
+ #include <imgui.h>
+@@ -1009,5 +1014,25 @@ void RefreshHostSettings() noexcept {
+             RT_LOG(RT_TAG_CONFIG) << "mobile runtime resolutionScale=" << resolutionScale << std::endl;
+         }
+     }
++#elif defined(__ANDROID__)
++    kartpad::android::DisplaySettings settings{};
++    if (kartpad::android::ConsumeDisplaySettings(&settings)) {
++        g_showFps = settings.show_fps;
++        const int aspectMode = std::clamp(settings.aspect_mode, 0, 2);
++        uint32_t surfaceWidth = 0;
++        uint32_t surfaceHeight = 0;
++        AuroraGetSurfaceSize(&surfaceWidth, &surfaceHeight);
++        if (surfaceWidth != 0 && surfaceHeight != 0) {
++            ConfigureMkwMobileAspectMode(aspectMode, surfaceWidth,
++                                         surfaceHeight);
++        }
++        const float resolutionScale =
++            std::clamp(settings.resolution_scale, 1.0f, 4.0f);
++        g_resolutionScale = resolutionScale;
++        VISetFrameBufferScale(resolutionScale);
++        RT_LOG(RT_TAG_CONFIG) << "android runtime aspectMode=" << aspectMode
++                              << " resolutionScale=" << resolutionScale
++                              << " showFps=" << g_showFps << std::endl;
++    }
+ #endif
+ }

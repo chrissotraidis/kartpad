@@ -83,9 +83,37 @@ if [[ "$minizip_cmake_sha256" != \
   exit 1
 fi
 
+mbedtls_version="4.1.1"
+mbedtls_archive="$cache_root/mbedtls-$mbedtls_version.tar.bz2"
+fetch_locked \
+  "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-$mbedtls_version/mbedtls-$mbedtls_version.tar.bz2" \
+  "$mbedtls_archive" 7099934 \
+  3359a349e23db3d5536fcee032ae7b2ecbfc08972fab643089b5cbf2a375c98c
+mbedtls_root="$cache_root/mbedtls-$mbedtls_version"
+if [[ ! -f "$mbedtls_root/CMakeLists.txt" ]]; then
+  temporary_mbedtls_root="$(mktemp -d "$cache_root/.mbedtls-$mbedtls_version.XXXXXX")"
+  tar -xjf "$mbedtls_archive" -C "$temporary_mbedtls_root" --strip-components=1
+  mv "$temporary_mbedtls_root" "$mbedtls_root"
+fi
+mbedtls_cmake_sha256="$(shasum -a 256 "$mbedtls_root/CMakeLists.txt" | awk '{print $1}')"
+if [[ "$mbedtls_cmake_sha256" != \
+      "d2061d05fdd7fc6ebee7a1cd6fd6fbf4ebbf87ffb523a70125c7b4aeef98f3f4" ]]; then
+  echo "ERROR: extracted Mbed TLS source digest changed" >&2
+  exit 1
+fi
+
+bundletool_jar="$cache_root/bundletool-all-1.18.1.jar"
+fetch_locked \
+  "https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar" \
+  "$bundletool_jar" 32505571 \
+  675786493983787ffa11550bdb7c0715679a44e1643f3ff980a529e9c822595c
+
 echo "SDL3 Android AAR: $(shasum -a 256 "$repo_root/android/app/libs/SDL3-3.4.4.aar" | awk '{print $1}')"
 echo "Dawn archive: $(shasum -a 256 "$dawn_archive" | awk '{print $1}')"
 echo "Dawn sanitized targets: $sanitized_targets_sha256"
 echo "minizip-ng archive: $(shasum -a 256 "$minizip_archive" | awk '{print $1}')"
+echo "Mbed TLS archive: $(shasum -a 256 "$mbedtls_archive" | awk '{print $1}')"
+echo "Android bundletool: $(shasum -a 256 "$bundletool_jar" | awk '{print $1}')"
 echo "DAWN_ANDROID_ROOT=$dawn_root"
 echo "MINIZIP_ANDROID_ROOT=$minizip_root"
+echo "MBEDTLS_ANDROID_ROOT=$mbedtls_root"

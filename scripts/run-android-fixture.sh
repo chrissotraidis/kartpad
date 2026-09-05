@@ -9,8 +9,18 @@ adb="$sdk_root/platform-tools/adb"
 emulator="$sdk_root/emulator/emulator"
 avd="${1:-$KARTPAD_ANDROID_PHONE_AVD}"
 case "$avd" in
-  "$KARTPAD_ANDROID_PHONE_AVD") expected_page_size=4096 ;;
-  "$KARTPAD_ANDROID_PS16K_AVD") expected_page_size=16384 ;;
+  "$KARTPAD_ANDROID_PHONE_AVD")
+    expected_page_size=4096
+    orientation_acceleration="-9.81:0:0"
+    ;;
+  "$KARTPAD_ANDROID_TABLET_AVD")
+    expected_page_size=4096
+    orientation_acceleration="0:-9.81:0"
+    ;;
+  "$KARTPAD_ANDROID_PS16K_AVD")
+    expected_page_size=16384
+    orientation_acceleration="-9.81:0:0"
+    ;;
   *) echo "ERROR: unsupported AVD: $avd" >&2; exit 1 ;;
 esac
 
@@ -119,7 +129,7 @@ wait_for_marker \
 # Exercise the other allowed landscape orientation and require SDL to observe
 # it before accepting a newly created Dawn surface presentation.
 "$adb" shell settings put system accelerometer_rotation 1
-"$adb" emu sensor set acceleration -9.81:0:0 >/dev/null
+"$adb" emu sensor set acceleration "$orientation_acceleration" >/dev/null
 wait_for_marker "A1 orientation observed orientation=2 previous=1"
 wait_for_marker \
   "A1 Vulkan recreate passed generation=2 reason=orientation orientation=2 page_size=$expected_page_size"
@@ -141,4 +151,40 @@ if "$adb" logcat -d -v brief KartPadFixture:E '*:S' | grep -q .; then
   exit 1
 fi
 
-echo "Android A1/A2 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected scheduler=2M-operations fiber=1M-register-checked-switches gamepad_contract=passed backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=orientation-plus-3-background-foreground-recreations"
+tablet_result=""
+if [[ "$avd" == "$KARTPAD_ANDROID_TABLET_AVD" ]]; then
+  "$adb" shell am force-stop dev.kartpad.android
+  "$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity \
+    --ez dev.kartpad.android.TEST_TOUCH_OVERLAY true >/dev/null
+  sleep 3
+  tablet_tree="$repo_root/.android-bootstrap/tablet-overlay.uiautomator.xml"
+  "$adb" shell uiautomator dump /sdcard/kartpad-tablet.xml >/dev/null
+  "$adb" exec-out cat /sdcard/kartpad-tablet.xml >"$tablet_tree"
+  labels=(
+    "Move stick" "Camera stick" "A button" "B button" "X button" "Y button"
+    "L button" "R button" "Z button" "Start button" "D-pad up" "D-pad down"
+    "D-pad left" "D-pad right"
+  )
+  for label in "${labels[@]}"; do
+    grep -Fq "content-desc=\"$label\"" "$tablet_tree" || {
+      echo "ERROR: tablet overlay accessibility target missing: $label" >&2
+      exit 1
+    }
+  done
+  read -r r_left r_top r_right r_bottom < <(
+    perl -ne 'if (/content-desc="R button".*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/) { print "$1 $2 $3 $4\n" }' \
+      "$tablet_tree"
+  )
+  [[ $((r_right - r_left)) == 560 ]] || {
+    echo "ERROR: tablet R target width $((r_right - r_left))px != 560px" >&2
+    exit 1
+  }
+  screen_width="$("$adb" shell wm size | sed -n 's/.*: \([0-9]*\)x.*/\1/p' | tr -d '\r')"
+  [[ "$r_left" -ge 0 && "$r_right" -le "$screen_width" ]] || {
+    echo "ERROR: tablet R target [$r_left,$r_right] exceeds screen width $screen_width" >&2
+    exit 1
+  }
+  tablet_result=" tablet_overlay=14-accessible-targets-r-width-560px-in-bounds"
+fi
+
+echo "Android A1/A2 fixture passed: avd=$avd api=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r') abi=$abi page_size=$page_size guest_memory=4GiB-aliased-protected scheduler=2M-operations fiber=1M-register-checked-switches gamepad_contract=passed backend=Vulkan readback_rgba=20-80-e0-ff surface=presented lifecycle=orientation-plus-3-background-foreground-recreations$tablet_result"

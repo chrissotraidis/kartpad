@@ -13,6 +13,7 @@ notice files collected from the exact pinned sources and package build under
 | Dolphin | `4f8af23db516d8b6e9cd00e7b261a65b026514a8` | GPL-2.0-or-later aggregate compatible with GPL-3.0; DiscIO and hardware/HLE-derived integration |
 | SunPad | `e43f0ea6b797e5110787171957c9dc3c6213269c` | GPL-3.0; Apple touch, menu, and runtime integration reference |
 | SDL 3 | `3.4.4` | zlib; platform and runtime support |
+| Mbed TLS | `4.1.1` | Apache-2.0 OR GPL-2.0-or-later; Android native TLS primitive |
 | Minizip-NG | Dolphin-pinned source | zlib; tvOS Retro Rewind archive extraction |
 | WiimotePairPlus | `8e7f9b12db2da520e4f868305c4861cdf58fa15f` | GPL-2.0-or-later; experimental macOS Wii Remote Bluetooth pairing flow derived from Dolphin WiimotePair |
 | Abseil, Dear ImGui, fmt, FreeType, libpng, Tracy, xxHash, zstd | exact package-build inputs | Their included upstream license files apply |
