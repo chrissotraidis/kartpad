@@ -9,10 +9,12 @@ the 63 px status zone ended at y=63, the menu began at y=84, and its y=975
 bottom stayed above navigation at y=1017 while retaining all seven actions.
 Accelerometer-driven opposite landscape moved the 128 px cutout onto the menu
 edge and the card shifted left by exactly 128 px; the menu walker now asserts
-those safe bounds before restoring orientation.
+those safe bounds before restoring orientation. It also rotates with the card
+already open and requires stale popup dismissal, neutral touch, a correctly
+inset trigger, and a correctly placed reopened card.
 The complete 16-destination walker, exact dual build, strict package audit, and
 110-test suite pass. The exact installed unpublished dual APK is
-`07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`;
+`ab10b1e9bbd201ad2866d4f9b92d3349db2e541d32b9437f68504eb560b547d6`;
 the retained Retro pack/save hashes still match and the selector is visible.
 Physical/OEM acceptance remains open. Evidence:
 [`docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`](artifacts/2026-09-05/android/a4-menu-safe-insets.md).

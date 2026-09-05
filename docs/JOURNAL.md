@@ -4366,12 +4366,18 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   rotation 3. The 128 px cutout moved to the right/menu edge and the card moved
   left exactly 128 px. Added that safe-bound assertion and orientation restore
   to the complete phone menu walker.
+- A stronger live-transition probe then exposed stale popup geometry when the
+  rotation changed with the card already open. Resource orientation remained
+  landscape, so Android did not send a configuration callback. Inset-edge
+  changes now also dismiss the card and clear touch state. The automated gate
+  requires dismissal, the inset trigger at x=2124--2240, and the reopened card
+  at x=1400--2240.
 - The complete menu walker passed 8 top/title rows, 5 Controls, 2 Display, 6
   Game Data rows, and 16 action destinations. The source-only and exact dual
   builds, strict APK audit, 110 tests with one skip, repository safety, and
   whitespace checks pass.
 - Reinstalled unpublished exact dual APK
-  `07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`
+  `ab10b1e9bbd201ad2866d4f9b92d3349db2e541d32b9437f68504eb560b547d6`
   with `-r`; retained Retro/version/save hashes match and the visible selector
   shows Installed 6.12.5. Temporary captures/APK were moved to Trash.
 - Classification: **Pass for API 36 phone-emulator system-bar/cutout-safe menu

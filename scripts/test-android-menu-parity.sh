@@ -269,14 +269,42 @@ assert_labels "KartPad" "Retro Rewind 6.12.5"
 if [[ "$lane" == phone ]]; then
   "$adb" shell cmd window user-rotation free >/dev/null
   "$adb" shell settings put system accelerometer_rotation 1
+  "$adb" emu sensor set acceleration 9.81:0:0 >/dev/null
+  for _ in {1..20}; do
+    dump_tree
+    grep -Fq 'rotation="1"' "$tree" && break
+    sleep 1
+  done
+  grep -Fq 'rotation="1"' "$tree" || {
+    echo "ERROR: phone emulator did not restore canonical landscape" >&2
+    exit 1
+  }
+  start_menu
+  "$adb" logcat -c
   "$adb" emu sensor set acceleration -9.81:0:0 >/dev/null
   for _ in {1..20}; do
     dump_tree
-    grep -Fq 'rotation="3"' "$tree" && break
+    if grep -Fq 'rotation="3"' "$tree" &&
+        ! grep -Fq 'content-desc="KartPad"' "$tree"; then
+      break
+    fi
     sleep 1
   done
   grep -Fq 'rotation="3"' "$tree" || {
     echo "ERROR: phone emulator did not enter opposite landscape" >&2
+    exit 1
+  }
+  ! grep -Fq 'content-desc="KartPad"' "$tree" || {
+    echo "ERROR: open menu survived a landscape configuration change" >&2
+    exit 1
+  }
+  grep -Fq 'content-desc="Menu"' "$tree" || {
+    echo "ERROR: menu trigger missing after landscape configuration change" >&2
+    exit 1
+  }
+  "$adb" logcat -d -v brief KartPadFixture:I '*:S' | grep -Fq \
+    'A4 menu inset transition passed neutral=0x0 owners=0' || {
+    echo "ERROR: inset transition did not prove neutral touch state" >&2
     exit 1
   }
   start_menu

@@ -8,9 +8,11 @@ by immersive mode. On the visible API 36 phone, the card occupied y=84--975
 between the 63 px top zone and navigation beginning at y=1017, retained every
 top-level action, and passed all 16 action destinations. An automated
 accelerometer-driven opposite-landscape step moves the 128 px cutout to the
-menu edge and requires the card to shift left by at least that safe inset.
+menu edge. It rotates once with the card open, requiring stale-popup dismissal,
+neutral touch, and a correctly inset trigger, then requires the reopened card
+to shift left by that safe inset.
 Exact audited
-unpublished APK SHA-256: `07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`.
+unpublished APK SHA-256: `ab10b1e9bbd201ad2866d4f9b92d3349db2e541d32b9437f68504eb560b547d6`.
 Retained Retro and save hashes match, and the selector is visible. OEM cutout,
 multi-window, and physical-device checks remain open.
 Evidence: `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.

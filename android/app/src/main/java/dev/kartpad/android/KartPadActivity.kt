@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
@@ -60,6 +61,7 @@ class KartPadActivity : SDLActivity() {
     private var menuSafeInsetTop = 0
     private var menuSafeInsetEnd = 0
     private var menuSafeInsetBottom = 0
+    private var menuSafeInsetsInitialized = false
     private var runtimeProfile = "base"
     private lateinit var inputManager: InputManager
     private lateinit var motionSteering: KartPadMotionSteering
@@ -355,6 +357,13 @@ class KartPadActivity : SDLActivity() {
         super.onWindowFocusChanged(hasFocus)
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        kartPadMenu?.dismiss()
+        if (::kartPadOverlay.isInitialized) kartPadOverlay.clearTouchInput()
+        super.onConfigurationChanged(newConfig)
+        if (::menuButton.isInitialized) menuButton.requestApplyInsets()
+    }
+
     private fun verifyDebugLifecycleClear(reason: String) {
         if (!debugLifecycleClearArmed) return
         check(kartPadOverlay.debugTouchStateIsNeutral()) {
@@ -411,6 +420,9 @@ class KartPadActivity : SDLActivity() {
 
     @Suppress("DEPRECATION")
     private fun applyMenuSafeInsets(insets: WindowInsets) {
+        val priorTop = menuSafeInsetTop
+        val priorEnd = menuSafeInsetEnd
+        val priorBottom = menuSafeInsetBottom
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val safe = insets.getInsetsIgnoringVisibility(
                 WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout(),
@@ -440,6 +452,21 @@ class KartPadActivity : SDLActivity() {
             params.marginEnd = menuSafeInsetEnd + dp(12)
             menuButton.layoutParams = params
         }
+        if (
+            menuSafeInsetsInitialized &&
+            (priorTop != menuSafeInsetTop || priorEnd != menuSafeInsetEnd ||
+                priorBottom != menuSafeInsetBottom)
+        ) {
+            kartPadMenu?.dismiss()
+            if (::kartPadOverlay.isInitialized) {
+                kartPadOverlay.clearTouchInput()
+                if (BuildConfig.DEBUG && !BuildConfig.GAME_RUNTIME) {
+                    check(kartPadOverlay.debugTouchStateIsNeutral())
+                    Log.i(TAG, "A4 menu inset transition passed neutral=0x0 owners=0")
+                }
+            }
+        }
+        menuSafeInsetsInitialized = true
     }
 
     private fun showKartPadMenu() {
