@@ -78,6 +78,18 @@ container, listener, or temporary server state. This does not prove translated
 guest routing/login or a race. Evidence:
 `docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
 
+The visible API 36 phone AVD now holds the installed selector after an exact
+dual-product Retro launch reached the branded title. The run fixed a secondary
+pre-Aurora ImGui shutdown assertion and made the production Retro installer
+atomically persist `retro_rewind_root` after activation; the selector also
+repairs it for a validated pack retained across an app update. The final
+unpublished debug APK is
+`9c20099ab98f04dfde1d83e16fcb229936ccf7d1a596dbb0b1245ad1aa5cb4c7`.
+The retained tablet AVD was not modified. This remains emulator evidence; next
+A5 work is translated retail Retro traffic against the isolated local WFC
+service and then physical-device hardening. Evidence:
+`docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`.
+
 Two independent scoped clean Android product builds are byte-identical at that
 same `aa227e2b…` hash. An incremental package had the same 149 extracted files
 but different ZIP ordering/alignment, so only the clean path is authoritative

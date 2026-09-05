@@ -46,6 +46,8 @@ patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-event-cache.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-assignment.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-idempotent-imgui-shutdown.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-runtime.patch"
 patch --batch -p1 -d "$runtime_source" < \

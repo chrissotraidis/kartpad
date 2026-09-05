@@ -80,6 +80,19 @@ server reachability only—not translated guest routing, authentication,
 matchmaking, racing, or physical networking. Evidence:
 [`docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`](artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md).
 
+The visible API 36 phone emulator now also repeats production-selector launch
+with the complete dual Original/Retro graph and retained validated 6.12.5 pack.
+It exposed and fixed safe cleanup before Aurora initialization, then reached
+the rendered Retro Rewind title from the installed selector. The Retro install
+worker now durably writes its relative runtime root after activation, and the
+selector repairs that path for an already-installed pack after an app update.
+The exact local-only dual APK is
+`9c20099ab98f04dfde1d83e16fcb229936ccf7d1a596dbb0b1245ad1aa5cb4c7`;
+110 tests with one skip and the package/privacy and repository audits pass.
+This is emulator launch evidence, not physical-device, online, performance, or
+release acceptance. Evidence:
+[`docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`](artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md).
+
 Android A6 now has a byte-level clean-build reproducibility result. Two
 independent scoped Android app cleans and product rebuilds produced identical
 APK bytes at SHA-256

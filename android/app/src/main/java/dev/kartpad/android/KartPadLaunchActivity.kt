@@ -71,7 +71,11 @@ class KartPadLaunchActivity : Activity() {
                     RetroRewindInstallStorage.installedRoot(filesDir)
                         .resolve(RetroRewindRelease.ROOT),
                     RetroRewindInstallValidator.productionContract(),
-                ).isValid
+                ).isValid.also { installed ->
+                    if (installed) {
+                        KartPadRuntimePathConfig.ensureRetroRewindRoot(filesDir)
+                    }
+                }
             }.getOrDefault(false)
             runOnUiThread {
                 if (generation != validationGeneration || isFinishing || isDestroyed) {

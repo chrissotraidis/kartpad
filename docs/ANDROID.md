@@ -1367,6 +1367,13 @@ canonical emulators. All 8 top-level rows and the complete 5-row Controls,
 representative actions open their intended destination UI; evidence is in
 `docs/artifacts/2026-09-05/android/a4-menu-hierarchy-reachability.md`.
 
+The API 36 phone lane now also launches the validated installed Retro 6.12.5
+profile from the production selector through the complete dual graph and
+reaches its rendered title. Aurora shutdown is safe when product validation
+fails before ImGui initialization, and the Retro install worker owns durable
+configuration of the relative installed-pack root. Evidence is in
+`docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`.
+
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

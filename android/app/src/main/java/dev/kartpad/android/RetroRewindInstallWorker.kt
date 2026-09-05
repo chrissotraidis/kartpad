@@ -120,6 +120,12 @@ internal class RetroRewindInstallWorker(
         }
 
         try {
+            KartPadRuntimePathConfig.ensureRetroRewindRoot(applicationContext.filesDir)
+        } catch (_: Exception) {
+            return@withContext failure("runtime-path")
+        }
+
+        try {
             Files.deleteIfExists(
                 RetroRewindArchiveDownload.archivePath(applicationContext.cacheDir.toPath()),
             )

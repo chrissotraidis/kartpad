@@ -4221,3 +4221,31 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   physical Android networking remain open. No public service, APK/AAB,
   credential, or private game data was used or published. Evidence:
   `docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
+
+## 2026-09-05 — Android A5 dual Retro phone-emulator launch
+
+- Preserved the storage-constrained Pixel Tablet and booted the visible API 36
+  phone AVD with its 10 GiB data partition. Streamed the already approved
+  Original and Retro 6.12.5 inputs directly into the app sandbox, then verified
+  accepted `main.dol`, `Code.pul`, profile XML, and version values on-device.
+- The first selector launch exposed that the current DNS-fixture APK was
+  base-only. Its expected `selected profile is not linked` failure then exposed
+  an unsafe secondary ImGui shutdown assertion before Aurora initialization.
+  Added an idempotent no-context cleanup guard and rebuilt `KartPadDual`.
+- The dual retry reached Vulkan/audio and the translated Retro registry, then
+  correctly stopped at missing content-root configuration. The game-data
+  importer already owns `dvd_root`; the successful Retro install worker now
+  atomically persists its relative installed-pack root and fails closed if that
+  update cannot be committed. The selector also repairs that root after
+  validating a pack retained from an earlier app version.
+- The exact final unpublished APK SHA-256 is
+  `9c20099ab98f04dfde1d83e16fcb229936ccf7d1a596dbb0b1245ad1aa5cb4c7`.
+  It reached and held the branded Retro title with the production touch overlay
+  at about 34 FPS under the temporary 1280x720 performance size. Native
+  2400x1080 metrics were restored and the installed selector was left visible.
+- Fresh dual preparation, 110 tests with one skip, strict APK/privacy audit,
+  repository safety, and whitespace checks pass. Classification: **Pass for
+  dual selector-to-Retro rendered-title launch on the API 36 phone emulator and
+  durable runtime-path ownership.** Physical device, online flow, performance,
+  and release acceptance remain open. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`.

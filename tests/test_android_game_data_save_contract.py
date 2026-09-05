@@ -13,6 +13,8 @@ class AndroidGameDataSaveContractTests(unittest.TestCase):
         activity = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadActivity.kt").read_text()
         manager = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadGameDataActivity.kt").read_text()
         storage = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadGameDataStorage.kt").read_text()
+        retro_worker = (REPO / "android/app/src/main/java/dev/kartpad/android/RetroRewindInstallWorker.kt").read_text()
+        runtime_paths = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadRuntimePathConfig.kt").read_text()
         manifest = (REPO / "android/app/src/main/AndroidManifest.xml").read_text()
 
         self.assertIn("Intent(this, KartPadGameDataActivity::class.java)", launcher)
@@ -56,6 +58,11 @@ class AndroidGameDataSaveContractTests(unittest.TestCase):
         self.assertIn("GameData.import-", storage)
         self.assertIn("GameData.rollback-", storage)
         self.assertIn("ensureRelativeDvdRoot", storage)
+        self.assertIn("KartPadRuntimePathConfig.ensureRetroRewindRoot(applicationContext.filesDir)", retro_worker)
+        self.assertIn('failure("runtime-path")', retro_worker)
+        self.assertIn("KartPadRuntimePathConfig.ensureRetroRewindRoot(filesDir)", launcher)
+        self.assertIn('retro_rewind_root = \\"RetroRewind/RetroRewind6\\"', runtime_paths)
+        self.assertIn("AtomicFile(configFile)", runtime_paths)
         self.assertIn("RemoveGameDataOnNextLaunch", storage)
 
         importer = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadDiscImageImporter.kt").read_text()
