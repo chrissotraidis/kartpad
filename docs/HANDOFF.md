@@ -6,10 +6,13 @@ The latest exact dual APK moves the three-dot trigger and iOS-shaped menu card
 inside Android's system-bar/display-cutout safe bounds, including bars hidden
 by immersive mode. On the visible API 36 phone, the card occupied y=84--975
 between the 63 px top zone and navigation beginning at y=1017, retained every
-top-level action, and passed all 16 action destinations. Exact audited
+top-level action, and passed all 16 action destinations. An automated
+accelerometer-driven opposite-landscape step moves the 128 px cutout to the
+menu edge and requires the card to shift left by at least that safe inset.
+Exact audited
 unpublished APK SHA-256: `07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`.
-Retained Retro and save hashes match, and the selector is visible. Reverse
-landscape, OEM cutout, multi-window, and physical-device checks remain open.
+Retained Retro and save hashes match, and the selector is visible. OEM cutout,
+multi-window, and physical-device checks remain open.
 Evidence: `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
 
 The latest exact dual APK now includes adaptive menu rows proven at Android

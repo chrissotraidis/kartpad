@@ -1384,8 +1384,10 @@ representative actions open their intended destination UI; evidence is in
 The trigger and the iOS-shaped card now also reserve system-bar and cutout
 insets even when immersive mode temporarily hides the bars. Native API 36
 phone bounds place the card between the 63 px status and navigation regions
-without losing its final action; opposite landscape, OEM cutouts, foldables,
-multi-window, and physical-device checks remain open. Evidence is in
+without losing its final action. Accelerometer-driven opposite landscape moves
+the 128 px cutout to the menu edge and the automated walker requires the card
+to shift left by that inset; OEM cutouts, foldables, multi-window, and
+physical-device checks remain open. Evidence is in
 `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
 
 The API 36 phone lane now also launches the validated installed Retro 6.12.5

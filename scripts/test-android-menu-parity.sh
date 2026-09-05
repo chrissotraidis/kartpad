@@ -13,6 +13,14 @@ case "$lane" in
   *) echo "ERROR: lane must be phone or tablet" >&2; exit 64 ;;
 esac
 
+restore_orientation() {
+  [[ "$lane" == phone ]] || return 0
+  "$adb" emu sensor set acceleration 9.81:0:0 >/dev/null 2>&1 || true
+  "$adb" shell settings put system accelerometer_rotation 0 >/dev/null 2>&1 || true
+  "$adb" shell settings put system user_rotation 1 >/dev/null 2>&1 || true
+}
+trap restore_orientation EXIT
+
 device_count="$("$adb" devices | sed -n '2,$p' | grep -c '[[:space:]]device$' || true)"
 [[ "$device_count" == 1 ]] || {
   echo "ERROR: expected exactly one connected Android emulator/device" >&2
@@ -258,4 +266,64 @@ assert_labels \
 open_submenu_action "Game Data & Saves" "Manage Retro Rewind…"
 assert_labels "KartPad" "Retro Rewind 6.12.5"
 
-echo "Android menu parity passed: lane=$lane top=8 controls=5 display=2 data=6 actions=16"
+if [[ "$lane" == phone ]]; then
+  "$adb" shell cmd window user-rotation free >/dev/null
+  "$adb" shell settings put system accelerometer_rotation 1
+  "$adb" emu sensor set acceleration -9.81:0:0 >/dev/null
+  for _ in {1..20}; do
+    dump_tree
+    grep -Fq 'rotation="3"' "$tree" && break
+    sleep 1
+  done
+  grep -Fq 'rotation="3"' "$tree" || {
+    echo "ERROR: phone emulator did not enter opposite landscape" >&2
+    exit 1
+  }
+  start_menu
+  insets="$artifact_root/window-insets.txt"
+  "$adb" shell dumpsys window >"$insets"
+  python3 - "$tree" "$insets" "$expected_width" <<'PY'
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+tree_path, insets_path, width_text = sys.argv[1:]
+width = int(width_text)
+nodes = list(ET.parse(tree_path).getroot().iter("node"))
+
+def bounds(node):
+    return tuple(map(int, re.findall(r"\d+", node.attrib["bounds"])))
+
+heading = next(node for node in nodes if node.attrib.get("content-desc") == "KartPad")
+final_row = next(node for node in nodes if node.attrib.get("text") == "Report a Problem…")
+left, top, right, _ = bounds(heading)
+_, _, _, bottom = bounds(final_row)
+window = open(insets_path, encoding="utf-8").read()
+cutout = re.search(
+    r"mDisplayCutout=DisplayCutout\{insets=Rect\((\d+), (\d+) - (\d+), (\d+)\)",
+    window,
+)
+status = re.search(r"type=statusBars frame=\[0,0\]\[\d+,(\d+)\]", window)
+navigation = re.search(r"type=navigationBars frame=\[0,(\d+)\]", window)
+if not (cutout and status and navigation):
+    raise SystemExit("ERROR: could not parse opposite-landscape safe insets")
+cutout_right = int(cutout.group(3))
+status_bottom = int(status.group(1))
+navigation_top = int(navigation.group(1))
+if cutout_right <= 0:
+    raise SystemExit("ERROR: opposite landscape did not place cutout on menu edge")
+if top < status_bottom or width - right < cutout_right or bottom > navigation_top:
+    raise SystemExit(
+        "ERROR: menu crossed safe bounds: "
+        f"card=[{left},{top}][{right},{bottom}] "
+        f"status={status_bottom} cutoutRight={cutout_right} navigation={navigation_top}"
+    )
+print(
+    "PASS: opposite-landscape menu safe bounds "
+    f"card=[{left},{top}][{right},{bottom}] "
+    f"status={status_bottom} cutoutRight={cutout_right} navigation={navigation_top}"
+)
+PY
+fi
+
+echo "Android menu parity passed: lane=$lane top=8 controls=5 display=2 data=6 actions=16 safe-insets=pass"

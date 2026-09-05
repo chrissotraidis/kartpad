@@ -42,10 +42,13 @@ On the visible API 36 ARM64 phone at native 2400x1080 and `font_scale=1.0`:
   `Report a Problem…` remained fully present rather than being clipped.
 - The full menu walker passed 8 title/top rows, 5 Controls rows, 2 Display rows,
   6 Game Data rows, and all 16 action destinations.
-
-An attempted command-line reverse-landscape lock remained at rotation 1 under
-the activity's sensor-landscape policy, so this result does not claim a
-separate opposite-cutout orientation acceptance.
+- A window-manager rotation lock could not drive the sensor-landscape activity,
+  but emulator accelerometer input did. At rotation 3 the 128 px cutout moved
+  to the right/menu edge and the card moved left exactly 128 px, from
+  `[1528,84][2368,975]` to `[1400,84][2240,975]`.
+- The menu walker now repeats that opposite-landscape check automatically and
+  requires the card to remain below status, left of the right cutout, and above
+  navigation before restoring the canonical orientation.
 
 ## Validation and restoration
 
@@ -65,7 +68,7 @@ APK and screenshots were moved to Trash.
 
 ## Classification
 
-**Pass for system-bar-safe trigger/card layout and complete action reachability
-on the API 36 phone emulator.** Opposite landscape orientation, OEM cutouts,
-foldables, multi-window, and physical-device acceptance remain open. No
-APK/AAB was published.
+**Pass for system-bar/cutout-safe trigger/card layout in both landscape
+orientations and complete action reachability on the API 36 phone emulator.**
+OEM cutouts, foldables, multi-window, and physical-device acceptance remain
+open. No APK/AAB was published.

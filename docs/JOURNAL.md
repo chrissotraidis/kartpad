@@ -4362,6 +4362,10 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
 - On the visible native 2400x1080 API 36 phone, WindowManager reported 63 px
   top/bottom system regions. The card rendered at y=84--975, above navigation
   beginning at y=1017, with the final row fully present.
+- Emulator accelerometer input then drove the sensor-landscape activity to
+  rotation 3. The 128 px cutout moved to the right/menu edge and the card moved
+  left exactly 128 px. Added that safe-bound assertion and orientation restore
+  to the complete phone menu walker.
 - The complete menu walker passed 8 top/title rows, 5 Controls, 2 Display, 6
   Game Data rows, and 16 action destinations. The source-only and exact dual
   builds, strict APK audit, 110 tests with one skip, repository safety, and
@@ -4370,8 +4374,8 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   `07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`
   with `-r`; retained Retro/version/save hashes match and the visible selector
   shows Installed 6.12.5. Temporary captures/APK were moved to Trash.
-- Classification: **Pass for API 36 phone-emulator system-bar-safe menu layout
-  and complete action reachability; not opposite-landscape, OEM cutout,
-  foldable, multi-window, or physical-device acceptance.** No APK/AAB was
-  published. Evidence:
+- Classification: **Pass for API 36 phone-emulator system-bar/cutout-safe menu
+  layout in both landscape orientations and complete action reachability; not
+  OEM cutout, foldable, multi-window, or physical-device acceptance.** No
+  APK/AAB was published. Evidence:
   `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
