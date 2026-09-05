@@ -18,8 +18,9 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupMenu
+import android.widget.PopupWindow
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.RelativeLayout
@@ -50,6 +51,7 @@ class KartPadActivity : SDLActivity() {
     private var updatingEditorControls = false
     private var touchSettingsDialog: AlertDialog? = null
     private var resetTouchLayoutDialog: AlertDialog? = null
+    private var kartPadMenu: PopupWindow? = null
     private var runtimeProfile = "base"
     private lateinit var inputManager: InputManager
     private lateinit var motionSteering: KartPadMotionSteering
@@ -308,6 +310,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     override fun onPause() {
+        kartPadMenu?.dismiss()
         if (::editorBar.isInitialized && editorBar.visibility == View.VISIBLE) {
             finishLayoutEditing(returnToSettings = false)
         }
@@ -395,89 +398,213 @@ class KartPadActivity : SDLActivity() {
 
     private fun showKartPadMenu() {
         kartPadOverlay.clearTouchInput()
-        PopupMenu(this, menuButton).apply {
-            menu.add(0, MENU_TITLE, 0, "KartPad").isEnabled = false
-            menu.add(0, MENU_SWITCH_GAME, 1, "Switch Game Version…")
-                .setIcon(R.drawable.ic_kartpad_gobackward)
-            menu.add(0, MENU_MULTIPLAYER, 2, "Multiplayer…")
-                .setIcon(R.drawable.ic_kartpad_multiplayer)
-            menu.add(0, MENU_FPS, 3, "Show FPS Counter").apply {
-                isCheckable = true
-                isChecked = KartPadTouchSettings.showFps(this@KartPadActivity)
-                setIcon(R.drawable.ic_kartpad_speedometer)
-            }
-            menu.addSubMenu(0, MENU_CONTROLS_GROUP, 4, "Controls").apply {
-                item.setIcon(R.drawable.ic_kartpad_gamecontroller)
-                add(0, MENU_CONTROLLER_PLAYERS, 0, "Controller Player Setup…")
-                    .setIcon(R.drawable.ic_kartpad_gamecontroller)
-                add(0, MENU_CONTROLLER_MAPPING, 1, "Controller Button Mapping…")
-                    .setIcon(R.drawable.ic_kartpad_gamecontroller)
-                add(0, MENU_TOUCH_CONTROLS, 2, "Touch Control Settings…")
-                    .setIcon(R.drawable.ic_kartpad_hand)
-                add(0, MENU_MOTION_STEERING, 3, "Motion Steering…")
-                    .setIcon(R.drawable.ic_kartpad_gyroscope)
-                add(0, MENU_WIIMOTE, 4, "Experimental Wii Remote + Nunchuk…")
-                    .setIcon(R.drawable.ic_kartpad_antenna)
-            }
-            menu.addSubMenu(0, MENU_DISPLAY_GROUP, 5, "Display").apply {
-                item.setIcon(R.drawable.ic_kartpad_display)
-                add(0, MENU_ASPECT_RATIO, 0, "Aspect Ratio…")
-                    .setIcon(R.drawable.ic_kartpad_display)
-                add(0, MENU_RENDER_RESOLUTION, 1, "Render Resolution…")
-                    .setIcon(R.drawable.ic_kartpad_display)
-            }
-            menu.addSubMenu(0, MENU_DATA_GROUP, 6, "Game Data & Saves").apply {
-                item.setIcon(R.drawable.ic_kartpad_folder)
-                add(0, MENU_IMPORT_GAME_DATA, 0, "Import or Reimport Wii Disc Image…")
-                    .setIcon(R.drawable.ic_kartpad_refresh)
-                add(0, MENU_IMPORT_GAME_DATA_FOLDER, 1, "Import from Extracted Folder…")
-                    .setIcon(R.drawable.ic_kartpad_folder)
-                add(0, MENU_REMOVE_GAME_DATA, 2, "Remove Stored Game Data…")
-                    .setIcon(R.drawable.ic_kartpad_trash)
-                add(0, MENU_RETRO_REWIND, 3, "Manage Retro Rewind…")
-                    .setIcon(R.drawable.ic_kartpad_gobackward)
-                add(0, MENU_SAVES, 4, "Manage Saves…")
-                    .setIcon(R.drawable.ic_kartpad_folder)
-                add(0, MENU_MIIS, 5, "Manage Miis…")
-                    .setIcon(R.drawable.ic_kartpad_mii)
-            }
-            menu.add(0, MENU_REPORT_PROBLEM, 7, "Report a Problem…")
-                .setIcon(R.drawable.ic_kartpad_report)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                setForceShowIcon(true)
-            }
-            setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    MENU_SWITCH_GAME -> confirmSwitchGameVersion()
-                    MENU_MULTIPLAYER -> showMultiplayer()
-                    MENU_FPS -> setShowFps(!item.isChecked)
-                    MENU_CONTROLLER_PLAYERS -> showControllerPlayers()
-                    MENU_CONTROLLER_MAPPING -> showControllerMapping()
-                    MENU_TOUCH_CONTROLS -> showTouchControlSettings()
-                    MENU_MOTION_STEERING -> showMotionSteering()
-                    MENU_WIIMOTE -> showParityBoundary(
+        showKartPadMenuPage(
+            "KartPad",
+            listOf(
+                MenuRow("Switch Game Version…", R.drawable.ic_kartpad_gobackward) {
+                    closeKartPadMenu(::confirmSwitchGameVersion)
+                },
+                MenuRow("Multiplayer…", R.drawable.ic_kartpad_multiplayer) {
+                    closeKartPadMenu(::showMultiplayer)
+                },
+                MenuRow(
+                    "Show FPS Counter",
+                    R.drawable.ic_kartpad_speedometer,
+                    checked = KartPadTouchSettings.showFps(this),
+                ) {
+                    val show = !KartPadTouchSettings.showFps(this)
+                    setShowFps(show)
+                    showKartPadMenu()
+                },
+                MenuRow("Controls", R.drawable.ic_kartpad_gamecontroller, submenu = true) {
+                    showControlsMenu()
+                },
+                MenuRow("Display", R.drawable.ic_kartpad_display, submenu = true) {
+                    showDisplayMenu()
+                },
+                MenuRow("Game Data & Saves", R.drawable.ic_kartpad_folder, submenu = true) {
+                    showGameDataMenu()
+                },
+                MenuRow("Report a Problem…", R.drawable.ic_kartpad_report) {
+                    closeKartPadMenu(::showReportProblem)
+                },
+            ),
+        )
+    }
+
+    private fun showControlsMenu() = showKartPadMenuPage(
+        "Controls",
+        listOf(
+            MenuRow("Controller Player Setup…", R.drawable.ic_kartpad_gamecontroller) {
+                closeKartPadMenu(::showControllerPlayers)
+            },
+            MenuRow("Controller Button Mapping…", R.drawable.ic_kartpad_gamecontroller) {
+                closeKartPadMenu(::showControllerMapping)
+            },
+            MenuRow("Touch Control Settings…", R.drawable.ic_kartpad_hand) {
+                closeKartPadMenu(::showTouchControlSettings)
+            },
+            MenuRow("Motion Steering…", R.drawable.ic_kartpad_gyroscope) {
+                closeKartPadMenu(::showMotionSteering)
+            },
+            MenuRow("Experimental Wii Remote + Nunchuk…", R.drawable.ic_kartpad_antenna) {
+                closeKartPadMenu {
+                    showParityBoundary(
                         "Experimental Wii Remote + Nunchuk",
                         "Direct Wii Remote pairing is not available in this Android build. Android-supported Bluetooth and USB gamepads still work through the controller layer.",
                     )
-                    MENU_ASPECT_RATIO -> showAspectRatioSettings()
-                    MENU_RENDER_RESOLUTION -> showResolutionSettings()
-                    MENU_IMPORT_GAME_DATA -> openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT)
-                    MENU_IMPORT_GAME_DATA_FOLDER -> openGameDataManager(
-                        KartPadGameDataActivity.ACTION_IMPORT_FOLDER,
-                    )
-                    MENU_REMOVE_GAME_DATA -> openGameDataManager(KartPadGameDataActivity.ACTION_REMOVE)
-                    MENU_RETRO_REWIND -> startActivity(
-                        Intent(this@KartPadActivity, RetroRewindInstallActivity::class.java),
-                    )
-                    MENU_MIIS -> showMiiManager()
-                    MENU_SAVES -> showSaveManager()
-                    MENU_REPORT_PROBLEM -> showReportProblem()
-                    else -> return@setOnMenuItemClickListener false
                 }
-                true
+            },
+        ),
+        showBack = true,
+    )
+
+    private fun showDisplayMenu() = showKartPadMenuPage(
+        "Display",
+        listOf(
+            MenuRow("Aspect Ratio…", R.drawable.ic_kartpad_display) {
+                closeKartPadMenu(::showAspectRatioSettings)
+            },
+            MenuRow("Render Resolution…", R.drawable.ic_kartpad_display) {
+                closeKartPadMenu(::showResolutionSettings)
+            },
+        ),
+        showBack = true,
+    )
+
+    private fun showGameDataMenu() = showKartPadMenuPage(
+        "Game Data & Saves",
+        listOf(
+            MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) {
+                closeKartPadMenu {
+                    openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT)
+                }
+            },
+            MenuRow("Import from Extracted Folder…", R.drawable.ic_kartpad_folder) {
+                closeKartPadMenu {
+                    openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT_FOLDER)
+                }
+            },
+            MenuRow("Remove Stored Game Data…", R.drawable.ic_kartpad_trash) {
+                closeKartPadMenu {
+                    openGameDataManager(KartPadGameDataActivity.ACTION_REMOVE)
+                }
+            },
+            MenuRow("Manage Retro Rewind…", R.drawable.ic_kartpad_gobackward) {
+                closeKartPadMenu {
+                    startActivity(Intent(this, RetroRewindInstallActivity::class.java))
+                }
+            },
+            MenuRow("Manage Saves…", R.drawable.ic_kartpad_folder) {
+                closeKartPadMenu(::showSaveManager)
+            },
+            MenuRow("Manage Miis…", R.drawable.ic_kartpad_mii) {
+                closeKartPadMenu(::showMiiManager)
+            },
+        ),
+        showBack = true,
+    )
+
+    private fun showKartPadMenuPage(
+        title: String,
+        rows: List<MenuRow>,
+        showBack: Boolean = false,
+    ) {
+        kartPadMenu?.dismiss()
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = GradientDrawable().apply {
+                cornerRadius = dp(20).toFloat()
+                setColor(Color.argb(246, 238, 238, 240))
+                setStroke(dp(1), Color.argb(80, 255, 255, 255))
             }
-            show()
+            clipToOutline = true
         }
+        val heading = TextView(this).apply {
+            text = if (showBack) "‹  $title" else title
+            contentDescription = title
+            textSize = 14f
+            setTextColor(Color.rgb(92, 92, 98))
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(18), 0, dp(18), 0)
+            isClickable = showBack
+            isFocusable = showBack
+            if (showBack) setOnClickListener { showKartPadMenu() }
+        }
+        card.addView(heading, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            dp(38),
+        ))
+        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        rows.forEachIndexed { index, row ->
+            if (index > 0) list.addView(View(this).apply {
+                setBackgroundColor(Color.argb(44, 60, 60, 67))
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1).apply {
+                marginStart = dp(52)
+            })
+            list.addView(kartPadMenuRow(row), LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(44),
+            ))
+        }
+        card.addView(ScrollView(this).apply {
+            isFillViewport = false
+            addView(list)
+        }, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            0,
+            1f,
+        ))
+        val availableHeight = resources.displayMetrics.heightPixels - dp(76)
+        val desiredHeight = dp(38 + rows.size * 44) + (rows.size - 1).coerceAtLeast(0)
+        kartPadMenu = PopupWindow(card, dp(320), minOf(availableHeight, desiredHeight), true).apply {
+            isOutsideTouchable = true
+            elevation = dp(12).toFloat()
+            setBackgroundDrawable(GradientDrawable().apply { setColor(Color.TRANSPARENT) })
+            setOnDismissListener { if (kartPadMenu === this) kartPadMenu = null }
+            showAtLocation(mLayout, Gravity.TOP or Gravity.END, dp(12), dp(60))
+        }
+    }
+
+    private fun kartPadMenuRow(row: MenuRow): View = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        setPadding(dp(13), 0, dp(10), 0)
+        contentDescription = row.title
+        isClickable = true
+        isFocusable = true
+        background = android.graphics.drawable.StateListDrawable().apply {
+            addState(
+                intArrayOf(android.R.attr.state_pressed),
+                GradientDrawable().apply { setColor(Color.argb(42, 60, 60, 67)) },
+            )
+            addState(intArrayOf(), GradientDrawable().apply { setColor(Color.TRANSPARENT) })
+        }
+        addView(ImageView(this@KartPadActivity).apply {
+            setImageResource(row.icon)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(38, 38, 40))
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(dp(22), dp(22)).apply { marginEnd = dp(12) })
+        addView(TextView(this@KartPadActivity).apply {
+            text = row.title
+            textSize = 16f
+            setTextColor(Color.rgb(22, 22, 24))
+            gravity = Gravity.CENTER_VERTICAL
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
+        if (row.checked || row.submenu) addView(TextView(this@KartPadActivity).apply {
+            text = if (row.checked) "✓" else "›"
+            textSize = if (row.checked) 18f else 28f
+            setTextColor(Color.rgb(55, 55, 58))
+            gravity = Gravity.CENTER
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(dp(24), ViewGroup.LayoutParams.MATCH_PARENT))
+        setOnClickListener { row.action() }
+    }
+
+    private fun closeKartPadMenu(action: () -> Unit) {
+        kartPadMenu?.dismiss()
+        action()
     }
 
     private fun setShowFps(show: Boolean) {
@@ -1794,27 +1921,6 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeRemoveMii(database: ByteArray, slot: Int): ByteArray
 
     companion object {
-        private const val MENU_TITLE = 99
-        private const val MENU_SWITCH_GAME = 100
-        private const val MENU_MULTIPLAYER = 101
-        private const val MENU_FPS = 102
-        private const val MENU_CONTROLLER_MAPPING = 103
-        private const val MENU_TOUCH_CONTROLS = 104
-        private const val MENU_MOTION_STEERING = 105
-        private const val MENU_WIIMOTE = 106
-        private const val MENU_ASPECT_RATIO = 107
-        private const val MENU_RENDER_RESOLUTION = 108
-        private const val MENU_IMPORT_GAME_DATA = 109
-        private const val MENU_RETRO_REWIND = 110
-        private const val MENU_MIIS = 111
-        private const val MENU_REPORT_PROBLEM = 112
-        private const val MENU_CONTROLS_GROUP = 113
-        private const val MENU_DISPLAY_GROUP = 114
-        private const val MENU_DATA_GROUP = 115
-        private const val MENU_REMOVE_GAME_DATA = 116
-        private const val MENU_SAVES = 117
-        private const val MENU_IMPORT_GAME_DATA_FOLDER = 118
-        private const val MENU_CONTROLLER_PLAYERS = 119
         private const val SELECTOR_RESTART_DELAY_MS = 250L
         private const val REQUEST_IMPORT_MII = 4_301
         private const val REQUEST_MANAGE_GAME_DATA = 4_302
@@ -1878,4 +1984,11 @@ class KartPadActivity : SDLActivity() {
 
     private data class MiiRecord(val slot: Int, val name: String, val creator: String)
     private data class NativeController(val instance: Long, val player: Int, val name: String)
+    private data class MenuRow(
+        val title: String,
+        val icon: Int,
+        val checked: Boolean = false,
+        val submenu: Boolean = false,
+        val action: () -> Unit,
+    )
 }

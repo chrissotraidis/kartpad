@@ -22,7 +22,6 @@ device_count="$("$adb" devices | sed -n '2,$p' | grep -c '[[:space:]]device$' ||
 "$repo_root/scripts/build-android-fixture.sh"
 apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
 "$adb" install -r "$apk" >/dev/null
-"$adb" shell pm clear dev.kartpad.android >/dev/null
 "$adb" shell input keyevent KEYCODE_WAKEUP >/dev/null
 "$adb" shell wm dismiss-keyguard >/dev/null 2>&1 || true
 "$adb" shell settings put system accelerometer_rotation 0
@@ -82,7 +81,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 print(sum(
-    node.attrib.get("resource-id") == "android:id/icon"
+    node.attrib.get("class") == "android.widget.ImageView"
     for node in ET.parse(sys.argv[1]).getroot().iter("node")
 ))
 PY
@@ -189,13 +188,21 @@ open_top_action "Report a Problem…"
 assert_labels "Report a Problem" "SHARE REPORT…" "REPORT ON GITHUB" "CANCEL"
 
 start_menu
+fps_before="$("$adb" exec-out run-as dev.kartpad.android \
+  cat shared_prefs/kartpad_touch_controls.xml 2>/dev/null || true)"
+if grep -Eq '<boolean name="show_fps" value="false"[[:space:]]*/>' \
+    <<<"$fps_before"; then
+  expected_fps_value=true
+else
+  expected_fps_value=false
+fi
 tap_label "Show FPS Counter"
 sleep 1
 fps_preferences="$("$adb" exec-out run-as dev.kartpad.android \
   cat shared_prefs/kartpad_touch_controls.xml)"
-grep -Eq '<boolean name="show_fps" value="false"[[:space:]]*/>' \
+grep -Eq "<boolean name=\"show_fps\" value=\"$expected_fps_value\"[[:space:]]*/>" \
   <<<"$fps_preferences" || {
-  echo "ERROR: Show FPS Counter did not persist the toggled-off state" >&2
+  echo "ERROR: Show FPS Counter did not persist the toggled state" >&2
   exit 1
 }
 
@@ -246,7 +253,6 @@ assert_labels "Manage Saves" "EXPORT SAVE BACKUP…" "RESTORE SAVE BACKUP…" "D
 open_submenu_action "Game Data & Saves" "Manage Miis…"
 assert_labels \
   "Manage Miis (Experimental)" \
-  "No Mii database exists yet. Start Mario Kart Wii once, then try again." \
   "BACK"
 
 open_submenu_action "Game Data & Saves" "Manage Retro Rewind…"

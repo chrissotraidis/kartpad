@@ -2,6 +2,19 @@
 
 ## Current state
 
+Android's three-dot menu is now a KartPad-owned, iOS-shaped card rather than a
+narrow platform popup. On the visible API 36 phone it shows the rounded light
+surface, icon rows, FPS checkmark, chevrons, compact replacement submenus, and
+bounded scrolling. The emulator walker reached all eight title/top-level rows,
+5 Controls, 2 Display, 6 Game Data & Saves, and 16 action destinations; 110
+tests pass with one skip. Physical-device visual/font-scale/OEM acceptance is
+still open. The exact audited unpublished dual APK SHA-256 is
+`898a03bed41a95af41537f626ffee6928b609aec397bde7643cdc48c136517d7`.
+The menu walker no longer resets shared package data; after detecting that
+legacy behavior, the retained 6.12.5 pack and prior save were restored exactly
+and the selector again shows **Installed 6.12.5**. Evidence:
+`docs/artifacts/2026-09-05/android/a4-ios-shaped-menu-surface.md`.
+
 The complete product now passes the guarded release-bundle runtime gate on the
 official API 29 / Android 10 ARM64 emulator. Android 10 Goldfish could deadlock
 when priority pipeline compilation raced Vulkan submission; API 29 and lower

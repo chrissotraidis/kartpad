@@ -4284,3 +4284,28 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   production key was used, and no APK/AAB or private artifact was published.
   Evidence:
   `docs/artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md`.
+
+## 2026-09-05 — Android A4 iOS-shaped in-game menu
+
+- Replaced Android's platform `PopupMenu` with a right-anchored KartPad-owned
+  rounded card modeled on the current iOS menu presentation.
+- Added compact icon rows, separators, FPS checkmark, submenu chevrons,
+  viewport-bounded scrolling, and Controls/Display/Game Data replacement pages
+  with a working back header. Existing action handlers and touch-input clearing
+  remain intact.
+- Built the fixture and exercised the visible native 2400x1080 API 36 phone.
+  The complete walker passed eight title/top rows, five Controls rows, two
+  Display rows, six Game Data rows, and 16 functional action destinations.
+- The repository suite passes all 110 tests with one intentional skip, plus
+  changed-script lint/syntax and whitespace checks.
+- The first run exposed that the legacy menu walker still used `pm clear` from
+  its fixture-only era. Removed that destructive reset, made FPS/Mii assertions
+  state-aware, and restored the already-approved local Retro pack after the
+  run. Future menu checks preserve shared package data.
+- The exact audited, unpublished `KartPadDual` debug APK SHA-256 is
+  `898a03bed41a95af41537f626ffee6928b609aec397bde7643cdc48c136517d7`.
+- Classification: **Pass for iOS-shaped phone-emulator menu presentation and
+  complete action reachability; not physical-device, large-font,
+  accessibility-service, or OEM-windowing acceptance.** No APK/AAB or private
+  artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-ios-shaped-menu-surface.md`.

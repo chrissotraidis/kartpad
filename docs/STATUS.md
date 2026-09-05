@@ -2,6 +2,20 @@
 
 Updated: 2026-09-05
 
+Android A4 now owns an iOS-shaped in-game menu instead of relying on the narrow
+platform `PopupMenu`. The native 2400x1080 phone emulator renders a rounded,
+right-anchored card with the KartPad header, icons, FPS checkmark, submenu
+chevrons, separators, bounded scrolling, and compact replacement pages with a
+back header. The real emulator walker reached all eight title/top-level rows,
+five Controls actions, two Display actions, six Game Data & Saves actions, and
+all 16 action destinations. The 110-test suite passes with one intentional
+skip. This is phone-emulator menu parity, not physical-device or large-font/OEM
+acceptance. The exact audited unpublished dual APK is
+`898a03bed41a95af41537f626ffee6928b609aec397bde7643cdc48c136517d7`.
+The walker was also made non-destructive after its legacy fixture reset was
+found, and the prior 6.12.5 pack/save state was restored exactly. Evidence:
+[`docs/artifacts/2026-09-05/android/a4-ios-shaped-menu-surface.md`](artifacts/2026-09-05/android/a4-ios-shaped-menu-surface.md).
+
 The complete release product now passes on the official API 29 / Android 10
 ARM64 emulator as well as the pinned API 36 tablet and API 35 16 KiB lane.
 Android 10's Goldfish Vulkan transport deadlocked when Aurora raced pipeline
