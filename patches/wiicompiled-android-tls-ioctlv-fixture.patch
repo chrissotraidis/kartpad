@@ -40,7 +40,7 @@
  #include <memory>
  
  namespace NetworkHle {
-@@ -1017,7 +1021,205 @@
+@@ -1017,7 +1021,223 @@
      default:
          WriteSslReturn(in, SSL_ERR_FAILED);
          return 0;
@@ -67,6 +67,7 @@
 +        return true;
 +    }
 +    const std::string root = std::string(filesDir) + "/KartPadTlsIoctlvFixture";
++    static thread_local bool useRecoveryPort = false;
 +    const auto readText = [](const std::string& path) {
 +        std::ifstream input(path);
 +        std::string value{std::istreambuf_iterator<char>(input),
@@ -84,17 +85,22 @@
 +    const std::string addressText = readText(root + "/address");
 +    const std::string hostname = readText(root + "/hostname");
 +    const std::string expectedText = readText(root + "/expected");
++    const std::string recoveryPortText = readText(root + "/recovery_port");
 +    const bool checkBuiltinRootMissing =
 +        readText(root + "/check_builtin_root_missing") == "1";
 +    std::ifstream certificateInput(root + "/ca.der", std::ios::binary);
 +    const std::vector<uint8_t> certificate{
 +        std::istreambuf_iterator<char>(certificateInput),
 +        std::istreambuf_iterator<char>()};
-+    const int port = std::atoi(portText.c_str());
++    const int primaryPort = std::atoi(portText.c_str());
++    const int recoveryPort = std::atoi(recoveryPortText.c_str());
++    const int port = useRecoveryPort ? recoveryPort : primaryPort;
 +    const int32_t expected = std::atoi(expectedText.c_str());
 +    const std::string address = addressText.empty() ? "10.0.2.2" : addressText;
 +    if (port <= 0 || port > 65535 || hostname.empty() || expectedText.empty() ||
-+        certificate.empty() || certificate.size() > 0x3000u) {
++        certificate.empty() || certificate.size() > 0x3000u ||
++        (!recoveryPortText.empty() &&
++         (recoveryPort <= 0 || recoveryPort > 65535))) {
 +        NetFail("A5 guest TLS IOCTLV fixture invalid configuration");
 +        return false;
 +    }
@@ -194,6 +200,18 @@
 +    const int32_t handshake = result();
 +    if (handshake != expected) {
 +        NetFail("A5 guest TLS IOCTLV fixture handshake=%d expected=%d", handshake, expected);
++        if (expected == SSL_OK && !useRecoveryPort && recoveryPort > 0) {
++            (void)finish(false);
++            useRecoveryPort = true;
++            const bool recovered = RunAndroidTlsIoctlvFixture();
++            useRecoveryPort = false;
++            if (recovered) {
++                RT_LOGF(RT_TAG_NET,
++                        "A5 guest TLS IOCTLV same-process recovery passed result=%d\n",
++                        handshake);
++            }
++            return recovered;
++        }
 +        return finish(false);
 +    }
 +    if (expected != SSL_OK) {

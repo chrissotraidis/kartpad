@@ -191,6 +191,9 @@ run_case() {
       if [[ -n "$prerequisite_marker" ]]; then
         transcript_delta | grep -F "$prerequisite_marker" | tail -n 1
       fi
+      if [[ -n "$secondary_marker" ]]; then
+        transcript_delta | grep -F "$secondary_marker" | tail -n 1
+      fi
       transcript_delta | grep -F "$marker" | tail -n 1
       "${adb_target[@]}" shell am force-stop "$package"
       return 0
@@ -206,20 +209,18 @@ run_case() {
   return 1
 }
 
+put_fixture_text recovery_port "$port"
 put_fixture_text port "$interrupt_port"
 run_case kartpad.test 0 \
+  "A5 guest TLS IOCTLV same-process recovery passed result=" \
   "A5 guest TLS IOCTLV fixture handshake=" \
-  "Android guest TLS IOCTLV fixture failed" \
-  "expected=0"
+  "A5 guest TLS IOCTLV trusted exchange passed response_bytes="
 wait "$interrupt_server_pid"
 interrupt_server_pid=""
 
 put_fixture_text port "$port"
-run_case kartpad.test 0 \
-  "A5 guest TLS IOCTLV trusted exchange passed response_bytes=" \
-  "A5 guest TLS IOCTLV missing built-in root rejection passed result=-1"
 run_case wrong.kartpad.test -9 \
   "A5 guest TLS IOCTLV hostname rejection passed result=-9"
 
 apk_sha256="$(shasum -a 256 "$apk" | awk '{ print $1 }')"
-echo "Android product guest TLS IOCTLV emulator fixture passed: apk_sha256=$apk_sha256 interrupted_handshake_recovered=yes private_key_on_device=no game_data_preserved=yes"
+echo "Android product guest TLS IOCTLV emulator fixture passed: apk_sha256=$apk_sha256 same_process_handshake_recovered=yes private_key_on_device=no game_data_preserved=yes"

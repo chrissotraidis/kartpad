@@ -4138,3 +4138,26 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   fixture, and returned to the selector. No APK or private artifact was
   published. Evidence:
   `docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.
+
+## 2026-09-05 — Android A5 same-process guest TLS recovery
+
+- Added optional fixture-only recovery routing to the translated guest TLS
+  gate. An expected-success handshake failure now drives production shutdown,
+  cleans every Wii/native socket, restores guest scratch bytes, and enters one
+  guarded recursive session against the trusted peer. Recovery cannot recurse
+  again, and ordinary hostname rejection does not use it.
+- A fresh complete dual-runtime preparation reproduced the updated IOCTLV and
+  API 29 Vulkan patches. The packaged same-process marker was verified before
+  installation; the strict-audited version-code 7 debug APK SHA-256 was
+  `a5a09e08b0374810566181b59fe19d88572e2303b4327f40320dfbcedb1556dd`.
+- One API 36 product fixture invocation reported primary handshake `-5`, then
+  completed the trusted 4,797-byte response and orderly close `-6` from its
+  second session before reporting same-process recovery. Wrong-host rejection
+  remained `-9`.
+- Classification: **Pass for controlled same-process translated guest TLS
+  session/socket recovery on the emulator.** Network transitions, WFC
+  reconnect, retail guest initiation, and physical networking remain open.
+  The runner kept keys off Android, preserved game data, removed its trigger,
+  restored the selector, and the temporary source was deleted. No APK or
+  private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.

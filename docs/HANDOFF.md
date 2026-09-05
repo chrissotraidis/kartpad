@@ -53,6 +53,14 @@ data and keeping keys off Android. Same-process reconnect, Wi-Fi/cellular
 transitions, WFC, and physical networking remain open. Evidence:
 `docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.
 
+That gate is now stronger: the failed `-5` handshake is shut down and followed
+by a fresh guest SSL session in the same Android process. The second session
+completes the verified 4,797-byte response and close `-6`; a recursion guard
+prevents repeated recovery, and the independent wrong-host case remains `-9`.
+This closes controlled same-process session/socket recovery. Network
+transitions, WFC reconnect, and physical networking remain open. Evidence:
+`docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.
+
 Two independent scoped clean Android product builds are byte-identical at that
 same `aa227e2b…` hash. An incremental package had the same 149 extracted files
 but different ZIP ordering/alignment, so only the clean path is authoritative

@@ -435,6 +435,14 @@ recovery only; same-process retry, network transitions, WFC protocol recovery,
 and physical networking remain incomplete. Evidence is in
 `docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.
 
+The fixture now additionally proves same-process recovery: it shuts down the
+failed guest session, cleans the Wii/native socket table, restores the guarded
+guest scratch window, and creates a bounded second session against the trusted
+peer. That session completes the verified response and close path before the
+fixture succeeds. Network-interface transitions, DNS/NAT impairment, WFC
+protocol reconnect, and physical networking remain incomplete. Evidence is in
+`docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.
+
 Android HTTPS used by the application shell for the version manifest and pack
 download is separate from guest networking. Both layers must enforce HTTPS,
 certificate validation, bounded redirects, timeouts, and cancellation.

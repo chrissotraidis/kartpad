@@ -49,6 +49,16 @@ process recovery only; same-process reconnect, network transitions, WFC, and
 physical networking remain open. Evidence:
 [`docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`](artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md).
 
+The interruption gate now also recovers inside the same Android process.
+After guest handshake `-5`, the fixture drives production `SSL_SHUTDOWN`,
+cleans the Wii/native socket table, restores its guest scratch region, and uses
+a guarded second session to complete the verified response and close `-6`.
+The later wrong-host case still returns `-9`. Fresh preparation, package-marker
+verification, the strict debug-APK audit, and cleanup/state checks pass. This
+closes controlled same-process guest TLS session recovery, not Wi-Fi/cellular
+transitions, WFC reconnect, or physical networking. Evidence:
+[`docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`](artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md).
+
 Android A6 now has a byte-level clean-build reproducibility result. Two
 independent scoped Android app cleans and product rebuilds produced identical
 APK bytes at SHA-256

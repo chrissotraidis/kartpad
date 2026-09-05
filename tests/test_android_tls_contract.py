@@ -82,6 +82,9 @@ class AndroidTlsContractTests(unittest.TestCase):
         self.assertIn("std::memcpy(saved.data(), scratch, saved.size())", fixture_patch)
         self.assertIn("std::memcpy(scratch, saved.data(), saved.size())", fixture_patch)
         self.assertIn('root + "/port"', fixture_patch)
+        self.assertIn('root + "/recovery_port"', fixture_patch)
+        self.assertIn("static thread_local bool useRecoveryPort", fixture_patch)
+        self.assertIn("same-process recovery passed", fixture_patch)
         self.assertIn("terminalRead != SSL_ERR_ZERO", fixture_patch)
         self.assertIn("peer_close=%d", fixture_patch)
         self.assertIn("IOCTLV_NET_SSL_SETBUILTINROOTCA", fixture_patch)
@@ -119,7 +122,7 @@ class AndroidTlsContractTests(unittest.TestCase):
         self.assertIn("A5 guest TLS IOCTLV fixture handshake=", runner)
         self.assertIn("before_size", runner)
         self.assertIn("tail -c", runner)
-        self.assertIn("interrupted_handshake_recovered=yes", runner)
+        self.assertIn("same_process_handshake_recovered=yes", runner)
         self.assertIn(".KartPadLaunchActivity", runner)
 
     def test_tls_fixtures_use_only_ephemeral_private_keys(self) -> None:
