@@ -4385,3 +4385,22 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   OEM cutout, foldable, multi-window, or physical-device acceptance.** No
   APK/AAB was published. Evidence:
   `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
+
+## 2026-09-05 — Android A6 retained Original runtime-root repair
+
+- A release-derived Original launch with retained validated game data crashed
+  on the SDL thread because `Config.toml` lacked `dvd_root`; selector validation
+  had enabled a path the runtime could not use.
+- Added a fail-closed selector repair that writes the relative `GameData` root.
+  A subsequent repeat exposed blank-line drift, so the repair now returns
+  unchanged when the installed line is already present.
+- Three selector launches preserve the exact configuration hash. The final
+  bundle-derived universal and device-split API 36 ARM64 gates both show the
+  selector, render stable/diverse Original frames, and preserve durable state.
+- Strict APK/AAB audits and all 110 repository tests pass with one intentional
+  skip. Exact unpublished debug APK SHA-256 is `1db15ed1033e39f3fef7bced0039320dd57e6cc21edfe1d01e3fea50906a1535`;
+  unsigned AAB SHA-256 is `25346d13084154ff75e4fdfd70c7a832a55d664a5679bea86900b49ad33f34d1`.
+- Classification: **Pass for retained Original path repair and release-derived
+  emulator runtime/state stability; not physical-device stability.** No build
+  or private artifact was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-retained-game-data-runtime-root.md`.

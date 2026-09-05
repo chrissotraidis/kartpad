@@ -36,6 +36,12 @@ internal object KartPadGameDataStorage {
 
     fun validationError(filesDir: File): String? = localValidationError(installed(filesDir))
 
+    /** Repairs durable runtime configuration for a validated retained import. */
+    fun ensureRuntimePath(filesDir: File) {
+        localValidationError(installed(filesDir))?.let { throw IllegalArgumentException(it) }
+        ensureRelativeDvdRoot(root(filesDir))
+    }
+
     fun scheduleRemoval(filesDir: File) {
         val support = root(filesDir)
         check(support.isDirectory || support.mkdirs()) { "Game-data storage is unavailable." }
@@ -271,6 +277,10 @@ internal object KartPadGameDataStorage {
     private fun ensureRelativeDvdRoot(support: File) {
         val configFile = File(support, "Config.toml")
         var config = if (configFile.isFile) configFile.readText() else ""
+        val installedDvdLine = Regex(
+            "(?m)^[\\t ]*dvd_root[\\t ]*=[\\t ]*\"GameData\"[\\t ]*(?:#.*)?$",
+        )
+        if (installedDvdLine.containsMatchIn(config)) return
         val dvdLine = Regex("(?m)^\\s*#?\\s*dvd_root\\s*=.*$")
         config = config.replace(dvdLine, "")
         val paths = Regex("(?m)^\\s*\\[paths]\\s*$").find(config)

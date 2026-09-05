@@ -1494,3 +1494,11 @@ and thermals, and subjective touch/audio acceptance remain open. Evidence:
 `docs/artifacts/2026-08-30/g15-motion-steering/`,
 `docs/artifacts/2026-08-30/g15-touch-modal-input-clear/`, and
 `docs/artifacts/2026-08-30/g15-touch-layout-editor/`.
+
+The Android selector now repairs a missing retained Original `dvd_root` before
+enabling launch and performs that repair idempotently. This closes an observed
+release-derived SDL-thread crash and a later configuration-drift failure. The
+final API 36 ARM64 bundle-derived universal and split installs render Original,
+survive repeat launch, and preserve durable state; strict APK/AAB audits and
+the 110-test suite pass. Physical-device stability remains unclaimed. Evidence:
+`docs/artifacts/2026-09-05/android/a6-retained-game-data-runtime-root.md`.

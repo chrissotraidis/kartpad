@@ -711,6 +711,17 @@ not block offline Retro Rewind support.
 
 ## Operating constraints
 
+The current Android A6 candidate idempotently repairs a missing retained
+Original `dvd_root` before launch. A release-derived API 36 ARM64 gate passes
+for universal and device-split installs with stable rendering and preserved
+durable state. The exact unpublished debug APK is
+`1db15ed1033e39f3fef7bced0039320dd57e6cc21edfe1d01e3fea50906a1535`;
+the unsigned AAB is
+`25346d13084154ff75e4fdfd70c7a832a55d664a5679bea86900b49ad33f34d1`.
+Next priority is physical-phone Vulkan, touch, audio, rotation/cutout,
+controller, lifecycle, and thermal validation. Evidence:
+`docs/artifacts/2026-09-05/android/a6-retained-game-data-runtime-root.md`.
+
 - Preserve user game data, Retro Rewind content, saves, and signing state.
 - Never commit or publish a disc image, extracted assets, translated source
   shards, saves, credentials, signing material, device identifiers, or private

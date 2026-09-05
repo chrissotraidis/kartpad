@@ -1399,6 +1399,15 @@ fails before ImGui initialization, and the Retro install worker owns durable
 configuration of the relative installed-pack root. Evidence is in
 `docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`.
 
+The release-derived Original lane now repairs a missing relative `dvd_root`
+for a validated retained import before the selector enables launch. The repair
+is idempotent across repeat selector creation and fails closed when configuration
+cannot be written. Universal and device-split APKs derived from the unsigned
+AAB pass API 36 ARM64 selector, stable/diverse runtime rendering, signer/native
+payload, and durable-state checks. Physical hardware remains authoritative.
+Evidence is in
+`docs/artifacts/2026-09-05/android/a6-retained-game-data-runtime-root.md`.
+
 Do not begin the touch-UI port until A2's controller-driven Original-mode proof
 passes. Physical Android hardware remains authoritative for vendor Vulkan and
 controller behavior; Retro Rewind installation and touch parity follow from

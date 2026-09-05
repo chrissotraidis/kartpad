@@ -63,8 +63,16 @@ class KartPadLaunchActivity : Activity() {
         retro.isEnabled = false
         validator.execute {
             val removalError = KartPadGameDataStorage.applyScheduledRemoval(filesDir)
-            val gameDataValid = forceGameDataValid ||
-                (removalError == null && KartPadGameDataStorage.validationError(filesDir) == null)
+            val gameDataError = when {
+                forceGameDataValid -> null
+                removalError != null -> removalError
+                else -> KartPadGameDataStorage.validationError(filesDir) ?: runCatching {
+                    KartPadGameDataStorage.ensureRuntimePath(filesDir)
+                }.exceptionOrNull()?.let {
+                    "Validated game data could not be configured for the runtime."
+                }
+            }
+            val gameDataValid = gameDataError == null
             val valid = !forceNotInstalled && runCatching {
                 RetroRewindInstallStorage.recover(filesDir)
                 RetroRewindInstallValidator.validate(
@@ -95,8 +103,8 @@ class KartPadLaunchActivity : Activity() {
                         "Download ${RetroRewindRelease.VERSION} • Extra content + Retro WFC"
                     },
                 )
-                if (removalError != null) {
-                    showStatus(removalError)
+                if (gameDataError != null) {
+                    showStatus(gameDataError)
                 } else if (!gameDataValid) {
                     hideStatus("Game data is required. Choose a mode to import it.")
                 } else if (valid) {
