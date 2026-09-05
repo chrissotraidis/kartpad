@@ -2,6 +2,18 @@
 
 Updated: 2026-09-05
 
+The iOS-shaped Android menu now passes a real 200% system-text exercise. A
+rejected first formula left wrapped rows at 44 dp and visibly clipped two
+labels; the accepted implementation measures each title at its actual SP pixel
+size and available width, expands to one or two lines, preserves the minimum
+touch target, ellipsizes horizontally, and scrolls the bounded card. Both ends
+of the Controls page expose all five actions without vertical text clipping.
+Normal font scale, the retained Retro/save hashes, and the selector were
+restored after the test. The exact audited unpublished dual APK is
+`bbb0d08deb58017bd68a354037b232d1449c77a54fa28c120baaae8e9cb659f4`.
+Evidence:
+[`docs/artifacts/2026-09-05/android/a4-menu-large-text.md`](artifacts/2026-09-05/android/a4-menu-large-text.md).
+
 The physical-phone handoff now rejects devices that do not declare both Vulkan
 version and level before any package mutation, and the complete preview session
 requires at least 6 GiB free under `/data`. The mocked preflight passes 13

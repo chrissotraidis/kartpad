@@ -2,6 +2,14 @@
 
 ## Current state
 
+The latest exact dual APK now includes adaptive menu rows proven at Android
+`font_scale=2.0`. It measures title width at the real SP pixel size, expands
+one/two-line rows, and scrolls the card; all five Controls actions were visible
+across the top/bottom positions without vertical clipping. Font scale returned
+to 1.0, retained Retro/save hashes still match, and the selector is visible.
+Exact audited unpublished APK SHA-256: `bbb0d08deb58017bd68a354037b232d1449c77a54fa28c120baaae8e9cb659f4`.
+Evidence: `docs/artifacts/2026-09-05/android/a4-menu-large-text.md`.
+
 The guarded phone installer now requires Android-declared Vulkan version/level
 and a 6 GiB free-space floor before mutation. Its fake-ADB contract passes 13
 cases; a live run against the visible emulator rejected it as non-physical,

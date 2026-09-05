@@ -4326,3 +4326,26 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   live negative safety; not physical Android execution or acceptance.** No
   APK/AAB was published. Evidence:
   `docs/artifacts/2026-09-05/android/a6-physical-vulkan-storage-preflight.md`.
+
+## 2026-09-05 — Android A4 menu at 200% system text
+
+- Tested the new in-game menu at Android `font_scale=2.0` on the visible native
+  2400x1080 phone. The first row-height formula was rejected because the actual
+  screenshot showed clipped wrapped labels.
+- Replaced it with real text-width measurement at 16 sp, precise trailing-icon
+  reservations, one/two-line adaptive heights, a 44 dp minimum touch target,
+  and bounded two-line ellipsis. Added pause-time popup dismissal.
+- The accepted top card scrolled cleanly. The Controls page exposed all five
+  actions across top and bottom positions without vertical text clipping,
+  including its two longest labels.
+- Restored font scale 1.0, installed the new exact dual APK with `-r`, rechecked
+  the retained Retro/save hashes, and left the selector active. The temporary
+  backup APK and setting marker were moved to Trash.
+- Exact audited unpublished dual APK SHA-256:
+  `bbb0d08deb58017bd68a354037b232d1449c77a54fa28c120baaae8e9cb659f4`.
+  The 110-test suite passes with one skip, along with package/privacy and
+  repository safety/whitespace audits.
+- Classification: **Pass for 200% text containment/reachability on the API 36
+  phone emulator; not TalkBack, switch access, tablet/OEM font, or physical
+  hardware acceptance.** No APK/AAB was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-menu-large-text.md`.

@@ -6,11 +6,14 @@ import android.os.Bundle
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.hardware.input.InputManager
 import android.net.Uri
 import android.system.Os
+import android.text.TextUtils
 import android.util.Log
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.InputDevice
 import android.view.View
@@ -35,6 +38,7 @@ import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import java.util.UUID
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 import org.libsdl.app.SDLActivity
 import org.libsdl.app.SDLSurface
@@ -536,6 +540,7 @@ class KartPadActivity : SDLActivity() {
             dp(38),
         ))
         val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val rowHeights = rows.map(::kartPadMenuRowHeight)
         rows.forEachIndexed { index, row ->
             if (index > 0) list.addView(View(this).apply {
                 setBackgroundColor(Color.argb(44, 60, 60, 67))
@@ -544,7 +549,7 @@ class KartPadActivity : SDLActivity() {
             })
             list.addView(kartPadMenuRow(row), LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(44),
+                rowHeights[index],
             ))
         }
         card.addView(ScrollView(this).apply {
@@ -556,7 +561,7 @@ class KartPadActivity : SDLActivity() {
             1f,
         ))
         val availableHeight = resources.displayMetrics.heightPixels - dp(76)
-        val desiredHeight = dp(38 + rows.size * 44) + (rows.size - 1).coerceAtLeast(0)
+        val desiredHeight = dp(38) + rowHeights.sum() + (rows.size - 1).coerceAtLeast(0)
         kartPadMenu = PopupWindow(card, dp(320), minOf(availableHeight, desiredHeight), true).apply {
             isOutsideTouchable = true
             elevation = dp(12).toFloat()
@@ -588,6 +593,8 @@ class KartPadActivity : SDLActivity() {
         addView(TextView(this@KartPadActivity).apply {
             text = row.title
             textSize = 16f
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
             setTextColor(Color.rgb(22, 22, 24))
             gravity = Gravity.CENTER_VERTICAL
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -600,6 +607,19 @@ class KartPadActivity : SDLActivity() {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, LinearLayout.LayoutParams(dp(24), ViewGroup.LayoutParams.MATCH_PARENT))
         setOnClickListener { row.action() }
+    }
+
+    private fun kartPadMenuRowHeight(row: MenuRow): Int {
+        val trailingWidth = if (row.checked || row.submenu) 24 else 0
+        val availableTextWidth = dp(320 - 13 - 10 - 22 - 12 - trailingWidth)
+        val paint = Paint().apply {
+            textSize = sp(16f)
+        }
+        val lineCount = ceil(paint.measureText(row.title) / availableTextWidth)
+            .toInt()
+            .coerceIn(1, 2)
+        val scaledLineHeight = sp(21f)
+        return maxOf(dp(44), dp(12) + (scaledLineHeight * lineCount).roundToInt())
     }
 
     private fun closeKartPadMenu(action: () -> Unit) {
@@ -1712,6 +1732,12 @@ class KartPadActivity : SDLActivity() {
         }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).roundToInt()
+
+    private fun sp(value: Float): Float = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_SP,
+        value,
+        resources.displayMetrics,
+    )
 
     private fun isGameController(device: InputDevice): Boolean {
         val sources = device.sources
