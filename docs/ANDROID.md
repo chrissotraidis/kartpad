@@ -467,6 +467,21 @@ boundary only: the translated Retro guest has not yet routed, authenticated,
 matched, or raced against it. Evidence is in
 `docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
 
+The real translated Retro product now crosses that service boundary. A
+boolean debug-only route is accepted only for the Retro profile on official
+emulator hardware and fixes the destination to `10.0.2.2:29980`; release
+builds cannot activate it and no arbitrary intent host/port is accepted. The
+API 36 phone entered the one-player Retro WFC flow, explicitly accepted its
+privacy prompt, exchanged QR2 availability traffic, and issued an `RMCPD00`
+NAS payload request to the isolated server. The server intentionally lacked an
+executable payload and production signing key, so the client stopped at
+`20913`. This proves retail guest initiation and local DNS/socket routing, not
+payload validation, authentication, matchmaking, racing, reconnect, or
+physical networking. The next valid step needs a locally controlled
+payload/client pair with a matching test key; an unsigned placeholder or
+production private key is not acceptable. Evidence is in
+`docs/artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md`.
+
 Android HTTPS used by the application shell for the version manifest and pack
 download is separate from guest networking. Both layers must enforce HTTPS,
 certificate validation, bounded redirects, timeouts, and cancellation.

@@ -77,6 +77,7 @@ class KartPadActivity : SDLActivity() {
             }
             KartPadRuntimeResources.install(this)
             configureRuntimeProfile()
+            configureDebugLocalWfcRoute()
             configureDebugRkgInput()
             configureDebugStateTrace()
         }
@@ -1621,6 +1622,29 @@ class KartPadActivity : SDLActivity() {
         }
     }
 
+    private fun configureDebugLocalWfcRoute() {
+        Os.unsetenv("KARTPAD_WFC_TEST_HOST")
+        Os.unsetenv("KARTPAD_WFC_TEST_HTTP_PORT")
+        if (!BuildConfig.DEBUG ||
+            !intent.getBooleanExtra(DEBUG_EXTRA_LOCAL_WFC_ROUTE, false)
+        ) {
+            return
+        }
+
+        check(runtimeProfile == "retro_rewind") {
+            "Local WFC routing requires the Retro Rewind profile"
+        }
+        check(Build.HARDWARE == "ranchu" || Build.HARDWARE == "goldfish") {
+            "Local WFC routing is restricted to an Android emulator"
+        }
+        Os.setenv("KARTPAD_WFC_TEST_HOST", "10.0.2.2", true)
+        Os.setenv("KARTPAD_WFC_TEST_HTTP_PORT", "29980", true)
+        Log.i(
+            TAG,
+            "A5 local WFC route host=10.0.2.2 http_port=29980 profile=retro_rewind",
+        )
+    }
+
     private fun configureDebugRkgInput() {
         if (!BuildConfig.DEBUG) return
 
@@ -1812,6 +1836,8 @@ class KartPadActivity : SDLActivity() {
             "dev.kartpad.android.TEST_RETRO_REWIND_WORKER"
         private const val DEBUG_EXTRA_RUNTIME_PROFILE =
             "dev.kartpad.android.TEST_RUNTIME_PROFILE"
+        private const val DEBUG_EXTRA_LOCAL_WFC_ROUTE =
+            "dev.kartpad.android.TEST_LOCAL_WFC_ROUTE"
         private const val DEBUG_EXTRA_TOUCH_OVERLAY =
             "dev.kartpad.android.TEST_TOUCH_OVERLAY"
         private const val DEBUG_EXTRA_MULTI_POINTER =

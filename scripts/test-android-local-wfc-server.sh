@@ -11,6 +11,7 @@ adb="${KARTPAD_ADB:-$sdk_root/platform-tools/adb}"
 container_name="kartpad-local-wfc-postgres-$$"
 temporary_root="$(mktemp -d "${TMPDIR:-/tmp}/kartpad-android-local-wfc.XXXXXX")"
 server_pid=""
+hold_fixture="${KARTPAD_LOCAL_WFC_HOLD:-0}"
 
 fail() {
   echo "ERROR: $*" >&2
@@ -43,6 +44,8 @@ command -v nc >/dev/null || fail "netcat is unavailable"
 command -v lsof >/dev/null || fail "lsof is unavailable"
 [[ -x "$adb" ]] || fail "adb is unavailable at $adb"
 [[ -f "$config_template" ]] || fail "local WFC config template is unavailable"
+[[ "$hold_fixture" == 0 || "$hold_fixture" == 1 ]] ||
+  fail "KARTPAD_LOCAL_WFC_HOLD must be 0 or 1"
 [[ "$(git -C "$server_source" rev-parse HEAD)" == "$expected_server_commit" ]] ||
   fail "pinned local WFC server commit changed"
 [[ -z "$(git -C "$server_source" status --porcelain)" ]] ||
@@ -155,3 +158,19 @@ grep -Fq "KartPad Local WFC" <<<"$emulator_response" ||
 
 server_sha256="$(shasum -a 256 "$temporary_root/wwfc" | awk '{ print $1 }')"
 echo "Android local WFC server boundary passed: server_commit=$expected_server_commit postgres_digest=${postgres_image#postgres@} server_sha256=$server_sha256 schema_tables=$table_count emulator_nas_reachable=yes public_service_used=no"
+
+if [[ "$hold_fixture" == 1 ]]; then
+  echo "Android local WFC server ready for translated guest traffic: host=10.0.2.2 nas_port=29980 public_service_used=no"
+  guest_request_reported=0
+  while kill -0 "$server_pid" >/dev/null 2>&1; do
+    if [[ "$guest_request_reported" == 0 ]] &&
+        grep -Fq "Command:" "$temporary_root/server.log" &&
+        grep -Fq "AVAILABLE" "$temporary_root/server.log" &&
+        grep -Fq "/payload?g=RMCPD00" "$temporary_root/server.log"; then
+      echo "Android translated Retro guest reached local WFC: qr2_available=yes nas_payload_request=yes public_service_used=no"
+      guest_request_reported=1
+    fi
+    sleep 0.5
+  done
+  fail "local WFC server exited while held for translated guest traffic"
+fi

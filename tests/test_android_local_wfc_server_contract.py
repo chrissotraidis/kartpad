@@ -14,6 +14,10 @@ class AndroidLocalWfcServerContractTests(unittest.TestCase):
         template = (
             REPO / "scripts/fixtures/android-local-wfc-config.xml.in"
         ).read_text()
+        activity = (
+            REPO
+            / "android/app/src/main/java/dev/kartpad/android/KartPadActivity.kt"
+        ).read_text()
         dependencies = json.loads(
             (REPO / "dependencies.lock.json").read_text()
         )["dependencies"]
@@ -34,6 +38,18 @@ class AndroidLocalWfcServerContractTests(unittest.TestCase):
         self.assertIn("PostgreSQL init process complete; ready for start up.", script)
         self.assertIn("go test -vet=off ./...", script)
         self.assertIn("10.0.2.2 29980", script)
+        self.assertIn('hold_fixture="${KARTPAD_LOCAL_WFC_HOLD:-0}"', script)
+        self.assertIn('[[ "$hold_fixture" == 0 || "$hold_fixture" == 1 ]]', script)
+        self.assertIn('if [[ "$hold_fixture" == 1 ]]; then', script)
+        self.assertIn(
+            "Android local WFC server ready for translated guest traffic:",
+            script,
+        )
+        self.assertIn('grep -Fq "/payload?g=RMCPD00"', script)
+        self.assertIn(
+            "Android translated Retro guest reached local WFC:",
+            script,
+        )
         self.assertIn("public_service_used=no", script)
         self.assertIn("<gsAddress>0.0.0.0</gsAddress>", template)
         self.assertIn("<nasAddress>0.0.0.0</nasAddress>", template)
@@ -42,6 +58,27 @@ class AndroidLocalWfcServerContractTests(unittest.TestCase):
         self.assertIn("127.0.0.1:@POSTGRES_PORT@", template)
         self.assertNotIn("play.rwfc.net", template)
         self.assertNotIn("wiimmfi", template.lower())
+
+        self.assertIn("configureDebugLocalWfcRoute()", activity)
+        self.assertIn("if (!BuildConfig.DEBUG ||", activity)
+        self.assertIn("DEBUG_EXTRA_LOCAL_WFC_ROUTE", activity)
+        self.assertIn(
+            '"dev.kartpad.android.TEST_LOCAL_WFC_ROUTE"',
+            activity,
+        )
+        self.assertIn('check(runtimeProfile == "retro_rewind")', activity)
+        self.assertIn('Build.HARDWARE == "ranchu"', activity)
+        self.assertIn('Build.HARDWARE == "goldfish"', activity)
+        self.assertIn(
+            'Os.setenv("KARTPAD_WFC_TEST_HOST", "10.0.2.2", true)',
+            activity,
+        )
+        self.assertIn(
+            'Os.setenv("KARTPAD_WFC_TEST_HTTP_PORT", "29980", true)',
+            activity,
+        )
+        self.assertNotIn("TEST_LOCAL_WFC_HOST", activity)
+        self.assertNotIn("TEST_LOCAL_WFC_PORT", activity)
 
 
 if __name__ == "__main__":

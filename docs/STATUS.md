@@ -80,6 +80,23 @@ server reachability only—not translated guest routing, authentication,
 matchmaking, racing, or physical networking. Evidence:
 [`docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`](artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md).
 
+The actual translated Retro client now crosses that boundary. A debug-only,
+emulator-only product switch routes the Retro profile to fixed host alias
+`10.0.2.2` and NAS port `29980`; it accepts no arbitrary destination and
+release builds cannot enable it. The visible API 36 phone entered **Retro WFC
+— 1 Player**, explicitly permitted its privacy prompt, exchanged a QR2
+availability datagram, and made a real `RMCPD00` NAS payload request to the
+isolated server. The server deliberately had no executable payload or
+production signing key, so it rejected the missing file and the game reported
+`20913`. This passes translated guest routing and first local service traffic,
+not payload validation, authentication, matchmaking, racing, reconnect, or
+physical networking. App-private save state and the visible selector were
+restored exactly, and all fixture state was removed. The exact unpublished APK
+SHA-256 is
+`fdb3cb3c995ddeaf1daef37acfb82dc45f1ffffe41f764fdc6362bcc21ae9a9c`.
+Evidence:
+[`docs/artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md`](artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md).
+
 The visible API 36 phone emulator now also repeats production-selector launch
 with the complete dual Original/Retro graph and retained validated 6.12.5 pack.
 It exposed and fixed safe cleanup before Aurora initialization, then reached

@@ -78,6 +78,21 @@ container, listener, or temporary server state. This does not prove translated
 guest routing/login or a race. Evidence:
 `docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
 
+The actual translated Retro client now reaches that isolated service as well.
+An opt-in debug route is restricted to the Retro profile and official emulator
+hardware, with fixed destination `10.0.2.2:29980`; release builds and arbitrary
+intent destinations cannot activate it. On the visible API 36 phone, **Retro
+WFC — 1 Player** sent a QR2 availability request and then a real
+`/payload?g=RMCPD00` NAS request. The local server intentionally had neither an
+executable payload nor production signing key, so it logged a missing payload
+and the game stopped at `20913`. This is a pass for translated guest routing
+and first local-WFC traffic, not login. The test save was restored exactly,
+all disposable service state was removed, and the selector is visible. The
+exact unpublished APK SHA-256 is `fdb3cb3c…`. Next online work requires a
+locally controlled payload/client pair with a matching test key; do not serve
+a placeholder or use a production private key. Evidence:
+`docs/artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md`.
+
 The visible API 36 phone AVD now holds the installed selector after an exact
 dual-product Retro launch reached the branded title. The run fixed a secondary
 pre-Aurora ImGui shutdown assertion and made the production Retro installer

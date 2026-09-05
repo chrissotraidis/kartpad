@@ -4249,3 +4249,38 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   durable runtime-path ownership.** Physical device, online flow, performance,
   and release acceptance remain open. Evidence:
   `docs/artifacts/2026-09-05/android/a5-dual-retro-phone-launch.md`.
+
+## 2026-09-05 — Android A5 translated Retro local-WFC request
+
+- Added a debug-only Android route owner that activates only for the Retro
+  profile on `ranchu`/`goldfish`, fixes the destination to
+  `10.0.2.2:29980`, and accepts no arbitrary host or port. Release builds
+  cannot activate it.
+- Added an opt-in hold mode to the disposable local-WFC runner plus a sanitized
+  future marker for QR2 availability and the `RMCPD00` NAS payload request.
+- Built and installed the complete dual runtime. Exact unpublished debug APK
+  SHA-256:
+  `fdb3cb3c995ddeaf1daef37acfb82dc45f1ffffe41f764fdc6362bcc21ae9a9c`.
+- On the visible API 36 phone, the real translated Retro product entered
+  **Retro WFC — 1 Player**, explicitly accepted its privacy prompt, sent an
+  18-byte QR2 availability request, received the 7-byte response, and caused
+  the isolated server to receive `GET /payload?g=RMCPD00&…`.
+- The server intentionally had no executable payload or production signing
+  key. It reported `Failed to read payload file`, and the game stopped at
+  `20913`, narrowing the next boundary to a locally controlled payload/client
+  pair with a matching test key.
+- The first full-suite command omitted the repository builder module path: 89
+  tests ran, then discovery failed with `ModuleNotFoundError:
+  kartpad_builder`. The changed invocation used `PYTHONPATH=builder` and
+  passed all 110 tests with one intentional skip. The strict APK audit, pinned
+  source/input and 494-hunk patch verification, repository safety, shell lint,
+  shell syntax, and whitespace checks also pass.
+- Classification: **Pass for translated guest routing and first local QR2/NAS
+  traffic; incomplete for payload validation, login, matchmaking, race,
+  reconnect, cross-client play, and physical networking.** The prior fresh
+  save was restored byte-for-byte, its temporary backup was removed, native
+  display size and the visible selector were restored, and no service process,
+  container, listener, or temporary directory remained. No public service or
+  production key was used, and no APK/AAB or private artifact was published.
+  Evidence:
+  `docs/artifacts/2026-09-05/android/a5-translated-retro-local-wfc-request.md`.
