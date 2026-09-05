@@ -427,6 +427,14 @@ runs before the translated guest starts; a retail Mario Kart/WFC-initiated
 request, built-in Wii CA/client-certificate handling, WFC, interruption
 recovery, and physical-device networking remain incomplete.
 
+A deterministic follow-up now resets a one-shot peer after TCP establishment
+during the translated guest handshake. The IOCTLV path reports guest `-5`, and
+the next cold product process completes the verified response and orderly-close
+path without stale session/socket state. This closes cold-process interruption
+recovery only; same-process retry, network transitions, WFC protocol recovery,
+and physical networking remain incomplete. Evidence is in
+`docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.
+
 Android HTTPS used by the application shell for the version manifest and pack
 download is separate from guest networking. Both layers must enforce HTTPS,
 certificate validation, bounded redirects, timeouts, and cancellation.

@@ -43,6 +43,16 @@ dual-game APK SHA-256 is
 `aa227e2b2232c2d36d86044f44a26caa310325f42ca9774216a1a62dde94df89`.
 Evidence: `docs/artifacts/2026-09-05/android/a5-guest-tls-ioctlv.md`.
 
+The guest TLS runner now injects an abortive peer close after TCP establishment
+and before handshake completion. The translated IOCTLV path reports `-5`; a
+following clean product process completes the verified 4,797-byte response,
+observes close as `-6`, and retains hostname rejection at `-9`. Transcript
+checks are byte-offset scoped when rapid launches reuse one timestamped path.
+This passes cold-process interruption recovery while preserving private game
+data and keeping keys off Android. Same-process reconnect, Wi-Fi/cellular
+transitions, WFC, and physical networking remain open. Evidence:
+`docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.
+
 Two independent scoped clean Android product builds are byte-identical at that
 same `aa227e2b…` hash. An incremental package had the same 149 extracted files
 but different ZIP ordering/alignment, so only the clean path is authoritative

@@ -31,6 +31,7 @@ adb_target=("$adb" -s "$serial")
 
 temporary_root="$(mktemp -d "${TMPDIR:-/tmp}/kartpad-guest-tls.XXXXXX")"
 server_pid=""
+interrupt_server_pid=""
 cleanup() {
   "${adb_target[@]}" shell am force-stop "$package" >/dev/null 2>&1 || true
   "${adb_target[@]}" shell run-as "$package" toybox rm -rf \
@@ -38,6 +39,10 @@ cleanup() {
   if [[ -n "$server_pid" ]]; then
     kill "$server_pid" >/dev/null 2>&1 || true
     wait "$server_pid" 2>/dev/null || true
+  fi
+  if [[ -n "$interrupt_server_pid" ]]; then
+    kill "$interrupt_server_pid" >/dev/null 2>&1 || true
+    wait "$interrupt_server_pid" 2>/dev/null || true
   fi
   rm -rf "$temporary_root"
   "${adb_target[@]}" shell am start -W \
@@ -79,6 +84,42 @@ server_pid="$!"
 sleep 0.25
 kill -0 "$server_pid" 2>/dev/null || fail "local TLS server did not start"
 
+# A separate one-shot peer accepts TCP and resets the connection before TLS
+# negotiation completes. The following good exchange must then succeed from a
+# fresh product process, proving failed guest sessions/sockets do not poison
+# the next connection.
+interrupt_port_file="$temporary_root/interrupt-port"
+python3 - "$interrupt_port_file" >"$temporary_root/interrupt-server.log" 2>&1 <<'PY' &
+import socket
+import struct
+import sys
+import time
+
+port_file = sys.argv[1]
+with socket.socket() as listener:
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind(("0.0.0.0", 0))
+    listener.listen(1)
+    with open(port_file, "w", encoding="ascii") as output:
+        output.write(str(listener.getsockname()[1]))
+    connection, _ = listener.accept()
+    with connection:
+        time.sleep(0.5)
+        connection.setsockopt(
+            socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0)
+        )
+PY
+interrupt_server_pid="$!"
+for _ in {1..100}; do
+  [[ -s "$interrupt_port_file" ]] && break
+  kill -0 "$interrupt_server_pid" 2>/dev/null ||
+    fail "local interruption server exited before listening"
+  sleep 0.05
+done
+[[ -s "$interrupt_port_file" ]] || fail "local interruption server did not listen"
+interrupt_port="$(<"$interrupt_port_file")"
+[[ "$interrupt_port" =~ ^[0-9]+$ ]] || fail "local interruption port is invalid"
+
 "${adb_target[@]}" shell run-as "$package" toybox rm -rf \
   "$fixture_root" "$completed_fixture_root"
 "${adb_target[@]}" shell run-as "$package" toybox mkdir -p "$fixture_root"
@@ -106,12 +147,20 @@ run_case() {
   local expected="$2"
   local marker="$3"
   local prerequisite_marker="${4:-}"
+  local secondary_marker="${5:-}"
   local before_transcript
+  local before_size=0
   local current_transcript=""
 
   put_fixture_text hostname "$hostname"
   put_fixture_text expected "$expected"
   before_transcript="$(latest_transcript)"
+  if [[ -n "$before_transcript" ]]; then
+    before_size="$("${adb_target[@]}" shell \
+      "run-as $package stat -c %s '$before_transcript' 2>/dev/null" |
+      tr -d '\r')"
+    [[ "$before_size" =~ ^[0-9]+$ ]] || before_size=0
+  fi
   "${adb_target[@]}" shell am force-stop "$package"
   "${adb_target[@]}" shell am start -W \
     -n "$package/.KartPadActivity" \
@@ -119,21 +168,30 @@ run_case() {
 
   for _ in {1..120}; do
     current_transcript="$(latest_transcript)"
-    if [[ -n "$current_transcript" && "$current_transcript" != "$before_transcript" ]] &&
-        "${adb_target[@]}" exec-out run-as "$package" cat "$current_transcript" |
+    transcript_delta() {
+      if [[ "$current_transcript" == "$before_transcript" ]]; then
+        "${adb_target[@]}" exec-out run-as "$package" tail -c \
+          "+$((before_size + 1))" "$current_transcript"
+      else
+        "${adb_target[@]}" exec-out run-as "$package" cat "$current_transcript"
+      fi
+    }
+    if [[ -n "$current_transcript" ]] && transcript_delta |
           grep -Fq "$marker"; then
       if [[ -n "$prerequisite_marker" ]] &&
-          ! "${adb_target[@]}" exec-out run-as "$package" cat "$current_transcript" |
-            grep -Fq "$prerequisite_marker"; then
+          ! transcript_delta | grep -Fq "$prerequisite_marker"; then
+        sleep 0.5
+        continue
+      fi
+      if [[ -n "$secondary_marker" ]] &&
+          ! transcript_delta | grep -Fq "$secondary_marker"; then
         sleep 0.5
         continue
       fi
       if [[ -n "$prerequisite_marker" ]]; then
-        "${adb_target[@]}" exec-out run-as "$package" cat "$current_transcript" |
-          grep -F "$prerequisite_marker" | tail -n 1
+        transcript_delta | grep -F "$prerequisite_marker" | tail -n 1
       fi
-      "${adb_target[@]}" exec-out run-as "$package" cat "$current_transcript" |
-        grep -F "$marker" | tail -n 1
+      transcript_delta | grep -F "$marker" | tail -n 1
       "${adb_target[@]}" shell am force-stop "$package"
       return 0
     fi
@@ -148,6 +206,15 @@ run_case() {
   return 1
 }
 
+put_fixture_text port "$interrupt_port"
+run_case kartpad.test 0 \
+  "A5 guest TLS IOCTLV fixture handshake=" \
+  "Android guest TLS IOCTLV fixture failed" \
+  "expected=0"
+wait "$interrupt_server_pid"
+interrupt_server_pid=""
+
+put_fixture_text port "$port"
 run_case kartpad.test 0 \
   "A5 guest TLS IOCTLV trusted exchange passed response_bytes=" \
   "A5 guest TLS IOCTLV missing built-in root rejection passed result=-1"
@@ -155,4 +222,4 @@ run_case wrong.kartpad.test -9 \
   "A5 guest TLS IOCTLV hostname rejection passed result=-9"
 
 apk_sha256="$(shasum -a 256 "$apk" | awk '{ print $1 }')"
-echo "Android product guest TLS IOCTLV emulator fixture passed: apk_sha256=$apk_sha256 private_key_on_device=no game_data_preserved=yes"
+echo "Android product guest TLS IOCTLV emulator fixture passed: apk_sha256=$apk_sha256 interrupted_handshake_recovered=yes private_key_on_device=no game_data_preserved=yes"

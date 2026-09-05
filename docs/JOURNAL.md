@@ -4113,3 +4113,28 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   retained.** API 28 and every physical-device acceptance row remain open. No
   APK/AAB or private artifact was published. Evidence:
   `docs/artifacts/2026-09-05/android/a6-api29-product-runtime.md`.
+
+## 2026-09-05 — Android A5 guest TLS interruption recovery
+
+- Extended the guarded guest IOCTLV runner with a one-shot host peer that
+  publishes a kernel-selected port only after listening, waits for TCP
+  establishment, then aborts during TLS negotiation.
+- The first attempts correctly exposed harness problems rather than product
+  failures: a cached prepared source lacked the opt-in fixture; rapid relaunches
+  could reuse one transcript filename; loopback binding was not reachable
+  through this emulator's `10.0.2.2`; and an immediate reset could race native
+  `connect()`. Fresh preparation, package-marker verification, byte-offset log
+  scanning, wildcard IPv4 binding, and a bounded post-accept delay resolved
+  those distinct boundaries.
+- The translated `/dev/net/ssl` handler reported interrupted handshake `-5`.
+  The following clean process completed the verified 4,797-byte exchange,
+  observed orderly peer close as `-6`, and retained wrong-host rejection `-9`.
+  The version-code 7 debug APK SHA-256 was
+  `81b46c904ae2a81ed9b0a2edaa2fc2b4c472b3d70b56dbc10c3cafa69231744b`.
+- Classification: **Pass for cold-process guest TLS interruption recovery on
+  the API 36 emulator.** Same-process reconnect, network transitions, local or
+  production WFC, and physical-device networking remain open. The runner
+  preserved app-private game data, copied no key to Android, removed the exact
+  fixture, and returned to the selector. No APK or private artifact was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`.

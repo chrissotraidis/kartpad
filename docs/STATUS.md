@@ -37,6 +37,18 @@ open. The clean reproducible dual-game baseline APK SHA-256 is
 Evidence:
 [`docs/artifacts/2026-09-05/android/a5-guest-tls-ioctlv.md`](artifacts/2026-09-05/android/a5-guest-tls-ioctlv.md).
 
+The same translated guest TLS fixture now has a deterministic interrupted-
+handshake recovery gate. A one-shot host peer waits until TCP establishment,
+then resets the connection during negotiation; the guest IOCTLV path reports
+`-5`. The next clean product process completes the verified 4,797-byte response,
+observes peer close as `-6`, and still rejects the wrong hostname as `-9`.
+The runner also handles Android reusing a timestamped transcript by scanning
+only bytes appended after launch. The test preserves game data, copies no key
+to Android, cleans its fixture, and restores the selector. This proves cold-
+process recovery only; same-process reconnect, network transitions, WFC, and
+physical networking remain open. Evidence:
+[`docs/artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md`](artifacts/2026-09-05/android/a5-guest-tls-interruption-recovery.md).
+
 Android A6 now has a byte-level clean-build reproducibility result. Two
 independent scoped Android app cleans and product rebuilds produced identical
 APK bytes at SHA-256

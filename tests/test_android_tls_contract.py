@@ -112,6 +112,14 @@ class AndroidTlsContractTests(unittest.TestCase):
         self.assertIn('"$fixture_root/ca.der"', runner)
         self.assertNotIn('"$fixture_root/ca.key"', runner)
         self.assertNotIn('"$fixture_root/server.key"', runner)
+        self.assertIn("SO_LINGER", runner)
+        self.assertIn('listener.bind(("0.0.0.0", 0))', runner)
+        self.assertIn("interrupt_port_file", runner)
+        self.assertIn("time.sleep(0.5)", runner)
+        self.assertIn("A5 guest TLS IOCTLV fixture handshake=", runner)
+        self.assertIn("before_size", runner)
+        self.assertIn("tail -c", runner)
+        self.assertIn("interrupted_handshake_recovered=yes", runner)
         self.assertIn(".KartPadLaunchActivity", runner)
 
     def test_tls_fixtures_use_only_ephemeral_private_keys(self) -> None:
