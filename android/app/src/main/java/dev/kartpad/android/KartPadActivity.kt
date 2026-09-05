@@ -18,6 +18,7 @@ import android.view.Gravity
 import android.view.InputDevice
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
 import android.widget.EditText
@@ -56,6 +57,9 @@ class KartPadActivity : SDLActivity() {
     private var touchSettingsDialog: AlertDialog? = null
     private var resetTouchLayoutDialog: AlertDialog? = null
     private var kartPadMenu: PopupWindow? = null
+    private var menuSafeInsetTop = 0
+    private var menuSafeInsetEnd = 0
+    private var menuSafeInsetBottom = 0
     private var runtimeProfile = "base"
     private lateinit var inputManager: InputManager
     private lateinit var motionSteering: KartPadMotionSteering
@@ -398,6 +402,44 @@ class KartPadActivity : SDLActivity() {
             setMargins(0, dp(8), dp(12), 0)
         }
         mLayout.addView(menuButton, params)
+        menuButton.setOnApplyWindowInsetsListener { _, insets ->
+            applyMenuSafeInsets(insets)
+            insets
+        }
+        menuButton.requestApplyInsets()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applyMenuSafeInsets(insets: WindowInsets) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val safe = insets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout(),
+            )
+            menuSafeInsetTop = safe.top
+            menuSafeInsetEnd = safe.right
+            menuSafeInsetBottom = safe.bottom
+        } else {
+            menuSafeInsetTop = maxOf(
+                insets.stableInsetTop,
+                insets.systemWindowInsetTop,
+                insets.displayCutout?.safeInsetTop ?: 0,
+            )
+            menuSafeInsetEnd = maxOf(
+                insets.stableInsetRight,
+                insets.systemWindowInsetRight,
+                insets.displayCutout?.safeInsetRight ?: 0,
+            )
+            menuSafeInsetBottom = maxOf(
+                insets.stableInsetBottom,
+                insets.systemWindowInsetBottom,
+                insets.displayCutout?.safeInsetBottom ?: 0,
+            )
+        }
+        (menuButton.layoutParams as? RelativeLayout.LayoutParams)?.let { params ->
+            params.topMargin = menuSafeInsetTop + dp(8)
+            params.marginEnd = menuSafeInsetEnd + dp(12)
+            menuButton.layoutParams = params
+        }
     }
 
     private fun showKartPadMenu() {
@@ -560,14 +602,20 @@ class KartPadActivity : SDLActivity() {
             0,
             1f,
         ))
-        val availableHeight = resources.displayMetrics.heightPixels - dp(76)
+        // Keep the whole iOS-sized menu card inside the short landscape viewport.
+        // It intentionally covers its trigger while open, like an anchored system menu.
+        val popupTop = menuSafeInsetTop + dp(8)
+        val popupEnd = menuSafeInsetEnd + dp(12)
+        val availableHeight = (
+            resources.displayMetrics.heightPixels - popupTop - menuSafeInsetBottom - dp(16)
+        ).coerceAtLeast(dp(88))
         val desiredHeight = dp(38) + rowHeights.sum() + (rows.size - 1).coerceAtLeast(0)
         kartPadMenu = PopupWindow(card, dp(320), minOf(availableHeight, desiredHeight), true).apply {
             isOutsideTouchable = true
             elevation = dp(12).toFloat()
             setBackgroundDrawable(GradientDrawable().apply { setColor(Color.TRANSPARENT) })
             setOnDismissListener { if (kartPadMenu === this) kartPadMenu = null }
-            showAtLocation(mLayout, Gravity.TOP or Gravity.END, dp(12), dp(60))
+            showAtLocation(mLayout, Gravity.TOP or Gravity.END, popupEnd, popupTop)
         }
     }
 

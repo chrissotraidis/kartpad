@@ -1381,6 +1381,12 @@ canonical emulators. All 8 top-level rows and the complete 5-row Controls,
 2-row Display, and 6-row Game Data & Saves submenus are reachable, and 16
 representative actions open their intended destination UI; evidence is in
 `docs/artifacts/2026-09-05/android/a4-menu-hierarchy-reachability.md`.
+The trigger and the iOS-shaped card now also reserve system-bar and cutout
+insets even when immersive mode temporarily hides the bars. Native API 36
+phone bounds place the card between the 63 px status and navigation regions
+without losing its final action; opposite landscape, OEM cutouts, foldables,
+multi-window, and physical-device checks remain open. Evidence is in
+`docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
 
 The API 36 phone lane now also launches the validated installed Retro 6.12.5
 profile from the production selector through the complete dual graph and

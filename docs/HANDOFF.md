@@ -2,6 +2,16 @@
 
 ## Current state
 
+The latest exact dual APK moves the three-dot trigger and iOS-shaped menu card
+inside Android's system-bar/display-cutout safe bounds, including bars hidden
+by immersive mode. On the visible API 36 phone, the card occupied y=84--975
+between the 63 px top zone and navigation beginning at y=1017, retained every
+top-level action, and passed all 16 action destinations. Exact audited
+unpublished APK SHA-256: `07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`.
+Retained Retro and save hashes match, and the selector is visible. Reverse
+landscape, OEM cutout, multi-window, and physical-device checks remain open.
+Evidence: `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.
+
 The latest exact dual APK now includes adaptive menu rows proven at Android
 `font_scale=2.0`. It measures title width at the real SP pixel size, expands
 one/two-line rows, and scrolls the card; all five Controls actions were visible

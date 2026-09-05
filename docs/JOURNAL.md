@@ -4349,3 +4349,29 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   phone emulator; not TalkBack, switch access, tablet/OEM font, or physical
   hardware acceptance.** No APK/AAB was published. Evidence:
   `docs/artifacts/2026-09-05/android/a4-menu-large-text.md`.
+
+## 2026-09-05 — Android A4 menu safe insets
+
+- Replaced the three-dot trigger's fixed top/end placement with Android
+  system-bar and display-cutout insets. API 30+ reserves bars even while they
+  are transiently hidden; API 28--29 uses stable/system/cutout fallbacks.
+- The first safe placement put the card below the trigger and was rejected by
+  the existing walker because the short landscape viewport hid the final
+  action. The accepted card begins inside the safe top, covers its trigger
+  while open, and reserves the bottom navigation inset.
+- On the visible native 2400x1080 API 36 phone, WindowManager reported 63 px
+  top/bottom system regions. The card rendered at y=84--975, above navigation
+  beginning at y=1017, with the final row fully present.
+- The complete menu walker passed 8 top/title rows, 5 Controls, 2 Display, 6
+  Game Data rows, and 16 action destinations. The source-only and exact dual
+  builds, strict APK audit, 110 tests with one skip, repository safety, and
+  whitespace checks pass.
+- Reinstalled unpublished exact dual APK
+  `07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`
+  with `-r`; retained Retro/version/save hashes match and the visible selector
+  shows Installed 6.12.5. Temporary captures/APK were moved to Trash.
+- Classification: **Pass for API 36 phone-emulator system-bar-safe menu layout
+  and complete action reachability; not opposite-landscape, OEM cutout,
+  foldable, multi-window, or physical-device acceptance.** No APK/AAB was
+  published. Evidence:
+  `docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`.

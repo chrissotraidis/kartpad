@@ -2,6 +2,18 @@
 
 Updated: 2026-09-05
 
+KartPad's Android three-dot trigger and menu card now honor system-bar and
+display-cutout safe insets, including transiently hidden bars on API 30+ and
+stable/cutout fallbacks on API 28--29. On the visible API 36 landscape phone,
+the 63 px status zone ended at y=63, the menu began at y=84, and its y=975
+bottom stayed above navigation at y=1017 while retaining all seven actions.
+The complete 16-destination walker, exact dual build, strict package audit, and
+110-test suite pass. The exact installed unpublished dual APK is
+`07c416a1ee5987bc30bd24ff74623b9d6f1683052c28fe02efb78fa0419ec3a3`;
+the retained Retro pack/save hashes still match and the selector is visible.
+Opposite-landscape and physical/OEM acceptance remain open. Evidence:
+[`docs/artifacts/2026-09-05/android/a4-menu-safe-insets.md`](artifacts/2026-09-05/android/a4-menu-safe-insets.md).
+
 The iOS-shaped Android menu now passes a real 200% system-text exercise. A
 rejected first formula left wrapped rows at 44 dp and visibly clipped two
 labels; the accepted implementation measures each title at its actual SP pixel
