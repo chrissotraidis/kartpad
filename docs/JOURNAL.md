@@ -4309,3 +4309,20 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   accessibility-service, or OEM-windowing acceptance.** No APK/AAB or private
   artifact was published. Evidence:
   `docs/artifacts/2026-09-05/android/a4-ios-shaped-menu-surface.md`.
+
+## 2026-09-05 — Android A6 physical Vulkan/storage intake
+
+- Changed the read-only physical gate to require Android's declared Vulkan
+  version and level rather than allowing a phone with no Vulkan declaration to
+  pass on an unavailable diagnostic inventory.
+- Raised the one-command preview installer to a 6 GiB minimum free-space floor;
+  callers may raise but cannot lower it.
+- Expanded the isolated fake-ADB matrix to 13 cases with explicit no-Vulkan
+  rejection. The entire contract passes with serial redaction.
+- Ran the guarded installer with exact audited dual APK `898a03be…` while the
+  API 36 emulator was the sole target. It rejected the emulator before install,
+  retained the exact installed APK hash, and left the selector active.
+- Classification: **Pass for fail-closed physical Vulkan/storage intake and
+  live negative safety; not physical Android execution or acceptance.** No
+  APK/AAB was published. Evidence:
+  `docs/artifacts/2026-09-05/android/a6-physical-vulkan-storage-preflight.md`.

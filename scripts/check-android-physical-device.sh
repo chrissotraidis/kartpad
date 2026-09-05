@@ -99,13 +99,21 @@ else
   package_state=not-installed
 fi
 
+features="$(adb_shell pm list features)"
+if ! grep -Fq 'feature:android.hardware.vulkan.version=' <<<"$features"; then
+  fail "device does not declare android.hardware.vulkan.version; KartPad requires Vulkan"
+fi
+if ! grep -Fq 'feature:android.hardware.vulkan.level=' <<<"$features"; then
+  fail "device does not declare android.hardware.vulkan.level; KartPad requires Vulkan"
+fi
+
 if adb_shell cmd gpu vkjson 2>/dev/null | grep -Eq 'deviceName|apiVersion|driverVersion'; then
   vulkan_inventory=available
 else
   vulkan_inventory=unavailable
 fi
 
-echo "Android A2 physical-device preflight passed: device=${manufacturer:-unknown}_${model:-unknown} api=$api abi=$abi page_size=$page_size free_kib=$free_kib package=$package_state input_controller_candidates=$controller_count vulkan_inventory=$vulkan_inventory adb_serial=redacted"
+echo "Android A2 physical-device preflight passed: device=${manufacturer:-unknown}_${model:-unknown} api=$api abi=$abi page_size=$page_size free_kib=$free_kib package=$package_state input_controller_candidates=$controller_count vulkan_feature=declared vulkan_inventory=$vulkan_inventory adb_serial=redacted"
 if (( controller_count == 0 )); then
   echo "NOTICE: no gamepad/joystick source is visible in dumpsys input; connect the intended controller before the hands-on A2 run" >&2
 fi

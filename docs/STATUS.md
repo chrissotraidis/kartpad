@@ -2,6 +2,16 @@
 
 Updated: 2026-09-05
 
+The physical-phone handoff now rejects devices that do not declare both Vulkan
+version and level before any package mutation, and the complete preview session
+requires at least 6 GiB free under `/data`. The mocked preflight passes 13
+supported/rejected cases, including a device with declared Vulkan but no
+available driver JSON and an explicit no-Vulkan rejection. A live negative run
+with the latest exact dual APK rejected the visible emulator, kept its installed
+APK hash unchanged, and left the selector active. This is stronger intake
+safety, not physical execution. Evidence:
+[`docs/artifacts/2026-09-05/android/a6-physical-vulkan-storage-preflight.md`](artifacts/2026-09-05/android/a6-physical-vulkan-storage-preflight.md).
+
 Android A4 now owns an iOS-shaped in-game menu instead of relying on the narrow
 platform `PopupMenu`. The native 2400x1080 phone emulator renders a rounded,
 right-anchored card with the KartPad header, icons, FPS checkmark, submenu

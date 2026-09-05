@@ -13,6 +13,7 @@ expected_sha256="${KARTPAD_ANDROID_EXPECTED_PREVIEW_SHA256:-cfb32065650a15e9d3dd
 expected_version_code=7
 expected_version_name="0.4.0-android-preview.2"
 allow_update="${KARTPAD_ANDROID_ALLOW_PREVIEW_UPDATE:-0}"
+minimum_free_kib="${KARTPAD_ANDROID_PREVIEW_MIN_FREE_KIB:-6291456}"
 
 fail() {
   echo "ERROR: $*" >&2
@@ -23,6 +24,10 @@ fail() {
 [[ -f "$apk" ]] || fail "hardware preview APK is unavailable"
 [[ "$allow_update" == 0 || "$allow_update" == 1 ]] ||
   fail "KARTPAD_ANDROID_ALLOW_PREVIEW_UPDATE must be 0 or 1"
+[[ "$minimum_free_kib" =~ ^[0-9]+$ ]] ||
+  fail "KARTPAD_ANDROID_PREVIEW_MIN_FREE_KIB must be an integer"
+(( minimum_free_kib >= 6291456 )) ||
+  fail "KARTPAD_ANDROID_PREVIEW_MIN_FREE_KIB must be at least 6291456"
 actual_sha256="$(shasum -a 256 "$apk" | awk '{ print $1 }')"
 [[ "$actual_sha256" == "$expected_sha256" ]] ||
   fail "hardware preview APK does not match the approved digest"
@@ -30,7 +35,8 @@ actual_sha256="$(shasum -a 256 "$apk" | awk '{ print $1 }')"
 
 # This must pass before any package mutation. It rejects emulators, unsupported
 # ABI/API/page sizes, insufficient space, and ambiguous/unauthorized targets.
-KARTPAD_ADB="$adb" "$repo_root/scripts/check-android-physical-device.sh" >&2
+KARTPAD_ADB="$adb" KARTPAD_ANDROID_A2_MIN_FREE_KIB="$minimum_free_kib" \
+  "$repo_root/scripts/check-android-physical-device.sh" >&2
 
 devices="$($adb devices -l 2>/dev/null)"
 serial="$(printf '%s\n' "$devices" |

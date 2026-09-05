@@ -2,6 +2,13 @@
 
 ## Current state
 
+The guarded phone installer now requires Android-declared Vulkan version/level
+and a 6 GiB free-space floor before mutation. Its fake-ADB contract passes 13
+cases; a live run against the visible emulator rejected it as non-physical,
+preserved exact installed APK hash `898a03be…`, and left the selector active.
+This is preflight hardening only; a connected physical phone remains required.
+Evidence: `docs/artifacts/2026-09-05/android/a6-physical-vulkan-storage-preflight.md`.
+
 Android's three-dot menu is now a KartPad-owned, iOS-shaped card rather than a
 narrow platform popup. On the visible API 36 phone it shows the rounded light
 surface, icon rows, FPS checkmark, chevrons, compact replacement submenus, and

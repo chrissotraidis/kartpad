@@ -19,6 +19,8 @@ class AndroidHardwarePreviewInstallContractTests(unittest.TestCase):
         self.assertIn("0.4.0-android-preview.2", installer)
         self.assertIn("expected_version_code=7", installer)
         self.assertIn("KARTPAD_ANDROID_ALLOW_PREVIEW_UPDATE", installer)
+        self.assertIn("KARTPAD_ANDROID_PREVIEW_MIN_FREE_KIB", installer)
+        self.assertIn("6291456", installer)
         self.assertIn('install -r "$apk"', installer)
         self.assertNotIn("pm clear", installer)
         self.assertNotIn(" uninstall ", installer)
@@ -36,6 +38,8 @@ class AndroidHardwarePreviewInstallContractTests(unittest.TestCase):
         self.assertIn("getconf PAGE_SIZE", preflight)
         self.assertIn("KernelPageSize", preflight)
         self.assertIn("/proc/self/smaps", preflight)
+        self.assertIn("android.hardware.vulkan.version", preflight)
+        self.assertIn("android.hardware.vulkan.level", preflight)
 
 
 if __name__ == "__main__":
