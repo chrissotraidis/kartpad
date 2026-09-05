@@ -1,0 +1,30 @@
+<Config>
+  <gsAddress>0.0.0.0</gsAddress>
+  <frontendAddress>127.0.0.1:29998</frontendAddress>
+  <frontendBackendAddress>127.0.0.1:29999</frontendBackendAddress>
+  <backendAddress>127.0.0.1:29999</backendAddress>
+  <backendFrontendAddress>127.0.0.1:29998</backendFrontendAddress>
+  <nasAddress>0.0.0.0</nasAddress>
+  <nasPort>29980</nasPort>
+  <nasAddressHttps>127.0.0.1</nasAddressHttps>
+  <nasPortHttps>29943</nasPortHttps>
+  <enableHttps>false</enableHttps>
+  <enableHttpsExploitWii>false</enableHttpsExploitWii>
+  <enableHttpsExploitDS>false</enableHttpsExploitDS>
+  <payloadServerAddress></payloadServerAddress>
+  <allowDefaultDolphinKeys>true</allowDefaultDolphinKeys>
+  <allowMultipleDeviceIDs>SameIPAddress</allowMultipleDeviceIDs>
+  <allowMultipleCsnums>SameIPAddress</allowMultipleCsnums>
+  <!-- Local isolation only: do not require a production Code.pul hash. -->
+  <enableHashCheck>false</enableHashCheck>
+  <pcountRefreshInterval>600</pcountRefreshInterval>
+  <username>kartpad</username>
+  <password>kartpad-local-only</password>
+  <databaseAddress>127.0.0.1:@POSTGRES_PORT@</databaseAddress>
+  <databaseName>wwfc</databaseName>
+  <logLevel>4</logLevel>
+  <logOutput>StdOut</logOutput>
+  <friendBotPID>0</friendBotPID>
+  <apiSecret>kartpad-local-only</apiSecret>
+  <serverName>KartPad Local WFC</serverName>
+</Config>

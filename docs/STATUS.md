@@ -70,6 +70,16 @@ guest initiation, Retro-WFC routing, local WFC, network transitions, or
 physical networking. Evidence:
 [`docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`](artifacts/2026-09-05/android/a5-guest-dns-ioctl.md).
 
+The isolated local-WFC service boundary is reproducible for Android testing.
+A guarded runner uses a digest-pinned PostgreSQL 17 image with tmpfs-only data,
+imports the unchanged pinned server schema, builds the clean server revision,
+and requires frontend/backend, NAS, GameSpy, QR2, and NATNEG listeners. The
+API 36 emulator received the expected NAS response through `10.0.2.2`; cleanup
+left no fixture process, container, port, or temporary server state. This is
+server reachability only—not translated guest routing, authentication,
+matchmaking, racing, or physical networking. Evidence:
+[`docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`](artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md).
+
 Android A6 now has a byte-level clean-build reproducibility result. Two
 independent scoped Android app cleans and product rebuilds produced identical
 APK bytes at SHA-256

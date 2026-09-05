@@ -455,6 +455,18 @@ not Retro-WFC routing, a retail guest request, local WFC, network transitions,
 or physical networking. Evidence is in
 `docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
 
+The pinned isolated Retro WFC server boundary is now reproducible again for
+Android work. A guarded runner starts PostgreSQL 17 from an immutable image
+digest with tmpfs-only data, creates the schema's required non-login owner,
+builds the clean pinned server, and requires every frontend/backend, NAS,
+GameSpy, QR2, and NATNEG listener. Both the Mac host and the API 36 emulator
+received the expected local NAS response, with Android crossing the real
+`10.0.2.2` host alias. Cleanup leaves no fixture container, process, listener,
+or temporary server tree. This advances online-acceptance step 2's service
+boundary only: the translated Retro guest has not yet routed, authenticated,
+matched, or raced against it. Evidence is in
+`docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
+
 Android HTTPS used by the application shell for the version manifest and pack
 download is separate from guest networking. Both layers must enforce HTTPS,
 certificate validation, bounded redirects, timeouts, and cancellation.

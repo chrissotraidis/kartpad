@@ -133,3 +133,20 @@ instrumentation before a third attempt.
 - External service, impairment, reconnect, physical-device online, and
   cross-client interoperability rows remain open. Production Retro WFC testing
   is specifically waiting on the documented service outage to end.
+
+## Android local-server boundary on 5 September 2026
+
+The pinned server can now be reconstructed with
+`scripts/test-android-local-wfc-server.sh`. Its PostgreSQL 17 image is locked by
+digest and uses tmpfs-only state; the unchanged upstream schema is imported
+after explicitly creating its assumed non-login `wiilink` owner. The runner
+builds the clean server pin, requires frontend/backend RPC, NAS, all four
+GameSpy TCP listeners, QR2 UDP, and NATNEG UDP, then proves the API 36 emulator
+can reach the isolated NAS endpoint through `10.0.2.2`. It stops the exact
+server/container and removes the temporary state on every exit.
+
+This closes Android reachability to the pinned local service, not a game-client
+state. Retro payload/bootstrap, translated guest routing, authentication,
+profile login, matchmaking, race traffic, results, reconnect, and physical
+networking remain open. Evidence:
+`docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.

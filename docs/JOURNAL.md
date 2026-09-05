@@ -4189,3 +4189,35 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   open. The runner preserved app-private game data, removed the trigger, and
   restored the selector. No APK/AAB or private artifact was published.
   Evidence: `docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
+
+## 2026-09-05 — Android A5 isolated local-WFC server boundary
+
+- Reconstructed the clean pinned Retro WFC server against a disposable
+  PostgreSQL 17 container. The database image is locked by immutable digest,
+  stores data only in a 512 MiB tmpfs, and publishes an ephemeral loopback
+  database port.
+- The first schema attempt exposed that upstream assigns ownership to a
+  `wiilink` role it does not create. The runner now creates that non-login role
+  before importing the unchanged pin and requires four public tables.
+- A first automated startup then exposed a second boundary: PostgreSQL's
+  temporary initialization server could satisfy `pg_isready` and shut down
+  before schema import. The final gate waits for the image's init-complete
+  marker plus readiness from the final server.
+- The clean final cycle built server commit
+  `fbd30fa41a35fe8a407e3a49bc83fe4ff91fd35b`, brought up frontend/backend RPC,
+  NAS, four GameSpy TCP listeners, QR2 UDP, and NATNEG UDP, and received the
+  isolated `KartPad Local WFC` NAS response from both the Mac and the API 36
+  emulator through `10.0.2.2:29980`.
+- Server binary SHA-256 was
+  `7eac61307cf3c8e8ccad38830202c7af1a7185224905bd0702c63ee5bffccfd1`.
+  No fixture container, process, listener, or temporary server directory
+  remained after cleanup.
+- The 110-test repository suite passes with one intentional skip, together with
+  shell lint, JSON validation, 493 patch hunks, pinned source/input
+  verification, repository safety, and whitespace checks.
+- Classification: **Pass for pinned local-server startup and Android emulator
+  reachability, not translated guest login or gameplay.** Payload/bootstrap,
+  client routing/auth/profile state, matchmaking, race/results, reconnect, and
+  physical Android networking remain open. No public service, APK/AAB,
+  credential, or private game data was used or published. Evidence:
+  `docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.

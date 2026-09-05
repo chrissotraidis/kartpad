@@ -69,6 +69,15 @@ the exact APK repeated the existing TLS recovery cases. This is not yet a
 retail guest request, Retro-WFC routing, local WFC, or physical networking.
 Evidence: `docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
 
+Android can now reach a freshly reconstructed pinned local-WFC service through
+the emulator host boundary. `scripts/test-android-local-wfc-server.sh` starts a
+digest-pinned, tmpfs-only PostgreSQL container, imports the upstream schema,
+builds the clean server pin, checks all TCP/UDP listeners, and requires the
+emulator's `10.0.2.2` NAS response. Its cleanup leaves no fixture process,
+container, listener, or temporary server state. This does not prove translated
+guest routing/login or a race. Evidence:
+`docs/artifacts/2026-09-05/android/a5-local-wfc-server-boundary.md`.
+
 Two independent scoped clean Android product builds are byte-identical at that
 same `aa227e2b…` hash. An incremental package had the same 149 extracted files
 but different ZIP ordering/alignment, so only the clean path is authoritative

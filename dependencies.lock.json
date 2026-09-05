@@ -52,6 +52,15 @@
       "pushDisabled": true
     },
     {
+      "name": "PostgreSQL local WFC fixture",
+      "repository": "https://hub.docker.com/_/postgres",
+      "version": "17-alpine",
+      "image": "postgres@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193",
+      "imageId": "sha256:8ee7c900f4de054e8f0a3b42b8f5da38b8fba57c3ccd7c1a02be28cb0b06494f",
+      "license": "PostgreSQL",
+      "role": "Disposable tmpfs-backed database for the isolated Android local-WFC emulator fixture"
+    },
+    {
       "name": "Retro Rewind WFC patcher",
       "repository": "https://github.com/Retro-Rewind-Team/wfc-patcher-wii.git",
       "commit": "9ee5c2dfdcbe97408786184566ab50c9bee0d1eb",
