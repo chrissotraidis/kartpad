@@ -61,6 +61,14 @@ This closes controlled same-process session/socket recovery. Network
 transitions, WFC reconnect, and physical networking remain open. Evidence:
 `docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.
 
+The translated guest DNS primitive now passes on the same API 36 product lane.
+An opt-in `SO_GETHOSTBYNAME` request is copied from Wii memory, resolved on the
+production deferred worker, normalized to IPv4, and encoded back into the Wii
+`hostent` layout. The fixture validated guest `localhost` as `127.0.0.1`, then
+the exact APK repeated the existing TLS recovery cases. This is not yet a
+retail guest request, Retro-WFC routing, local WFC, or physical networking.
+Evidence: `docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
+
 Two independent scoped clean Android product builds are byte-identical at that
 same `aa227e2b…` hash. An incremental package had the same 149 extracted files
 but different ZIP ordering/alignment, so only the clean path is authoritative

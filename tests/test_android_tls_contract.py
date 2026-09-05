@@ -125,6 +125,32 @@ class AndroidTlsContractTests(unittest.TestCase):
         self.assertIn("same_process_handshake_recovered=yes", runner)
         self.assertIn(".KartPadLaunchActivity", runner)
 
+    def test_guest_dns_ioctl_fixture_uses_product_deferred_path(self) -> None:
+        fixture_patch = (
+            REPO / "patches/wiicompiled-android-dns-ioctl-fixture.patch"
+        ).read_text()
+        prepare = (REPO / "scripts/prepare-android-game-runtime.sh").read_text()
+        runner = (
+            REPO / "scripts/test-android-dns-ioctl-emulator.sh"
+        ).read_text()
+
+        self.assertIn("wiicompiled-android-dns-ioctl-fixture.patch", prepare)
+        self.assertIn("StartScalarDeferredIoctl", fixture_patch)
+        self.assertIn("IOCTL_SO_GETHOSTBYNAME", fixture_patch)
+        self.assertIn("ApplyDeferredDnsCompletion", fixture_patch)
+        self.assertIn("AndroidFixtureRoute", fixture_patch)
+        self.assertIn("TakeAndroidFixtureCompletion", fixture_patch)
+        self.assertIn("CancelAndroidFixtureCompletion", fixture_patch)
+        self.assertNotIn("getaddrinfo(", fixture_patch)
+        self.assertIn("request_marshaled=yes", fixture_patch)
+        self.assertIn("worker_resolved=yes", fixture_patch)
+        self.assertIn("guest_hostent=yes", fixture_patch)
+        self.assertIn("KartPadDnsIoctlFixture", runner)
+        self.assertIn("localhost", runner)
+        self.assertIn("127.0.0.1", runner)
+        self.assertIn("before_size", runner)
+        self.assertNotIn("pm clear", runner)
+
     def test_tls_fixtures_use_only_ephemeral_private_keys(self) -> None:
         script = (REPO / "scripts/test-android-tls-local.sh").read_text()
         emulator_script = (

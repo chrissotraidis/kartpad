@@ -59,6 +59,17 @@ closes controlled same-process guest TLS session recovery, not Wi-Fi/cellular
 transitions, WFC reconnect, or physical networking. Evidence:
 [`docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`](artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md).
 
+Android A5 now also crosses the translated guest DNS boundary. An opt-in
+product request passes through the production deferred `SO_GETHOSTBYNAME`
+preparation and worker, then validates the complete Wii `hostent` written back
+to guarded guest memory. The API 36 emulator resolved guest `localhost` to
+`127.0.0.1`; the exact APK then repeated the same-process TLS recovery gate.
+The runner preserved app-private game data, removed its trigger, and restored
+the selector. This proves deterministic guest DNS marshalling, not retail
+guest initiation, Retro-WFC routing, local WFC, network transitions, or
+physical networking. Evidence:
+[`docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`](artifacts/2026-09-05/android/a5-guest-dns-ioctl.md).
+
 Android A6 now has a byte-level clean-build reproducibility result. Two
 independent scoped Android app cleans and product rebuilds produced identical
 APK bytes at SHA-256

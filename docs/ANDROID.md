@@ -443,6 +443,18 @@ fixture succeeds. Network-interface transitions, DNS/NAT impairment, WFC
 protocol reconnect, and physical networking remain incomplete. Evidence is in
 `docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.
 
+The translated Android product now also has a deterministic guest DNS gate.
+An opt-in request enters the same deferred `SO_GETHOSTBYNAME` preparation,
+worker, IPv4 normalization, and Wii `hostent` encoder used by IOS networking;
+the fixture itself never calls the host resolver. The API 36 emulator copied
+`localhost` from guest memory, resolved it to `127.0.0.1`, and validated the
+canonical-name, family, address-length, pointer-list, and address bytes written
+back to guarded guest memory. A cancelled fixture token cannot write after its
+scratch window is restored. This closes the deterministic native DNS primitive,
+not Retro-WFC routing, a retail guest request, local WFC, network transitions,
+or physical networking. Evidence is in
+`docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
+
 Android HTTPS used by the application shell for the version manifest and pack
 download is separate from guest networking. Both layers must enforce HTTPS,
 certificate validation, bounded redirects, timeouts, and cancellation.

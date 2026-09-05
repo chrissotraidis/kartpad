@@ -4161,3 +4161,31 @@ This file is append-only. Evidence paths refer to sanitized, publishable artifac
   restored the selector, and the temporary source was deleted. No APK or
   private artifact was published. Evidence:
   `docs/artifacts/2026-09-05/android/a5-guest-tls-same-process-recovery.md`.
+
+## 2026-09-05 — Android A5 translated guest DNS IOCTL
+
+- Added an opt-in product fixture around the production deferred
+  `SO_GETHOSTBYNAME` path. It opens `/dev/net/ip/top`, copies a Wii request from
+  guarded guest memory, launches the existing detached resolver worker, and
+  applies the normal Wii `hostent` encoder; the fixture does not invoke
+  `getaddrinfo` directly.
+- Added a bounded fixture completion route and cancellation token so an overdue
+  worker cannot fabricate an IOS callback or write after guest scratch is
+  restored.
+- Fresh dual-runtime preparation reproduced the patch and the complete ARM64
+  product built successfully. On the visible API 36 Pixel Tablet emulator,
+  guest `localhost` resolved to `127.0.0.1`; canonical name, IPv4 family,
+  address size, guest pointer list, and address bytes all matched.
+- The exact debug APK SHA-256 is
+  `5bf5018de8d8e8c2b59dfaf381bdade5668c40a890f483ca248f81ca5e244411`.
+  It also repeated the translated TLS interruption, trusted exchange,
+  same-process recovery, orderly close, and hostname-rejection cases.
+- The 109-test suite with one intentional skip, strict APK audit, all 493 patch
+  hunks, pinned source/input verification, SunPad snapshot, shell lint,
+  repository safety, and whitespace checks pass.
+- Classification: **Pass for deterministic translated guest DNS marshalling on
+  the Android emulator.** Retail guest initiation, Retro-WFC routing, local
+  WFC, network transitions, cross-client play, and physical networking remain
+  open. The runner preserved app-private game data, removed the trigger, and
+  restored the selector. No APK/AAB or private artifact was published.
+  Evidence: `docs/artifacts/2026-09-05/android/a5-guest-dns-ioctl.md`.
