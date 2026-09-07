@@ -33,3 +33,7 @@ software licenses do not grant rights in Nintendo-owned game content. This
 does not waive GPL obligations for the combined application or for GPL-covered
 code included in generated output. See [`RIGHTS_AND_LICENSES.md`](RIGHTS_AND_LICENSES.md)
 for the game-content boundary and complete Corresponding Source obligations.
+
+The CSNum runtime correction in `patches/wiicompiled-sc-serial.patch` is
+backported from [patchzyy/Wiicompiled commit e0e362b](https://github.com/patchzyy/Wiicompiled/commit/e0e362bd992e07784f8ce7fa795cdb496af7b075),
+by patchzyy, under the upstream GPLv3 license.

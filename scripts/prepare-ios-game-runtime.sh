@@ -123,6 +123,10 @@ for dual_patch in \
   patch --batch -p1 -d "${runtime_source}" < "${repo_root}/patches/${dual_patch}"
 done
 
+# Backport upstream e0e362b: SCGetProductSN returns a guest u32 for DWC csnum.
+patch --batch -p1 -d "${runtime_source}" < \
+  "${repo_root}/patches/wiicompiled-sc-serial.patch"
+
 mkdir -p "${runtime_source}/third_party/sse2neon"
 cached_sse2neon="${repo_root}/build/dependency-cache/sse2neon-${sse2neon_sha256}.h"
 if [[ -f "${cached_sse2neon}" ]] &&
