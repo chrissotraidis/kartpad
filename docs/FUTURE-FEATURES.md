@@ -64,3 +64,67 @@ three-dot menu.
 Do not schedule this ahead of current import reliability, lifecycle stability,
 performance, physical-device coverage, or production online acceptance. It is a
 medium-to-large reusable feature, not a small menu addition.
+
+## DSU / Cemuhook motion controllers on Apple TV
+
+**Status:** Reviewed; deferred for an optional experimental build. Not implemented
+or scheduled. This is a product enhancement, not technical debt.
+
+Issue [#91](https://github.com/chrissotraidis/kartpad/issues/91) proposes using a
+phone or a controller bridge on the local network for Wiimote-style tilt
+steering on Apple TV. The
+[maintainer review](https://github.com/chrissotraidis/kartpad/issues/91#issuecomment-5568259122)
+found the approach feasible with moderate implementation complexity. DSU input
+would map into KartPad's existing Classic Controller controls; it would not
+provide Dolphin's full Wii Remote/Nunchuk emulation.
+
+### Recommended first scope
+
+- tvOS only, disabled by default, with manual server address/port entry and
+  selection of one DSU pad for Player 1.
+- One verified phone app and layout, providing buttons and calibrated tilt,
+  with sensitivity, inversion, recentering, and clear connection status.
+- Keep a button available for tricks. Validate shake detection separately.
+- Defer motion-only pairing with a physical pad, DSU players 2–4, additional
+  platform UIs, discovery, rumble, IR, and DSU server mode.
+
+### Integration work and limits
+
+- Parse and validate DSU packets separately from asynchronous UDP reception.
+  Keep network work off the game thread, bound sample handling, and clear held
+  input on timeout, disconnect, or shutdown. Handle packet reordering, sequence
+  wraparound, and server restarts.
+- Convert sensor orientation and timestamps, estimate gravity for tilt, and
+  separate gravity from acceleration before reusing the shake detector. The
+  existing CoreMotion helpers and tests do not establish DSU motion support.
+- Extend controller source bookkeeping and reconciliation explicitly; the
+  current manager only retains GameController devices. Preserve physical-pad
+  assignments and button-edge latching. Do not use a DSU MAC alone as identity,
+  since the protocol permits an all-zero value.
+- Start the client during tvOS setup so a connected full DSU pad can satisfy
+  the gameplay gate before runtime installation. Preserve Siri Remote setup
+  navigation and provide recovery when a phone sleeps or loses its connection.
+- Verify button mappings for the selected app. DSU carries generic pad fields;
+  apps do not necessarily expose the same Wii Remote layout. DSUController's
+  documented Wii Remote/Nunchuk setup uses two phones.
+
+Protocol details should follow the
+[Cemuhook reference](https://v1993.github.io/cemuhook-protocol/): its controller
+payload offsets exclude the first 20 bytes of the packet, analog R2 is at
+payload offset 34, and L2 is at 35. Compatibility references include the
+[WiiMoteDSU profile](https://github.com/marcowindt/WiiMoteDSU/blob/master/WiiMoteDSU.ini)
+and [DSUController guide](https://github.com/breeze2/dsu-controller-guides#faq).
+
+### Acceptance and next decision
+
+Require protocol fixtures, malformed-packet rejection, calibration and motion
+tests, and connection lifecycle tests before a hardware trial. Physical Apple
+TV acceptance must cover setup, phone-only game-menu navigation, Original and
+Retro Rewind races, steering feel and latency under Wi-Fi jitter, phone sleep,
+disconnect/reconnect, and coexistence with physical controllers.
+
+The requester has offered Apple TV testing. Confirm their Apple TV/tvOS and
+phone/app versions, and whether they want sideways phone steering or a bridged
+physical Wii Remote/Nunchuk, before choosing the first compatibility target.
+Keep this deferred until separately prioritized; listing it here does not
+commit it to the next build or establish hardware support.
