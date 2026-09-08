@@ -1,5 +1,5 @@
 --- a/lib/dolphin/pad/pad.cpp
 +++ b/lib/dolphin/pad/pad.cpp
 @@ -873,0 +873,2 @@
-+      if (leftTriggerSet) status[i].triggerLeft = 0;
-+      if (rightTriggerSet) status[i].triggerRight = 0;
++      if (leftTriggerSet) tl = 0;
++      if (rightTriggerSet) tr = 0;
