@@ -1,91 +1,85 @@
-# Local macOS controller improvements
+# macOS controller and native settings candidate
 
-Source baseline: KartPad `v0.4.11-macos.1`, commit `0c700618e91eda0eac86cd134e3130c8f4fc37a0`.
-Working branch: `macos-controller-overhaul`.
+This contribution by Aedan Pilkington is under review in
+[PR #112](https://github.com/chrissotraidis/kartpad/pull/112). It adds controller
+assignment, two alternative bindings per action, saved profiles and native
+settings. It applies to macOS; it does not change Android or iPhone/iPad input.
+A local build is not a public release or hardware acceptance.
 
-## Run the current build
+## Try the controller settings
 
-Quit the older KartPad after finishing your current game, then run:
+Quit any running KartPad normally and back up its data folder first. The
+standard app uses existing KartPad data; do not run two copies simultaneously.
+Open your candidate app, then **Controls → Controller Settings** or
+**KartPad Settings → Controllers**. Cmd-comma or F10 opens settings
+(Fn–F10 if the keyboard uses media keys).
 
-```sh
-open "/Users/aedanpilkington/KartPad Home/build/KartPad-multibind.app"
-```
+To use A or RT for Accelerate / Select:
 
-This is a **base Mario Kart Wii build**. Your downloaded dual-game app remains untouched; Retro Rewind was not rebuilt or play-tested. Existing game data, Config.toml and saves are reused. No disc contents were modified. The existing DOL and REL matched the pinned RMCP01 revision-0 hashes.
+1. Keep A as the primary binding and click **+ Add** for its alternative.
+2. Release the controls, then fully pull RT.
+3. Bind Drift to RB if RT should accelerate without also drifting.
+4. Click **Save Profile**, quit normally and reopen to check persistence.
 
-Open **Controls → Controller Settings** (also accessible from KartPad Settings).
+Either binding activates the action in menus and races. These are alternatives,
+not a simultaneous-button chord or context-dependent mapping. Trigger capture
+uses the configured threshold. Shared bindings are allowed with a warning.
+**Clear** removes both bindings; clearing Item or Drift restores its default
+analogue-trigger behavior. Explicit Item/Drift bindings suppress that fallback.
 
-To use **A or RT for Accelerate / Select**:
+Profiles are saved atomically to
+`~/Library/Application Support/KartPad/ControllerProfiles.json` using hashed
+GUID/serial identities. Identical devices without serials share a profile.
+Invalid profile JSON is preserved rather than overwritten. Diagnostics include
+controller subsystem/assignment/profile status without raw serials or profile keys.
 
-1. Keep A in the first binding slot.
-2. Click **+ Add** beside it.
-3. Release buttons and triggers, then fully pull RT.
-4. Click **Save Profile**.
+## Build from your checkout
 
-Either input activates the same action in menus and races; this does not switch mappings based on game context. Each action supports two alternative inputs, not a simultaneous-button chord. LT and RT use the configured trigger threshold. If a control is shared with another action, remapping succeeds and shows a warning. Clear removes both bindings for the action. Clearing Item or Drift restores its underlying analogue trigger behavior. Bind Drift to RB if RT should accelerate without also drifting.
-
-## Findings and changes
-
-- macOS GameController and the pinned SDL 3.4.4 both detected the connected Xbox One controller and SDL opened it successfully.
-- The old native Controller Settings menu only synthesized F10 to toggle the toolbar. It now opens a dedicated AppKit controller panel.
-- Newly discovered controllers were explicitly left unassigned. The first controller now takes Player 1 only when no saved Player 1 preference exists.
-- Assignment and unassignment updated SDL without updating Aurora's cached player index. Both now change together, including when displacing another device.
-- The raw joystick wizard emitted `platform:Windows` on macOS. It now uses SDL's actual platform name.
-- SDL suppresses controller events when an AppKit panel owns focus instead of an SDL window. The panel scopes the background-input hint to its active lifetime and restores the prior value on close.
-- The user initially still received no input, then confirmed input worked after unplugging/reconnecting. **The cold-connect issue is not conclusively resolved**; the focus change alone was insufficient in that test.
-- The initial remapper listened only to buttons, so analogue triggers could never bind. Trigger capture and runtime translation now use explicit LT/RT binding identifiers and the real trigger thresholds.
-- The initial duplicate-binding restriction made most already-mapped buttons unavailable. Shared bindings now work with a visible warning.
-- Primary and alternative bindings are independently editable and persisted per hashed GUID/serial identity. Existing legacy primary/secondary bindings and dead zones are retained when first saving a profile. Identical devices without serials share a profile.
-- Profiles are atomically saved in `~/Library/Application Support/KartPad/ControllerProfiles.json`. Invalid JSON is preserved rather than overwritten.
-- The existing diagnostics report includes controller subsystem state, detected devices, assignments and profile status. Raw serials and profile keys are not included.
-- The package audit now accepts its actual build product instead of requiring dual-game-only selectors for a supported base build.
-
-## Relevant files
-
-- `apple/macos/KartPadControllers.inc.mm`: native panel, capture, profile persistence, live tester and diagnostics.
-- `apple/macos/KartPadMacShell.mm`: menu and Settings integration.
-- `patches/aurora-macos-controller-assignment.patch`: default assignment and cached-index corrections.
-- `patches/aurora-macos-trigger-bindings.patch`: shared binding predicate and trigger-to-game-input handling.
-- `patches/wiicompiled-macos-controller-settings.patch`: runtime panel integration and wizard platform correction.
-- `scripts/prepare-g7-game-runtime.sh`: applies the patches to disposable runtime sources.
-- `tests/macos/controller_profiles.mm` and the two controller test scripts: profile, binding and assignment regression coverage.
-
-## Validation
-
-- Full ARM64 base-game runtime compiled, linked, packaged and passed the product-aware macOS package audit and strict codesign verification.
-- Earlier native-panel build launched with existing game data; the panel showed the physical Xbox as Player 1 and retained the user's existing bindings.
-- User confirmed input after reconnecting; subsequent game rendering reached race results.
-- Automated tests cover profile round trips, legacy secondary bindings, dead zones, malformed-profile preservation, shared bindings, clearing, and Xbox labels.
-- Real SDL virtual input verifies that A and RT independently activate the binding predicate used by the runtime, and release deactivates it. The A/RT pair survives save/reload.
-- Tests exercise the prepared runtime's actual player-assignment functions for cached-index fallback, displacement, unassignment and Player 4.
-- Applying both Aurora patches to clean pinned sources reproduces the compiled input sources exactly.
-- The newest multi-binding build has not yet been physically tested in a race. The running older game was deliberately left open at race results.
-
-## Rebuild this prepared workspace
-
-The existing translation and dependency build are available locally. `build/generated` points at the validated private base translation.
+Follow the repository's source-build prerequisites and prepare your own pinned
+translation inputs first. Run from the repository root. These example output
+paths must be fresh; choose new names if they already exist.
 
 ```sh
-cd "/Users/aedanpilkington/KartPad Home"
-cmake --build build/self-build-macos-build --target WiiCompiled --parallel 4
-scripts/test-macos-controller-profiles.sh
-python3 scripts/test-macos-controller-assignment.py
-scripts/package-macos-runtime.sh \
-  "$PWD/build/self-build-macos-build" "$PWD/build/KartPad-next.app"
-scripts/audit-macos-package.sh "$PWD/build/KartPad-next.app" base
-open "$PWD/build/KartPad-next.app"
+translation="$PWD/private/self-build/translation"
+scripts/build-macos-app.sh "$translation" \
+  "$PWD/build/controller-review-source" \
+  "$PWD/build/controller-review-build" \
+  "$PWD/build/KartPad-controller-review.app" base
+scripts/test-macos-controller-profiles.sh \
+  "$PWD/build/controller-review-build" "$PWD/build/controller-review-source"
+python3 scripts/test-macos-controller-assignment.py "$PWD/build/controller-review-source"
+python3 scripts/test-macos-trigger-output.py "$PWD/build/controller-review-source"
+open "$PWD/build/KartPad-controller-review.app"
 ```
 
-Choose a fresh app output name if `KartPad-next.app` already exists. Native shell source changes are picked up directly. If changing patch files, regenerate the prepared runtime with `scripts/build-macos-app.sh` using fresh source/build/output paths; merely editing a patch does not update an already prepared runtime.
+The example builds Original. For a dual candidate, use translation inputs that
+contain both Original and Retro shards and pass `dual` as the final build-script
+argument. A base build does not establish Retro acceptance. Changing a patch
+requires fresh prepared sources; editing the patch alone does not update an
+existing build tree. Build version and source are recorded in the app fingerprint.
 
-## Manual checklist
+## Acceptance status and test checklist
 
-- Launch with Xbox already connected; verify button and axis feedback. If input is absent, reconnect and record that it was necessary.
-- Assign to Player 2, back to Player 1, then unassign/reassign; verify the displayed assignment and game behavior.
-- Add RT as the alternative to Accelerate / Select's A. Verify both work independently and releasing either clears that input.
-- Save, quit and reopen; verify A + RT remain configured.
-- Test Cancel, Clear, shared bindings and trigger threshold changes.
-- Verify steering, brakes, drift, item, pause, D-pad and keyboard in a race.
-- Disconnect/reconnect while the controller panel is open and during gameplay.
+The contributor reported Xbox use, assignment/remapping and profile persistence.
+Earlier input required reconnecting, so cold-connected behavior still needs a
+specific check. Maintainer checks on contributor head `271fdc1` passed a full
+Original/Retro dual build, package/signature audit, profile tests, 200 final
+trigger-output cases, Original launch and the default native controller layout.
+The previous trigger-pressure overwrite and clipped Clear buttons are corrected.
 
-Remaining scope: a broader first-run wizard, game-context-dependent mappings, more than two bindings per action, raw-unmapped-device native remapping, and a rebuilt/validated dual-game Retro Rewind package are not included.
+On the final candidate, test:
+
+- Cold launch with the controller connected; check live buttons/axes and game input.
+- Assign Player 2, restore Player 1, then unassign/reassign; check game behavior.
+- Check A and RT independently, releases, Item/Drift, steering, brake, pause and
+  D-pad in an offline race. Confirm the saved profile after quitting/reopening.
+- Disconnect/reconnect in settings and gameplay; try multiple controllers if available.
+- Check Original and Retro separately, windowed/fullscreen transitions, settings
+  access in fullscreen and controls at a smaller available screen height.
+- Test the optional notch-area mode separately; its presence is not proof that
+  every MacBook/display combination works.
+
+Report the app fingerprint, controller model/connection and specific failing
+step. Do not post profiles, serials or personal game data. Broader setup wizards,
+context-dependent mappings, more than two bindings and native raw-device remapping
+remain outside this contribution.
