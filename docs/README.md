@@ -21,6 +21,7 @@ and observations named in them.
 | Build for Android | [Android source builds](../android/README.md), [architecture](ANDROID.md) |
 | Test hardware | [iPhone/iPad](PHYSICAL-ACCEPTANCE.md), [Android handoff](ANDROID-PHYSICAL-HANDOFF.md), [tvOS](TVOS-TESTING.md) |
 | Work on platform behavior | [tvOS architecture](TVOS.md), [external displays](EXTERNAL-DISPLAYS.md), [UIKit menu repair](IOS-THREE-DOT-MENU-FIX.md) |
+| Target Android FPS, stalls and geometry | [Investigation handoff](ANDROID-PERFORMANCE-HANDOFF.md) |
 | Investigate runtime correctness | [Portability](PORTABILITY.md), [PPC semantics](SEMANTICS.md), [performance](PERF.md) |
 
 ## Maintain and release

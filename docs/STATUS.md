@@ -9,7 +9,7 @@ next actions, and [known issues](KNOWN-ISSUES.md) for current reports.
 | Platform | Package | Acceptance boundary |
 | --- | --- | --- |
 | Android | [0.4.10-android.1, code 21](releases/v0.4.10-android.1.md) | Promotes the Pixel 9 Pro XL / Razer Kishi runtime with the console-serial correction; broader hardware and sustained performance remain open |
-| Android testing | [0.4.13 preview 1, code 28](releases/v0.4.13-android-preview.1.md) | Rating companion transfer and diagnostics; package/emulator checks pass, physical and real-save acceptance pending |
+| Android testing | [0.4.13 preview 1, code 28](releases/v0.4.13-android-preview.1.md) | Rating companion transfer and diagnostics; #105 confirms offline ratings/information transfer. Broad physical performance, Mii migration and server-sync acceptance remain open |
 | iPhone / iPad preview | [0.4.13, build 29](releases/v0.4.13-ios.1.md) | Generic ARM64 baseline, chooser artwork and diagnostics; exact-build physical acceptance and reported older-device crash confirmation pending |
 | Apple Silicon Mac | [0.4.11, build 26](releases/v0.4.11-macos.1.md) | Published native identity-fix rebuild; title-screen/normal-close smoke preserved installed state |
 | Apple TV experimental | [0.4.11, build 9](releases/v0.4.11-tvos.1.md) | Published identity-fix and compiler-hardened package; exact-build hardware acceptance remains open |

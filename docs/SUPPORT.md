@@ -63,9 +63,10 @@ for the same online ID; unrelated records are preserved. Unsupported/custom
 NAND configurations are refused.
 
 Keep the original save and rating file backed up and verify licenses and
-ratings **offline** before online play. Real-save migration acceptance remains
-pending in [#105](https://github.com/chrissotraidis/kartpad/issues/105). This does
-not transfer Miis or synchronize server ratings. Older diagnostic betas lack
+ratings **offline** before online play. The reporter in
+[#105](https://github.com/chrissotraidis/kartpad/issues/105) confirmed successful
+ratings and offline-information transfer on 8 September. This does not establish
+complete migration, transfer Miis or synchronize server ratings. Older diagnostic betas lack
 the companion action. Never replace rating files while the game runs, edit
 ratings, reset identity or publish saves, Miis or friend codes. Automatic
 Syncthing/two-way folder synchronization is not implemented.
