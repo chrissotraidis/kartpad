@@ -3,7 +3,8 @@
 - (NSView *)settingsPage:(NSString *)title {
   NSView *page=[[NSView alloc] initWithFrame:NSMakeRect(0,0,780,740)];
   NSScrollView *scroll=[[NSScrollView alloc] initWithFrame:NSMakeRect(0,0,780,740)];
-  scroll.hasVerticalScroller=YES; scroll.autohidesScrollers=YES;
+  scroll.hasVerticalScroller=YES; scroll.hasHorizontalScroller=YES;
+  scroll.autohidesScrollers=YES;
   scroll.drawsBackground=NO; scroll.documentView=page;
   NSTabViewItem *item=[[NSTabViewItem alloc] initWithIdentifier:title];
   item.label=title;item.view=scroll;[self.settingsTabs addTabViewItem:item];
@@ -114,17 +115,19 @@
   (void)sender;
   if(!self.settingsPanel) {
     CGFloat height=std::min<CGFloat>(810,NSScreen.mainScreen.visibleFrame.size.height-70);
-    self.settingsPanel=[[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,820,height)
+    // Leave room for the tab border and a non-overlay vertical scrollbar
+    // around the 780-point settings document, including its rightmost buttons.
+    self.settingsPanel=[[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,860,height)
       styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable
       backing:NSBackingStoreBuffered defer:NO];
     self.settingsPanel.title=@"KartPad Settings";self.settingsPanel.releasedWhenClosed=NO;
-    self.settingsPanel.minSize=NSMakeSize(820,570);
+    self.settingsPanel.minSize=NSMakeSize(860,570);
     self.settingsPanel.collectionBehavior=NSWindowCollectionBehaviorCanJoinAllSpaces | NSWindowCollectionBehaviorFullScreenAuxiliary;
     self.settingsPanel.hidesOnDeactivate=YES;
     self.settingsPanel.delegate=KPControllers();
     self.settingControls=[NSMutableDictionary dictionary];self.settingChoices=[NSMutableDictionary dictionary];
     self.settingValues=[NSMutableDictionary dictionary];
-    self.settingsTabs=[[NSTabView alloc] initWithFrame:NSMakeRect(10,42,800,height-52)];
+    self.settingsTabs=[[NSTabView alloc] initWithFrame:NSMakeRect(10,42,840,height-52)];
     self.settingsTabs.delegate=self;
     self.settingsTabs.autoresizingMask=NSViewWidthSizable|NSViewHeightSizable;
     [self.settingsPanel.contentView addSubview:self.settingsTabs];
