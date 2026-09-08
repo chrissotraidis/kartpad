@@ -28,6 +28,9 @@ A worker saying “done” is a review handoff, not automatic merge/release acce
 - [Investigation records](artifacts/): dated reproduction, experiment, review and
   build results. Keep facts, hypotheses and untested claims distinct. Correct
   superseded conclusions explicitly instead of leaving contradictory summaries.
+- [Documentation index](README.md): current guides and explicitly historical archives.
+  Keep README ordering intact and put release details in versioned notes.
+  Update STATUS/HANDOFF summaries in place; do not append full histories.
 - [Support guide](SUPPORT.md): reporter-facing reproduction and diagnostic steps.
 - [External displays](EXTERNAL-DISPLAYS.md) and [future features](FUTURE-FEATURES.md):
   accepted display work and separately scoped proposals.

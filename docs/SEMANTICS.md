@@ -1,6 +1,8 @@
 # KartPad PPC/AArch64 semantics ledger
 
-Updated: 2026-08-28
+Baseline evidence: 28 August 2026. This records the original G6 test corpus;
+new semantic changes need their own regression results. Current investigations
+are linked from the [maintenance board](MAINTENANCE-BOARD.md).
 
 ## Current gate state
 

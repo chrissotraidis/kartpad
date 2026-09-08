@@ -18,7 +18,7 @@ Treat it as an experimental build, not supported Apple TV functionality.
    any repository device script.
 4. Stage your own extracted PAL `RMCP01`, revision-0 `DATA` directory with
    `scripts/stage-tvos-game-data.sh`.
-5. Follow `docs/TVOS-TESTING.md` in order and stop at the first failure.
+5. Follow the [tvOS test guide](TVOS-TESTING.md) in order and stop at the first failure.
 
 An Extended Gamepad is required for racing. The Siri Remote is supported only
 for the native setup screens. The app does not include a disc image, extracted

@@ -1,6 +1,6 @@
 # KartPad support
 
-Use the [platform downloads](../README.md#platform-overview) and include the
+Use the [platform downloads](../README.md#downloads) and include the
 exact app version/build in a report. Update over the existing installation;
 do not uninstall or clear storage to troubleshoot. Follow the platform's
 backup instructions before changing saves or signing identities.
@@ -9,8 +9,8 @@ backup instructions before changing saves or signing identities.
 
 KartPad stores saves in Android's **internal app-private storage**, so its save
 folder is not exposed through a normal file manager under `Android/data`.
-The [Android 0.4.12-android.1 testing build](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.12-android.1)
-adds transfers for Original, Retro Rewind and Retro Rewind (Separate Save).
+The [Android testing preview](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.13-android-preview.1)
+includes transfers for Original, Retro Rewind and Retro Rewind (Separate Save).
 Root access is not needed:
 
 1. Copy the PC's raw Mario Kart Wii `rksys.dat` to Downloads on the phone.
@@ -50,29 +50,25 @@ console identity. If the source is Dolphin, another WiiCompiled build, or
 Retro Rewind, name it and the game region when asking for migration help.
 Never post the save or NAND publicly.
 
-**Retro Rewind ratings:** This picker transfers only `rksys.dat`. Retro Rewind
-also stores ratings in `RRRating.pul`, keyed by online profile, and synchronizes
-them during login. With a shared Dolphin NAND, the source file is under
-`<Dolphin User>/Wii/shared2/Pulsar/RetroRewind6/RRRating.pul`, not necessarily
-the imported mod folder. That companion file is not currently included in the transfer.
-A restored license therefore does not establish a complete Retro migration.
-If the rating differs, preserve the source save and Retro folder, stop rated
-races on the migrated copy, and report source/game versions and whether the
-friend code matches locally (only “same” or “different”; do not post the code).
-Do not edit ratings, regenerate identity, or publicly upload rating/Mii files.
-The missing companion file is a known gap; it does not by itself prove the
-cause of any particular server rating. The #105 reporter confirmed WiiCompiled
-0.2.31, Retro 6.12.7, an existing rating file in the shared NAND and matching
-friend codes; the rating still differed after a completed race. The diagnostic
-beta does not fix this migration gap. See [#105](https://github.com/chrissotraidis/kartpad/issues/105).
+**Retro Rewind ratings:** Raw `rksys.dat` transfer does not include
+`RRRating.pul`, Miis or console identity. In a shared Dolphin NAND, the rating
+file is usually under `Wii/shared2/Pulsar/RetroRewind6/RRRating.pul`.
 
-`RRRating.pul` is local rating data, not a synchronization service. Retro loads
-it into memory, and separate network code handles rating downloads/reports.
-Do not replace it while the game is running. The next migration step is a
-matched, validated save/rating transfer with backups, applied while stopped,
-then restart and offline verification. Automatic two-way folder sync also needs
-conflict handling and an Android-accessible transfer location; it is not yet
-implemented. The Mii database remains separate.
+[0.4.13 preview 1](releases/v0.4.13-android-preview.1.md) adds
+**Restore Retro Ratings…**. Restore the matching Retro save first, restart and
+let Retro create its local rating file, then choose the matching PC companion.
+The app validates online profile IDs, backs up the destination and selectively
+merges matching records before gameplay. Both Retro save modes share ratings
+for the same online ID; unrelated records are preserved. Unsupported/custom
+NAND configurations are refused.
+
+Keep the original save and rating file backed up and verify licenses and
+ratings **offline** before online play. Real-save migration acceptance remains
+pending in [#105](https://github.com/chrissotraidis/kartpad/issues/105). This does
+not transfer Miis or synchronize server ratings. Older diagnostic betas lack
+the companion action. Never replace rating files while the game runs, edit
+ratings, reset identity or publish saves, Miis or friend codes. Automatic
+Syncthing/two-way folder synchronization is not implemented.
 
 On Mac, **Data → Show KartPad Data** opens KartPad's support directory. Quit
 the game before backing it up. On Apple TV, use

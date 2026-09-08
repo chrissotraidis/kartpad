@@ -1,6 +1,10 @@
 # KartPad PRD: Mario Kart Wii, native on Apple platforms
 
-**Status:** Approved for autonomous execution. Written 28 August 2026.
+**Scope:** Original Apple engineering requirements, written 28 August 2026.
+The acceptance matrix remains a reference; initial machine state, delivery
+order and pre-release assessments below are historical. For current work use
+[STATUS.md](STATUS.md) and [MAINTENANCE.md](MAINTENANCE.md). Android's separate
+scope is in [ANDROID.md](ANDROID.md).
 **Audience:** An autonomous engineering agent with full control of an Apple Silicon macOS development machine.
 **Companion document:** `docs/GOAL-LOOP.md`. Read both files before changing code or downloading dependencies.
 **Product name:** **KartPad** (`kartpad`). Use it consistently unless a deliberate rename is recorded.

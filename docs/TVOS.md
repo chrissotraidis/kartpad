@@ -2,27 +2,22 @@
 
 ## Current status
 
-Native tvOS support is available as an experimental public hardware-bring-up
-path. An external Apple TV 4K (3rd generation) tester reached playable Original
-Mario Kart Wii and Retro Rewind on tvOS 26.5/26.6 with an Extended Gamepad, but
-the public `v0.4.0` build could not write config, NAND, saves, or logs under
-Application Support. The `v0.4.1` hotfix moves all filesystem-backed tvOS state
-to Caches, matching the successful physical workaround. The reporter then
-accepted the exact public `v0.4.1` IPA on the same hardware: error 513 was gone,
-both modes launched, save/config changes survived a normal relaunch, and the
-backup script succeeded. The 0.4.4 release also uses a generic compiler
-baseline, disables RCpc instructions, and rejects them during final-binary
-audit. Until the remaining physical acceptance matrix passes on the exact
-0.4.4 artifact, the correct
-claim is **public experimental tvOS build**, not supported Apple TV
-functionality.
+The current package is the [0.4.11 experimental IPA](releases/v0.4.11-tvos.1.md),
+with the console-serial correction and generic ARM64/RCpc compiler hardening.
+Exact-build physical and online acceptance remain open.
+
+The [0.4.1 storage hotfix](artifacts/2026-09-04/tvos-v0.4.1-storage-acceptance.md)
+was accepted by an Apple TV 4K (3rd generation) tester: both modes launched,
+config/save changes survived normal relaunch, and backup succeeded. This is
+historical evidence for that device and build. It does not establish current
+A12 compatibility, purge recovery or sustained performance.
 
 This implementation starts from KartPad `main`, the project's pinned upstream
 sources, and Apple/SDL platform contracts. External pull requests remain useful
 feasibility evidence, but the shipped implementation and acceptance gates are
 maintainer-owned.
 
-## First candidate scope
+## Platform scope
 
 - Apple TV hardware running tvOS 17 or later.
 - Original Mario Kart Wii and Retro Rewind 6.12.7 through the existing
@@ -74,7 +69,7 @@ replacing or deleting the app. A later broadly supported release needs a tested
 durable sync/restore design, such as an appropriately entitled CloudKit
 container, before it can promise durable saves.
 
-## Building the first candidate
+## Building a candidate
 
 Requirements:
 

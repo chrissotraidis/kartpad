@@ -1,6 +1,8 @@
 # KartPad performance ledger
 
-Updated: 2026-08-30
+Historical Apple measurements: 30 August 2026. The measurement contract below
+applies to new comparisons; active Android and Apple investigations are on the
+[maintenance board](MAINTENANCE-BOARD.md).
 
 G11 is not accepted. KartPad reaches real native gameplay on Apple Silicon,
 but first-use shader compilation and some sustained scenes are materially
@@ -72,7 +74,7 @@ scene exits even after pipelines are warm. Counterbalance bounded queue
 headroom before repeating the required eight-hour run; do not accept a larger
 cap unless observed queue depth drains and latency remains bounded.
 
-## Current hypotheses—not conclusions
+## Hypotheses from the recorded measurements
 
 - The initial pipeline cache covers many common states but misses enough
   title- and track-specific combinations to cause visible compilation stalls.

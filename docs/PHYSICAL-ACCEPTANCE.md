@@ -4,14 +4,15 @@ Native tvOS has its own controller, storage-recovery, and external-testing
 matrix in [`docs/TVOS.md`](TVOS.md). Do not extend the iPhone/iPad results below
 to Apple TV.
 
-KartPad has completed general physical execution acceptance on iPad and iPhone.
+Earlier KartPad builds have physical execution acceptance on iPad and iPhone.
+The [current iPhone/iPad preview](releases/v0.4.13-ios.1.md) needs its own pass.
 The 0.3.0 iPad run also downloaded, verified, installed, launched, and played a
 single-player match in Retro Rewind 6.12.4. This document is the repeatable
 hardware-regression procedure for future builds. The public repository and IPA
 contain no disc image, extracted game assets, saves, signing identity, or
 provisioning profile.
 
-## 2026-09-02 Preview 4 candidate
+## Historical 2026-09-02 Preview 4 candidate
 
 The in-place iPad build-10 run accepted the revised menu and dual-mode
 lifecycle. Retro Rewind launched, a physical controller connected and navigated
@@ -28,8 +29,10 @@ external acceptance gates.
 
 ## Before testing
 
-- Use the current `main` checkout and your own supported PAL `RMCP01`, revision
-  0 WBFS/ISO in Files.
+- Record the exact candidate source/build and use your own supported PAL
+  `RMCP01`, revision 0 WBFS/ISO in Files. Back up the installed state and update
+  in place with the same signing identity; do not remove existing game data
+  to simulate a clean first launch.
 - Build the unsigned device app with `scripts/build-ios-device-game-app.sh`,
   then sign/install it locally with your Apple development team in Xcode.
 - Start on iPad. Do not begin iPhone acceptance until the iPad run is closed.
@@ -38,15 +41,16 @@ external acceptance gates.
 
 ## Repeatable acceptance pass
 
-1. **Clean first launch:** with no installed game data, choose the WBFS/ISO in
-   the native picker. Confirm visible progress, successful extraction, and a
+1. **Clean first launch (separate test installation):** with no installed game
+   data, choose the WBFS/ISO in the native picker. Confirm visible progress, successful extraction, and a
    same-session transition into the Mario Kart Wii title.
 2. **Identity and persistence:** reach the title and a live race, close the
    app normally, relaunch, and confirm no second import is required and the
    existing save remains available.
 3. **Touch:** steer, accelerate, brake/reverse, drift, use an item, pause, and
-   navigate menus. Hold A for one second: it must turn cyan, remain asserted,
-   and release immediately on finger-up. Confirm compact R matches L.
+   navigate menus. Hold A for one second: it must turn cyan and keep accelerating
+   after finger-up. Tap A again to unlock; opening a modal or handing off to a
+   controller must clear the lock. Confirm compact R matches L.
 4. **Three-dot menu:** open and dismiss the root menu by tapping outside and by
    choosing an action. Confirm the ellipsis never blanks and no square replaces
    the circular border. Open Controls, Display, Multiplayer, Game Data & Saves,
@@ -82,6 +86,6 @@ disconnect/reconnect behavior, and bounded **Save Diagnostics Report…** output
 
 Run iPad and iPhone sequentially. Record the exact device class, OS version,
 commit, executable hash, controller model, and any failure's bounded diagnostics
-report without publishing device identifiers. General physical execution is
-accepted; sustained performance, thermals, subjective audio, motion feel, and
+report without publishing device identifiers. Earlier physical execution is
+recorded above; sustained performance, thermals, subjective audio, motion feel, and
 broader controller/touch coverage remain narrower per-build gates.

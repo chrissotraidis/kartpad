@@ -1,6 +1,10 @@
 # KartPad goal-based autonomous execution loop
 
-**Operating loop for the autonomous KartPad build.** The requirements and acceptance criteria live in `ref/PRD.md`; this document defines how to execute them. Written 28 August 2026.
+**Original engineering goal loop, written 28 August 2026.** Requirements live
+in [PRD.md](PRD.md). This is the initial G0–G18 acceptance procedure; current
+maintenance priorities and publication rules live in [MAINTENANCE.md](MAINTENANCE.md)
+and the [maintenance board](MAINTENANCE-BOARD.md). Do not resume historical
+machine state or treat the original delivery order as a current task assignment.
 
 Read `docs/PRD.md` completely before entering this loop.
 
@@ -12,7 +16,7 @@ Work continuously toward the lowest unmet goal. A goal is met only when its requ
 
 A regression reopens the lowest affected goal. Never protect a higher-level feature by ignoring a lower-level failure.
 
-Do not ask Chris for routine engineering approval. Standing local authorization is defined in PRD Section 8. Make the safest reversible choice, journal it, test it, and continue. A human-only external dependency does not justify idling: record it precisely and advance every independent track.
+Do not ask Chris for routine engineering approval. Standing local authorization is defined in PRD Section 8. Make the safest reversible choice, record dated evidence, test it, and continue. A human-only external dependency does not justify idling: record it precisely and advance every independent track.
 
 ---
 

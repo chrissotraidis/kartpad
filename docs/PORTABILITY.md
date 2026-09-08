@@ -1,6 +1,7 @@
 # KartPad portability ledger
 
-Updated: 2026-08-28
+Historical host-portability checkpoint: 28 August 2026. Later results are
+indexed in [STATUS.md](STATUS.md); the contracts below remain useful for regressions.
 
 ## G3 result
 
@@ -60,8 +61,9 @@ Release and ASan/UBSan suites cover start/yield/sleep/wake/queue/join/cancel/exi
 
 With Metal API Validation enabled, the Apple M2 device/queue completed an offscreen RGBA8 clear and every pixel read back correctly. Apple's default output Audio Unit initialized and reported a valid 48 kHz/eight-channel stream, GameController discovery initialized with a valid zero-device list, durable storage passed, and BSD DNS/loopback TCP exchanged a verified payload. These are native host-adapter smokes only; Dawn/Aurora presentation and translated renderer integration remain G7.
 
-## G6 semantic portability — in progress
+## G6 semantic portability — initial checkpoint
 
-The locked upstream ISA package assumes SSE intrinsics, MXCSR, `__regcall`, and Microsoft force-inline syntax. KartPad now has a standard-C++ semantic layer and a dual-architecture differential harness. Release arm64 and x86_64/Rosetta produce the same 250,155-check raw-result hash, pinned Dolphin's estimate implementation is compiled as the oracle, and an actual translator-emitted integer/scalar/paired/GQR/FPSCR fixture executes through checked memory on both architectures. Stateful edge helpers remain open, so G6 is not yet accepted; see `docs/SEMANTICS.md`.
+The locked upstream ISA package assumes SSE intrinsics, MXCSR, `__regcall`, and Microsoft force-inline syntax. KartPad now has a standard-C++ semantic layer and a dual-architecture differential harness. Release arm64 and x86_64/Rosetta produce the same 250,155-check raw-result hash, pinned Dolphin's estimate implementation is compiled as the oracle, and an actual translator-emitted integer/scalar/paired/GQR/FPSCR fixture executes through checked memory on both architectures. Stateful edge helpers were still open at this checkpoint. The later completed
+G6 result is recorded in [SEMANTICS.md](SEMANTICS.md).
 
 The provisional G7 app proves AppKit/CAMetalLayer presentation from a translated checked-memory command. It intentionally does not claim Dawn, Aurora, GX, or game-frame acceptance.

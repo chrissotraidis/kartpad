@@ -1,9 +1,10 @@
 # Install the KartPad unsigned IPA
 
 KartPad `v0.4.13-ios.1` (0.4.13, build 29) is an unsigned ARM64 IPA for iPhone and iPad. It is a free
-community release, not an App Store or TestFlight build, and it will not
+community preview, not an App Store or TestFlight build, and it will not
 install until it is re-signed with your own Apple identity or compatible
-personal sideloading tool.
+personal sideloading tool. Physical acceptance of this exact build remains open;
+see the [release notes](releases/v0.4.13-ios.1.md).
 
 The IPA declares **iOS/iPadOS 16 or newer** and an ARM64 device with Metal.
 These package requirements do not establish compatibility or performance on
@@ -28,6 +29,8 @@ help. Never reset identities or delete saves as a workaround.
    optional expanded game. KartPad can download, verify, and install the
    official version-locked Retro Rewind 6.12.7 full pack.
 
+## Player identity
+
 To change an existing online name, open **••• → Game Data & Saves → Player
 Identity… → Rename or Delete Licenses…**. Choose the exact Original or Retro
 Rewind profile and numbered slot, then choose **Rename License…**. KartPad
@@ -46,8 +49,8 @@ create a license, choose **New** inside the game and select your Mii. Use
 Appearance…** does not delete a game license and is blocked while the Mii is
 still linked to one.
 
-The persistent **•••** button is restored immediately after iPadOS reports a
-screenshot if the system temporarily changes its presentation state.
+## Import and controls
+
 The experimental direct Wii Remote/Nunchuk pairing flow is macOS-only; the IPA
 does not claim direct Wii Remote pairing on iPhone or iPad.
 
@@ -55,6 +58,8 @@ If **Import from This Installation's Folder…** cannot see a game image because
 the signer created a different app container, KartPad opens the normal Files
 picker automatically. Select the visible WBFS/ISO there; the app still validates
 the exact supported game before importing it.
+
+## Content and updates
 
 The IPA includes KartPad's ARM64 app and ahead-of-time translated executable
 module. It does not include a Mario Kart Wii disc image, extracted courses,
@@ -69,10 +74,8 @@ compatible KartPad update if the online-compatible content profile advances.
 The accepted physical iPad flow completed the download, verification,
 installation, launch, and a playable single-player match.
 
-Retro WFC is active again as of 6 September 2026. Service recovery does not by
-itself establish production compatibility for this exact KartPad artifact;
-login, matchmaking, a complete race, results, reconnect, and physical-device
-acceptance remain separate gates.
+Production-online acceptance is separate from offline gameplay and package
+audits. See the [online status](ONLINE.md) for tested flows and remaining gaps.
 
 Updating in place with the same bundle identifier and signing identity is the
 safest way to retain game data and saves. A clean uninstall can remove the app

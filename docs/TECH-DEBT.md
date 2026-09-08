@@ -14,8 +14,10 @@ unverified.
 The tvOS WiiCompiled targets should use a generic AArch64 CPU baseline and
 explicitly disable RCpc instruction selection. `-mcpu=generic` alone is not
 sufficient with the tested Apple Clang toolchain: it can still emit RCpc loads
-that fault on the A12 Apple TV. Other Apple targets retain the existing Apple M2
-tuning.
+that fault on the A12 Apple TV. Physical iOS also uses a generic/RCpc-disabled
+baseline in
+[0.4.13 build 29](releases/v0.4.13-ios.1.md); macOS and Simulator tuning are
+separate. A10X iPad acceptance remains pending.
 
 Completed integration evidence:
 

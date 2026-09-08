@@ -51,7 +51,7 @@ manually deleting application data.
 
 ## Build it yourself
 
-Install the prerequisites listed in the README, then run:
+Install the [Apple build prerequisites](BUILDING.md#prerequisites), then run:
 
 ```sh
 ./scripts/self-build-macos.sh /path/to/your/Mario-Kart-Wii.wbfs

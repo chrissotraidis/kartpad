@@ -2,13 +2,14 @@
 
 ## Testing update
 
-[**0.4.12-android.2 / code 23**](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.12-android.2)
-is an Android diagnostic beta with optional game-renderer validation and OS exit
-history. It retains the profile-specific save transfer and checked disc imports
-from code 22, uses the same public signer, and installs over public codes 21/22.
-Download its APK, notices ZIP and SHA256SUMS together. Follow the
-[targeted beta test](releases/v0.4.12-android.2.md); physical acceptance remains
-pending. It is not a verified graphics, frame-drop or external-display fix.
+[**0.4.13 preview 1 / code 28**](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.13-android-preview.1)
+is the latest published unstable Android preview. It adds checked Retro rating
+companion restore and expanded diagnostics, retaining profile-aware save
+transfer and checked imports. It uses the same public signer and can update
+older public APKs in place. Download the APK, notices ZIP and `SHA256SUMS`.
+Follow the [preview test steps](releases/v0.4.13-android-preview.1.md); physical,
+real-save and performance acceptance remain pending. It is not a verified
+fix for graphics corruption, slowdown, online stalls or cup crashes.
 
 ## Download and first launch
 
@@ -51,9 +52,8 @@ Never uninstall or clear storage as an update step.
 debug certificate. Android will reject the public release as an in-place update
 over those previews. Do not uninstall to force it through: preserve the working
 preview and its app data, and plan a deliberate backed-up migration separately.
-The maintainer's tested Pixel was deliberately left on Preview 15/code 20.
-The first public package is code 21; the current diagnostic beta is code 23;
-changing its signature is not a save migration.
+The first public package is code 21; the testing preview is code 28.
+Changing a package signature is not a save migration.
 Self-built APKs similarly cannot update public builds unless the signer matches.
 
 Earlier previews also lack the issue #94 console-serial correction. Do not use
@@ -103,8 +103,8 @@ after reproducing it. The [support guide](SUPPORT.md#collect-a-useful-report)
 explains which excerpts to share and how this differs from **Report a Problem…**.
 Runtime, renderer-phase and bounded battery/thermal diagnostics are retained
 locally; the app does not upload those reports automatically. Shell profiling
-is enabled in the first release; the testing update disables shell profiling.
-Both public builds are non-debuggable.
+is enabled in the first release; the later testing builds disable shell profiling.
+Public game packages are non-debuggable.
 
 Review diagnostics before sharing; do not attach raw private archives, game
 images, extracted assets, saves, account/device identifiers or signing keys to

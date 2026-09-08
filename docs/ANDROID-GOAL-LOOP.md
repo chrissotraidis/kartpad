@@ -12,8 +12,11 @@ Android release-candidate gate passes or progress genuinely requires a human,
 private game input that is not already available, physical Android hardware,
 new legal terms, credentials, payment, or public-release authorization.
 
-This document is the operational loop. [`ANDROID.md`](ANDROID.md) is the
-architecture, risk, and acceptance authority.
+This is the original A0–A6 engineering acceptance ladder. Android has since
+shipped; choose current work from [MAINTENANCE-BOARD.md](MAINTENANCE-BOARD.md)
+under [MAINTENANCE.md](MAINTENANCE.md). [ANDROID.md](ANDROID.md) summarizes
+architecture and acceptance. Unfinished rows still require evidence, but old
+bring-up checkpoints do not supersede later release authorization.
 
 ## Required reading before changes
 
@@ -22,8 +25,8 @@ Read completely, in this order:
 1. repository `AGENTS.md` instructions;
 2. [`ANDROID.md`](ANDROID.md);
 3. this goal loop;
-4. [`STATUS.md`](STATUS.md), [`HANDOFF.md`](HANDOFF.md), and the latest complete
-   entry in [`JOURNAL.md`](JOURNAL.md);
+4. [`STATUS.md`](STATUS.md), [`HANDOFF.md`](HANDOFF.md), and the current
+   board row with its linked dated evidence;
 5. [`PRD.md`](PRD.md), especially architecture, privacy, correctness, mobile,
    and release gates;
 6. `dependencies.lock.json` and the current Retro Rewind profile in

@@ -26,9 +26,10 @@ and verification through race/results/reconnect on the intended platforms.
 Do not upload NAND backups, certificates, or console identifiers to an issue.
 
 Issue [#94](https://github.com/chrissotraidis/kartpad/issues/94) exposed a separate
-numeric serial defect. Corrected packages are Android `v0.4.10-android.1`,
+numeric serial defect. The first corrected packages were Android `v0.4.10-android.1`,
 iPhone/iPad `v0.4.11`, Mac `v0.4.11-macos.1`, and experimental Apple TV
-`v0.4.11-tvos.1`. Old packages should remain offline. The client correction
+`v0.4.11-tvos.1`; later previews retain the correction. See
+[current downloads](../README.md#downloads). Older affected packages should remain offline. The client correction
 preserves identities and saves; it cannot remove bad historical CSNums or
 reverse existing service bans. Affected histories require service-admin review,
 not save deletion or identity regeneration. See the

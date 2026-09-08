@@ -14,8 +14,8 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
    runtime inputs after any patch change. Never assume an existing prepared
    directory automatically receives new patches.
 3. Build the complete dual graph using the instructions in `android/README.md`.
-   Testing version 0.4.12-android.1 is code 22, ARM64, minimum API 28, target SDK
-   36, non-debuggable. Retain the unsigned AAB privately and audit it. Do not
+   Choose an explicit version name and forward version code for the candidate;
+   record the actual ABI, minimum API, target SDK and non-debuggable status. Retain the unsigned AAB privately and audit it. Do not
    reuse the old candidate if native source changes after testing.
 4. Derive the universal APK with `scripts/derive-android-release-apk.sh`, using
    the persistent private release key. The key and password stay outside Git;
@@ -34,7 +34,7 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
      https://raw.githubusercontent.com/google/dawn/13abc3bc8ea2d3c2050f9e77a12d012108ceee24/LICENSE \
      -o .android-bootstrap/dependencies/Dawn-13abc3bc-LICENSE.txt
    python3 scripts/package-android-release-notices.py \
-     artifacts/v0.4.12-android.1/KartPad-v0.4.12-android.1-arm64.apk \
+     /absolute/path/to/the/audited-release.apk \
      android/app/build/outputs/bundle/release/app-release.aab \
      /absolute/path/to/the/exact/arm64-v8a/cmake-build \
      --certificate-sha256 c1dbe0a0d72d830a5779476b346a750d0a37515adef992cad2f3863058f7f2f2
@@ -47,9 +47,8 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
    Inspect `PROVENANCE.json` and every ZIP member before upload. The public
    certificate above is not a private key; never put key material here.
 7. Publish only the APK, companion notices ZIP and `SHA256SUMS` at the exact
-   audited source tag, with `docs/releases/v0.4.12-android.1.md` as release notes.
-   Publish this update as a prerelease with `--latest=false` until physical
-   acceptance. This Android-only release must not replace the Apple downloads.
+   audited source tag, with its matching versioned file under `docs/releases/` as release notes.
+   Publish unaccepted testing builds as prereleases with `--latest=false`. This Android-only release must not replace the Apple downloads.
    No Google Play, store submission, private game data, translated source or
    signing material is authorized by a successful package audit.
 8. Download all assets anonymously to a fresh ignored directory, compare bytes

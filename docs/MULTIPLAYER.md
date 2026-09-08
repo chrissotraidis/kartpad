@@ -3,7 +3,7 @@
 Open **••• → Multiplayer…** on iPhone/iPad, **Controls → Multiplayer…** on
 Mac, or **Multiplayer…** on the Apple TV game chooser. The menu covers
 Original Mario Kart Wii and Retro Rewind; available online guidance depends on
-the game profile. The 0.4.10 changes below apply to iPhone and iPad.
+the game profile. Apple mobile menu names below follow 0.4.10 and later.
 
 ## Local split-screen
 
@@ -98,18 +98,3 @@ hiding. Retro Rewind Retro WFC login, worldwide matchmaking and live race play
 were also owner-reported. Rumble, reconnect, multiple physical pads and complete
 online results/reconnect are not established by that session. See
 [Android installation and controls](INSTALL_ANDROID.md).
-
-### Historical Apple 0.4.10 handoff (superseded)
-
-Android work remains paused on `codex/android-a4-touch-settings`. No Android APK
-is produced by this Apple update. Carry the shared private-service header and
-runtime patch into the Android preparation when that branch resumes, expose
-matching launch-time preferences in its Multiplayer dialog, and verify the
-Android TLS path applies the same scoped legacy-service policy.
-
-The paused Android controller patch already has its own SDL connection query.
-When replaying `wiicompiled-android-sdl-controller.patch`, retain the new Apple
-connection branch in `KPAD_IsKeyboardChannelConnected` and add the Android query
-under its Android guard. Do not resolve that hunk by dropping either platform's
-physical-controller detection. Repeat Android controller registration, stable
-slots, mapping, lifecycle and two-/three-player acceptance before any APK release.

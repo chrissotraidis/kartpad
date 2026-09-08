@@ -2,7 +2,7 @@
 
 An externally built cache-root candidate has reached playable Original Mario
 Kart Wii and Retro Rewind on physical Apple TV 4K hardware. The exact public
-`v0.4.4` compiler-hardened build still needs a signed-container retest. Treat it as an
+[`v0.4.11-tvos.1`](releases/v0.4.11-tvos.1.md) compiler-hardened build still needs a signed-container retest. Treat it as an
 engineering bring-up build, not a supported release, and do not rely on its
 purgeable local storage for valuable saves.
 
