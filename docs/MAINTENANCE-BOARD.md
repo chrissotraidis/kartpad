@@ -4,7 +4,7 @@ Snapshot: 10 September 2026 (Japan time). Refresh GitHub and active work before 
 This is the tracked coordination index, not a claim that all local work is merged.
 See [workflow](MAINTENANCE.md), [known issues](KNOWN-ISSUES.md) and their evidence links.
 Private artifact paths and task identifiers belong in the local maintenance files.
-Open-issue audit: 21 open issues and two open PRs checked during the 16:49 UTC cycle on 9 September 2026 (10 September in Japan).
+Open-issue audit: 22 open issues and two open PRs checked during the 20:28 UTC cycle on 9 September 2026 (10 September in Japan).
 Next manual Android investigation: [bounded handoff and test plan](ANDROID-PERFORMANCE-HANDOFF.md).
 
 The [Android technical debt work order](TECH-DEBT.md#order-of-operations)
@@ -15,8 +15,9 @@ Use it to select ready follow-up work without duplicating the active build owner
 
 | Workstream | State / owner role | Next action and completion condition | Platform boundary |
 | --- | --- | --- | --- |
-| #166 HONOR graphics | New report, exact build/settings supplied | Reviewed diagnostic text requested; images not yet inspected, GPU/cause unknown | Android16 preview1/build28 |
-| #167 Helio G200 FPS | New device-specific performance report | Existing resolution/aspect requested; Android owner notified, no repeat tests | Android0.4.11; other-device gains not transferable |
+| #169 POCO progress loss | New data-retention concern, highest support priority | Clarify lost data category and exit/profile path; review existing save errors before any reproduction that risks progress | Android build21; performance/display symptoms tracked separately |
+| #166 HONOR graphics | New report, exact build/settings supplied | Adreno829/driver512.842.36 supplied; images reviewed by Android owner, broad corruption confirmed. Actual failing draw unresolved | Android16 preview1/build28 |
+| #167 Helio G200 FPS | New device-specific performance report | Reporter confirms1x and both4:3/16:9 unchanged; response acknowledged, no repeat tests | Android0.4.11; other-device gains not transferable |
 | #143 Android game-launch crash | Awaiting targeted exit evidence | Exact build/profile, import completion and matching exit/final console; no repeat installation | Honor X7D/Android15, hardware cause unverified |
 | #135 iPad launch crash | Build29 startup reporter-confirmed; A10X performance concern remains | [Reporter confirmation](https://github.com/chrissotraidis/kartpad/issues/135#issuecomment-5598895632): launches and loads Original/Retro. Reports about30FPS Retro and30–35FPS Original at native resolution versus Dolphin60FPS. Record performance separately; no repeat startup/crash request | A10X/iPadOS; this does not validate Android CPU or graphics behavior |
 | #105 rating companion restore | Published and reporter-confirmed for offline ratings/information transfer | [Success acknowledged](https://github.com/chrissotraidis/kartpad/issues/105#issuecomment-5594271981); new Mii database/Syncthing question answered after source review; selected missing-Mii import is a bounded next feature, live timestamp-based sync is unsafe | Android; Apple parity not implemented |
