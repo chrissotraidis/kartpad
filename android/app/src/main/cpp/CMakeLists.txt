@@ -85,6 +85,10 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   # capture + clear at an opaque out-of-line ARM64 call boundary.
   add_compile_definitions(KARTPAD_ANDROID_COMBINED_FENV=1)
   add_subdirectory("${KARTPAD_GAME_RUNTIME_SOURCE}" game-runtime)
+  # Local debug game builds hash pipeline configurations on the measured draw path.
+  # Keep xxHash's debug assertions; optimize only this measured integer hot path.
+  # Release/RelWithDebInfo already provide optimization through their toolchain.
+  target_compile_options(xxhash PRIVATE "$<$<CONFIG:Debug>:-O2>")
   if(TARGET KartPadDual)
     set(KARTPAD_GAME_RUNTIME_TARGET KartPadDual)
   elseif(TARGET WiiCompiled)

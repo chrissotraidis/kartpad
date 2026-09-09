@@ -48,6 +48,8 @@ patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-android-gamepad-assignment.patch"
 patch --batch -p1 -d "$runtime_source/aurora-main" < \
   "$repo_root/patches/aurora-idempotent-imgui-shutdown.patch"
+patch --batch -p1 -d "$runtime_source/aurora-main" < \
+  "$repo_root/patches/aurora-imgui-snapshot-bounds.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-runtime.patch"
 patch --batch -p1 -d "$runtime_source" < \
@@ -99,6 +101,23 @@ patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-network-stall.patch"
 patch --batch -p1 -d "$runtime_source" < \
   "$repo_root/patches/wiicompiled-android-alarm-reschedule-guard.patch"
+
+cp "$repo_root/runtime/include/kartpad/android/trace_scope.h" \
+  "$runtime_source/aurora-main/lib/kartpad_android_trace_scope.h"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/android-frame-critical-path-trace.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/android-frame-overlap-state-guards.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/android-native-frame-overlap-experiment.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/android-sealed-debug-frame.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/android-sealed-depth-mapping.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/aurora-first-genmode-write.patch"
+patch --batch -p1 -d "$runtime_source" < \
+  "$repo_root/patches/aurora-geometry-contract-tests.patch"
 
 generated_link="$(dirname "$runtime_source")/generated"
 if [[ -e "$generated_link" && ! -L "$generated_link" ]]; then

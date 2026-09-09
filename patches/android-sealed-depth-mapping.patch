@@ -1,0 +1,166 @@
+--- a/aurora-main/lib/gfx/depth_peek.hpp
++++ b/aurora-main/lib/gfx/depth_peek.hpp
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include "common.hpp"
++#include <dolphin/gx/GXAurora.h>
+ 
+ #include <vector>
+ 
+@@ -13,8 +14,15 @@
+ bool read_latest(uint16_t x, uint16_t y, uint32_t& z) noexcept;
+ void poll() noexcept;
+ 
++// Captured before SEALED; the producer may configure the next frame during encode.
++struct FrameMapping {
++  Vec2<uint32_t> logicalSize{};
++  AuroraViewportPolicy viewportPolicy = AURORA_VIEWPORT_FIT;
++};
++FrameMapping capture_frame_mapping() noexcept;
++
+ void encode_frame_snapshot(const wgpu::CommandEncoder& cmd, const wgpu::TextureView& depthView,
+-                           wgpu::Extent3D sourceSize, uint32_t msaaSamples) noexcept;
++                           wgpu::Extent3D sourceSize, uint32_t msaaSamples, const FrameMapping& mapping) noexcept;
+ void after_submit() noexcept;
+ 
+ namespace testing {
+--- a/aurora-main/lib/gfx/depth_peek.cpp
++++ b/aurora-main/lib/gfx/depth_peek.cpp
+@@ -196,7 +196,8 @@
+   return g_device.CreateBindGroupLayout(&descriptor);
+ }
+ 
+-Params make_params(wgpu::Extent3D sourceSize, Vec2<uint32_t> dstSize) noexcept {
++Params make_params(wgpu::Extent3D sourceSize, const FrameMapping& mapping) noexcept {
++  const auto dstSize = mapping.logicalSize;
+   Params params{
+       .dstWidth = dstSize.x,
+       .dstHeight = dstSize.y,
+@@ -204,16 +205,16 @@
+       .srcHeight = sourceSize.height,
+   };
+ 
+-  if (gx::g_gxState.viewportPolicy == AURORA_VIEWPORT_NATIVE) {
++  if (mapping.viewportPolicy == AURORA_VIEWPORT_NATIVE) {
+     return params;
+   }
+ 
+-  const auto logicalSize = vi::configured_fb_size();
++  const auto logicalSize = mapping.logicalSize;
+   if (logicalSize.x == 0 || logicalSize.y == 0 || sourceSize.width == 0 || sourceSize.height == 0) {
+     return params;
+   }
+ 
+-  const bool stretch = gx::g_gxState.viewportPolicy == AURORA_VIEWPORT_STRETCH;
++  const bool stretch = mapping.viewportPolicy == AURORA_VIEWPORT_STRETCH;
+   const float scaleX = static_cast<float>(sourceSize.width) / static_cast<float>(logicalSize.x);
+   const float scaleY = static_cast<float>(sourceSize.height) / static_cast<float>(logicalSize.y);
+   const float scale = std::min(scaleX, scaleY);
+@@ -336,8 +337,12 @@
+   }
+ }
+ 
++FrameMapping capture_frame_mapping() noexcept {
++  return {vi::configured_fb_size(), gx::g_gxState.viewportPolicy};
++}
++
+ void encode_frame_snapshot(const wgpu::CommandEncoder& cmd, const wgpu::TextureView& depthView,
+-                           wgpu::Extent3D sourceSize, uint32_t msaaSamples) noexcept {
++                           wgpu::Extent3D sourceSize, uint32_t msaaSamples, const FrameMapping& mapping) noexcept {
+   ZoneScoped;
+   const auto now = Clock::now();
+   {
+@@ -349,7 +354,7 @@
+     g_nextSnapshotTime = now + SnapshotInterval;
+   }
+ 
+-  const auto dstSize = vi::configured_fb_size();
++  const auto dstSize = mapping.logicalSize;
+   if (!depthView || dstSize.x == 0 || dstSize.y == 0 || sourceSize.width == 0 || sourceSize.height == 0) {
+     return;
+   }
+@@ -357,7 +362,7 @@
+     Log.fatal("Depth Peek from multisampled EFB targets is not supported");
+   }
+ 
+-  const Params params = make_params(sourceSize, dstSize);
++  const Params params = make_params(sourceSize, mapping);
+   wgpu::Buffer storageBuffer;
+   wgpu::Buffer readbackBuffer;
+   wgpu::Buffer paramsBuffer;
+--- a/aurora-main/lib/gfx/common.cpp
++++ b/aurora-main/lib/gfx/common.cpp
+@@ -232,6 +232,7 @@
+ }
+ 
+ struct SealedFrameData {
++  depth_peek::FrameMapping depthMapping;
+   DebugFrameData debug;
+   std::vector<RenderPass> passes;
+ };
+@@ -1204,7 +1205,7 @@
+                              int32_t interpolatedFrame, DebugFrameData& debugFrame);
+ 
+ static void render_impl(std::vector<RenderPass>& renderPasses, wgpu::CommandEncoder& cmd, int32_t interpolatedFrame,
+-                        bool finalize, DebugFrameData& debugFrame) {
++                        bool finalize, DebugFrameData& debugFrame, const depth_peek::FrameMapping& depthMapping) {
+   ZoneScoped;
+   // Palette conversions, MSAA resolves and EFB copies depend on sealed frame state, not on the
+   // interpolation weight, so encode them on the native render and let replay slots sample them.
+@@ -1258,7 +1259,7 @@
+     pass.End();
+ 
+     if (finalize && i == renderPasses.size() - 1) {
+-      depth_peek::encode_frame_snapshot(cmd, passInfo.copySourceDepthView, passInfo.targetSize, passInfo.msaaSamples);
++      depth_peek::encode_frame_snapshot(cmd, passInfo.copySourceDepthView, passInfo.targetSize, passInfo.msaaSamples, depthMapping);
+     }
+ 
+     if (passInfo.resolveTarget) {
+@@ -1346,6 +1347,7 @@
+ }
+ 
+ void seal_frame(SealedFrame& out) noexcept {
++  out.data().depthMapping = depth_peek::capture_frame_mapping();
+   ZoneScoped;
+   // The encode that could still have been holding these has completed: the
+   // producer joins the worker's DONE phase before it seals another frame.
+@@ -1368,11 +1370,11 @@
+ }
+ 
+ void render(SealedFrame& frame, wgpu::CommandEncoder& cmd, int32_t interpolatedFrame, bool finalize) {
+-  render_impl(frame.data().passes, cmd, interpolatedFrame, finalize, frame.data().debug);
++  render_impl(frame.data().passes, cmd, interpolatedFrame, finalize, frame.data().debug, frame.data().depthMapping);
+ }
+ 
+ void render(wgpu::CommandEncoder& cmd, int32_t interpolatedFrame, bool finalize) {
+-  render_impl(g_renderPasses, cmd, interpolatedFrame, finalize, g_debugFrame);
++  render_impl(g_renderPasses, cmd, interpolatedFrame, finalize, g_debugFrame, depth_peek::capture_frame_mapping());
+   if (finalize) {
+     g_currentRenderPass = UINT32_MAX;
+     expire_bind_group_cache();
+--- a/aurora-main/lib/dolphin/gx/GXAurora.cpp
++++ b/aurora-main/lib/dolphin/gx/GXAurora.cpp
+@@ -43,8 +43,8 @@
+   if (changed) {
+     // Finish commands using the old framebuffer mapping before changing it.
+     aurora::gx::fifo::drain();
++    g_gxState.viewportPolicy = policy;
+   }
+-  g_gxState.viewportPolicy = policy;
+   aurora::window::set_frame_buffer_aspect_fit(policy == AURORA_VIEWPORT_FIT);
+   aurora::window::set_present_surface_fill(policy == AURORA_VIEWPORT_STRETCH);
+   if (changed && aurora::window::get_sdl_window() != nullptr) {
+--- a/aurora-main/tests/gx_test_stubs.cpp
++++ b/aurora-main/tests/gx_test_stubs.cpp
+@@ -471,8 +471,9 @@
+ void shutdown() {}
+ void request_snapshot() noexcept { s_snapshotRequested = true; }
+ void poll() noexcept {}
++FrameMapping capture_frame_mapping() noexcept { return {}; }
+ void encode_frame_snapshot(const wgpu::CommandEncoder& cmd, const wgpu::TextureView& depthView,
+-                           wgpu::Extent3D sourceSize, uint32_t msaaSamples) noexcept {}
++                           wgpu::Extent3D sourceSize, uint32_t msaaSamples, const FrameMapping& mapping) noexcept {}
+ void after_submit() noexcept {}
+ 
+ bool read_latest(uint16_t x, uint16_t y, uint32_t& z) noexcept {

@@ -1,0 +1,61 @@
+--- a/aurora-main/lib/aurora.cpp
++++ b/aurora-main/lib/aurora.cpp
+@@ -1,4 +1,5 @@
+ #include <aurora/aurora.h>
++#include "kartpad_android_trace_scope.h"
+ 
+ #if defined(__ANDROID__)
+ #include <chrono>
+@@ -8,7 +9,12 @@
+   unsigned id;
+   std::chrono::steady_clock::time_point wall = std::chrono::steady_clock::now();
+   long long cpu = KartPadAndroidThreadCpuNanos();
+-  explicit KartPadAndroidPhaseScope(unsigned value) : id(value) {}
++  kartpad::android::TraceScope trace;
++  explicit KartPadAndroidPhaseScope(unsigned value) : id(value), trace(
++      value == 8 ? "KartPad/worker-seal-encode" :
++      value == 9 ? "KartPad/worker-prepare" :
++      value == 10 ? "KartPad/worker-overlap-encode" :
++      value == 11 ? "KartPad/producer-wait-sealed" : "KartPad/producer-wait-ready") {}
+   ~KartPadAndroidPhaseScope() {
+     const auto endCpu = KartPadAndroidThreadCpuNanos();
+     KartPadAndroidRecordPhase(id,
+@@ -413,6 +419,7 @@
+   // Both phases service the guest's alarm/retrace pump identically; the
+   // producer must keep its own timing alive however long it waits.
+   if (const auto callback = g_frameWorkerWaitCallback.load(std::memory_order_acquire)) {
++    kartpad::android::TraceScope trace("KartPad/worker-wait-callback");
+     callback();
+   }
+   return false;
+--- a/src/hle/audio/ax_mix.cpp
++++ b/src/hle/audio/ax_mix.cpp
+@@ -1,4 +1,5 @@
+ #include "ax_dsp.h"
++#include "kartpad/android/trace_scope.h"
+ 
+ #include "ax_internal.h"
+ 
+@@ -120,6 +121,7 @@
+     }
+ 
+     void JoinMix() {
++        kartpad::android::TraceScope trace("KartPad/audio-join-mix");
+         if (m_mixThread.joinable()) {
+             std::unique_lock<std::mutex> lock(m_mixMutex);
+             m_mixIdle.wait(lock, [this] { return !m_mixPending && !m_mixBusy; });
+--- a/src/hle/vi.cpp
++++ b/src/hle/vi.cpp
+@@ -1,3 +1,4 @@
++#include "kartpad/android/trace_scope.h"
+ #include "hle_stubs.h"
+ #include "memory.h"
+ #include "abi_bridge.h"
+@@ -589,6 +590,7 @@
+ // producer to the VI retrace boundary, and pre-warms the next frame. Paced from GXCopyDisp; unpaced for
+ // the retrace-context black/boot present path in AdvanceRetrace.
+ void VI_HLE_PresentFrame(bool presentedXfb, bool paceToRetrace) {
++    kartpad::android::TraceScope trace("KartPad/vi-present-sequence");
+     if (s_presentSequenceActive.exchange(true, std::memory_order_acq_rel)) {
+         return;
+     }

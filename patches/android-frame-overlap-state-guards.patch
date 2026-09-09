@@ -1,0 +1,155 @@
+--- a/aurora-main/lib/dolphin/vi/vi.cpp
++++ b/aurora-main/lib/dolphin/vi/vi.cpp
+@@ -7,11 +7,13 @@
+ #include <algorithm>
+ #include <atomic>
+ #include <optional>
++#include <mutex>
+ 
+ namespace aurora::vi {
+ std::optional<GXRenderModeObj> g_renderMode;
+ namespace {
+ std::atomic<float> g_presentAspectCorrection{1.f};
++std::mutex g_renderModeMutex;
+ 
+ float calculate_present_aspect_correction(const GXRenderModeObj& rm) noexcept {
+   if (rm.viWidth == 0 || rm.viHeight == 0) {
+@@ -29,9 +31,8 @@
+   const float verticalFill = static_cast<float>(rm.viHeight) / nominalActiveHeight;
+   return horizontalFill / verticalFill;
+ }
+-} // namespace
+ 
+-Vec2<uint32_t> render_mode_size() noexcept {
++Vec2<uint32_t> render_mode_size_locked() noexcept {
+   if (!g_renderMode) {
+     return {640, 528};
+   }
+@@ -40,18 +41,31 @@
+   return {std::max<uint32_t>(g_renderMode->fbWidth, 640), std::max<uint32_t>(g_renderMode->efbHeight, 528)};
+ }
+ 
++} // namespace
++
++Vec2<uint32_t> render_mode_size() noexcept {
++  std::lock_guard lock(g_renderModeMutex);
++  return render_mode_size_locked();
++}
++
+ void configure(const GXRenderModeObj* rm) noexcept {
+-  const auto oldSize = render_mode_size();
+-  if (rm == nullptr) {
+-    g_renderMode.reset();
+-  } else {
+-    g_renderMode = *rm;
+-    g_presentAspectCorrection.store(calculate_present_aspect_correction(*rm), std::memory_order_release);
++  bool sizeChanged = false;
++  {
++    std::lock_guard lock(g_renderModeMutex);
++    const auto oldSize = render_mode_size_locked();
++    if (rm == nullptr) {
++      g_renderMode.reset();
++    } else {
++      g_renderMode = *rm;
++      g_presentAspectCorrection.store(calculate_present_aspect_correction(*rm), std::memory_order_release);
++    }
++    if (rm == nullptr) {
++      g_presentAspectCorrection.store(1.f, std::memory_order_release);
++    }
++    sizeChanged = render_mode_size_locked() != oldSize;
+   }
+-  if (rm == nullptr) {
+-    g_presentAspectCorrection.store(1.f, std::memory_order_release);
+-  }
+-  if (render_mode_size() != oldSize) {
++  // Never hold the mode lock across a resize request or a renderer callback.
++  if (sizeChanged) {
+     window::request_frame_buffer_resize();
+   }
+ }
+@@ -61,6 +75,7 @@
+ }
+ 
+ Vec2<uint32_t> visible_fb_size() noexcept {
++  std::lock_guard lock(g_renderModeMutex);
+   if (!g_renderMode) {
+     return {640, 528};
+   }
+--- a/aurora-main/lib/window.cpp
++++ b/aurora-main/lib/window.cpp
+@@ -46,6 +46,7 @@
+ SDL_Renderer* g_renderer;
+ float g_frameBufferScale = 0.f;
+ bool g_frameBufferAspectFit = true;
++std::mutex g_presentAspectMutex;
+ bool g_presentSurfaceFill = false;
+ int g_presentAspectWidth = 0;
+ int g_presentAspectHeight = 0;
+@@ -799,6 +800,7 @@
+ }
+ 
+ void set_present_surface_fill(bool fill) {
++  std::lock_guard lock(g_presentAspectMutex);
+   g_presentSurfaceFill = fill;
+ }
+ 
+@@ -807,6 +809,7 @@
+     unlock_present_aspect_ratio();
+     return;
+   }
++  std::lock_guard lock(g_presentAspectMutex);
+   if (g_presentAspectWidth == width && g_presentAspectHeight == height) {
+     return;
+   }
+@@ -815,12 +818,22 @@
+ }
+ 
+ void unlock_present_aspect_ratio() {
++  std::lock_guard lock(g_presentAspectMutex);
+   g_presentAspectWidth = 0;
+   g_presentAspectHeight = 0;
+ }
+ 
+ bool get_present_aspect_ratio(float& aspect) noexcept {
+-  if (g_presentSurfaceFill && g_window != nullptr) {
++  bool surfaceFill;
++  int aspectWidth, aspectHeight;
++  {
++    std::lock_guard lock(g_presentAspectMutex);
++    surfaceFill = g_presentSurfaceFill;
++    aspectWidth = g_presentAspectWidth;
++    aspectHeight = g_presentAspectHeight;
++  }
++  // The lock protects only the state copy, never SDL/native-window queries.
++  if (surfaceFill && g_window != nullptr) {
+     // Queried once per presentation snapshot; use the cached native client size
+     // instead of re-entering SDL for a value the window procedure already knows.
+     uint32_t nativeWidth = 0;
+@@ -836,11 +849,11 @@
+       return true;
+     }
+   }
+-  if (g_presentAspectWidth <= 0 || g_presentAspectHeight <= 0) {
++  if (aspectWidth <= 0 || aspectHeight <= 0) {
+     aspect = 0.f;
+     return false;
+   }
+-  aspect = (static_cast<float>(g_presentAspectWidth) / static_cast<float>(g_presentAspectHeight)) *
++  aspect = (static_cast<float>(aspectWidth) / static_cast<float>(aspectHeight)) *
+            vi::present_aspect_correction();
+   return aspect > 0.f;
+ }
+--- a/src/settings_overlay.cpp
++++ b/src/settings_overlay.cpp
+@@ -1120,10 +1120,10 @@
+ }
+ 
+ bool Draw() noexcept {
+-    RefreshHostSettings();
+     if (!FrameReadyForOverlay()) {
+         return false;
+     }
++    RefreshHostSettings();
+     ApplyConfiguredMappings();
+     PersistDisplayModeIfChanged();
+     UpdateCursorAutoHide();

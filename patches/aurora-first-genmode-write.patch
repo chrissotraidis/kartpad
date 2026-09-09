@@ -1,0 +1,87 @@
+--- a/aurora-main/lib/gx/gx.hpp
++++ b/aurora-main/lib/gx/gx.hpp
+@@ -436,6 +436,11 @@
+   u32 pipelineStateGeneration = next_gx_state_epoch();
+   std::array<u32, 0x100> bpRegCache = [] {
+     std::array<u32, 0x100> regs{};
++    // Cache entries include the register ID. GEN_MODE is the only ID whose
++    // first zero write otherwise matches this uninitialized cache. An invalid
++    // tag forces its first decode while keeping all 24 hardware reset bits zero.
++    // The BP mask merge strips this tag before storing the first real write.
++    regs[0x00] = 0xFF000000;
+     regs[0xFE] = 0x00FFFFFF;
+     return regs;
+   }();
+--- a/aurora-main/tests/gx_fifo_test.cpp
++++ b/aurora-main/tests/gx_fifo_test.cpp
+@@ -708,6 +708,52 @@
+   EXPECT_EQ(g_gxState.blendOp, GX_LO_XOR);
+ }
+ 
++
++TEST_F(GXFifoTest, GenMode_FirstZeroWriteDecodesAndRepeatDeduplicates) {
++  reset_gx_state();
++  const auto before = g_gxState.pipelineStateGeneration;
++  decode_fifo(bp_cmd(0, 0));
++  EXPECT_EQ(g_gxState.numTevStages, 1u);
++  EXPECT_EQ(g_gxState.cullMode, GX_CULL_NONE);
++  EXPECT_EQ(g_gxState.numChans, 0u);
++  EXPECT_EQ(g_gxState.numTexGens, 0u);
++  EXPECT_EQ(g_gxState.numIndStages, 0u);
++  EXPECT_EQ(g_gxState.bpRegCache[0], 0u);
++  EXPECT_NE(g_gxState.pipelineStateGeneration, before);
++  const auto decoded = g_gxState.pipelineStateGeneration;
++  decode_fifo(bp_cmd(0, 0));
++  EXPECT_EQ(g_gxState.pipelineStateGeneration, decoded);
++}
++
++TEST_F(GXFifoTest, GenMode_FirstMaskedWritePreservesZeroResetBits) {
++  for (const u32 mask : {0u, 1u << 10}) {
++    reset_gx_state();
++    const auto before = g_gxState.pipelineStateGeneration;
++    decode_fifo(bp_cmd(0xFE, mask));
++    decode_fifo(bp_cmd(0, 0xFFFFFF));
++    EXPECT_EQ(g_gxState.bpRegCache[0], mask);
++    EXPECT_EQ(g_gxState.bpRegCache[0xFE], 0xFFFFFFu);
++    EXPECT_EQ(g_gxState.numTevStages, mask ? 2u : 1u);
++    EXPECT_EQ(g_gxState.cullMode, GX_CULL_NONE);
++    EXPECT_NE(g_gxState.pipelineStateGeneration, before);
++    decode_fifo(bp_cmd(0, 0));
++    EXPECT_EQ(g_gxState.numTevStages, 1u);
++    EXPECT_EQ(g_gxState.bpRegCache[0], 0u);
++  }
++}
++
++TEST_F(GXFifoTest, GenMode_ColdSingleStageApiSetupDecodes) {
++  reset_gx_state();
++  GXSetNumTevStages(1);
++  GXSetNumTexGens(0);
++  GXSetNumChans(0);
++  GXSetCullMode(GX_CULL_NONE);
++  const auto bytes = flush_and_capture();
++  decode_fifo(bytes);
++  EXPECT_EQ(g_gxState.numTevStages, 1u);
++  EXPECT_EQ(g_gxState.cullMode, GX_CULL_NONE);
++}
++
+ TEST_F(GXFifoTest, BpMask_AppliesOnlyToNextWrite) {
+   std::vector<u8> bytes;
+   auto mask = bp_cmd(0xFE, 1u << 19);
+--- a/aurora-main/tests/gx_test_stubs.cpp
++++ b/aurora-main/tests/gx_test_stubs.cpp
+@@ -25,6 +25,7 @@
+ #include <fmt/format.h>
+ 
+ namespace {
++aurora::Module Log("gx_test_stubs");
+ aurora::Vec2<uint32_t> s_logicalFbSize{640, 480};
+ aurora::Vec2<uint32_t> s_renderTargetSize{640, 480};
+ uint32_t s_currentFrame = 0;
+@@ -59,6 +60,7 @@
+ } // namespace aurora
+ 
+ namespace aurora::window {
++SDL_Window* get_sdl_window() { return nullptr; }
+ void set_present_surface_fill(bool) {}
+ } // namespace aurora::window
+ 

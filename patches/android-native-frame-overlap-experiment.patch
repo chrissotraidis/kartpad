@@ -1,0 +1,23 @@
+--- a/aurora-main/lib/aurora.cpp
++++ b/aurora-main/lib/aurora.cpp
+@@ -1621,6 +1621,9 @@
+ 
+ // One complete frame-worker cycle. The scene encode only leaves the renderer mutex when
+ // interpolation actually inserts slots; otherwise both phases publish together.
++#if defined(__ANDROID__)
++extern "C" bool KartPadAndroidNativeFrameOverlapExperiment();
++#endif
+ bool run_frame_worker_cycle(gfx::SealedFrame& sealedFrame) noexcept {
+   ZoneScopedN("Frame worker cycle");
+   webgpu::fail_if_device_lost();
+@@ -1634,6 +1637,10 @@
+     std::lock_guard gpuLock(g_rendererGpuMutex);
+     seal_frame_locked(sealedFrame, ctx);
+     overlapEncode = ctx.interpolationActive;
++#if defined(__ANDROID__) && !defined(AURORA_GFX_DEBUG_GROUPS)
++    // Controlled warmed-scene experiment only. Do not change slot count or deadlines.
++    overlapEncode = overlapEncode || KartPadAndroidNativeFrameOverlapExperiment();
++#endif
+     if (!overlapEncode) {
+       presentationJobs = encode_sealed_frame(sealedFrame, ctx);
+     }

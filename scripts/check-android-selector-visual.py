@@ -31,77 +31,33 @@ def main() -> None:
 
     nodes = list(ET.parse(args.tree).getroot().iter("node"))
     by_text = {node.attrib.get("text", ""): node for node in nodes if node.attrib.get("text")}
-    by_description = {
-        node.attrib.get("content-desc", ""): node
-        for node in nodes
-        if node.attrib.get("content-desc")
-    }
-    required_text = (
-        "KartPad",
-        "Choose your way to race",
-        "Your own RMCP01 disc image or extracted game data is required before play.",
-    )
+    required_text = ("KartPad", "Help")
     missing = [label for label in required_text if label not in by_text]
     if missing:
         raise SystemExit(f"ERROR: selector labels missing: {missing}")
-    original_label = "Mario Kart Wii\nOriginal game"
-    retro_label = "Retro Rewind\nDownload 6.12.5 • Extra content + Retro WFC"
-    missing_descriptions = [
-        label for label in ("KartPad", original_label, retro_label)
-        if label not in by_description
-    ]
-    if missing_descriptions:
-        raise SystemExit(
-            f"ERROR: selector accessibility labels missing: {missing_descriptions}"
-        )
-
-    original = parse_bounds(by_description[original_label].attrib["bounds"])
-    retro = parse_bounds(by_description[retro_label].attrib["bounds"])
-    mark = parse_bounds(by_description["KartPad"].attrib["bounds"])
-    title = parse_bounds(by_text["KartPad"].attrib["bounds"])
-    tagline = parse_bounds(by_text["Choose your way to race"].attrib["bounds"])
-    message = parse_bounds(by_text[required_text[2]].attrib["bounds"])
-    density = (mark[2] - mark[0]) / 48.0
-
-    def expect_dp(actual: float, expected: float, label: str, tolerance: float = 2.1) -> None:
-        target = expected * density
-        if abs(actual - target) > tolerance:
-            raise SystemExit(f"ERROR: {label} is {actual}px; expected {target}px")
-
-    expect_dp(title[1] - mark[3], 12, "mark/title spacing")
-    expect_dp(tagline[1] - title[3], 12, "title/tagline spacing")
-    expect_dp(message[1] - tagline[3], 12, "tagline/message spacing")
-    expect_dp(original[1] - message[3], 24, "message/card spacing")
-    expect_dp(original[3] - original[1], 96, "mode-card height")
-
-    for label, node, bounds in (
-        ("Original", by_description[original_label], original),
-        ("Retro Rewind", by_description[retro_label], retro),
-    ):
-        content_nodes = [
-            child for child in node.iter()
-            if child is not node and (
-                child.attrib.get("class") == "android.widget.ImageView" or
-                child.attrib.get("text")
-            )
-        ]
-        content_bounds = [parse_bounds(child.attrib["bounds"]) for child in content_nodes]
-        content_left = min(item[0] for item in content_bounds)
-        content_right = max(item[2] for item in content_bounds)
-        if abs((content_left + content_right) - (bounds[0] + bounds[2])) > 3:
-            raise SystemExit(f"ERROR: {label} icon/label group is not centered")
-    # The custom accessible button bounds can differ by a few density-rounded
-    # pixels even though the equal-weight card Views share one row.
+    by_id = {node.attrib.get("resource-id"): node for node in nodes}
+    cards = []
+    for mode, title in (("original", "Mario Kart Wii"), ("retro_rewind", "Retro Rewind")):
+        node = by_id.get(f"dev.kartpad.android:id/kartpad_mode_{mode}")
+        if node is None or node.attrib.get("enabled") != "true" or node.attrib.get("clickable") != "true":
+            raise SystemExit(f"ERROR: {title} action is missing or disabled")
+        description = node.attrib.get("content-desc", "")
+        if title not in description or not any(action in description for action in
+                ("Play Game", "Import Game", "Set Up Game", "Resume Game", "Use on Next Launch")):
+            raise SystemExit(f"ERROR: {title} action lacks an explicit accessible name")
+        bounds = parse_bounds(node.attrib["bounds"])
+        left, top, right, bottom = bounds
+        if not (0 <= left < right <= args.width and 0 <= top < bottom <= args.height):
+            raise SystemExit(f"ERROR: {title} action extends outside the viewport: {bounds}")
+        cards.append(bounds)
+    original, retro = cards
     if abs(original[1] - retro[1]) > 4 or abs(original[3] - retro[3]) > 4:
-        raise SystemExit(f"ERROR: mode cards are not vertically aligned: {original} {retro}")
-    original_width = original[2] - original[0]
-    retro_width = retro[2] - retro[0]
-    if abs(original_width - retro_width) > 1 or retro[0] <= original[2]:
-        raise SystemExit(f"ERROR: mode cards are not equal separated columns: {original} {retro}")
-    if abs(((original[0] + retro[2]) / 2) - args.width / 2) > 1:
-        raise SystemExit("ERROR: mode-card group is not horizontally centered")
-    if mark[2] - mark[0] != mark[3] - mark[1] or mark[2] - mark[0] < 72:
-        raise SystemExit(f"ERROR: selector mark is not a full square target: {mark}")
+        raise SystemExit(f"ERROR: compact game cards are not aligned: {cards}")
+    if abs((original[2]-original[0]) - (retro[2]-retro[0])) > 2 or original[2] >= retro[0]:
+        raise SystemExit(f"ERROR: compact game cards are not equal separated columns: {cards}")
+    help_bounds = parse_bounds(by_text["Help"].attrib["bounds"])
+    if help_bounds[3] > min(original[1], retro[1]):
+        raise SystemExit("ERROR: Help is not accessible above both game choices")
 
     raw = args.frame.read_bytes()
     if len(raw) < 16:
@@ -120,28 +76,13 @@ def main() -> None:
         offset = (y * width + x) * 4
         return tuple(pixels[offset : offset + 3])  # type: ignore[return-value]
 
-    # Sample card fill away from the leading icon and centered text. The exact
-    # Android colors mirror iOS's 0.03/0.49/1.0 and 0.96/0.22/0.39 values.
-    card_y = original[1] + 24
-    blue = pixel(original[2] - 40, card_y)
-    pink = pixel(retro[2] - 40, card_y)
-    if not close(blue, (8, 125, 255)):
-        raise SystemExit(f"ERROR: Original card fill {blue} is not KartPad blue")
-    if not close(pink, (245, 56, 99)):
-        raise SystemExit(f"ERROR: Retro card fill {pink} is not KartPad pink")
-
-    # The top-left and bottom-right app-content samples must retain the diagonal
-    # navy-to-wine direction. Avoid system/status/navigation bars.
-    navy = pixel(width // 5, height // 4)
-    wine = pixel(width * 4 // 5, height * 3 // 4)
-    if not (navy[2] > navy[0] and wine[0] > wine[2]):
-        raise SystemExit(f"ERROR: selector gradient direction changed: {navy} -> {wine}")
-
-    print(
-        "Android selector visual contract passed: "
-        f"viewport={width}x{height} cards={original_width}px "
-        f"blue={blue} pink={pink} gradient={navy}->{wine}"
-    )
+    # Quiet bordered cards match the accepted iOS chooser. Sample below the
+    # rounded top edge and away from status text; actions are checked above.
+    for card in cards:
+        color = pixel(card[0] + 12, (card[1] + card[3]) // 2)
+        if not close(color, (19, 26, 38)):
+            raise SystemExit(f"ERROR: game-card fill {color} differs from accepted chooser")
+    print(f"Android chooser visual check passed: viewport={width}x{height} cards={cards}; Help and both actions visible")
 
 
 if __name__ == "__main__":

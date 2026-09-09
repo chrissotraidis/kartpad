@@ -28,12 +28,10 @@ class AndroidGameDataSaveContractTests(unittest.TestCase):
 
         self.assertIn("Intent(this, KartPadGameDataActivity::class.java)", launcher)
         self.assertIn("pendingProfile = profile", launcher)
-        self.assertIn("GradientDrawable.Orientation.TL_BR", launcher)
-        self.assertIn("Color.rgb(8, 125, 255)", launcher)
-        self.assertIn("Color.rgb(245, 56, 99)", launcher)
-        self.assertIn("cornerRadius = dp(18).toFloat()", launcher)
-        self.assertIn("setModeText(this, \"Mario Kart Wii\", \"Original game\")", launcher)
-        self.assertIn("minOf(760, maxOf(320, availableWidthDp))", launcher)
+        self.assertIn('"READY TO PLAY"', launcher)
+        self.assertIn('"BASE GAME REQUIRED"', launcher)
+        self.assertIn('"Import Game"', launcher)
+        self.assertIn('"Set Up Game"', launcher)
         self.assertIn("setImageResource(R.drawable.kartpad_app_icon)", launcher)
         for icon in (
             "ic_kartpad_checkered_flag",

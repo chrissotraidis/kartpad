@@ -1,10 +1,34 @@
 #include <android/log.h>
+#include <android/trace.h>
+#include <sys/system_properties.h>
 #include <cstdarg>
 #include <cstdio>
 #include <time.h>
 #include <array>
 #include <mutex>
 #include "kartpad/android/phase_metrics.h"
+
+extern "C" bool KartPadAndroidBeginTrace(const char* name) {
+  if (!ATrace_isEnabled()) return false;
+  ATrace_beginSection(name);
+  return true;
+}
+
+extern "C" void KartPadAndroidEndTrace() { ATrace_endSection(); }
+
+// Allow the next native frame to be produced while encoding the sealed frame.
+// Debug builds retain a worker-boundary switch for matched warm-scene comparisons.
+// Public builds use the same enabled path without reading device debug properties.
+extern "C" bool KartPadAndroidNativeFrameOverlapExperiment() {
+#if !defined(NDEBUG)
+  char value[PROP_VALUE_MAX]{};
+  if (__system_property_get("debug.kartpad.native_overlap", value) == 1) {
+    if (value[0] == '0') return false;
+    if (value[0] == '1') return true;
+  }
+#endif
+  return true;
+}
 
 // Used for coarse runtime metrics and capped slow-network-call diagnostics.
 // stderr is already mirrored into the app's private per-launch console log.

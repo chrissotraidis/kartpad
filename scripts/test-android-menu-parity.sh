@@ -192,7 +192,7 @@ assert_labels \
 assert_icon_count 6
 
 open_top_action "Return to KartPad Menu"
-assert_labels "Resume Mario Kart Wii" "Current game • Paused" "Retro Rewind" "Switch on next launch"
+assert_labels "Mario Kart Wii" "CURRENT GAME · PAUSED" "Resume Game  →" "Retro Rewind" "NEXT LAUNCH" "Use on Next Launch  →"
 
 open_top_action "Multiplayer…"
 assert_labels "Multiplayer" "Local Split-Screen…" "Controller Setup…" "Experimental Server Settings…" "BACK"
