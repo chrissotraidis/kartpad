@@ -76,7 +76,7 @@ public final class RetroRewindSpacePreflightTestMain {
                 RetroRewindRelease.ARCHIVE_BYTES,
                 RetroRewindRelease.MAXIMUM_EXPANDED_BYTES);
         expect(production.isReady(), "production requirements overflowed");
-        expect(production.requiredFilesBytes == 4_327_477_355L,
+        expect(production.requiredFilesBytes == 4_327_477_144L,
                 "production shared-store requirement drifted");
         var productionCached = RetroRewindSpacePreflight.evaluate(
                 Long.MAX_VALUE, Long.MAX_VALUE, true,

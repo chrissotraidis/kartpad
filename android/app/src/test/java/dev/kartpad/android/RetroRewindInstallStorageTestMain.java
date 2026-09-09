@@ -17,10 +17,15 @@ public final class RetroRewindInstallStorageTestMain {
             testRecovery(temporary.resolve("recovery"));
             testAmbiguousRecovery(temporary.resolve("ambiguous"));
             testActivation(temporary.resolve("activation"));
+            testSavePreservingReplacement(temporary.resolve("saves"));
+            for (String boundary : new String[]{"source-parent", "source-file", "target-parent", "target-file", "target-conflict"}) {
+                testSaveCopyFailure(temporary.resolve(boundary), boundary);
+            }
             testActivationRollback(temporary.resolve("rollback"));
             testScopeChecks(temporary.resolve("scope"));
             testSymlinkBoundary(temporary.resolve("symlink"));
             testRollbackSymlinkBoundary(temporary.resolve("rollback-symlink"));
+            System.out.println("Retro install storage: 13 cases passed");
         } finally {
             deleteTree(temporary);
         }
@@ -72,11 +77,96 @@ public final class RetroRewindInstallStorageTestMain {
                 "successful rollback was not removed");
     }
 
+    private static void testSavePreservingReplacement(Path root) throws Exception {
+        File files = Files.createDirectories(root).toFile();
+        Path support = RetroRewindInstallStorage.supportRoot(files);
+        Path installed = Files.createDirectories(support.resolve("RetroRewind"));
+        String[] saves = {"riivolution/save/RetroWFC/RMCP/rksys.dat",
+                "riivolution/save/RetroWFC2/RMCP/rksys.dat",
+                "riivolution/save/RetroWFC/RMCP/other-progress.dat"};
+        for (String save : saves) {
+            Files.createDirectories(installed.resolve(save).getParent());
+            write(installed.resolve(save), "player:" + save);
+        }
+        Path pulsar = support.resolve("NAND/shared2/Pulsar/RetroRewind6/Ghosts/track/ldb.pul");
+        Files.createDirectories(pulsar.getParent());
+        write(pulsar, "custom record");
+        Path staging = RetroRewindInstallStorage.createStagingDirectory(files, "preserve");
+        write(staging.resolve("new-pack"), "new pack");
+        Files.createDirectories(staging.resolve(saves[0]).getParent());
+        write(staging.resolve(saves[0]), "pack default must not replace player save");
+
+        RetroRewindInstallStorage.activateValidatedStaging(files, staging, "preserve");
+        RetroRewindInstallStorage.recover(files);
+
+        for (String save : saves) {
+            expect(Files.exists(installed.resolve(save)), "replacement lost save: " + save);
+            expect(Files.readString(installed.resolve(save)).equals("player:" + save),
+                    "replacement overwrote save: " + save);
+        }
+        expect(Files.readString(installed.resolve("new-pack")).equals("new pack"),
+                "updated pack was not activated");
+        expect(Files.readString(pulsar).equals("custom record"), "Pulsar data changed");
+    }
+
+    private static void testSaveCopyFailure(Path root, String boundary) throws Exception {
+        File files = Files.createDirectories(root.resolve("files")).toFile();
+        Path installed = Files.createDirectories(RetroRewindInstallStorage.installedRoot(files));
+        write(installed.resolve("old"), "old pack");
+        Path outside = Files.createDirectories(root.resolve("outside"));
+        write(outside.resolve("sentinel"), "unchanged");
+        Path save = installed.resolve("riivolution/save/RetroWFC/RMCP/rksys.dat");
+        Path staging = RetroRewindInstallStorage.createStagingDirectory(files, "boundary");
+        Path target = staging.resolve("riivolution/save/RetroWFC/RMCP/rksys.dat");
+        if (boundary.equals("source-parent")) {
+            Files.createSymbolicLink(installed.resolve("riivolution"), outside);
+        } else {
+            Files.createDirectories(save.getParent());
+            if (boundary.equals("source-file")) {
+                Files.createSymbolicLink(save, outside.resolve("sentinel"));
+            } else {
+                write(save, "player progress");
+                if (boundary.equals("target-parent")) {
+                    Files.createSymbolicLink(staging.resolve("riivolution"), outside);
+                } else {
+                    Files.createDirectories(target.getParent());
+                    if (boundary.equals("target-file")) {
+                        Files.createSymbolicLink(target, outside.resolve("sentinel"));
+                    } else {
+                        Files.createDirectory(target);
+                    }
+                }
+            }
+        }
+        AtomicInteger moves = new AtomicInteger();
+        try {
+            RetroRewindInstallStorage.activateValidatedStaging(files, staging, "boundary",
+                    (source, destination) -> {
+                        moves.incrementAndGet();
+                        Files.move(source, destination);
+                    });
+            throw new AssertionError("unsafe save copy was accepted: " + boundary);
+        } catch (IOException expected) {
+            expect(moves.get() == 0, "save-copy failure moved active data");
+        }
+        expect(Files.readString(installed.resolve("old")).equals("old pack"),
+                "save-copy failure replaced active pack");
+        expect(Files.readString(outside.resolve("sentinel")).equals("unchanged"),
+                "save-copy failure changed link target");
+        if (boundary.startsWith("target-")) {
+            expect(Files.readString(save).equals("player progress"),
+                    "save-copy failure changed original progress");
+        }
+    }
+
     private static void testActivationRollback(Path root) throws Exception {
         File files = Files.createDirectories(root).toFile();
         Path support = RetroRewindInstallStorage.supportRoot(files);
         Path installed = Files.createDirectories(support.resolve("RetroRewind"));
         write(installed.resolve("old"), "old");
+        Path save = installed.resolve("riivolution/save/RetroWFC/RMCP/rksys.dat");
+        Files.createDirectories(save.getParent());
+        write(save, "retained progress");
         Path staging = RetroRewindInstallStorage.createStagingDirectory(files, "failure");
         write(staging.resolve("new"), "new");
         AtomicInteger calls = new AtomicInteger();
@@ -97,6 +187,8 @@ public final class RetroRewindInstallStorageTestMain {
 
         expect(Files.readString(support.resolve("RetroRewind/old")).equals("old"),
                 "old install was not restored after activation failure");
+        expect(Files.readString(save).equals("retained progress"),
+                "activation rollback lost saved progress");
         expect(Files.exists(staging.resolve("new")),
                 "failed staging directory was unexpectedly removed");
         expect(!Files.exists(support.resolve("RetroRewind.rollback-failure")),
