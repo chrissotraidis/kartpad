@@ -60,6 +60,53 @@ int main(){@autoreleasepool {
  for(int i=0;i<12;++i)testKeys[i]={PAD_KEY_INVALID,KPButtons[i]};
  for(int i=0;i<10;++i)testKeyAxes[i]={PAD_KEY_INVALID,(PADAxis)i,0};
  second.selectedID=(SDL_JoystickID)-1; [second refreshKeyboardLabels];
+
+ auto event=[](unsigned short code, NSString *text, BOOL repeat=NO) {
+   return [NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:0
+     timestamp:0 windowNumber:0 context:nil characters:text charactersIgnoringModifiers:text
+     isARepeat:repeat keyCode:code];
+ };
+ auto arm=[&] { second.keyboardCaptureKind=0;second.keyboardCaptureIndex=0; };
+ auto unchanged=[&] {
+   assert(second.capture==-1 && second.keyboardCaptureKind==-1 && second.keyboardCaptureIndex==-1);
+   [second handleKeyboardEvent:event(12,@"a")];assert(testKeys[0].scancode==PAD_KEY_INVALID);
+ };
+ arm();second.capture=2;[second cancel:nil];unchanged();
+ auto close=[NSNotification notificationWithName:NSWindowWillCloseNotification object:nil];
+ arm();[second windowWillClose:close];[second activateInput];unchanged();
+ [second windowWillClose:close]; // restore background-input hint and remove the monitor
+ arm();[second windowDidResignKey:[NSNotification notificationWithName:NSWindowDidResignKeyNotification object:nil]];unchanged();
+ arm();[second cancelCapture];unchanged(); // shared tab-deactivation path
+ arm();[second handleKeyboardEvent:event(53,@"\033")];unchanged();
+ assert(!second.keyboardMonitor);
+
+ // Layout text must not change the physical key being bound.
+ for (auto code : {0, 6, 12, 16}) {
+   for (NSString *text in @[@"a",@"q",@"y",@"z",@"A",@"\u0444",@""]) {
+     arm();[second handleKeyboardEvent:event(code,text)];
+     assert(testKeys[0].scancode==KPMacPhysicalScancode(code,false));
+   }
+ }
+ // Arrow, function, keypad, Return, Tab and distinct delete/backspace keys.
+ for (auto pair : {std::pair<int,int>{123,SDL_SCANCODE_LEFT}, {126,SDL_SCANCODE_UP},
+                   {122,SDL_SCANCODE_F1}, {82,SDL_SCANCODE_KP_0}, {29,SDL_SCANCODE_0},
+                   {36,SDL_SCANCODE_RETURN}, {76,SDL_SCANCODE_KP_ENTER}, {48,SDL_SCANCODE_TAB},
+                   {51,SDL_SCANCODE_BACKSPACE}, {117,SDL_SCANCODE_DELETE},
+                   {93,SDL_SCANCODE_INTERNATIONAL3}, {104,SDL_SCANCODE_LANG1}}) {
+   arm();[second handleKeyboardEvent:event(pair.first,@"")];assert(testKeys[0].scancode==pair.second);
+ }
+ int previous=testKeys[0].scancode;
+ arm();[second handleKeyboardEvent:event(65535,@"a")];assert(testKeys[0].scancode==previous);
+ [second handleKeyboardEvent:event(12,@"a",YES)];assert(testKeys[0].scancode==previous);
+ assert(second.keyboardCaptureKind==0);[second cancel:nil];
+ assert(KPMacPhysicalScancode(10,false)==SDL_SCANCODE_NONUSBACKSLASH);
+ assert(KPMacPhysicalScancode(50,false)==SDL_SCANCODE_GRAVE);
+ assert(KPMacPhysicalScancode(10,true)==SDL_SCANCODE_GRAVE);
+ assert(KPMacPhysicalScancode(50,true)==SDL_SCANCODE_NONUSBACKSLASH);
+ assert(KPMacPhysicalScancode(65535,false)==SDL_SCANCODE_UNKNOWN);
+ second.keyboardCaptureKind=1;second.keyboardCaptureIndex=0;
+ [second handleKeyboardEvent:event(12,@"a")];assert(testKeyAxes[0].scancode==SDL_SCANCODE_Q);
+ puts("PASS: keyboard cancel/Escape/close/reopen/deactivation, alternate layouts, special keys, ISO, repeat and invalid-key handling");
  uint32_t controllerBefore=testButtons[0].nativeButton;
  assert(PADSetKeyButtonBinding(0,{SDL_SCANCODE_F,KPButtons[0]}));
  assert(testKeys[0].scancode==SDL_SCANCODE_F && testButtons[0].nativeButton==controllerBefore);

@@ -1,6 +1,16 @@
 // Included by KartPadMacShell.mm so all native shell targets share this UI.
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_scancode.h>
+#include <iterator>
+#import <Carbon/Carbon.h>
+#include "../third_party/sdl/scancodes_darwin.h"
+
+static SDL_Scancode KPMacPhysicalScancode(unsigned short keyCode, bool isoKeyboard) {
+  // Match SDL Cocoa, including the hardware ISO grave/non-US key swap.
+  if (isoKeyboard && (keyCode == 10 || keyCode == 50)) keyCode = 60 - keyCode;
+  return keyCode < std::size(darwin_scancode_table)
+      ? darwin_scancode_table[keyCode] : SDL_SCANCODE_UNKNOWN;
+}
 #define BOOL KPPadBOOL
 #include <dolphin/pad.h>
 #undef BOOL
@@ -256,8 +266,16 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
   SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
   [self tick];
 }
+- (void)cancelCapture {
+  self.capture = -1; self.armed = NO;
+  self.keyboardCaptureKind = -1; self.keyboardCaptureIndex = -1;
+  if ([self keyboardSelected]) [self refreshKeyboardLabels];
+}
+- (void)windowDidResignKey:(NSNotification *)notification {
+  (void)notification; [self cancelCapture];
+}
 - (void)windowWillClose:(NSNotification *)notification {
-  (void)notification; self.capture = -1;
+  (void)notification; [self cancelCapture];
   if(self.backgroundHintOwned) {
     if(self.previousBackgroundHint) SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS,self.previousBackgroundHint.UTF8String);
     else SDL_ResetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS);
@@ -269,8 +287,7 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
 - (void)selectDevice:(id)sender {
   (void)sender;
   self.selectedID = [self.devices.selectedItem.representedObject isEqual:@"keyboard"] ? (SDL_JoystickID)-1 : [self.devices.selectedItem.representedObject unsignedIntValue];
-  self.capture = -1;
-  self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1;
+  [self cancelCapture];
 }
 - (void)assign:(id)sender {
   (void)sender;
@@ -345,6 +362,7 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
   }
 }
 - (void)captureKeyboard:(NSButton *)sender {
+  [self cancelCapture];
   self.keyboardCaptureKind=sender.tag>=100 ? 1 : 0;
   self.keyboardCaptureIndex=sender.tag>=100 ? sender.tag-100 : sender.tag;
   self.status.stringValue=@"Press a keyboard key. Controller input will not be captured.";
@@ -363,13 +381,9 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
 }
 - (void)handleKeyboardEvent:(NSEvent *)event {
   if(self.keyboardCaptureKind<0 || event.type!=NSEventTypeKeyDown || event.isARepeat) return;
-  NSString *text=event.charactersIgnoringModifiers.uppercaseString;
-  SDL_Scancode converted=text.length ? SDL_GetScancodeFromName(text.UTF8String) : SDL_SCANCODE_UNKNOWN;
-  int sc=(int)converted;
-  if(sc==SDL_SCANCODE_UNKNOWN) {
-    NSDictionary *special=@{@"\uF700":@(SDL_SCANCODE_UP),@"\uF701":@(SDL_SCANCODE_DOWN),@"\uF702":@(SDL_SCANCODE_LEFT),@"\uF703":@(SDL_SCANCODE_RIGHT),@"\u001b":@(SDL_SCANCODE_ESCAPE),@"\r":@(SDL_SCANCODE_RETURN),@"\b":@(SDL_SCANCODE_BACKSPACE),@" ":@(SDL_SCANCODE_SPACE)};
-    sc=[special[text] intValue];
-  }
+  // Escape cancels before the local monitor can consume it as a binding.
+  if (event.keyCode == kVK_Escape) { [self cancel:nil]; return; }
+  int sc = KPMacPhysicalScancode(event.keyCode, KBGetLayoutType(LMGetKbdType()) == kKeyboardISO);
   if(sc<=SDL_SCANCODE_UNKNOWN) return;
   if(self.keyboardCaptureKind==0) PADSetKeyButtonBinding(0,{sc,KPButtons[self.keyboardCaptureIndex]});
   else PADSetKeyAxisBinding(0,{sc,(PADAxis)(PAD_AXIS_LEFT_X_POS+self.keyboardCaptureIndex),0});
@@ -389,7 +403,7 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
   PADSetAltButtonMapping(port,{PAD_NATIVE_BUTTON_INVALID,KPButtons[sender.tag]});
   self.capture=sender.tag; self.captureAlternate=NO; [self bind:PAD_NATIVE_BUTTON_INVALID];
 }
-- (void)cancel:(id)sender { (void)sender; self.capture=-1; self.status.stringValue=@"Remapping cancelled."; }
+- (void)cancel:(id)sender { (void)sender; [self cancelCapture]; self.status.stringValue=@"Remapping cancelled."; }
 - (void)reset:(id)sender {
   (void)sender; int port=[self port]; if(port<0)return;
   PADRestoreDefaultMapping(port);

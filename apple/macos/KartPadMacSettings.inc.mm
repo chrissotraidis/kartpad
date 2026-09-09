@@ -218,7 +218,7 @@
 - (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)item {
   (void)tabView;
   // A hidden capture must never change a binding while editing another tab.
-  if(![item.identifier isEqual:@"Controllers"]) KPControllers().capture=-1;
+  if(![item.identifier isEqual:@"Controllers"]) [KPControllers() cancelCapture];
   NSScrollView *scroll=(NSScrollView *)item.view;
   [scroll.contentView scrollToPoint:NSMakePoint(0,std::max<CGFloat>(0,740-scroll.contentView.bounds.size.height))];
   [scroll reflectScrolledClipView:scroll.contentView];
