@@ -11,6 +11,11 @@ experiments and distinguishes installed, public and local candidate builds.
 The [maintenance workflow](MAINTENANCE.md) defines how evidence advances into
 reviewed fixes, platform tests and accepted builds.
 
+The [Android device report register](TECH-DEBT.md#android-device-report-register)
+records reported hardware, exact builds where available, successful milestones,
+failures and remaining checks from the 9 September GitHub review. It distinguishes
+logged driver versions from suspected causes and is not a compatibility certification.
+
 The [9 September Reddit triage](artifacts/2026-09-09/reddit-android-report-triage.md)
 maps additional Android reports to these issues and records setup, remapping
 and resolution-change leads in [technical debt](TECH-DEBT.md#android-community-reports-and-flow-gaps).

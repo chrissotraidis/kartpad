@@ -67,6 +67,121 @@ It is **not** a verified graphics, freeze or crash fix. Preview 2/code 29 is a l
   not already-supported paths. [Acceptance](PHYSICAL-ACCEPTANCE.md),
   [future features](FUTURE-FEATURES.md).
 
+## Android device report register
+
+GitHub issue bodies and replies reviewed on **9 September 2026, 01:57 UTC**.
+These rows preserve the reported device/build combinations and their outcomes;
+they are not a certified compatibility list. Build numbers below belong to the
+reported sessions, not necessarily the current download or the owner's active
+Android work. Source links identify the relevant issue or follow-up. Existing
+[known issues](KNOWN-ISSUES.md) retain detailed investigation history, and the
+[maintenance board](MAINTENANCE-BOARD.md) retains work ownership.
+
+### Graphics, startup and completion failures by device
+
+| Device and reported software | Tested build/profile | Reported failure and useful positive evidence | Remaining work for this device |
+| --- | --- | --- | --- |
+| **Galaxy Z Fold 8 / SM-F971U**; Android 17 / One UI 9; Vulkan Adreno 840, driver **512.842.19** in supplied startup excerpt | 0.4.10-android.1/code 21, Retro 6.12.7; Original also reported corrupted. Later actual-game validation comparison on code 23 | Stretched characters and road-texture problems persist folded/unfolded and at 1x/4:3. Code 23 ran without crashing during the supplied interval, near 60 FPS, but corruption was unchanged with validation. [Device/log details](https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5576923553), [code-23 result](https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5581255824). | Reproduce an actual failing character draw; retain road textures as a potentially separate defect. Retest the affected screen state and both profiles when a relevant correction exists. Do not repeat completed reimports or validation comparisons. |
+| **Galaxy S24 Ultra**; Android 16 / One UI 8.5; Snapdragon 8 Gen 3; probe reports Adreno 750, **512.762.41** | 0.4.10-android.1, Original; later validation-on result does not restate exact APK | Racer models remain corrupted at 1x/4:3; reporter says vehicles and track look correct. Synthetic compute/draw checks passed, reimport did not help, and actual-game validation did not remove corruption. [Device/settings](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5576571212), [driver/probe](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5578298862), [scene distinction](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5578549139), [validation result](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5586910901). | Character transform/animation/shader reproduction is the next lead. Here “drivers glitch” means the **racers**, not proof of a GPU-driver bug. Preserve correct karts/tracks as a regression comparison. |
+| **Galaxy Tab S7 FE 5G / SM-T738U**; Android 14 / One UI 6.1; probe Adreno 619, **512.502.0** | 0.4.10-android.1; Retro; initially native resolution / Fill Screen | Initially reported an exit before the first match. All eight synthetic checks passed. Later completed an entire race at 4:3 after also moving the app from microSD to internal storage. [Device/probe](https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5578598186), [OS/settings](https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5578959929), [successful race](https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5579111251). | Preserve that working setup. Two variables changed, so neither storage nor aspect is an established cause or universal fix. Original, repeat sessions and cup completion remain unspecified; do not make the reporter undo success merely to reproduce the old failure. |
+| **OnePlus OPD2514**; Android 16/API 36; GPU/driver unknown | 0.4.10-android.1/code 21, Retro 6.12.7 | Reports incorrect textures throughout play; reinstall/cache clearing did not help. Existing image review records stretched surfaces obscuring the race. [Report](https://github.com/chrissotraidis/kartpad/issues/120). | Obtain actual renderer identity and failing scene evidence already requested. Keep the model identifier as supplied; do not guess chipset or attach another OnePlus device's driver. No confirmed working configuration. |
+| **Galaxy S26 Ultra / SM-S948B**; Android 16/API 36; GPU/driver absent from technical report | 0.4.13-android-preview.1/code 28; Original/base; Retro not installed; source cecd69c | Reports stretched geometry every launch at 4x/16:9 and 60 FPS with validation on. Settings changes reportedly did not resolve it. [Report and technical context](https://github.com/chrissotraidis/kartpad/issues/137). | Match requested GPU/driver and actual-draw evidence to this build. A supported Retro version printed in the report does not mean Retro was installed or running. No broad settings retry or shared-driver diagnosis is justified. |
+| **Honor X7D**; Snapdragon 685; Android 15; reported 8 GB RAM; GPU/driver unknown | “Latest prerelease”; exact version/code and profile unknown | Reporter opens app, adds game file, presses Launch, then app crashes every time. [Report](https://github.com/chrissotraidis/kartpad/issues/143). | Confirm importer completion, exact build and matching exit/last console evidence. RAM capacity alone does not diagnose memory pressure, and the chipset name does not prove incompatibility. No successful gameplay milestone established. |
+| **AYN Thor**; OS/GPU/driver not supplied in issue | 0.4.12-android.2/code 23; Retro | Reaches the end of a cup, then reportedly crashes; system bars/fullscreen remain problematic. Original impact was speculation in this report. [#128](https://github.com/chrissotraidis/kartpad/issues/128). Separate owner-supplied comments identify the top time/battery bar and request D-pad/shoulder/trigger/stick-click remapping. | Classify cup exit using the existing request; separately verify immersive-mode lifecycle and selected aspect on the affected display. Do not transfer another device's Original result to this Thor. Use the [Thor follow-up](artifacts/2026-09-09/reddit-android-report-triage.md#additional-ayn-thor-report--9-september-2026) for controls and missing attribution. |
+| **Poco X8 Pro**; Android 16 / HyperOS 3.1; GPU/driver unknown | Report says “0.4.12 build 2”; exact Android version code unresolved; Original and Retro subsequently confirmed | Grand Prix at fullscreen/3x reportedly stays at 60 FPS until Next after the final race closes the game before the ceremony. Reporter also mentions online, without a separate online reproduction. [Initial report](https://github.com/chrissotraidis/kartpad/issues/131), [profile follow-up](https://github.com/chrissotraidis/kartpad/issues/131#issuecomment-5587364209). | Match the exit to the awards transition and establish the exact APK. Do not silently translate “build 2” into code 23 or claim all devices/modes fail. Passing race performance does not close the transition crash. |
+
+### Performance and online behavior by device
+
+| Device and reported software | Tested build/profile | Reported failure and useful positive evidence | Remaining work for this device |
+| --- | --- | --- | --- |
+| **Galaxy S25+**; reported Snapdragon Gen 4/Elite; exact OS/GPU driver unknown | Exact APK/profile unknown; initially 1x | Reports clean graphics for about 20 minutes but repeated high-40s/low-50s FPS dips. Changing Game Booster+ from battery saver to performance **and** resolution to 4x reportedly produced 55–60 FPS. [Report](https://github.com/chrissotraidis/kartpad/issues/103), [follow-up](https://github.com/chrissotraidis/kartpad/issues/103#issuecomment-5574390735). | Preserve clean rendering as a comparison to Fold/S24. Two settings changed: higher resolution is not a demonstrated fix. Exact build/driver and the already requested controlled comparison remain missing. |
+| **Retroid Pocket 5**; Snapdragon 865; OS/GPU driver unknown | 0.4.12-android.2 and 0.4.13-android-preview.1; mainly Original; validation off | Standard power profile/1x reportedly stutters at 40–45 FPS; high-performance mode reaches 60 with greater heat/battery use. Dolphin comparison is reporter evidence, not a controlled benchmark. [Performance report](https://github.com/chrissotraidis/kartpad/issues/103#issuecomment-5589429674), [build/profile confirmation](https://github.com/chrissotraidis/kartpad/issues/103#issuecomment-5590528295). | Await a candidate with a specific measured reason to improve this path; no repeated hotter-profile or Dolphin benchmark needed now. Keep the separate Reddit **Retro** report distinct; installed Retro content does not change which runtime an Original session used. |
+| **Pixel 8 Pro**; Android 17/API 37; Vulkan/Mali-G715 in reviewed log; driver version not recorded here | Initial code 23, Retro 6.12.7; definitive later log code 28, 1x/4:3, validation **on** | Offline play, spectating and one online race reportedly worked; online menus freeze with audio catch-up and disconnects while the native menu responds. Earlier validation-off failure is a separate observation. Later matched log records a 2.222-second gap at thermal status 0. [Report](https://github.com/chrissotraidis/kartpad/issues/123), [definitive log/context](https://github.com/chrissotraidis/kartpad/issues/123#issuecomment-5589711600), [timing analysis](artifacts/2026-09-09/pixel-online-log-review.md). | Correlate guest progress and presentation through the failing online transition on the targeted candidate. Recorded receive waits outside the gap do not diagnose it. A successful race does not validate between-race menus; no repeat generic logs requested. |
+| **Poco X6 Pro**; one Reddit commenter reports Dimensity 8300U; OS/GPU driver unknown | APK/profile unknown in supplied Reddit export | Separate comments describe repeat-play decline from about 40 to 20 FPS, and 60 FPS menus versus 25–30 racing with 15–21 FPS sections and no graphical glitches. [Attributed Reddit evidence](artifacts/2026-09-09/reddit-android-report-triage.md). | Establish exact build/profile and repeat/scene trigger before a device-specific comparison. This is not the Poco X8 Pro cup-crash report. Do not infer a shared MediaTek failure or combine two comments into one measured session. |
+
+### Device identity and driver claims
+
+- Separate the **reported marketing name**, OS/firmware, logged GPU/driver,
+  APK identity and runtime profile. Keep contradictory or missing fields visible
+  until resolved; never fill them using another device with a similar name.
+- Adreno 750 **512.762.39** probe results also appear in
+  [#102](https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5578283020).
+  That comment does not identify the handset. Do not attach it to the S24 Ultra
+  row, whose own probe reports **512.762.41**, or count it as an identified model.
+- No reviewed report establishes a GPU-driver root cause. A driver version is
+  a comparison key, not a diagnosis. Passing synthetic probes does not clear the
+  actual game; clean output on another Samsung device does not clear all Adreno
+  devices either.
+- The S24 reporter asked about Turnip. The
+  [existing response](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5581427321)
+  records that KartPad has no custom-driver loading option. Keep a possible
+  alternate-driver experiment separate from available installation advice;
+  downloading a driver ZIP is not a working KartPad workaround.
+- **#101 is an iPhone 15 Pro Max Fill Screen report**, and **#100 begins with
+  iPhone/iPad external video loss**. They provide related design/investigation
+  context, not additional Android failure counts. The device-free “all devices”
+  claim in #119 also does not establish all-device coverage.
+
+### Use this evidence to improve installation and device acceptance
+
+The goal is a reliable path for each affected device, not a phone-name blacklist
+or a collection of unverified “best settings.” Before a device-specific fix or
+recommendation is accepted:
+
+1. **Identify the install route.** Record fresh install versus in-place update,
+   exact APK/code and required platform capabilities. Preserve the supported
+   same-signer/forward-update path; a signing conflict is separate from a
+   runtime crash. No new package-install defect was established by this review.
+2. **Verify first-run prerequisites.** Separate file selection, identity
+   validation, available destination storage, successful extraction and official
+   Retro installation. Keep the existing [checked-import behavior](artifacts/2026-09-08/android-import-storage-errors.md).
+   A rejected format should produce an actionable error without replacing valid
+   game data. The Reddit “cannot load” comments do not establish a broken APK.
+3. **Exercise the affected path.** Reach the chooser/title and race, then the
+   specific failing action: character scene, final-cup Next, online selection,
+   resolution change or Thor menu/resume. Include the real input/display route.
+   A launch-only check cannot mark a device playable without qualification.
+4. **Keep success and failure on the same record.** For repeat-play performance,
+   record duration, frame-time stalls and thermal/power context. For cups, verify
+   results/progress. For online, distinguish login, race and return-to-menu.
+   Do not require unrelated tests from every reporter; select what validates
+   the correction and its relevant regressions.
+5. **Publish only the verified scope.** Update this row and the linked issue
+   with the exact accepted build, tested scenario and remaining limitations.
+   If a setting helps one device, record what changed and whether it was tested
+   independently. Confirm safe update and retained saves/settings where affected.
+   Runtime owners continue to use the existing candidate ledger; this register
+   does not commission another build or phone session.
+
+### Additional flow gaps found in GitHub replies
+
+- **Finding the right diagnostic session (#104):** the reporter encountered
+  several `base_.../console.log` folders and did not know why exit metadata sat
+  outside `Logs`. This is concrete support-flow evidence for the session-summary
+  work below. Use recognizable session time/build/profile and symptom-specific
+  file guidance; accept reports in the user's language. Do not make them collect
+  every folder. [Reporter question](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5580450816).
+- **Mii database transfer (#105):** the latest
+  [follow-up](https://github.com/chrissotraidis/kartpad/issues/105#issuecomment-5594344231)
+  proposes importing Dolphin's `Wii/shared2/menu/FaceLib/RFL_DB.dat`. Existing
+  Android Mii storage uses that database layout and the app has an individual
+  Mii import UI; whole-database PC migration is not thereby accepted. Specify
+  validation, merge versus replacement, duplicate/conflict behavior, retained
+  local Miis and license links, backup and restart behavior before implementation.
+  This does not reopen the [confirmed offline rating transfer](https://github.com/chrissotraidis/kartpad/issues/105#issuecomment-5586429782).
+- **Automatic save/rating synchronization (#105):** the same follow-up suggests
+  a user-accessible folder and newest-file copying through Syncthing. Treat it
+  as a proposal, not proof that modification time resolves conflicts or that
+  ratings have no server behavior. Design stopped-game import/export of matched
+  save/rating data, conflict detection, stale in-memory handling and recovery
+  before any automatic sync. Mii transfer and server synchronization remain
+  separate acceptance cases; never overwrite live app-private files as advice.
+- **Preferred launch mode (#105):** an earlier
+  [request](https://github.com/chrissotraidis/kartpad/issues/105#issuecomment-5576572576)
+  asks to start Original or Retro automatically. Deferred convenience work:
+  preserve prerequisite/version checks, actionable failures, recovery to the
+  chooser and a way to change preference; do not bypass setup to hide confusion.
+
 ## Android community reports and flow gaps
 
 Status: triaged on 9 September 2026; runtime symptoms remain reporter claims
