@@ -228,6 +228,20 @@ overlaps [#102](https://github.com/chrissotraidis/kartpad/issues/102); vague
 to [#119](https://github.com/chrissotraidis/kartpad/issues/119), but system bars
 and aspect-ratio letterboxing must be distinguished first.
 
+An [additional owner-supplied Thor comment](artifacts/2026-09-09/reddit-android-report-triage.md#additional-ayn-thor-report--9-september-2026)
+explicitly identifies the **top time/battery status bar** remaining visible,
+alongside the game not filling the screen. Record the status-bar symptom under
+#119/#128. Keep unused screen area separate until the selected aspect mode,
+display and screenshot distinguish expected letterboxing, system-inset sizing
+and a Fill Screen defect. No bottom-bar symptom or candidate-build result was
+supplied. Do not count this as a new unique affected device without attribution.
+
+Thor presentation acceptance: the top status bar hides during normal gameplay
+and hides again after menu/resume or a transient edge swipe; controls remain
+accessible. At the chosen aspect mode, the game uses the intended content area
+without unintended crop/stretch. Verify 4:3, 16:9 and Fill Screen separately on
+the reported display; expected letterboxing is not itself a defect.
+
 Acceptance needs the exact tested APK and a targeted affected-device result:
 same-scene cold/repeat performance with power/thermal context, an actual failing
 game draw for graphics work, or launch/menu/resume system-bar behavior for
@@ -272,10 +286,20 @@ tricks/wheelies accessible from triggers or stick clicks. Evaluate a focused
 extension after confirming the desired bindings; macOS PR #112 does not supply
 Android acceptance.
 
+The additional Thor comment requests **D-pad and shoulder-button remapping**.
+Add D-pad directions and shoulder inputs to the proposed scope, alongside the
+earlier trigger/stick-click request. Left shoulder already participates in the
+limited mapping; right shoulder and D-pad need separate consideration. Confirm
+which physical input should produce which action rather than assuming this
+comment requests the same wheelie/trick assignment as the earlier reporter.
+
 Acceptance: physical Thor or affected controller confirms the requested action,
 including press/hold/release, without breaking analog trigger behavior,
 existing defaults, saved mappings, player assignment or touch handoff. Check
 menu dismissal, disconnect/reconnect and reset for stuck or duplicate inputs.
+For D-pad support, include diagonal and simultaneous direction/button input,
+menu navigation, conflict handling and restoring defaults; distinguish digital
+shoulders from analog triggers when verifying press and release behavior.
 
 ### Freeze after changing render resolution
 

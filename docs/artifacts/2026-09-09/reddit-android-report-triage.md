@@ -33,6 +33,33 @@ performed for this triage.
 | Terminator996: changing render resolution freezes the game; pausing/unpausing reportedly recovers it. | New settings-transition reproduction lead; no exact matching issue found. Keep separate from online-menu stalls in [#123](https://github.com/chrissotraidis/kartpad/issues/123). | Build/device/profile, old → new scale, scene and exact pause control used; whether audio, native menu and FPS continue. Inspect settings application, renderer resource transition and lifecycle state. Pause/resume is a reporter workaround, not a verified fix. |
 | TypeZaxter: wording “fullscreen is fps uncapped.” | Ambiguous request concerning an FPS cap/uncapping, not evidence that game speed or frame limiting is broken. | Clarify whether they want a higher cap, observe uncapped rendering, or mean something else. Any future option needs game-speed/audio/physics validation; do not infer the request from punctuation. |
 
+## Additional AYN Thor report — 9 September 2026
+
+The owner supplied a further comment reporting that the game does not completely
+fill the Thor screen, leaves the time/battery bar visible at the top, and needs
+D-pad and shoulder-button remapping. No handle, permalink, build, Android version,
+selected aspect mode or screenshot accompanied it. It is not established as an
+additional unique reporter/device or a result for the active Android candidate.
+
+- **Top status bar:** the time/battery description identifies a reported Android
+  status-bar symptom, strengthening the link to #119 and the Thor bar report in
+  #128. It does not establish whether the bottom navigation bar is also affected.
+- **Unused screen area:** retain separately from the status bar. Without the
+  selected aspect mode and a screenshot, expected 4:3/16:9 letterboxing, reduced
+  usable area from system insets, and an actual Fill Screen defect remain distinct
+  possibilities. #101 is related presentation work, not a confirmed duplicate.
+- **Remapping:** expand the existing Thor controls request to include D-pad
+  directions and shoulder buttons alongside triggers/stick clicks. Current source
+  already allows the left shoulder within the limited A/B/X/Y/Z mapping; this
+  request concerns broader assignment, not total absence of shoulder mapping.
+
+Next evidence: exact build/OS, selected aspect mode, which Thor display, a screenshot
+with notifications hidden, and whether the bar is present from launch or after
+menu/resume. For controls, obtain desired physical input → game action pairs and
+which shoulder/trigger buttons are meant. No crash logs are needed to record
+these UI and control requests. See the corresponding technical debt acceptance
+criteria; do not force stretched output or assume a remapping default.
+
 ## Questions and positive reports
 
 - Switch-port and Nvidia Shield questions are demand/compatibility questions,
