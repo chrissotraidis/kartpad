@@ -60,3 +60,18 @@ compile/lint log. Prepare the next local APK using the unchanged accepted native
 payload, verify signing/package identity and perform a backed-up in-place update.
 Do not exercise pack replacement against the owner's real saves as a regression.
 The physical menu-delay profile remains the next performance measurement.
+
+## Independent integration review
+
+The focused commit applies to current main; all 13 storage cases and the space,
+pipeline, content and worker-policy checks pass in the integration checkout.
+Independent Medium review found no blocker for replacement with guest saves
+quiescent. Copy failure preserves the installed tree; activation failure restores
+it or retains rollback if restoration fails.
+
+Concurrent gameplay/update safety is not established: storage and worker do not
+lock guest writes, and a worker can outlive the installer screen. The healthy
+ready-pack UI hides installation, but any future update/reinstall flow needs an
+explicit runtime-stop gate. Extra duplicated save bytes are not included in the
+space estimate and may cause a safe copy failure. Actual pack replacement,
+power-loss recovery and #169 ordinary-exit attribution remain unverified.
