@@ -1,10 +1,10 @@
 # Maintenance work and test board
 
-Snapshot: 9 September 2026 (Japan time). Refresh GitHub and active work before claiming a task.
+Snapshot: 10 September 2026 (Japan time). Refresh GitHub and active work before claiming a task.
 This is the tracked coordination index, not a claim that all local work is merged.
 See [workflow](MAINTENANCE.md), [known issues](KNOWN-ISSUES.md) and their evidence links.
 Private artifact paths and task identifiers belong in the local maintenance files.
-Open-issue audit: 19 open issues and two open PRs checked during the 09:51 UTC cycle on 9 September 2026.
+Open-issue audit: 21 open issues and two open PRs checked during the 16:49 UTC cycle on 9 September 2026 (10 September in Japan).
 Next manual Android investigation: [bounded handoff and test plan](ANDROID-PERFORMANCE-HANDOFF.md).
 
 The [Android technical debt work order](TECH-DEBT.md#order-of-operations)
@@ -15,6 +15,8 @@ Use it to select ready follow-up work without duplicating the active build owner
 
 | Workstream | State / owner role | Next action and completion condition | Platform boundary |
 | --- | --- | --- | --- |
+| #166 HONOR graphics | New report, exact build/settings supplied | Reviewed diagnostic text requested; images not yet inspected, GPU/cause unknown | Android16 preview1/build28 |
+| #167 Helio G200 FPS | New device-specific performance report | Existing resolution/aspect requested; Android owner notified, no repeat tests | Android0.4.11; other-device gains not transferable |
 | #143 Android game-launch crash | Awaiting targeted exit evidence | Exact build/profile, import completion and matching exit/final console; no repeat installation | Honor X7D/Android15, hardware cause unverified |
 | #135 iPad launch crash | Build29 startup reporter-confirmed; A10X performance concern remains | [Reporter confirmation](https://github.com/chrissotraidis/kartpad/issues/135#issuecomment-5598895632): launches and loads Original/Retro. Reports about30FPS Retro and30–35FPS Original at native resolution versus Dolphin60FPS. Record performance separately; no repeat startup/crash request | A10X/iPadOS; this does not validate Android CPU or graphics behavior |
 | #105 rating companion restore | Published and reporter-confirmed for offline ratings/information transfer | [Success acknowledged](https://github.com/chrissotraidis/kartpad/issues/105#issuecomment-5594271981); new Mii database/Syncthing question answered after source review; selected missing-Mii import is a bounded next feature, live timestamp-based sync is unsafe | Android; Apple parity not implemented |
@@ -47,7 +49,7 @@ public downloads. Link full provenance records instead of copying raw diagnostic
 | Local macOS 0.4.12/build 27 at 271fdc1 | Historical candidate; later PR head adds keyboard behavior | Contributor hardware results apply to exact tested commits; resolve newer review findings before declaring a replacement ready |
 | Android preview2/code29 (local candidate) | Clean fdda4c1 source, alarm guard correction; APK SHA-256 `9e7b7a0942714c7a3c9d75397e71763dc16765b9b1ada0ed8ca3e6a57dcb81ac`, 110351769 bytes; excludes unmerged scalar optimization | [Build record](artifacts/2026-09-09/android-preview2-local-candidate.md): build/lint/package/signature audits, repeat derivation and disposable-emulator chooser/seeded Original startup pass. Physical comparison and public distribution gates remain |
 | iPhone/iPad 0.4.14/build 33 | [Current official release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.14-ios.1), superseding build 29 | Published from de4ea58 after owner acceptance of build 32 on M2 iPad. Repeat packages and all anonymous hosted bytes match; downloaded IPA/provenance audit passes. [Release evidence](artifacts/2026-09-09/ios-v0414-release.md) records source/package verification and cross-platform handoff. A10X performance and external displays remain open |
-| Android owner candidate | Public APK on hold; code37 internal diagnostic installed, scheduling experiment off; code38 unaccepted | Physical phone released to Christopher; no claimed menu improvement. Manual owner retains source/integration decisions |
+| Android owner candidate | Public APK remains on hold; local code52 chooser adaptation retains measured code51 runtime | Owner reports repeatable Pixel menu gains with overlap ON; separate stationary Retro race comparison shows only1.36% conservative gain and unchanged tail pacing. Sustained driving/cup acceptance incomplete. Overnight hardware/implementation remains with manual owner; do not duplicate or generalize to Adreno/Helio reports |
 | tvOS | No new candidate declared ready here | Track applicable shared changes and experimental device acceptance separately |
 
 A pending request is not acceptance. When results arrive, link them and record
