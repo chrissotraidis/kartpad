@@ -11,6 +11,12 @@ experiments and distinguishes installed, public and local candidate builds.
 The [maintenance workflow](MAINTENANCE.md) defines how evidence advances into
 reviewed fixes, platform tests and accepted builds.
 
+The [9 September Reddit triage](artifacts/2026-09-09/reddit-android-report-triage.md)
+maps additional Android reports to these issues and records setup, remapping
+and resolution-change leads in [technical debt](TECH-DEBT.md#android-community-reports-and-flow-gaps).
+Those comments omit exact APK versions and do not establish results for the
+separate Android build/test workstream.
+
 | Issue | Current boundary / next evidence |
 | --- | --- |
 | [#142](https://github.com/chrissotraidis/kartpad/issues/142) AI disclosure and documentation | Answered publicly; disclosure shipped. README ordering and repository documentation cleanup merged in PR #148. Remains open; UI criticism is not a diagnosed rendering or performance defect. |

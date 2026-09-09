@@ -7,6 +7,10 @@ Private artifact paths and task identifiers belong in the local maintenance file
 Open-issue audit: 19 open issues and PR #112 checked during the 01:14 UTC cycle on 9 September 2026.
 Next manual Android investigation: [bounded handoff and test plan](ANDROID-PERFORMANCE-HANDOFF.md).
 
+The [Android technical debt work order](TECH-DEBT.md#order-of-operations)
+defines failure classification, evidence requirements and completion criteria.
+Use it to select ready follow-up work without duplicating the active build owner.
+
 ## Ready work and dependencies
 
 | Workstream | State / owner role | Next action and completion condition | Platform boundary |
