@@ -22,8 +22,8 @@ icon_name="$(plutil -extract CFBundleIconFile raw "${plist}")"
 executable="${contents}/MacOS/${executable_name}"
 
 test "${bundle_identifier}" = "dev.kartpad.app"
-test "$(plutil -extract CFBundleShortVersionString raw "${plist}")" = "0.4.15"
-test "$(plutil -extract CFBundleVersion raw "${plist}")" = "34"
+test "$(plutil -extract CFBundleShortVersionString raw "${plist}")" = "0.4.16"
+test "$(plutil -extract CFBundleVersion raw "${plist}")" = "35"
 test "$(plutil -extract NSBluetoothAlwaysUsageDescription raw "${plist}")" = \
   "KartPad uses Bluetooth to pair and connect an experimental Wii Remote and Nunchuk."
 test -x "${executable}"

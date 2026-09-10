@@ -20,7 +20,7 @@ maintainer-owned.
 ## Platform scope
 
 - Apple TV hardware running tvOS 17 or later.
-- Original Mario Kart Wii and Retro Rewind 6.12.7 through the existing
+- Original Mario Kart Wii and Retro Rewind 6.12.8 through the existing
   `KartPadDual` ahead-of-time translated product.
 - Offline play first. Retro WFC remains a separate network-acceptance gate.
 - One to four Extended Gamepad controllers. The Siri Remote can operate native

@@ -51,20 +51,20 @@ public final class RetroRewindVersionCheckTestMain {
         expect(RetroRewindVersionCheck.compareVersions("006.012.0005", "6.12.5") == 0,
                 "leading zero comparison changed");
 
-        QueueHandler currentHandler = new QueueHandler(response(200, "6.12.7\n"));
+        QueueHandler currentHandler = new QueueHandler(response(200, "6.12.8\n"));
         var current = RetroRewindVersionCheck.checkFrom(
                 fixtureUrl("https://fixture.invalid/version", currentHandler), () -> false);
         expect(current.isReady() && !current.updateRequired &&
-                        "6.12.7".equals(current.latestVersion),
+                        "6.12.8".equals(current.latestVersion),
                 "current version did not pass");
         expect("identity".equals(currentHandler.opened.getRequestProperty("Accept-Encoding")),
                 "version request did not disable content encoding");
 
         var update = RetroRewindVersionCheck.checkFrom(
                 fixtureUrl("https://fixture.invalid/version",
-                        new QueueHandler(response(200, "6.12.8\n"))), () -> false);
+                        new QueueHandler(response(200, "6.12.9\n"))), () -> false);
         expect(update.isReady() && update.updateRequired &&
-                        "6.12.8".equals(update.latestVersion),
+                        "6.12.9".equals(update.latestVersion),
                 "newer official version did not block the compiled profile");
 
         QueueHandler redirectHandler = new QueueHandler(

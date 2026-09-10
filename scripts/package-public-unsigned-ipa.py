@@ -8,9 +8,9 @@ import sys
 from pathlib import Path
 
 
-RELEASE_TAG = "v0.4.15-ios.1"
-APP_VERSION = "0.4.15"
-APP_BUILD = "34"
+RELEASE_TAG = "v0.4.16-ios.1"
+APP_VERSION = "0.4.16"
+APP_BUILD = "35"
 
 
 def fail(message: str) -> None:
@@ -26,7 +26,7 @@ def main() -> int:
         "output",
         type=Path,
         nargs="?",
-        help="Output IPA path (defaults to artifacts/KartPad-v0.4.15-ios.1-unsigned.ipa)",
+        help="Output IPA path (defaults to artifacts/KartPad-v0.4.16-ios.1-unsigned.ipa)",
     )
     args = parser.parse_args()
 
@@ -38,7 +38,7 @@ def main() -> int:
     output = (
         args.output.resolve()
         if args.output
-        else repo / "artifacts/KartPad-v0.4.15-ios.1-unsigned.ipa"
+        else repo / "artifacts/KartPad-v0.4.16-ios.1-unsigned.ipa"
     )
     if subprocess.check_output(
         ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all"],
@@ -70,7 +70,7 @@ def main() -> int:
     xcode_build = app.parents[1]
     additional_entries = {
         "INSTALL_IPA.md": repo / "docs/INSTALL_IPA.md",
-        "RELEASE_NOTES.md": repo / "docs/releases/v0.4.15-ios.1.md",
+        "RELEASE_NOTES.md": repo / "docs/releases/v0.4.16-ios.1.md",
         "MULTIPLAYER.md": repo / "docs/MULTIPLAYER.md",
         "LICENSE": repo / "LICENSE",
         "LICENSES/GPL-3.0.txt": repo / "LICENSES/GPL-3.0.txt",

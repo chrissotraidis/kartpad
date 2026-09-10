@@ -1,6 +1,6 @@
 # Install KartPad on Apple Silicon Mac
 
-KartPad 0.4.15 (build 34) is an ad-hoc-signed native arm64 app for Apple Silicon Macs
+KartPad 0.4.16 (build 35) is an ad-hoc-signed native arm64 app for Apple Silicon Macs
 running macOS 14 or newer. It contains the Original Mario Kart Wii and Retro
 Rewind executable profiles but no disc image, extracted game assets, Retro
 Rewind pack, saves, account data, or Apple signing identity.
@@ -10,8 +10,8 @@ reported in [#94](https://github.com/chrissotraidis/kartpad/issues/94). It prese
 identities, friend codes and saves; existing incorrect server-side history or
 bans may need service-admin review. Do not reset identities to work around them.
 
-1. Download `KartPad-v0.4.15-macos.1-arm64.zip` and `SHA256SUMS` from the
-   [corrected Mac release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.15-macos.1).
+1. Download `KartPad-v0.4.16-macos.1-arm64.zip` and `SHA256SUMS` from the
+   [Retro Rewind 6.12.8 Mac release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.16-macos.1).
 2. Run `shasum -a 256 KartPad-v0.4.15-macos.1-arm64.zip` and compare the
    result with the ZIP row in `SHA256SUMS`. The shared source archive is optional
    for normal installation. Then extract the ZIP and move
@@ -24,7 +24,7 @@ bans may need service-admin review. Do not reset identities to work around them.
    It must contain both `sys/` and `files/`; KartPad validates the disc identity
    and executable hash before launching.
 5. To use Retro Rewind, choose **Data → Choose Retro Rewind Data…** and select
-   the `RetroRewind6` folder from the exact supported 6.12.7 full pack. Then
+   the `RetroRewind6` folder from the exact supported 6.12.8 full pack. Then
    choose **Game → Retro Rewind**, quit, and reopen KartPad. Use **Game →
    Original Mario Kart Wii** and reopen to switch back. Saves and settings are
    kept separately from the selected game-data folders.

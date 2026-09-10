@@ -68,19 +68,19 @@
     "expectedRetroFunctions": 4188
   },
   "retroRewind": {
-    "version": "6.12.7",
+    "version": "6.12.8",
     "versionManifestUrl": "https://update.rwfc.net/RetroRewind/RetroRewindVersion.txt",
     "root": "RetroRewind6",
     "archive": {
-      "url": "https://cdn.update.rwfc.net/RetroRewind/zip/6.12.7-full.zip",
-      "bytes": 1859041688,
-      "sha256": "ade59f3ae217944bd7c3535b3bae79d5aa7b521ba00c581a16c7c2e3ce54c349",
+      "url": "https://cdn.update.rwfc.net/RetroRewind/zip/6.12.8-full.zip",
+      "bytes": 1859035109,
+      "sha256": "9dc9f689b2d1bc03f7b9f49e9013f31d2ab31e9b800aa2da1f6badbd2ecf21dc",
       "maximumExpandedBytes": 2200000000
     },
     "codePul": {
       "path": "Binaries/Code.pul",
-      "bytes": 1723048,
-      "sha256": "3a1e60f6c94e435ff672167816dbe040d0f48874bfa093ada39e468655baef72"
+      "bytes": 1704868,
+      "sha256": "88cd25ff08121f7c4ddb40538703f40c270f414f2dbc55a6b4b6767e62db7253"
     },
     "riivolutionXml": {
       "path": "xml/RetroRewind6.xml",

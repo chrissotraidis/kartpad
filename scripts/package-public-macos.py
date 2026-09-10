@@ -12,9 +12,9 @@ import zipfile
 from pathlib import Path
 
 
-RELEASE_TAG = "v0.4.15-macos.1"
-APP_VERSION = "0.4.15"
-APP_BUILD = "34"
+RELEASE_TAG = "v0.4.16-macos.1"
+APP_VERSION = "0.4.16"
+APP_BUILD = "35"
 ZIP_TIMESTAMP = (2020, 1, 1, 0, 0, 0)
 
 
@@ -32,7 +32,7 @@ def main() -> int:
     repo = Path(__file__).resolve().parents[1]
     app = args.app.resolve()
     output = (args.output.resolve() if args.output else
-              repo / "artifacts/KartPad-v0.4.15-macos.1-arm64.zip")
+              repo / "artifacts/KartPad-v0.4.16-macos.1-arm64.zip")
     if subprocess.check_output(
         ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all"],
         text=True,
@@ -67,7 +67,7 @@ def main() -> int:
     }
     extras = {
         "INSTALL_MACOS.md": repo / "docs/INSTALL_MACOS.md",
-        "RELEASE_NOTES.md": repo / "docs/releases/v0.4.15-macos.1.md",
+        "RELEASE_NOTES.md": repo / "docs/releases/v0.4.16-macos.1.md",
         "MULTIPLAYER.md": repo / "docs/MULTIPLAYER.md",
         "LICENSE": repo / "LICENSE",
         "LICENSES/GPL-3.0.txt": repo / "LICENSES/GPL-3.0.txt",

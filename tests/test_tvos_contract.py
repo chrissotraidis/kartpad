@@ -113,7 +113,7 @@ class TvOSContractTests(unittest.TestCase):
         profile = json.loads(
             (ROOT / "builder/profiles/mkwii-rmcp01-rev0.json").read_text()
         )
-        self.assertEqual(profile["retroRewind"]["version"], "6.12.7")
+        self.assertEqual(profile["retroRewind"]["version"], "6.12.8")
         host = (ROOT / "apple/tvos/KartPadTVRuntimeHost.mm").read_text()
         self.assertIn("installArchiveAtURL", host)
         self.assertIn("officialArchiveURL", host)
@@ -176,13 +176,13 @@ class TvOSContractTests(unittest.TestCase):
         ).read_text()
         tvos_audit = (ROOT / "scripts/audit-public-unsigned-tvos-ipa.py").read_text()
         for script in (ios_package, ios_audit):
-            self.assertIn('RELEASE_TAG = "v0.4.14-ios.1"', script)
-            self.assertIn('APP_VERSION = "0.4.14"', script)
+            self.assertIn('RELEASE_TAG = "v0.4.16-ios.1"', script)
+            self.assertIn('APP_VERSION = "0.4.16"', script)
         for script in (tvos_package, tvos_audit):
             self.assertIn('RELEASE_TAG = "v0.4.11-tvos.1"', script)
             self.assertIn('APP_VERSION = "0.4.11"', script)
-        self.assertIn('APP_BUILD = "33"', ios_package)
-        self.assertIn('APP_BUILD = "33"', ios_audit)
+        self.assertIn('APP_BUILD = "35"', ios_package)
+        self.assertIn('APP_BUILD = "35"', ios_audit)
         self.assertIn('APP_BUILD = "9"', tvos_package)
         self.assertIn('APP_BUILD = "9"', tvos_audit)
         self.assertIn('"physicalAppleTVAcceptance": False', tvos_package)

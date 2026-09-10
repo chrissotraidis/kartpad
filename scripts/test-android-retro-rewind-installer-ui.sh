@@ -76,7 +76,7 @@ done
 
 "$adb" shell am start -W -n "$fixture_component" \
   --ez dev.kartpad.android.TEST_RETRO_REWIND_VERSION_CHECK true >/dev/null
-wait_for_marker "A3 Android official version check latest=6.12.5 update_required=false"
+wait_for_marker "A3 Android official version check latest=6.12.8 update_required=false"
 "$adb" shell am force-stop "$package"
 "$adb" logcat -c
 

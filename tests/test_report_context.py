@@ -35,12 +35,12 @@ int main() { @autoreleasepool {
   [NSFileManager.defaultManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
   NSString *path = [dir stringByAppendingPathComponent:@"version.txt"];
   auto report = [&]() {
-    NSString *text = KartPadDiagnosticContext(path, @"6.12.7", @"retro_rewind", 1.0, 0);
+    NSString *text = KartPadDiagnosticContext(path, @"6.12.8", @"retro_rewind", 1.0, 0);
     assert(![text containsString:dir]);
     return (NSDictionary *)[NSJSONSerialization JSONObjectWithData:[text dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
   };
   assert([report()[@"retro_version_state"] isEqual:@"not_installed"]);
-  for (NSString *value in @[@"6.12.7\n", @"6.12.8", @"private-user\nsecret=token", [@"1" stringByPaddingToLength:200 withString:@"1" startingAtIndex:0]]) {
+  for (NSString *value in @[@"6.12.8\n", @"6.12.7", @"private-user\nsecret=token", [@"1" stringByPaddingToLength:200 withString:@"1" startingAtIndex:0]]) {
     [value writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
     NSDictionary *result = report();
     assert([result[@"schema"] intValue] == 1);
@@ -48,8 +48,8 @@ int main() { @autoreleasepool {
     assert([result[@"monotonic_ms"] longLongValue] > 0);
     assert([result[@"captured_unix_ms"] longLongValue] > 0);
     assert([result[@"retro_code_validation"] isEqual:@"not_rechecked_for_report"]);
-    if ([value isEqual:@"6.12.7\n"]) assert([result[@"retro_version_state"] isEqual:@"version_match_only"]);
-    else if ([value isEqual:@"6.12.8"]) assert([result[@"retro_version_state"] isEqual:@"version_mismatch"]);
+    if ([value isEqual:@"6.12.8\n"]) assert([result[@"retro_version_state"] isEqual:@"version_match_only"]);
+    else if ([value isEqual:@"6.12.7"]) assert([result[@"retro_version_state"] isEqual:@"version_mismatch"]);
     else assert(result[@"retro_installed_version"] == NSNull.null);
   }
   [NSFileManager.defaultManager removeItemAtPath:dir error:nil];
@@ -84,7 +84,7 @@ int main() { @autoreleasepool {
             "Clock.kt": 'package android.os\nobject SystemClock { fun elapsedRealtime() = 1234L }',
             "Settings.kt": '''package dev.kartpad.android
 object BuildConfig { const val VERSION_NAME = "test"; const val VERSION_CODE = 1 }
-object RetroRewindRelease { const val ROOT = "RetroRewind6"; const val VERSION = "6.12.7" }
+object RetroRewindRelease { const val ROOT = "RetroRewind6"; const val VERSION = "6.12.8" }
 object KartPadTouchSettings {
  fun resolutionScale(context: android.content.Context) = 1
  fun aspectMode(context: android.content.Context) = 0
@@ -112,7 +112,7 @@ fun main() {
   val path = File(root, "KartPad/RetroRewind/RetroRewind6/version.txt")
   check(KartPadReportContext.snapshot(context, null).getString("retro_version_state") == "not_installed")
   path.parentFile.mkdirs()
-  for (value in listOf("6.12.7\n", "6.12.8", "private-user\nsecret=token", "1".repeat(200))) {
+  for (value in listOf("6.12.8\n", "6.12.7", "private-user\nsecret=token", "1".repeat(200))) {
    path.writeText(value.replace("\\n", "\n"))
    val result = KartPadReportContext.snapshot(context, "retro_rewind")
    check(result.getInt("schema") == 1)
@@ -121,8 +121,8 @@ fun main() {
    check(!result.toString().contains(root.path))
    check(!result.toString().contains("private-user"))
    check(result.getString("retro_code_validation") == "not_rechecked_for_report")
-   if (value.startsWith("6.12.7")) check(result.getString("retro_version_state") == "version_match_only")
-   else if (value == "6.12.8") check(result.getString("retro_version_state") == "version_mismatch")
+   if (value.startsWith("6.12.8")) check(result.getString("retro_version_state") == "version_match_only")
+   else if (value == "6.12.7") check(result.getString("retro_version_state") == "version_mismatch")
    else check(result.isNull("retro_installed_version"))
   }
   check(KartPadReportContext.snapshot(context, "private-profile").getString("runtime_profile") == "unknown")

@@ -16,8 +16,8 @@ chooser, game-data management, packaging, and release workflows.
   <img alt="Android ARM64 with Vulkan" src="https://img.shields.io/badge/Android-ARM64%20%2F%20Vulkan-3DDC84?logo=android">
   <img alt="Ahead-of-time static recompilation" src="https://img.shields.io/badge/PowerPC-static%20recompilation-FF9F0A">
   <img alt="macOS development target" src="https://img.shields.io/badge/macOS%20target-14%2B-0A84FF">
-  <img alt="iPhone and iPad 0.4.14" src="https://img.shields.io/badge/iPhone%20%2F%20iPad-0.4.14-0A84FF">
-  <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.12.7-FF375F">
+  <img alt="iPhone and iPad 0.4.16" src="https://img.shields.io/badge/iPhone%20%2F%20iPad-0.4.16-0A84FF">
+  <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.12.8-FF375F">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
 </p>
 
@@ -44,12 +44,17 @@ chooser, game-data management, packaging, and release workflows.
 
 | Platform | Download | Setup |
 | --- | --- | --- |
-| Android ARM64 | [0.4.14 preview 1 · code 63](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.14-android-preview.1) | [Android 9+ with Vulkan](docs/INSTALL_ANDROID.md) |
-| iPhone / iPad | [0.4.15 · build 34](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.15-ios.1) | [iOS/iPadOS 16+; re-sign the IPA](docs/INSTALL_IPA.md) |
-| Apple Silicon Mac | [0.4.15 · build 34](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.15-macos.1) | [macOS 14+](docs/INSTALL_MACOS.md) |
+| Android ARM64 | [0.4.16 · code 64](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.16-android.1) | [Android 9+ with Vulkan](docs/INSTALL_ANDROID.md) |
+| iPhone / iPad | [0.4.16 · build 35](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.16-ios.1) | [iOS/iPadOS 16+; re-sign the IPA](docs/INSTALL_IPA.md) |
+| Apple Silicon Mac | [0.4.16 · build 35](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.16-macos.1) | [macOS 14+](docs/INSTALL_MACOS.md) |
 | Apple TV experimental preview | [0.4.11 · build 9](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.11-tvos.1) | [tvOS 17+; re-sign the IPA](docs/INSTALL_TVOS.md) |
 
-**Android 0.4.14 is now available.** It adds the refreshed game chooser,
+**KartPad 0.4.16 is now available for every active platform.** It rebuilds the
+Original and Retro Rewind profiles against official Retro Rewind **6.12.8**
+inputs, so the compatibility gate and native translated runtime move together.
+No new physical-device or performance claim is implied by the rebuild alone.
+
+**Android 0.4.16 is now available.** It adds the refreshed game chooser,
 reviewed-log reporting, Retro pack-update save protection and native rendering
 improvements. Local Pixel 9 Pro XL tests at 2x/Fill measured about **58 FPS versus
 40–50 FPS** in the warm Grand Prix menu with the change enabled versus disabled;
@@ -58,12 +63,14 @@ These local mode comparisons are not an across-device or old-public-versus-new-p
 benchmark. Menu delays and device-specific graphics issues remain open. See the
 [measurements and release notes](docs/releases/v0.4.14-android-preview.1.md).
 
-**iPhone/iPad 0.4.15** adds an actual log-review screen, an unchecked acknowledgment
+**iPhone/iPad 0.4.16** rebuilds the full ARM64 game app for Retro Rewind 6.12.8
+and retains the 0.4.15 diagnostic-log review screen, an unchecked acknowledgment
 and an explanation when logs cannot be attached. It retains the newer chooser
 and setup help. **macOS 0.4.15** brings the Metal view-lifetime correction to Mac;
 it does not establish a tearing or performance fix. See the
-[iPhone/iPad](docs/releases/v0.4.15-ios.1.md) and
-[macOS](docs/releases/v0.4.15-macos.1.md) notes.
+[iPhone/iPad](docs/releases/v0.4.16-ios.1.md),
+[macOS](docs/releases/v0.4.16-macos.1.md), and
+[Android](docs/releases/v0.4.16-android.1.md) notes.
 
 Download the checksums and accompanying notices with each package. The releases
 also include the [source bundle and rebuild instructions](docs/artifacts/2026-09-10/android-source-delivery.md). **Update in
@@ -75,7 +82,7 @@ Private Android previews use a different signer and need a backed-up migration.
 [Frequently asked questions](#frequently-asked-questions) · [Controls](docs/MULTIPLAYER.md) · [Save transfer and troubleshooting](docs/SUPPORT.md)
 
 - Choose **Mario Kart Wii** or **Retro Rewind** when KartPad opens. Retro
-  Rewind 6.12.7 content installs separately; KartPad requires a matching native
+  Rewind 6.12.8 content installs separately; KartPad requires a matching native
   profile when the mod updates. Follow your platform's setup guide above.
 - Touch controls, motion steering and controllers are available on mobile;
   Mac also supports keyboard input. Touch layouts can be moved, resized and
@@ -102,7 +109,7 @@ known issues. Android's suggested starting point is **1x Native**. Sustained
 <details>
 <summary>Can I download an IPA or playable app?</summary>
 
-Yes—use the [platform downloads above](#downloads). The current official iPhone/iPad build is **0.4.14 build 33**; Mac and Apple TV have separate packages. Apple IPAs need re-signing. Every package requires your own supported game data. A [Personal IPA Builder](docs/BUILDER.md) is also available.
+Yes—use the [platform downloads above](#downloads). The current official iPhone/iPad build is **0.4.16 build 35**; Mac and Apple TV have separate packages. Apple IPAs need re-signing. Every package requires your own supported game data. A [Personal IPA Builder](docs/BUILDER.md) is also available.
 
 </details>
 
@@ -123,7 +130,7 @@ The owner reported Retro WFC login, matchmaking and live racing on Android. Sepa
 <details>
 <summary>Does KartPad support Retro Rewind, and what if it updates?</summary>
 
-Yes, with the separately installed **6.12.7** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#downloads) if a compatibility update is requested.
+Yes, with the separately installed **6.12.8** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#downloads) if a compatibility update is requested.
 
 </details>
 
