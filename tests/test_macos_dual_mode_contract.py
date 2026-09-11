@@ -11,7 +11,7 @@ class MacOSDualModeContractTests(unittest.TestCase):
         self.assertIn('"${repo_root}/scripts/build-user-ipa.sh" bootstrap', script)
         self.assertIn('"${repo_root}/scripts/translate-retro-rewind.sh"', script)
         self.assertIn('--image "${image}"', script)
-        self.assertIn('"${repo_root}/build/KartPad-self-built.app" dual', script)
+        self.assertIn('"${repo_root}/build/KartPad.app" dual', script)
         self.assertIn("KARTPAD_SELF_BUILD_RETRO_REWIND_ROOT", script)
 
     def test_translation_honors_caller_disc_image(self):

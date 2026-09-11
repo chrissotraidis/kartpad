@@ -1,0 +1,20 @@
+--- a/src/settings_overlay.cpp
++++ b/src/settings_overlay.cpp
+@@ -1,4 +1,6 @@
+ #include "settings_overlay.h"
++#include "kartpad/macos_settings_shortcut.hpp"
++extern "C" void KartPadOpenSettingsFromShortcut();
+ #include "wup028_adapter.h"
+ #include "audio_backend.h"
+ #include "controller_mapping_wizard.h"
+@@ -796,6 +798,10 @@
+         if (ev->type != AURORA_SDL_EVENT) {
+             continue;
+         }
++        if (kartpad::IsMacSettingsShortcut(ev->sdl)) {
++            KartPadOpenSettingsFromShortcut();
++            continue;
++        }
+         controller_mapping_wizard::HandleSdlEvent(ev->sdl);
+     }
+ }

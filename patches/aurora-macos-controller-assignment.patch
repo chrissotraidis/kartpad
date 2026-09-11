@@ -1,0 +1,64 @@
+--- a/lib/input.cpp
++++ b/lib/input.cpp
+@@ -385,6 +385,16 @@
+     g_GameControllers[instance] = controller;
+     ensure_player_index(g_GameControllers[instance]);
+     apply_port_preferences();
++#if defined(SDL_PLATFORM_MACOS)
++    // First-use convenience only: never override a saved assignment or None.
++    if (g_portPreferences[0].state == PortPreferenceState::Unset &&
++        get_controller_for_player(0) == nullptr) {
++      assign_player_index(g_GameControllers[instance], 0);
++      persist_controller_for_player(0, &g_GameControllers[instance]);
++    }
++#endif
++    Log.info("Controller connected: {} (instance {}, player {})", SDL_GetGamepadName(ctrl),
++             instance, player_index(instance) + 1);
+     return instance;
+   }
+ 
+@@ -406,6 +416,7 @@
+ 
+ void remove_controller(Uint32 instance) noexcept {
+   if (auto it = g_GameControllers.find(instance); it != g_GameControllers.end()) {
++    Log.info("Controller disconnected: instance {}", instance);
+     SDL_CloseGamepad(it->second.m_controller);
+     g_GameControllers.erase(it);
+     apply_port_preferences();
+--- a/lib/dolphin/pad/pad.cpp
++++ b/lib/dolphin/pad/pad.cpp
+@@ -359,19 +359,20 @@
+ }
+ 
+ void PADSetPortForIndex(const u32 idx, const u32 port) {
++  if (port >= PAD_MAX_CONTROLLERS) return;
+   const auto* ctrl = __PADGetControllerForIndex(idx);
+   if (ctrl == nullptr) {
+     return;
+   }
+ 
+-  const int32_t oldPort = SDL_GetGamepadPlayerIndex(ctrl->m_controller);
++  const int32_t oldPort = aurora::input::player_index(ctrl->m_index);
+   if (const auto* dest = aurora::input::get_controller_for_player(port); dest != nullptr && dest != ctrl) {
+-    SDL_SetGamepadPlayerIndex(dest->m_controller, -1);
+-  }
+-  if (oldPort >= 0 && oldPort != port) {
++    aurora::input::set_player_index(dest->m_index, -1);
++  }
++  if (oldPort >= 0 && oldPort != static_cast<int32_t>(port)) {
+     aurora::input::persist_controller_for_player(oldPort, nullptr);
+   }
+-  SDL_SetGamepadPlayerIndex(ctrl->m_controller, static_cast<Sint32>(port));
++  aurora::input::set_player_index(ctrl->m_index, static_cast<Sint32>(port));
+   aurora::input::persist_controller_for_player(port, ctrl);
+ }
+ 
+@@ -397,7 +398,7 @@
+   if (ctrl == nullptr) {
+     return;
+   }
+-  SDL_SetGamepadPlayerIndex(ctrl->m_controller, -1);
++  aurora::input::set_player_index(ctrl->m_index, -1);
+ }
+ 
+ // Secondary bindings live only in memory; the runtime re-applies them from its

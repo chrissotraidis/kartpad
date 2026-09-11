@@ -19,9 +19,9 @@ KARTPAD_DISC_PATH="${image}" "${repo_root}/scripts/verify-sources.sh"
   "${repo_root}/private/self-build/retro-rewind/translation" \
   "${repo_root}/build/self-build-macos-source" \
   "${repo_root}/build/self-build-macos-build" \
-  "${repo_root}/build/KartPad-self-built.app" dual
+  "${repo_root}/build/KartPad.app" dual
 
-app="${repo_root}/build/KartPad-self-built.app"
+app="${repo_root}/build/KartPad.app"
 prepared_data="${repo_root}/private/self-build/disc"
 KARTPAD_SELF_BUILD_GAME_DATA_ROOT="${prepared_data}" \
 KARTPAD_SELF_BUILD_RETRO_REWIND_ROOT="${retro_root}" \

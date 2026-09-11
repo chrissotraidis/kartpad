@@ -1,0 +1,58 @@
+--- a/src/controller_mapping_wizard.cpp
++++ b/src/controller_mapping_wizard.cpp
+@@ -4,6 +4,7 @@
+ 
+ #include <imgui.h>
+ #include <SDL3/SDL_gamepad.h>
++#include <SDL3/SDL_platform.h>
+ #include <SDL3/SDL_joystick.h>
+ 
+ #include <algorithm>
+@@ -146,7 +147,7 @@
+             mapping += std::string(kSteps[i].mappingKey) + ":" + *g_wizard.bindings[i] + ",";
+         }
+     }
+-    mapping += "platform:Windows,";
++    mapping += std::string("platform:") + SDL_GetPlatform() + ",";
+     return mapping;
+ }
+ 
+--- a/src/settings_overlay.cpp
++++ b/src/settings_overlay.cpp
+@@ -46,6 +46,13 @@
+ void SetMixWorkerEnabled(bool enabled);
+ }
+ 
++#if defined(__APPLE__) && !defined(KARTPAD_IOS_RUNTIME)
++#include <TargetConditionals.h>
++#if TARGET_OS_OSX
++extern "C" void KartPadControllersTick();
++extern "C" bool KartPadControllersVisible();
++#endif
++#endif
+ namespace settings_overlay {
+ namespace {
+ 
+@@ -959,6 +966,9 @@
+     // and started the next ImGui frame, so all overlay callers can now safely issue ImGui commands.
+     aurora_wait_for_frame_worker();
+     ApplyConfiguredMappings();
++#if defined(__APPLE__) && TARGET_OS_OSX
++    KartPadControllersTick();
++#endif
+     PersistDisplayModeIfChanged();
+     UpdateCursorAutoHide();
+     if (!StartupScreenVisible()) {
+@@ -969,7 +979,11 @@
+     controller_mapping_wizard::Draw();
+     // The wizard captures raw presses; keep them out of the game even when the
+     // top bar is hidden mid-setup.
+-    PADBlockInput(g_topBarVisible || controller_mapping_wizard::IsActive());
++    PADBlockInput(g_topBarVisible || controller_mapping_wizard::IsActive()
++#if defined(__APPLE__) && TARGET_OS_OSX
++                  || KartPadControllersVisible()
++#endif
++    );
+     DrawStartupScreen();
+ }
+ 

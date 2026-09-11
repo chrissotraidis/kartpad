@@ -261,6 +261,14 @@ touch/menu component; [its provenance](apple/third_party/sunpad/UPSTREAM.md)
 and [third-party notices](THIRD_PARTY_NOTICES.md) record attribution and licenses.
 [Original artwork provenance](branding/PROVENANCE.md) is recorded separately.
 
+Aedan Pilkington contributed the native macOS controller and settings
+enhancements, including controller assignment and remapping, persistent
+profiles, keyboard remapping, settings shortcuts, and fullscreen/notch
+integration. See the [macOS controller and settings guide](docs/MACOS_CONTROLLER_OVERHAUL.md)
+for implementation details and source-build testing instructions. These are
+source-build enhancements; they should not be read as features of the
+published Mac release until a corresponding release is published.
+
 KartPad is free software under [GPLv3](LICENSE), including its WiiCompiled
 modifications and the integrated application where GPLv3 requires. GPL rights
 to use, modify and redistribute the software are separate from game-content

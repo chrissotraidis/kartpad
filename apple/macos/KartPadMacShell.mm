@@ -7,9 +7,6 @@
 #import <CommonCrypto/CommonDigest.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_keycode.h>
-#include <SDL3/SDL_scancode.h>
 
 #include <cstdlib>
 
@@ -17,6 +14,10 @@
 #if defined(KARTPAD_RUNTIME_PRODUCT_DUAL)
 #include "kartpad_retro_rewind_release.h"
 #endif
+
+static NSString *KPControllerDiagnostics();
+extern "C" void KartPadRequestSettingsReload();
+extern "C" void KartPadRequestControllerCompatibility();
 
 static constexpr NSInteger kKartPadMenuTag = 0x4b505344;
 static NSString *const kKartPadRuntimeProfileDefaultsKey = @"KartPadRuntimeProfile";
@@ -443,7 +444,7 @@ static NSString *DiagnosticsReport() {
        "audioVolumePercent=%ld\n"
        "audioMuted=%@\n"
        "networkEnabled=%@\n"
-       "controllerMappingsConfigured=%lu\n"
+       "controllerMappingsConfigured=%lu\n%@"
        "gameDataConfigured=%@\n"
        "gameDataValidated=%@\n"
        "applicationSupportExists=%@\n"
@@ -461,7 +462,7 @@ static NSString *DiagnosticsReport() {
       NSProcessInfo.processInfo.operatingSystemVersionString,
       ActiveRuntimeProfileLabel(), displayMode, resolution,
       interpolation, (long)volume, YesNo(runtime.audioMuted.value_or(false)),
-      YesNo(runtime.networkEnabled.value_or(true)), (unsigned long)mappingCount,
+      YesNo(runtime.networkEnabled.value_or(true)), (unsigned long)mappingCount, KPControllerDiagnostics(),
       YesNo(gameDataRoot.length > 0), YesNo(gameDataValid),
       YesNo([files fileExistsAtPath:support.path]),
       YesNo([files fileExistsAtPath:cache.path]),
@@ -471,15 +472,24 @@ static NSString *DiagnosticsReport() {
       currentSessionTail, previousSessionTail];
 }
 
-@interface KartPadMacShellController : NSObject
+static bool KPFullscreenAcrossNotch() {
+  try {
+    const auto document=toml::parse(RuntimeConfigFile::ResolveConfigPath().string());
+    return RuntimeConfigFile::FindConfigValue<bool>(document,"video","fullscreen_across_notch").value_or(false);
+  } catch (const std::exception &) { return false; }
+}
+
+#include "KartPadControllers.inc.mm"
+
+@interface KartPadMacShellController : NSObject <NSTabViewDelegate>
 @property(nonatomic, strong) NSPanel *settingsPanel;
 @property(nonatomic, strong) NSPanel *controlsPanel;
-@property(nonatomic, strong) NSPopUpButton *resolutionMenu;
-@property(nonatomic, strong) NSPopUpButton *displayModeMenu;
-@property(nonatomic, strong) NSButton *showFpsCheckbox;
-@property(nonatomic, strong) NSButton *muteCheckbox;
-@property(nonatomic, strong) NSSlider *volumeSlider;
-@property(nonatomic, strong) NSTextField *volumeValue;
+@property(nonatomic, strong) id settingsShortcutMonitor;
+@property(nonatomic, strong) NSTabView *settingsTabs;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSControl *> *settingControls;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSArray *> *settingChoices;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSTextField *> *settingValues;
+@property(nonatomic, strong) NSTextField *settingsStatus;
 @property(nonatomic, weak) NSTextField *playerNameField;
 @end
 
@@ -812,24 +822,8 @@ static NSString *DiagnosticsReport() {
 
 - (void)showControllerSettings:(id)sender {
   (void)sender;
-  [NSApp activateIgnoringOtherApps:YES];
-  for (NSWindow *window in NSApp.windows) {
-    if (![window isKindOfClass:NSPanel.class] && window.isVisible) {
-      [window makeKeyAndOrderFront:nil];
-      break;
-    }
-  }
-
-  SDL_Event event{};
-  event.type = SDL_EVENT_KEY_DOWN;
-  event.key.scancode = SDL_SCANCODE_F10;
-  event.key.key = SDLK_F10;
-  event.key.down = true;
-  if (!SDL_PushEvent(&event)) return;
-  event.type = SDL_EVENT_KEY_UP;
-  event.key.type = SDL_EVENT_KEY_UP;
-  event.key.down = false;
-  SDL_PushEvent(&event);
+  [self showSettings:sender];
+  [self.settingsTabs selectTabViewItemWithIdentifier:@"Controllers"];
 }
 
 - (void)showMultiplayer:(id)sender {
@@ -905,7 +899,7 @@ static NSString *DiagnosticsReport() {
       @[@"Select / minus", @"Tab"],
       @[@"Classic X / Y", @"X / C"],
       @[@"Classic ZL / ZR", @"Z / V"],
-      @[@"Runtime settings bar", @"F10"],
+      @[@"Settings (also in fullscreen)", @"⌘, or F10 / Fn–F10"],
     ];
     NSMutableArray<NSView *> *rows = [NSMutableArray array];
     for (NSArray<NSString *> *binding in bindings) {
@@ -972,192 +966,7 @@ static NSString *DiagnosticsReport() {
   return row;
 }
 
-- (void)updateVolumeValue:(id)sender {
-  (void)sender;
-  self.volumeValue.stringValue =
-      [NSString stringWithFormat:@"%ld%%", self.volumeSlider.integerValue];
-}
-
-- (void)closeSettings:(id)sender {
-  (void)sender;
-  [self.settingsPanel orderOut:nil];
-}
-
-- (void)saveSettings:(id)sender {
-  (void)sender;
-  static constexpr float kResolutionValues[] = {0.0f, 1.0f, 1.5f, 2.0f,
-                                                 3.0f, 4.0f};
-  static constexpr const char *kDisplayModeValues[] = {
-      "windowed", "borderless", "exclusive"};
-  const NSInteger resolutionIndex = self.resolutionMenu.indexOfSelectedItem;
-  const NSInteger displayIndex = self.displayModeMenu.indexOfSelectedItem;
-  if (resolutionIndex < 0 || resolutionIndex >= 6 || displayIndex < 0 ||
-      displayIndex >= 3) {
-    return;
-  }
-
-  std::ostringstream resolution;
-  resolution << kResolutionValues[resolutionIndex];
-  std::ostringstream volume;
-  volume << std::clamp(static_cast<float>(self.volumeSlider.doubleValue) / 100.0f,
-                       0.0f, 1.0f);
-  const bool wroteResolution = RuntimeConfigFile::WriteSetting(
-      "video", "resolution_multiplier", resolution.str());
-  const bool wroteDisplay = RuntimeConfigFile::WriteSetting(
-      "video", "display_mode",
-      RuntimeConfigFile::FormatString(kDisplayModeValues[displayIndex]));
-  const bool wroteFps = RuntimeConfigFile::WriteSetting(
-      "video", "show_fps",
-      self.showFpsCheckbox.state == NSControlStateValueOn ? "true" : "false");
-  const bool wroteVolume =
-      RuntimeConfigFile::WriteSetting("audio", "volume", volume.str());
-  const bool wroteMute = RuntimeConfigFile::WriteSetting(
-      "audio", "muted",
-      self.muteCheckbox.state == NSControlStateValueOn ? "true" : "false");
-
-  if (!(wroteResolution && wroteDisplay && wroteFps && wroteVolume && wroteMute)) {
-    NSAlert *alert = [NSAlert new];
-    alert.messageText = @"Settings Could Not Be Saved";
-    alert.informativeText =
-        @"KartPad could not update Config.toml. Your previous settings remain available.";
-    [alert beginSheetModalForWindow:self.settingsPanel completionHandler:nil];
-    return;
-  }
-  [self.settingsPanel orderOut:nil];
-}
-
-- (void)showSettings:(id)sender {
-  (void)sender;
-  const RuntimeUserConfig config = RuntimeConfigFile::LoadConfigFile();
-  if (self.settingsPanel == nil) {
-    self.settingsPanel = [[NSPanel alloc]
-        initWithContentRect:NSMakeRect(0, 0, 470, 312)
-                  styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
-                    backing:NSBackingStoreBuffered
-                      defer:NO];
-    self.settingsPanel.title = @"KartPad Settings";
-    self.settingsPanel.releasedWhenClosed = NO;
-
-    self.resolutionMenu = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
-    [self.resolutionMenu addItemsWithTitles:@[
-      @"Auto (Window Size)", @"Native (1×)", @"1.5×", @"2×", @"3×", @"4×"
-    ]];
-    self.resolutionMenu.accessibilityLabel = @"Render Resolution";
-
-    self.displayModeMenu = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
-    [self.displayModeMenu addItemsWithTitles:@[
-      @"Windowed", @"Borderless Fullscreen", @"Exclusive Fullscreen"
-    ]];
-    self.displayModeMenu.accessibilityLabel = @"Display Mode";
-
-    self.showFpsCheckbox = [NSButton checkboxWithTitle:@"Show FPS counter"
-                                               target:nil
-                                               action:nil];
-    self.muteCheckbox = [NSButton checkboxWithTitle:@"Mute game audio"
-                                            target:nil
-                                            action:nil];
-
-    self.volumeSlider = [NSSlider sliderWithValue:100.0
-                                        minValue:0.0
-                                        maxValue:100.0
-                                          target:self
-                                          action:@selector(updateVolumeValue:)];
-    self.volumeSlider.continuous = YES;
-    self.volumeSlider.accessibilityLabel = @"Master Volume";
-    [self.volumeSlider.widthAnchor constraintEqualToConstant:190.0].active = YES;
-    self.volumeValue = [self label:@"100%"];
-    [self.volumeValue.widthAnchor constraintEqualToConstant:42.0].active = YES;
-    NSStackView *volumeControl =
-        [NSStackView stackViewWithViews:@[self.volumeSlider, self.volumeValue]];
-    volumeControl.orientation = NSUserInterfaceLayoutOrientationHorizontal;
-    volumeControl.spacing = 8.0;
-
-    NSTextField *restart = [self label:
-        @"Changes are saved safely and apply the next time KartPad launches."];
-    restart.textColor = NSColor.secondaryLabelColor;
-    restart.maximumNumberOfLines = 2;
-    restart.lineBreakMode = NSLineBreakByWordWrapping;
-
-    NSTextField *controller = [self label:
-        @"Controller mappings remain available from Controller settings in the in-game F10 bar."];
-    controller.textColor = NSColor.secondaryLabelColor;
-    controller.maximumNumberOfLines = 2;
-    controller.lineBreakMode = NSLineBreakByWordWrapping;
-
-    NSButton *cancel = [NSButton buttonWithTitle:@"Cancel"
-                                          target:self
-                                          action:@selector(closeSettings:)];
-    NSButton *save = [NSButton buttonWithTitle:@"Save Changes"
-                                        target:self
-                                        action:@selector(saveSettings:)];
-    save.keyEquivalent = @"\r";
-    NSView *buttonSpacer = [NSView new];
-    NSStackView *buttons =
-        [NSStackView stackViewWithViews:@[buttonSpacer, cancel, save]];
-    buttons.orientation = NSUserInterfaceLayoutOrientationHorizontal;
-    buttons.alignment = NSLayoutAttributeCenterY;
-    buttons.distribution = NSStackViewDistributionFill;
-    buttons.spacing = 8.0;
-    [buttonSpacer setContentHuggingPriority:NSLayoutPriorityDefaultLow
-                            forOrientation:NSLayoutConstraintOrientationHorizontal];
-
-    NSStackView *content = [NSStackView stackViewWithViews:@[
-      [self rowWithLabel:@"Render resolution" control:self.resolutionMenu],
-      [self rowWithLabel:@"Display mode" control:self.displayModeMenu],
-      [self rowWithLabel:@"Overlay" control:self.showFpsCheckbox],
-      [self rowWithLabel:@"Master volume" control:volumeControl],
-      [self rowWithLabel:@"Audio" control:self.muteCheckbox],
-      restart, controller, buttons
-    ]];
-    content.translatesAutoresizingMaskIntoConstraints = NO;
-    content.orientation = NSUserInterfaceLayoutOrientationVertical;
-    content.alignment = NSLayoutAttributeLeading;
-    content.spacing = 16.0;
-    self.settingsPanel.contentView = [NSView new];
-    [self.settingsPanel.contentView addSubview:content];
-    [NSLayoutConstraint activateConstraints:@[
-      [content.leadingAnchor constraintEqualToAnchor:self.settingsPanel.contentView.leadingAnchor
-                                             constant:24.0],
-      [content.trailingAnchor constraintEqualToAnchor:self.settingsPanel.contentView.trailingAnchor
-                                              constant:-24.0],
-      [content.topAnchor constraintEqualToAnchor:self.settingsPanel.contentView.topAnchor
-                                         constant:24.0],
-      [content.bottomAnchor constraintLessThanOrEqualToAnchor:self.settingsPanel.contentView.bottomAnchor
-                                                      constant:-20.0],
-      [restart.widthAnchor constraintEqualToAnchor:content.widthAnchor],
-      [controller.widthAnchor constraintEqualToAnchor:content.widthAnchor],
-      [buttons.widthAnchor constraintEqualToAnchor:content.widthAnchor]
-    ]];
-  }
-
-  static constexpr float kResolutionValues[] = {0.0f, 1.0f, 1.5f, 2.0f,
-                                                 3.0f, 4.0f};
-  const float resolution = config.resolutionMultiplier.value_or(1.0f);
-  NSInteger resolutionIndex = 1;
-  for (NSInteger index = 0; index < 6; ++index) {
-    if (std::fabs(resolution - kResolutionValues[index]) < 0.001f) {
-      resolutionIndex = index;
-      break;
-    }
-  }
-  [self.resolutionMenu selectItemAtIndex:resolutionIndex];
-
-  const std::string display = config.displayMode.value_or("windowed");
-  [self.displayModeMenu selectItemAtIndex:
-      display == "borderless" ? 1 : (display == "exclusive" ? 2 : 0)];
-  self.showFpsCheckbox.state = config.showFps.value_or(true)
-      ? NSControlStateValueOn : NSControlStateValueOff;
-  self.muteCheckbox.state = config.audioMuted.value_or(false)
-      ? NSControlStateValueOn : NSControlStateValueOff;
-  self.volumeSlider.doubleValue =
-      std::clamp(static_cast<double>(config.audioVolume.value_or(1.0f)) * 100.0,
-                 0.0, 100.0);
-  [self updateVolumeValue:nil];
-
-  [self.settingsPanel center];
-  [self.settingsPanel makeKeyAndOrderFront:nil];
-  [NSApp activateIgnoringOtherApps:YES];
-}
+#include "KartPadMacSettings.inc.mm"
 
 - (void)showApplicationSupport:(id)sender {
   (void)sender;
@@ -1209,6 +1018,30 @@ static KartPadMacShellController *Controller() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{ controller = [KartPadMacShellController new]; });
   return controller;
+}
+
+extern "C" void KartPadOpenSettingsFromShortcut() {
+  // SDL event handling can run inside a guest fiber. Open AppKit UI on the
+  // next native run-loop turn rather than re-entering the event pump here.
+  dispatch_async(dispatch_get_main_queue(), ^{ [Controller() showSettings:nil]; });
+}
+
+static void InstallSettingsShortcutMonitor() {
+  KartPadMacShellController *controller = Controller();
+  if (controller.settingsShortcutMonitor != nil) return;
+  controller.settingsShortcutMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+      handler:^NSEvent *(NSEvent *event) {
+        const NSEventModifierFlags modifiers = event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask;
+        const bool functionKey = event.keyCode == 109;
+        const bool commandComma = event.keyCode == 47 && (modifiers & NSEventModifierFlagCommand) &&
+            !(modifiers & (NSEventModifierFlagControl | NSEventModifierFlagOption | NSEventModifierFlagShift));
+        if ((functionKey && !(modifiers & (NSEventModifierFlagControl | NSEventModifierFlagOption | NSEventModifierFlagCommand))) ||
+            commandComma) {
+          KartPadOpenSettingsFromShortcut();
+          return nil;
+        }
+        return event;
+      }];
 }
 
 static void InstallMenu() {
@@ -1430,8 +1263,14 @@ static void InstallMenu() {
 }
 
 void KartPadMacShellInstall(void) {
+  if (KPFullscreenAcrossNotch()) {
+    SDL_SetHint(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES, "0");
+    SDL_SetHint(SDL_HINT_VIDEO_MAC_FULLSCREEN_MENU_VISIBILITY, "never");
+  }
+
   dispatch_async(dispatch_get_main_queue(), ^{
     [NSApplication sharedApplication];
+    InstallSettingsShortcutMonitor();
     InstallMenu();
   });
 }

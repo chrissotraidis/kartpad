@@ -74,7 +74,7 @@ Retro Rewind file, or Retro-WFC payload has the wrong identity.
 Launch the audited local app:
 
 ```sh
-open build/KartPad-self-built.app
+open build/KartPad.app
 ```
 
 The resulting app is a local development build. It is ignored by Git, may

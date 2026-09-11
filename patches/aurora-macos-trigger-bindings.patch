@@ -1,0 +1,55 @@
+--- /dev/null
++++ b/include/dolphin/controller_binding.h
+@@ -0,0 +1,25 @@
++#pragma once
++#include <SDL3/SDL_gamepad.h>
++#include <algorithm>
++#include <cstdint>
++
++namespace kartpad::binding {
++// Keep existing SDL button IDs and the legacy unbound sentinel unchanged.
++inline constexpr uint32_t LeftTrigger = 0x10000;
++inline constexpr uint32_t RightTrigger = 0x10001;
++inline constexpr uint32_t Unbound = UINT32_MAX;
++inline bool valid(uint32_t value) {
++  return value < SDL_GAMEPAD_BUTTON_COUNT || value == LeftTrigger ||
++         value == RightTrigger || value == Unbound;
++}
++inline bool pressed(SDL_Gamepad *pad, uint32_t value, int leftThreshold, int rightThreshold) {
++  if (!pad) return false;
++  if (value == LeftTrigger || value == RightTrigger) {
++    const bool left = value == LeftTrigger;
++    // Zero must not make a released trigger count as pressed.
++    return SDL_GetGamepadAxis(pad, left ? SDL_GAMEPAD_AXIS_LEFT_TRIGGER : SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
++           >= std::clamp(left ? leftThreshold : rightThreshold, 1, 32767);
++  }
++  return value < SDL_GAMEPAD_BUTTON_COUNT && SDL_GetGamepadButton(pad, static_cast<SDL_GamepadButton>(value));
++}
++}
+--- a/lib/dolphin/pad/pad.cpp
++++ b/lib/dolphin/pad/pad.cpp
+@@ -1,3 +1,4 @@
++#include "dolphin/controller_binding.h"
+ #include "../../input.hpp"
+ #include "../../internal.hpp"
+ #include <dolphin/pad.h>
+@@ -748,7 +749,8 @@
+       bool rightTriggerSet = false;
+       std::ranges::for_each(controller->m_buttonMapping, [&controller, &i, &status, &leftTriggerSet,
+                                                           &rightTriggerSet](const auto& mapping) {
+-        if (SDL_GetGamepadButton(controller->m_controller, static_cast<SDL_GamepadButton>(mapping.nativeButton))) {
++        if (kartpad::binding::pressed(controller->m_controller, mapping.nativeButton,
++              controller->m_deadZones.leftTriggerActivationZone, controller->m_deadZones.rightTriggerActivationZone)) {
+           status[i].button |= mapping.padButton;
+         }
+ 
+@@ -765,7 +767,8 @@
+         if (mapping.nativeButton == PAD_NATIVE_BUTTON_INVALID) {
+           return;
+         }
+-        if (SDL_GetGamepadButton(controller->m_controller, static_cast<SDL_GamepadButton>(mapping.nativeButton))) {
++        if (kartpad::binding::pressed(controller->m_controller, mapping.nativeButton,
++              controller->m_deadZones.leftTriggerActivationZone, controller->m_deadZones.rightTriggerActivationZone)) {
+           status[i].button |= mapping.padButton;
+         }
+ 

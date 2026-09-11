@@ -58,6 +58,12 @@ patch --batch -p1 -d "${runtime_source}/aurora-main" < \
   "${repo_root}/patches/aurora-gx-resolve-snapshot-copy-src.patch"
 patch --batch -p1 -d "${runtime_source}/aurora-main" < \
   "${repo_root}/patches/aurora-viewport-policy-window-guard.patch"
+patch --batch -p1 -d "${runtime_source}/aurora-main" < \
+  "${repo_root}/patches/aurora-macos-controller-assignment.patch"
+patch --batch -p1 -d "${runtime_source}/aurora-main" < \
+  "${repo_root}/patches/aurora-macos-trigger-bindings.patch"
+patch --batch -p1 -d "${runtime_source}/aurora-main" < \
+  "${repo_root}/patches/aurora-macos-trigger-axis-isolation.patch"
 patch -p1 -d "${runtime_source}" < "${repo_root}/patches/wiicompiled-apple-runtime.patch"
 patch -p1 -d "${runtime_source}" < \
   "${repo_root}/patches/wiicompiled-rfl-alarm-context.patch"
@@ -89,6 +95,13 @@ for dual_patch in \
 done
 patch --batch -p1 -d "${runtime_source}" < \
   "${repo_root}/patches/wiicompiled-present-telemetry.patch"
+
+patch --batch -p1 -d "${runtime_source}" < \
+  "${repo_root}/patches/wiicompiled-macos-controller-settings.patch"
+patch --batch -p1 -d "${runtime_source}" < \
+  "${repo_root}/patches/wiicompiled-macos-unified-settings.patch"
+patch --batch -p1 -d "${runtime_source}" < \
+  "${repo_root}/patches/wiicompiled-macos-settings-shortcut.patch"
 
 # Backport upstream e0e362b: SCGetProductSN returns a guest u32 for DWC csnum.
 patch --batch -p1 -d "${runtime_source}" < \
