@@ -24,6 +24,8 @@ for selection_function in 8083DFA8 80846C1C 8084E388 80643F48; do
 done
 "${repo_root}/scripts/inject-g10-camera-lifecycle-guard.py" \
   "${functions}/func_805A1A8C.cpp"
+"${repo_root}/scripts/inject-retro-rel-report-guard.py" \
+  "${functions}/func_8000A440.cpp"
 "${dotnet_bin}" "${translator_dll}" generate-data-init --project "${manifest}"
 # generate-data-init rewrites the assembly payload table in ELF/COFF spelling.
 # Preserve the Mach-O aliases applied by prepare-g7-game-runtime.sh on every

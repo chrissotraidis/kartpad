@@ -133,6 +133,11 @@ done
 patch --batch -p1 -d "${runtime_source}" < \
   "${repo_root}/patches/wiicompiled-ios-device-cpu-baseline.patch"
 
+# Guard translated Retro REL error reporting before the generated function
+# dereferences its section table; invalid data must take generated cleanup.
+patch --batch -p2 -d "${runtime_source}" < \
+  "${repo_root}/patches/wiicompiled-retro-rel-report-guard.patch"
+
 # Backport upstream e0e362b: SCGetProductSN returns a guest u32 for DWC csnum.
 patch --batch -p1 -d "${runtime_source}" < \
   "${repo_root}/patches/wiicompiled-sc-serial.patch"

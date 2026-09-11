@@ -1,0 +1,70 @@
+diff --git a/runtime/include/recomp_mod_loader.h b/runtime/include/recomp_mod_loader.h
+--- a/runtime/include/recomp_mod_loader.h
++++ b/runtime/include/recomp_mod_loader.h
+@@ -90,5 +90,11 @@
+ uint32_t CurrentTranslatedExecutionAddress() noexcept;
+ 
++// Validate the StaticR.rel section-table pointer before translated error
++// reporting dereferences it. A malformed or overwritten REL must be logged
++// and returned to the caller, not allowed to turn an error report into a
++// native flat-memory crash.
++bool TryGetRelReportSectionTable(uint32_t relAddress, uint32_t& tableAddress) noexcept;
++
+ void RegisterExecutableRange(uint32_t start, uint32_t end, std::string name);
+ bool HandleExecutableWrite(uint32_t address, size_t length, uint64_t value);
+ void CheckExecutableWrite(uint32_t address, size_t length, uint64_t value);
+diff --git a/runtime/src/recomp_mod_loader.cpp b/runtime/src/recomp_mod_loader.cpp
+--- a/runtime/src/recomp_mod_loader.cpp
++++ b/runtime/src/recomp_mod_loader.cpp
+@@ -355,8 +355,51 @@
+ uint32_t CurrentTranslatedExecutionAddress() noexcept {
+     return g_currentTranslatedExecutionAddress;
+ }
+ 
++bool TryGetRelReportSectionTable(uint32_t relAddress, uint32_t& tableAddress) noexcept {
++    tableAddress = 0;
++    // The generated report function reads offsets 0, 12, 16, 20, 24 and 28
++    // before it reaches the section-table loop. Validate the complete header
++    // and the guest-address arithmetic before any of those FlatRead32 calls.
++    if ((relAddress & 3u) != 0 ||
++        static_cast<uint64_t>(relAddress) + 32u > (uint64_t{1} << 32) ||
++        !Memory::Contains(relAddress, 32)) {
++        RT_LOG(RT_TAG_MOD) << "StaticR.rel report header is outside guest memory at 0x"
++                           << std::hex << std::uppercase << relAddress << std::dec << std::endl;
++        return false;
++    }
++
++    uint32_t sectionCount = 0;
++    uint32_t table = 0;
++    if (!Memory::TryRead32(relAddress + 12u, sectionCount) ||
++        !Memory::TryRead32(relAddress + 16u, table)) {
++        RT_LOG(RT_TAG_MOD) << "StaticR.rel report header could not be read at 0x"
++                           << std::hex << std::uppercase << relAddress << std::dec << std::endl;
++        return false;
++    }
++
++    // A zero-entry report never dereferences the table pointer.
++    if (sectionCount == 0) {
++        tableAddress = table;
++        return true;
++    }
++
++    const uint64_t tableBytes = static_cast<uint64_t>(sectionCount) * 8u;
++    if ((table & 3u) != 0 ||
++        static_cast<uint64_t>(table) + tableBytes > (uint64_t{1} << 32) ||
++        tableBytes > static_cast<uint64_t>(SIZE_MAX) ||
++        !Memory::Contains(table, static_cast<size_t>(tableBytes))) {
++        RT_LOG(RT_TAG_MOD) << "StaticR.rel report section table is outside guest memory: rel=0x"
++                           << std::hex << std::uppercase << relAddress << " table=0x"
++                           << table << " count=" << std::dec << sectionCount << std::endl;
++        return false;
++    }
++
++    tableAddress = table;
++    return true;
++}
++
+ void RegisterExecutableRange(uint32_t start, uint32_t end, std::string name) {
+     if (end <= start) {
+         return;
+     }
