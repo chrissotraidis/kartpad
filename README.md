@@ -18,7 +18,7 @@ The projects are independently maintained.
   <img alt="Android ARM64 with Vulkan" src="https://img.shields.io/badge/Android-ARM64%20%2F%20Vulkan-3DDC84?logo=android">
   <img alt="Ahead-of-time static recompilation" src="https://img.shields.io/badge/PowerPC-static%20recompilation-FF9F0A">
   <img alt="macOS development target" src="https://img.shields.io/badge/macOS%20target-14%2B-0A84FF">
-  <img alt="iPhone and iPad 0.4.14" src="https://img.shields.io/badge/iPhone%20%2F%20iPad-0.4.14-0A84FF">
+  <img alt="iPhone and iPad" src="https://img.shields.io/badge/platform-iPhone%20%2F%20iPad-0A84FF">
   <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.12.8-FF375F">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
   <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the KartPad Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
@@ -128,11 +128,12 @@ Android has a playable ARM64/Vulkan APK for Android 9+, plus an explicitly unsta
 <details>
 <summary>Does online multiplayer work?</summary>
 
-The owner confirmed Retro WFC login and worldwide lobby entry on the current
-Android build. Separate isolated-server tests covered race results and lobby
-return, but complete production online behavior, reconnect and every device are
-not established. Native room hosting and Original Wiimmfi compatibility remain
-unfinished; entering a server address does not implement them. See [online
+Earlier Android testing confirmed Retro WFC login and worldwide lobby entry on
+Pixel 9 Pro XL. The current Android 0.4.19 Android 1 release has no fresh physical
+Android gameplay acceptance. Separate isolated-server tests covered race results
+and lobby return, but complete production online behavior, reconnect and every
+device are not established. Native room hosting and Original Wiimmfi compatibility
+remain unfinished; entering a server address does not implement them. See [online
 status](docs/ONLINE.md) and [friend-room guidance](docs/MULTIPLAYER.md#private-friend-rooms).
 
 </details>
