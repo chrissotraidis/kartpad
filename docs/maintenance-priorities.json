@@ -99,7 +99,7 @@
     },
     {
       "id": "warmed-performance",
-      "priority": 2,
+      "priority": 1,
       "issues": [
         198,
         167,
@@ -108,16 +108,18 @@
         195,
         204,
         207,
-        135
+        135,
+        275,
+        278
       ],
       "state": "ready-local",
-      "next_action": "Private code84 is packaged, non-debuggable and shell-profileable, with public83 native payload and verified symbols. Arrange the existing accepted private handoff after checking recipient version/signer; derive a Debug-signed twin before using the owner Pixel last verified on private82. Then capture one bounded warmed driven CPU sample to classify guest, GX CPU and waits. Do not rebuild native code or repeat answered settings/log/willingness requests.",
+      "next_action": "Prepare a separate current-source API29 private control/candidate pair: forced emulated TLS versus native TLS, without bundling scalar-context or renderer changes. Verify arithmetic, cross-thread/fiber behavior, ELF TLS and explicit private package audits before phone use. Capture matched warmed CPU/frame times plus memory and pipeline counts. See the passive second-pass assessment; no build or benefit is yet established.",
       "acceptance": "A matched warmed affected-device comparison shows a useful frame-time improvement with guest semantics and stability preserved. No FPS claim from a host microbenchmark.",
-      "checkpoint": "docs/MAINTENANCE-BOARD.md",
-      "priority_reason": "Owner explicitly prioritizes slowdowns. Sustained low FPS after shader queues empty is the strongest measured opportunity; a local diagnostic can progress now.",
+      "checkpoint": "docs/artifacts/2026-09-15/android-second-pass-candidate.md",
+      "priority_reason": "Passive Apple/Android comparison verifies API28 emulated-TLS overhead; unchanged-header PIC code emits native TLS on API29. Historical Helio exit metadata also reaches about1.59 GiB PSS/1.84 GiB RSS, motivating separate memory attribution. Prefer broader native-TLS comparison over the single-adapter candidate.",
       "dependency": {
-        "owner": "performance worker and release operator",
-        "needs": "Community-signed code84 audit passed. Concrete private delivery and affected-device capture remain; owner Pixel needs a compatible signing twin. Neither install nor capture has occurred."
+        "owner": "Android performance investigation and owner device session",
+        "needs": "No new APK exists. Private API29 pair needs full native rebuilds, TLS/fiber correctness and package audit before a compatible in-place owner-phone comparison. Public API28 support remains unchanged. Memory samples do not establish LMK or a leak."
       }
     },
     {

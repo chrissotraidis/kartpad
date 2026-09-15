@@ -85,6 +85,17 @@ over model-name special cases or bundled speculative workarounds. Sustained
 Android performance is first; A10X optimization and Apple external-display
 recovery remain independent, lower-priority work for this pass.
 
+## September 15 investigation update
+
+| Device/build scope | New evidence | State and next gate |
+| --- | --- | --- |
+| POCO X3 / Xiaomi M2007J20CG / API31 / Adreno618; export code90, session version unknown | Original/base at1x/4:3 records 9.81–11.29 FPS after pipeline queue empties; presentation averages about4 ms; thermal/memory context absent | CPU-side candidate awaiting matched physical comparison; [research](artifacts/2026-09-15/android-performance-research.md), [#275 reply](https://github.com/chrissotraidis/kartpad/issues/275#issuecomment-5674085700) |
+| SM-S901W / Android14 / code80; profile unknown | New #278 report describes sub20 FPS in every race; existing profile/log request unanswered | Await existing discriminator; do not assume chipset or send duplicate request |
+| Samsung SM-S948B / API36 / Adreno840; export code90, session version unknown | Latest #137 selected archive contains startup only, no affected draw records | Geometry remains open; this export does not establish a matrix-comparison outcome |
+| iPhone14 Pro Max / iOS26.6.2 / reported0.4.16 | New #199 comparison reports frozen image with continuing audio on local screen without TV, and also AirPlay/HDMI | Reclassify as local rendering freeze with external symptoms; await requested narrow diagnostic, not another TV sweep |
+
+Earlier rows remain historical build-specific observations; these updates do not declare them resolved. The 448,000-case emulator scalar comparison is source/correctness evidence, not a device compatibility result.
+
 ## How bots and people update the matrix
 
 1. Use a stable `device key`; never put a serial number, account identifier or
