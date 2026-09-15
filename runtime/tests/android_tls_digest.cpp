@@ -66,9 +66,11 @@ void check(uint64_t seed) {
     std::printf("PASS %u cases digest=%016llx\n", checks, (unsigned long long)digest);
 }
 
+void test_fiber_tls();
 extern "C" __attribute__((visibility("default"))) int run_tests() {
     std::thread t([] { check(0xabcdef01); });
     check(0x12345678);
     t.join();
+    test_fiber_tls();
     return 0;
 }

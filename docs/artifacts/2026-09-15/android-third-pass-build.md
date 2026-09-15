@@ -26,7 +26,7 @@ The earlier #137 archive adds finite vertex draw records but no decisive corrupt
 
 ## Validation and hardware gate
 
-The API-36 ARM64 emulator dynamically loads each API-29 shared-library variant. Across 448,000 scalar cases, special/random values, random FPSCR, four host rounding modes, nested contexts and two OS threads, both produce matching result/exception/write-state digests. This is arithmetic/context evidence, not game performance or full scheduler acceptance.
+The API-36 ARM64 emulator dynamically loads each API-29 shared-library variant. Across 448,000 scalar cases, special/random values, random FPSCR, four host rounding modes, nested contexts and two OS threads, both produce matching result/exception/write-state digests. A further 40,000 production ARM64 assembly stack switches per TLS mode preserve thread-local context and host rounding on two OS threads. These are arithmetic/context and switch-boundary checks, not game performance, full scheduler, or JNI lifecycle acceptance.
 
 On hardware: verify installed signer/version and preserve data; run baseline → native → baseline-repeat using increasing version codes. Keep the same game/profile, 1x resolution, aspect, track, save, camera and input route. Separate startup/prewarm measurements from repeated warmed runs. Allow equivalent cooling and match cache state without clearing user data. Record frame-time tails, main CPU stacks, TLS self time, memory categories and thermal state. Reject a candidate that gains a little FPS but regresses geometry, audio, resume, base/Retro switching or memory. Retain the old install artifact; never downgrade or uninstall to restore it.
 

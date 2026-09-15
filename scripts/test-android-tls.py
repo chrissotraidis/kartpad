@@ -21,7 +21,8 @@ flags = [str(c), '-std=c++20', '-O2', '-fPIC', '-fvisibility=hidden', '-fno-fast
 for mode, flag in [('emulated', '-femulated-tls'), ('native', '-fno-emulated-tls')]:
     subprocess.run(flags + [flag, '-shared', '-static-libstdc++',
         str(r/'runtime/tests/android_tls_digest.cpp'), str(r/'runtime/tests/android_tls_case.cpp'),
-        str(r/'runtime/src/android/scalar_fenv.cpp'), '-o', str(o/(mode+'.so'))], check=True)
+        str(r/'runtime/src/android/scalar_fenv.cpp'), str(r/'runtime/tests/android_tls_fiber.cpp'),
+        str(a.runtime_source.resolve()/'src/android/fiber_switch_android.S'), '-o', str(o/(mode+'.so'))], check=True)
 subprocess.run([str(c), '-static-libstdc++', str(r/'runtime/tests/android_tls_loader.cpp'),
                 '-ldl', '-o', str(o/'loader')], check=True)
 adb = [str(sdk/'platform-tools/adb'), '-s', a.serial]
@@ -34,7 +35,7 @@ for mode in ['emulated', 'native']:
     result = subprocess.check_output(adb+['shell', target+'/loader', target+'/'+mode+'.so'], text=True)
     (o/(mode+'.txt')).write_text(result)
     lines = sorted(result.strip().splitlines())
-    if len(lines) != 2 or any(not s.startswith('PASS 224000 cases digest=') for s in lines):
+    if len(lines) != 3 or sum(s.startswith('PASS 224000 cases digest=') for s in lines) != 2 or not any(s.startswith('PASS 40000 production assembly switches;') for s in lines):
         raise SystemExit('Missing expected test results: '+result)
     results.append(lines)
 if results[0] != results[1]:
