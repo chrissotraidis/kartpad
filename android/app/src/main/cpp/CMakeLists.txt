@@ -16,6 +16,21 @@ if(NOT DEFINED MBEDTLS_ANDROID_ROOT OR MBEDTLS_ANDROID_ROOT STREQUAL "" OR
   message(FATAL_ERROR "MBEDTLS_ANDROID_ROOT must name the prepared pinned Mbed TLS source")
 endif()
 
+# Keep every source-built C/C++ translation unit in the same TLS model.
+set(KARTPAD_PRIVATE_TLS_MODE "" CACHE STRING "Private API-29 TLS comparison")
+if(NOT KARTPAD_PRIVATE_TLS_MODE STREQUAL "")
+  if(ANDROID_PLATFORM_LEVEL LESS 29)
+    message(FATAL_ERROR "Private TLS comparison requires API 29 or newer")
+  endif()
+  if(KARTPAD_PRIVATE_TLS_MODE STREQUAL "emulated")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-femulated-tls>")
+  elseif(KARTPAD_PRIVATE_TLS_MODE STREQUAL "native")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-fno-emulated-tls>")
+  else()
+    message(FATAL_ERROR "Unknown private TLS mode")
+  endif()
+endif()
+
 find_package(Threads REQUIRED)
 find_package(SDL3 REQUIRED CONFIG)
 # The Android toolchain intentionally roots package discovery inside the NDK

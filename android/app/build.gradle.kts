@@ -12,9 +12,19 @@ val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orN
 val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
+if (discIoJniRoot != null) {
+    require(file("$discIoJniRoot/arm64-v8a/libkartpad_discio.so").isFile) {
+        "kartpadDiscIoJniRoot must contain arm64-v8a/libkartpad_discio.so"
+    }
+}
 val kartpadProfileable = providers.gradleProperty("kartpadProfileable")
     .map { it.toBooleanStrict() }
     .getOrElse(false)
+// Private matched experiment only. Public builds retain API 28 and NDK defaults.
+val kartpadPrivateTlsMode = providers.gradleProperty("kartpadPrivateTlsMode").orNull
+require(kartpadPrivateTlsMode == null || kartpadPrivateTlsMode in setOf("emulated", "native")) {
+    "kartpadPrivateTlsMode must be emulated or native"
+}
 val kartpadBuildAssets = layout.buildDirectory.dir("generated/assets/kartpadBuild")
 val prepareKartpadBuildProvenance by tasks.registering(Exec::class) {
     val output = kartpadBuildAssets.get().file("kartpad-build.json").asFile
@@ -58,7 +68,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.kartpad.android"
-        minSdk = 28
+        minSdk = if (kartpadPrivateTlsMode == null) 28 else 29
         targetSdk = 36
         versionCode = kartpadVersionCode
         versionName = kartpadVersionName
@@ -77,6 +87,9 @@ android {
                     "-DMINIZIP_ANDROID_ROOT=${minizipAndroidRoot.get()}",
                     "-DMBEDTLS_ANDROID_ROOT=${mbedtlsAndroidRoot.get()}",
                 )
+                if (kartpadPrivateTlsMode != null) {
+                    arguments += "-DKARTPAD_PRIVATE_TLS_MODE=$kartpadPrivateTlsMode"
+                }
                 if (gameRuntimeSource != null || translatedShardManifest != null) {
                     require(gameRuntimeSource != null && translatedShardManifest != null) {
                         "kartpadGameRuntimeSource and kartpadTranslatedShardManifest must be set together"
