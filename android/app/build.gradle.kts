@@ -74,6 +74,8 @@ android {
         versionName = kartpadVersionName
         manifestPlaceholders["kartpadProfileable"] = kartpadProfileable.toString()
         buildConfigField("boolean", "GAME_RUNTIME", (gameRuntimeSource != null).toString())
+        buildConfigField("boolean", "GRAPHICS_MEMORY_EXPERIMENT",
+            (gameRuntimeSource != null && providers.gradleProperty("kartpadGraphicsMemoryExperiment").orNull == "true").toString())
         buildConfigField("boolean", "DISC_IMAGE_IMPORT", (discIoJniRoot != null).toString())
 
         ndk {
