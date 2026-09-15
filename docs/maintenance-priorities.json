@@ -113,13 +113,13 @@
         278
       ],
       "state": "ready-local",
-      "next_action": "Compare the scalar-context candidate with current Android source on the owner phone when attached. Verify installed version/signer and native symbols first; code84 is not a current update. The 448,000-case ARM64 emulator differential passes, but microbenchmark results are mixed and no FPS gain is established. Capture warmed driven CPU samples and frame times; do not repeat answered settings/log requests.",
+      "next_action": "Prepare a separate current-source API29 private control/candidate pair: forced emulated TLS versus native TLS, without bundling scalar-context or renderer changes. Verify arithmetic, cross-thread/fiber behavior, ELF TLS and explicit private package audits before phone use. Capture matched warmed CPU/frame times plus memory and pipeline counts. See the passive second-pass assessment; no build or benefit is yet established.",
       "acceptance": "A matched warmed affected-device comparison shows a useful frame-time improvement with guest semantics and stability preserved. No FPS claim from a host microbenchmark.",
-      "checkpoint": "docs/artifacts/2026-09-15/android-performance-research.md",
-      "priority_reason": "Owner prioritizes Android optimization. New POCO X3 evidence adds sustained 10–11 FPS after warmup to independent Helio G85 CPU-side evidence. A tested candidate removes one redundant context lookup; physical benefit remains unresolved.",
+      "checkpoint": "docs/artifacts/2026-09-15/android-second-pass-candidate.md",
+      "priority_reason": "Passive Apple/Android comparison verifies API28 emulated-TLS overhead; unchanged-header PIC code emits native TLS on API29. Historical Helio exit metadata also reaches about1.59 GiB PSS/1.84 GiB RSS, motivating separate memory attribution. Prefer broader native-TLS comparison over the single-adapter candidate.",
       "dependency": {
         "owner": "Android performance investigation and owner device session",
-        "needs": "Phone not attached. Source baseline cedb338 / Android runtime b57c59b; check installed identity before preparing matched profileable artifacts. Old code84 cannot update current code93 installations."
+        "needs": "No new APK exists. Private API29 pair needs full native rebuilds, TLS/fiber correctness and package audit before a compatible in-place owner-phone comparison. Public API28 support remains unchanged. Memory samples do not establish LMK or a leak."
       }
     },
     {

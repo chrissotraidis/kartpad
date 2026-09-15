@@ -1,5 +1,7 @@
 # Android stability and performance investigation
 
+The [second passive pass](android-second-pass-candidate.md) revises the proposed next test: native TLS before the small context-reuse candidate, and stronger memory attribution from existing Helio exit records. This document retains the first-pass results.
+
 The strongest actionable performance evidence points to CPU-side game and render preparation, not an absence of parallel execution. A newly supplied POCO X3 log records roughly 10–11 FPS with no shader pipelines queued; an independent Helio G85 archive records roughly 25–29 FPS with 94–97% main-thread occupancy after prewarm. Presentation API timings in those intervals are much shorter than frame intervals. Neither observation proves that the GPU is idle, identifies a particular guest function, or rules out memory stalls. Together they justify prioritizing a measured CPU investigation over another resolution sweep or blanket shader-worker increase.[^1][^2]
 
 A narrow candidate now reuses the already validated CPU context across each scalar floating-point evaluation and commit. Android ARM64 baseline disassembly contains two context lookup calls in the representative single-add adapter; the candidate contains one. Both use the same arithmetic evaluators and exception rules. The emulator differential passes 448,000 cases. Alternating emulator microbenchmarks are mixed, so there is **no established gameplay speedup**, and no APK has been released by this investigation.
