@@ -99,7 +99,7 @@
     },
     {
       "id": "warmed-performance",
-      "priority": 2,
+      "priority": 1,
       "issues": [
         198,
         167,
@@ -108,16 +108,18 @@
         195,
         204,
         207,
-        135
+        135,
+        275,
+        278
       ],
       "state": "ready-local",
-      "next_action": "Private code84 is packaged, non-debuggable and shell-profileable, with public83 native payload and verified symbols. Arrange the existing accepted private handoff after checking recipient version/signer; derive a Debug-signed twin before using the owner Pixel last verified on private82. Then capture one bounded warmed driven CPU sample to classify guest, GX CPU and waits. Do not rebuild native code or repeat answered settings/log/willingness requests.",
+      "next_action": "Compare the scalar-context candidate with current Android source on the owner phone when attached. Verify installed version/signer and native symbols first; code84 is not a current update. The 448,000-case ARM64 emulator differential passes, but microbenchmark results are mixed and no FPS gain is established. Capture warmed driven CPU samples and frame times; do not repeat answered settings/log requests.",
       "acceptance": "A matched warmed affected-device comparison shows a useful frame-time improvement with guest semantics and stability preserved. No FPS claim from a host microbenchmark.",
-      "checkpoint": "docs/MAINTENANCE-BOARD.md",
-      "priority_reason": "Owner explicitly prioritizes slowdowns. Sustained low FPS after shader queues empty is the strongest measured opportunity; a local diagnostic can progress now.",
+      "checkpoint": "docs/artifacts/2026-09-15/android-performance-research.md",
+      "priority_reason": "Owner prioritizes Android optimization. New POCO X3 evidence adds sustained 10–11 FPS after warmup to independent Helio G85 CPU-side evidence. A tested candidate removes one redundant context lookup; physical benefit remains unresolved.",
       "dependency": {
-        "owner": "performance worker and release operator",
-        "needs": "Community-signed code84 audit passed. Concrete private delivery and affected-device capture remain; owner Pixel needs a compatible signing twin. Neither install nor capture has occurred."
+        "owner": "Android performance investigation and owner device session",
+        "needs": "Phone not attached. Source baseline cedb338 / Android runtime b57c59b; check installed identity before preparing matched profileable artifacts. Old code84 cannot update current code93 installations."
       }
     },
     {

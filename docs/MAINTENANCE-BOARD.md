@@ -11,6 +11,12 @@ are published separately from stable downloads. Both trackers are accessible;
 Android-specific and uncertain port issues remain KartPad intake. Physical
 report-flow acceptance is pending; no gameplay issue is closed by this change.
 
+## September 15 Android performance investigation
+
+Current source baseline `cedb338` / Android runtime `b57c59b`; public Android code93. New #275 POCO X3 evidence joins #198's warmed CPU-side lane: shader queue zero does not restore frame rate. A private source candidate removes duplicate scalar CPU-context lookup; 448,000 ARM64 emulator differential cases pass, but emulator timing is mixed and no gameplay gain is established. No APK was built or published in this pass. The next gate is a matched owner-phone CPU/frame-time comparison after checking current package/signer and symbols; stale code84 must not be offered as an update to code93.
+
+[Research and experiment](artifacts/2026-09-15/android-performance-research.md) · [complete recent intake](artifacts/2026-09-15/android-issue-intake.md). Replied to #275 and #137 from supplied logs, and to #199's new local-screen freeze comparison. Existing unanswered requests remain in place. Raw logs are retained locally outside Git. Runtime and parent PRs remain draft pending physical benefit; other platform runtime pins are unchanged.
+
 ## Current priorities and handoffs
 
 Counts below are distinct non-maintainer issue authors at this snapshot, excluding
