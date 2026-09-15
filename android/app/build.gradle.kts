@@ -12,6 +12,11 @@ val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orN
 val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
+if (discIoJniRoot != null) {
+    require(file("$discIoJniRoot/arm64-v8a/libkartpad_discio.so").isFile) {
+        "kartpadDiscIoJniRoot must contain arm64-v8a/libkartpad_discio.so"
+    }
+}
 val kartpadProfileable = providers.gradleProperty("kartpadProfileable")
     .map { it.toBooleanStrict() }
     .getOrElse(false)
