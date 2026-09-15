@@ -14,6 +14,8 @@ Graphics accounting showed approximately 300 MiB during title-screen prewarming 
 
 In the new probe build, the explicit release request returned pending work. After that work settled, Dawn allocator reservation fell from 1285.1 to 909.1 MiB, while allocator use remained 622.2 MiB. Android Graphics fell from 1,498,640 to 1,102,792 KiB, and total PSS from 2,034,879 to 1,628,116 KiB. These are one-session observations, not a universal memory/crash fix. The fresh probe run already had lower residency before release, so the larger earlier difference cannot be credited to this code.
 
+After reclamation, an explicitly restarted 55-second replay averaged 59.87 FPS, 22.21 ms mean window p95 and 24.41 ms mean window p99. Android Graphics remained 1,153,260→1,136,684 KiB and PSS 1,681,970→1,669,181 KiB. The saving persisted through this race segment; long-session and course-transition behavior remains open.
+
 Validation: release build/lint and package audit; exact APK/symbol identity, compatible signer, non-debuggable/profileable and 16 KiB alignment checks; actual hardware title/race readout, release and refresh UI. Existing resolution and aspect settings applied live and persisted across updates. Raw captures, screenshots, private APKs, backups and symbols remain local.
 
 The tested native-TLS build also replaced emulated lookup activity with Android's dynamic TLS resolver, so changing TLS models alone did not remove all context lookup cost. Separately, the base Mario Kart Wii path reached title but did not advance with touch A in the first baseline; Retro accepted the same input. Base gameplay, physical audio quality, low-end-device acceptance and reporter crashes remain unverified.
