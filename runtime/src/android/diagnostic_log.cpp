@@ -2,6 +2,8 @@
 #include <android/trace.h>
 #include <sys/system_properties.h>
 #include <cstdarg>
+#include <cstring>
+extern "C" void KartPadAndroidProcessGraphicsMemoryRequest();
 #include <cstdio>
 #include <time.h>
 #include <array>
@@ -44,6 +46,8 @@ extern "C" void KartPadAndroidLogMetric(const char* tag, const char* format, ...
   std::fprintf(stderr, "[%s] elapsed_ms=%lld %s\n", tag,
                static_cast<long long>(now.tv_sec) * 1000 + now.tv_nsec / 1000000,
                message);
+  // Process opt-in requests on the game thread, where device lifetime is stable.
+  if (std::strcmp(tag, "KartPadPerf") == 0) KartPadAndroidProcessGraphicsMemoryRequest();
 }
 
 extern "C" long long KartPadAndroidThreadCpuNanos() {

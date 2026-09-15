@@ -114,7 +114,11 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   else()
     message(FATAL_ERROR "Prepared game runtime has no Android product target")
   endif()
+  set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/kartpad_graphics_memory_jni.cpp"
+    TARGET_DIRECTORY ${KARTPAD_GAME_RUNTIME_TARGET} PROPERTIES
+    INCLUDE_DIRECTORIES "${DAWN_ANDROID_ROOT}/include")
   target_sources(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
+    kartpad_graphics_memory_jni.cpp
     kartpad_touch_input_jni.cpp
     kartpad_runtime_settings_jni.cpp
     kartpad_controller_slots_jni.cpp

@@ -587,9 +587,58 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Render Resolution…", R.drawable.ic_kartpad_display) {
                 closeKartPadMenu(::showResolutionSettings)
             },
-        ),
+        ) + if (BuildConfig.GRAPHICS_MEMORY_EXPERIMENT) listOf(
+            MenuRow("Graphics Memory…", R.drawable.ic_kartpad_display) {
+                closeKartPadMenu(::showGraphicsMemoryExperiment)
+            },
+        ) else emptyList(),
         showBack = true,
     )
+
+    private fun showGraphicsMemoryExperiment() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Graphics Memory · Experimental")
+            .setMessage("Sampling graphics memory…")
+            .setPositiveButton("Release Unused", null)
+            .setNeutralButton("Refresh", null)
+            .setNegativeButton("Close", null)
+            .create()
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        var pending = false
+        val poll = object : Runnable {
+            override fun run() {
+                if (!dialog.isShowing || isFinishing || isDestroyed) return
+                val result = nativeReadGraphicsMemory()
+                if (result.isEmpty()) {
+                    handler.postDelayed(this, 500)
+                } else {
+                    pending = false
+                    dialog.setMessage(result)
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).isEnabled = true
+                }
+            }
+        }
+        fun request(release: Boolean) {
+            if (pending) return
+            pending = true
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).isEnabled = false
+            dialog.setMessage(if (release) "Releasing unused graphics memory…" else "Sampling graphics memory…")
+            nativeRequestGraphicsMemory(release)
+            handler.postDelayed(poll, 500)
+        }
+        dialog.setOnDismissListener { handler.removeCallbacks(poll) }
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { request(true) }
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { request(false) }
+            request(false)
+        }
+        dialog.show()
+    }
+
+    private external fun nativeRequestGraphicsMemory(release: Boolean)
+    private external fun nativeReadGraphicsMemory(): String
 
     private fun showGameDataMenu() = showKartPadMenuPage(
         "Game Data & Saves",
