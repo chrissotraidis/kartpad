@@ -32,7 +32,12 @@ fi
   exit 1
 }
 [[ "$badging" == *"compileSdkVersion='36'"* ]]
-[[ "$badging" == *"minSdkVersion:'28'"* ]]
+expected_min_sdk="${KARTPAD_ANDROID_EXPECTED_MIN_SDK:-28}"
+case "$expected_min_sdk" in
+  28|29) ;;
+  *) echo "ERROR: expected min SDK must be 28 or private-test 29" >&2; exit 64 ;;
+esac
+[[ "$badging" == *"minSdkVersion:'$expected_min_sdk'"* ]]
 [[ "$badging" == *"targetSdkVersion:'36'"* ]]
 [[ "$badging" == *"native-code: 'arm64-v8a'"* ]]
 permissions="$("$aapt2" dump permissions "$apk")"
