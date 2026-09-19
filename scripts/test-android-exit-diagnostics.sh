@@ -15,8 +15,10 @@ out="$repo/.android-bootstrap/exit-host-tests"
 mkdir -p "$out"
 "$jdk/bin/java" -cp "$compiler:$stdlib:$annotations:$coroutines:$reflect" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler \
   -no-stdlib -no-reflect -jvm-target 17 -classpath "$stdlib:$json" -d "$out/tests.jar" \
+  "$repo/android/app/src/main/java/dev/kartpad/android/KartPadDiagnosticExport.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadExitDiagnostics.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadExitTraces.kt" \
+  "$repo/android/app/src/main/java/dev/kartpad/android/KartPadTombstoneSummary.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadBoundedRead.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadRendererDiagnostics.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadCharacterGraphicsTest.kt" \

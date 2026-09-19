@@ -52,7 +52,7 @@ class IOSGameDataPickerContractTests(unittest.TestCase):
             body.index("getResourceValue:&directory"),
         )
         self.assertNotIn("!directory.boolValue", body)
-        self.assertEqual(source.count("KartPadGameDataRootsInDocuments(&error)"), 2)
+        self.assertEqual(source.count("KartPadGameDataRootsInDocuments(&error)"), 1)
 
     def test_open_in_place_and_files_folder_contracts_are_declared(self) -> None:
         for name in ("Info.plist", "RuntimeInfo.plist"):
@@ -72,16 +72,17 @@ class IOSGameDataPickerContractTests(unittest.TestCase):
         self.assertIn("NSBundle.mainBundle.bundleIdentifier", source)
         self.assertIn("If a signer changes the bundle identifier", source)
         self.assertEqual(
-            source.count('actionWithTitle:@"Import from This Installation\'s Folder..."'),
+            source.count('actionWithTitle:@"Import from Extracted Folder…"'),
             2,
         )
         self.assertIn("[self presentGameDataPicker];", source)
         self.assertIn("[self presentGameDataFolderPicker];", source)
+        self.assertIn("gameOverlayRequestsGameDataFolderImport:weakSelf", source)
         self.assertEqual(
             source.count('NSLog(@"[KartPad] %@", KartPadDocumentsFolderScanDetail(error));'),
-            2,
+            1,
         )
-        self.assertEqual(source.count("KartPadGameDataRootsInDocuments(&error)"), 2)
+        self.assertEqual(source.count("KartPadGameDataRootsInDocuments(&error)"), 1)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 
 #import "KartPadShellViewController.h"
 #import "SunPadDiagnostics.h"
+#import "KartPadSystemDiagnostics.h"
 
 @interface KartPadAppDelegate : UIResponder <UIApplicationDelegate>
 @end
@@ -39,6 +40,7 @@ static void KartPadRequestLandscapeGeometry(UIWindow *window) {
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     (void)application;
     (void)launchOptions;
+    KartPadSystemDiagnosticsStart();
     SunPadDiagnosticsStart();
     return YES;
 }

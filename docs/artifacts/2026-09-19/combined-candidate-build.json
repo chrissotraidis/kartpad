@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "candidate_only": true,
+  "released": false,
+  "source_commit": "0fe98c134b471612c178ff60d9b027d86f03b54d",
+  "source_dirty": false,
+  "review_pr": "https://github.com/chrissotraidis/kartpad/pull/307",
+  "android": {
+    "version": "0.4.25-stabilization.7-prototype",
+    "version_code": 129,
+    "apk_sha256": "547d1db8b8cee0d7250066bccc30f16f581aba4859c2db911492f0204963d7ca",
+    "native_build_id": "932b07a580622770aec3cb525859ed778f7adc68",
+    "signer_sha256": "61dfb51411efe50b2e7fb8d280fcfbba766792c275d1024013940760caa3afaf",
+    "public_signer": false,
+    "package_audit": "pass",
+    "full_game_device_acceptance": "pending",
+    "emulator_debug_fixture_touch_and_menu": "pass"
+  },
+  "ios_ipados": {
+    "version": "0.4.25",
+    "build": 53,
+    "ipa_sha256": "69642d44c46c1b00b10d03eb36b5cf5db044850ebd5ac655cf7d8e1b1d07650a",
+    "macho_dsym_uuid": "A1898969-1D1C-37D4-AFCB-1E31098CC188",
+    "package_audit": "pass",
+    "physical_device_acceptance": "pending"
+  },
+  "macos": {
+    "version": "0.4.25-stabilization.7",
+    "build": 53,
+    "zip_sha256": "b0ab03b5b3614803a3cb9c2fdfa7b0df6b8be22731ab8553a261716a6284bdc6",
+    "package_audit": "pass",
+    "native_startup_settings_and_exit": "pass",
+    "race_input_acceptance": "pending"
+  },
+  "runtime_commits": {
+    "android": "606d3bc96eb02e15a351f50433a302ff76fb0ab6",
+    "ios": "959ba99003fc4676cc8593f51c6ea5ea3ac81906",
+    "macos": "70dc93802c851089d15334f91ea08b08ab1b0c24",
+    "tvos": "b923726296846771cf759b6940cbd692e493d8bd"
+  },
+  "dawn": {
+    "patch_identity": "b0fd045b0a694eb07ac3fcf0d741f8697b935856",
+    "archive_sha256": "99cef2c445bb9fa9758dda2036887f29c6116629053d2b40b3107590881db43a",
+    "production_dependency_lock_promoted": false
+  },
+  "release_gates_remaining": [
+    "affected Android graphics and warmed workload acceptance",
+    "staging exhaustion and map lifecycle integration",
+    "Original and Retro race/results/awards/endurance checks",
+    "final coordinated versions, dependency distribution, signing and asset discovery"
+  ]
+}

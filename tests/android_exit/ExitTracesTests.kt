@@ -6,6 +6,7 @@ import java.io.*
 import java.util.zip.*
 import org.json.JSONObject
 fun testPrivateExitTraces() {
+ testTombstoneSummary()
  val manager=ActivityManager();val context=Context(manager)
  fun export(): Map<String,ByteArray> {
   val out=ByteArrayOutputStream();ZipOutputStream(out).use { KartPadExitTraces.write(context,it) }

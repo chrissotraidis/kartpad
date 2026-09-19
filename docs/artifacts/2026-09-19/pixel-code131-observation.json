@@ -1,0 +1,37 @@
+{
+  "sourceRevision": "e34389bc733a21c71355402f7613015509f75c5a",
+  "candidateVersion": "0.5.0",
+  "versionCode": 131,
+  "localApkSha256": "3faec28bf52a65785b02fb034ed7cbf1378c47f901144a412d0274d27b2c190a",
+  "localSignerCertificateSha256": "61dfb51411efe50b2e7fb8d280fcfbba766792c275d1024013940760caa3afaf",
+  "publicApplicationPayloadIdentical": true,
+  "hardware": "Pixel 9 Pro XL / Mali-G715",
+  "resolutionScale": 2,
+  "installation": "in-place code125 to code131; exact installed version read back; no uninstall or data clear",
+  "preservation": "Previous APK and earlier durable backups retained. Normal launcher recognizes Original and existing Retro Rewind 6.12.8. Fresh private save-byte backup/readback unavailable for non-debuggable app.",
+  "observed": "Real Vulkan startup, existing license/main menu, touch A and stick navigation through Single Player and VS. Later screenshot shows paused race and native Controls menu outside the last automated action; all injected input stopped.",
+  "readOnlyWindow": {
+    "sampleCount": 4,
+    "sampleSpacingSeconds": 30,
+    "pssKiBMin": 2809201,
+    "pssKiBMax": 2823733,
+    "thermalStatuses": [
+      0
+    ],
+    "perfSamples": 18,
+    "firstPresentation": 47700,
+    "lastPresentation": 52800,
+    "fpsMin": 49.09,
+    "fpsMedian": 58.33,
+    "fpsMax": 60.04,
+    "newNativeCrashObserved": false
+  },
+  "acceptanceLimits": [
+    "read-only window is not independently correlated to continuous racing versus pause/menu",
+    "no matched old/new race benchmark",
+    "no complete race or awards acceptance",
+    "short stable memory interval does not establish lifetime memory bound",
+    "Pixel success does not establish Adreno or PowerVR acceptance"
+  ],
+  "privateEvidence": "private/device-validation-20260920 (not distributed)"
+}

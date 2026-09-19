@@ -1,2 +1,2 @@
 package android.os
-object Build { object VERSION { var SDK_INT = 30 } }
+object Build { const val MANUFACTURER = "Fixture"; const val MODEL = "FixturePhone"; object VERSION { var SDK_INT = 30 } }

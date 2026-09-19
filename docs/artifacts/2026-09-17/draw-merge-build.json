@@ -1,0 +1,15 @@
+{
+  "source": "a98e0c3",
+  "apk": "KartPad-0.4.25-diagnostics.3-mergefix-code121-local-debug-signer.apk",
+  "sha256": "8f9438640d39bc1d495fa880eff20740949dc6edb98091dc018fea788569362d",
+  "build_id": "be9930491e079cf1945685104afd9ace791cc941",
+  "symbols_match": true,
+  "non_debuggable": true,
+  "game_activity_exported": false,
+  "package_audit_passed": true,
+  "signer": "existing local Android Debug; community handoff requires matching signer",
+  "android_build_passed": true,
+  "ios_arm64_build_passed": true,
+  "regression_tests_passed": 10,
+  "affected_device_verified": false
+}

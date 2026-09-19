@@ -741,6 +741,7 @@ NSArray<NSDictionary<NSString *, id> *> *KartPadOriginalGhosts(NSUInteger licens
     std::span<const uint8_t> bytes((const uint8_t *)save.bytes, save.length);
     kartpad::ghost::ValidateSave(bytes, (unsigned)license);
     NSMutableArray *records = [NSMutableArray array];
+    std::string firstGhostError;
     for (bool downloaded : {false, true}) {
       const auto bits = kartpad::ghost::Read32(bytes, 8 + license * 0x8cc0 + (downloaded ? 8 : 4));
       for (unsigned slot = 0; slot < 32; ++slot) if (bits & (1u << slot)) {
@@ -748,8 +749,15 @@ NSArray<NSDictionary<NSString *, id> *> *KartPadOriginalGhosts(NSUInteger licens
           auto data = kartpad::ghost::Export(bytes, (unsigned)license, slot, downloaded);
           [records addObject:@{@"name": [NSString stringWithFormat:@"%s — %@", kartpad::ghost::CourseNames[slot], downloaded ? @"Downloaded" : @"Personal Best"],
               @"data": [NSData dataWithBytes:data.data() length:data.size()]}];
-        } catch (const std::exception&) { /* A corrupt ghost must not prevent exporting another valid slot. */ }
+        } catch (const std::exception& failure) {
+          // A corrupt ghost must not prevent exporting another valid slot.
+          if (firstGhostError.empty()) firstGhostError = failure.what();
+        }
       }
+    }
+    if (records.count == 0 && !firstGhostError.empty()) {
+      if (error) *error = ManagerError(40, ("This license lists saved ghosts, but they could not be exported. " + firstGhostError + ". Your save has not been changed.").c_str());
+      return nil;
     }
     return records;
   } catch (const std::exception& e) {

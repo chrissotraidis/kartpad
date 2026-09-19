@@ -87,19 +87,30 @@ PY
 }
 
 assert_checked_label() {
-  python3 - "$tree" "$1" <<'PY'
+  python3 - "$tree" "$1" "${2:-true}" <<'PY'
 import sys
 import xml.etree.ElementTree as ET
 
-tree, expected = sys.argv[1:]
+tree, expected, checked = sys.argv[1:]
 for node in ET.parse(tree).getroot().iter("node"):
     if node.attrib.get("text") == expected:
-        if node.attrib.get("checked") != "true":
+        if node.attrib.get("checked") != checked:
             raise SystemExit(f"ERROR: {expected!r} was not selected after relaunch")
         break
 else:
     raise SystemExit(f"ERROR: selected label {expected!r} missing after relaunch")
 PY
+}
+
+scroll_to_labels() {
+  for _ in {1..8}; do
+    if assert_labels "$@" 2>/dev/null; then return 0; fi
+    "$adb" shell input swipe \
+      "$((expected_width / 2))" "$((expected_height * 3 / 4))" \
+      "$((expected_width / 2))" "$((expected_height / 4))" 300
+    dump_tree
+  done
+  assert_labels "$@"
 }
 
 assert_icon_count() {
@@ -191,8 +202,8 @@ start_menu
 tap_label "Display"
 sleep 1
 dump_tree
-assert_labels "FPS Counter Size…" "Aspect Ratio…" "Render Resolution…"
-assert_icon_count 3
+assert_labels "FPS Counter Size" "Aspect Ratio" "Render Resolution" "Android Graphics Diagnostics…"
+assert_icon_count 4
 
 start_menu
 tap_label "Game Data & Saves"
@@ -205,16 +216,20 @@ assert_labels \
   "Manage Retro Rewind…" \
   "Manage Saves…" \
   "Player Identity…"
-assert_icon_count 6
+assert_icon_count 7
 
 open_top_action "Return to KartPad Menu"
-assert_labels "Mario Kart Wii" "CURRENT GAME · PAUSED" "Resume Game  →" "Retro Rewind" "NEXT LAUNCH" "Use on Next Launch  →"
+assert_labels "Mario Kart Wii" "Paused" "Resume Game  →" "Retro Rewind" "Next launch" "Use on Next Launch  →"
 
 open_top_action "Multiplayer…"
 assert_labels "Multiplayer" "Local Split-Screen…" "Controller Setup…" "Experimental Server Settings…" "BACK"
 
 open_top_action "Report a Problem…"
-assert_labels "Report a Problem" "SHARE REPORT…" "REPORT ON GITHUB" "CANCEL"
+assert_labels "Report a Problem" "Send to"
+# The report is now a scrollable Activity, not the old three-button dialog.
+for label in "Open GitHub Draft" "Share Report…" "Back to Game"; do
+  scroll_to_labels "$label"
+done
 
 start_menu
 fps_before="$("$adb" exec-out run-as dev.kartpad.android \
@@ -236,16 +251,23 @@ grep -Eq "<boolean name=\"show_fps\" value=\"$expected_fps_value\"[[:space:]]*/>
 }
 
 open_submenu_action "Controls" "Controller Button Mapping…"
-assert_labels "Controller Button Mapping" "A — A" "Z — LEFT SHOULDER"
-"$adb" shell input swipe \
-  "$((expected_width / 2))" "$((expected_height * 3 / 4))" \
-  "$((expected_width / 2))" "$((expected_height / 4))" 300
-sleep 1
-dump_tree
-assert_labels "RESET TO DEFAULT" "DONE"
+assert_labels "Controller Button Mapping" "A — ACCELERATE / CONFIRM — A" "ZR — REAR VIEW — LEFT SHOULDER"
+scroll_to_labels "RESET TO DEFAULT" "DONE"
 
 open_submenu_action "Controls" "Touch Control Settings…"
-assert_labels "Touch Control Settings" "MOVE CONTROLS" "RESET THIS DEVICE LAYOUT"
+assert_labels "Touch Control Settings" "Auto-accelerate"
+auto_accelerate_before="$(python3 - "$tree" <<'PY'
+import sys, xml.etree.ElementTree as ET
+print(next(n.attrib['checked'] for n in ET.parse(sys.argv[1]).iter('node') if n.attrib.get('text') == 'Auto-accelerate'))
+PY
+)"
+if [[ "$auto_accelerate_before" == true ]]; then tap_label "Auto-accelerate"; fi
+open_submenu_action "Controls" "Touch Control Settings…"
+assert_checked_label "Auto-accelerate" false
+"$adb" exec-out run-as dev.kartpad.android cat shared_prefs/kartpad_touch_controls.xml |
+  grep -Eq '<boolean name="auto_accelerate" value="false"[[:space:]]*/>'
+if [[ "$auto_accelerate_before" == true ]]; then tap_label "Auto-accelerate"; fi
+scroll_to_labels "MOVE CONTROLS" "RESET THIS DEVICE LAYOUT"
 
 open_submenu_action "Controls" "Motion Steering…"
 assert_labels "Motion Steering" "CONTINUE PLAYING"
@@ -253,17 +275,17 @@ assert_labels "Motion Steering" "CONTINUE PLAYING"
 open_submenu_action "Controls" "Experimental Wii Remote + Nunchuk…"
 assert_labels "Experimental Wii Remote + Nunchuk" "BACK"
 
-open_submenu_action "Display" "Aspect Ratio…"
+open_submenu_action "Display" "Aspect Ratio"
 assert_labels \
   "Aspect Ratio" \
   "Original 4:3" \
   "16:9 (Experimental)" \
   "Fill Screen (Experimental)"
 
-open_submenu_action "Display" "Render Resolution…"
+open_submenu_action "Display" "Render Resolution"
 assert_labels "Render Resolution" "1× (Native)" "2×" "3×" "4×"
 
-open_submenu_action "Display" "FPS Counter Size…"
+open_submenu_action "Display" "FPS Counter Size"
 assert_labels "FPS Counter Size" "Small" "Medium" "Large"
 tap_label "Large"
 sleep 1
@@ -273,7 +295,7 @@ grep -Eq '<int name="fps_size" value="2"[[:space:]]*/>' <<<"$fps_preferences" ||
   echo "ERROR: FPS counter size did not persist Large" >&2
   exit 1
 }
-open_submenu_action "Display" "FPS Counter Size…"
+open_submenu_action "Display" "FPS Counter Size"
 assert_checked_label "Large"
 
 open_submenu_action "Game Data & Saves" "Remove Stored Game Data…"
@@ -290,7 +312,11 @@ if ! "$adb" shell dumpsys activity activities | grep -Eq \
 fi
 
 open_submenu_action "Game Data & Saves" "Manage Saves…"
-assert_labels "Manage Saves" "EXPORT SAVE BACKUP…" "RESTORE SAVE BACKUP…" "DONE"
+assert_labels "Choose Save Profile" "Original Mario Kart Wii" "Retro Rewind" "Retro Rewind (Separate Save)"
+tap_label "Original Mario Kart Wii"
+dump_tree
+assert_labels "Manage Saves • Original Mario Kart Wii"
+scroll_to_labels "EXPORT SAVE BACKUP…" "RESTORE SAVE BACKUP…" "DONE"
 
 open_submenu_action "Game Data & Saves" "Player Identity…"
 assert_labels \
@@ -391,4 +417,4 @@ print(
 PY
 fi
 
-echo "Android menu parity passed: lane=$lane top=8 controls=5 display=3 data=6 actions=17 safe-insets=pass"
+echo "Android menu parity passed: lane=$lane top=8 controls=5 display=4 data=7 actions=17 safe-insets=pass"

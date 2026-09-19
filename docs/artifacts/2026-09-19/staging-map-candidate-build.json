@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "candidate_only": true,
+  "released": false,
+  "source_commit": "df39712cfdaec14eb849f018ed72c2486b240b3d",
+  "source_dirty": false,
+  "review_pr": "https://github.com/chrissotraidis/kartpad/pull/307",
+  "runtime_commits": {
+    "android": "851ff320bd1bb69f98ace5c22fc9904aa47e83b9",
+    "ios": "d5aa464f4d89b3f4b928bc52aebe94ed51898fd8",
+    "macos": "b7f515defe14f27bebda75ba09007c0e399c438e",
+    "tvos": "cbbf9eb00b7ef1ebecf51ea8381031cedeb96545"
+  },
+  "android": {
+    "version": "0.4.25-stabilization.8-prototype",
+    "version_code": 130,
+    "apk_sha256": "94dd81c2c6851b2469519971277c98bd96aaafa2a0804a38a3834b29e64ec602",
+    "native_build_id": "0f67a95fd168901db6838c7315ee37794bdf1c96",
+    "signer_sha256": "61dfb51411efe50b2e7fb8d280fcfbba766792c275d1024013940760caa3afaf",
+    "public_signer": false,
+    "package_audit": "pass",
+    "physical_game_acceptance": "pending",
+    "swiftshader_full_game_intro_title": "pass_over_11700_presentations",
+    "swiftshader_race_and_input": "not_established_mirror_input_boundary",
+    "physical_update_identity_check": "matching_installed_code125_no_install"
+  },
+  "ios_ipados": {
+    "version": "0.4.25",
+    "build": 54,
+    "ipa_sha256": "abc5815c0dbd57863e29b381efd21afc6e8b4e9f59e694ead18bc821c66b257c",
+    "macho_dsym_uuid": "C4BE7AA4-08BF-3EE2-9588-E381B586D035",
+    "package_audit": "pass",
+    "physical_device_acceptance": "pending"
+  },
+  "macos": {
+    "version": "0.4.25-stabilization.8",
+    "build": 54,
+    "zip_sha256": "284029b40eecfbc763bd362b498fd9bf1f6d780df2f4706a7281de08d6919de8",
+    "package_and_zip_readback_audit": "pass",
+    "native_original_race_start_pause_resume_return_to_menu": "pass_in_isolated_classic_keyboard_configuration",
+    "complete_race_awards_endurance": "pending"
+  },
+  "dawn": {
+    "patch_identity": "b0fd045b0a694eb07ac3fcf0d741f8697b935856",
+    "archive_sha256": "99cef2c445bb9fa9758dda2036887f29c6116629053d2b40b3107590881db43a",
+    "production_dependency_lock_promoted": false
+  },
+  "remaining": [
+    "transactional staging admission and all pass ownership",
+    "affected Android GPU and warmed workload acceptance",
+    "complete Original and Retro race/results/awards/endurance",
+    "coordinated versions, dependency distribution and signing"
+  ]
+}

@@ -66,6 +66,15 @@ static inline NSString *KartPadDiagnosticContext(NSString *versionPath, NSString
   NSBundle *bundle = NSBundle.mainBundle;
   NSDictionary *context = @{
     @"schema": @1, @"platform": @"ios",
+    @"diagnostic_contract": @2,
+    @"context_scope": @"export_time_not_selected_session",
+    @"capture_support": @{
+      @"native_stacks": @"os_dependent",
+      @"startup_boundaries": @"bounded_events_v2",
+      @"frame_timings": @"bounded_events_v2",
+      @"function_cpu": @"selected_functions_candidate_opt_in",
+      @"graphics_draws": @"sampled_pnmtx_candidate_opt_in",
+      @"network_payloads": @"not_collected", @"guest_memory": @"excluded"},
     @"app_version": [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"unknown",
     @"app_build": [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"unknown",
     @"build_provenance": KartPadPackagedBuildProvenance() ?: NSNull.null,

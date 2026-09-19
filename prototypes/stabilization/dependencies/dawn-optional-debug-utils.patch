@@ -1,0 +1,143 @@
+From 33f61fdfc90d38e208fd4496f81ecf24142228f2 Mon Sep 17 00:00:00 2001
+From: Nikita Gupta <nikigupta@google.com>
+Date: Fri, 21 Aug 2026 03:34:37 -0700
+Subject: [PATCH] [vulkan] Ignore VK_EXT_debug_utils when entrypoints are
+ missing
+
+Some Vulkan drivers/loaders (such as Qualcomm Adreno 610/619 on Android)
+advertise VK_EXT_debug_utils in vkEnumerateInstanceExtensionProperties
+but fail to return entrypoint pointers (e.g. vkCmdBeginDebugUtilsLabelEXT)
+when queried via vkGetInstanceProcAddr.
+
+Previously, Dawn failed instance proc loading with an internal error upon
+encountering any null entrypoint in an advertised extension. This caused
+Dawn to discard the Vulkan hardware backend and fall back to the null
+device, ultimately leading to device request and external texture creation
+failures (e.g. AHB import).
+
+This CL adds TryLoadEXTDebugUtils to safely query VK_EXT_debug_utils
+entrypoints without fatal errors, resetting InstanceExt::DebugUtils if
+any required entrypoint is missing.
+
+Bug: 538692591
+Change-Id: I9dea570fa5546fd4a0a53f09a5908fd71d9bdfb4
+Reviewed-on: https://dawn-review.googlesource.com/c/dawn/+/333435
+Reviewed-by: Corentin Wallez <cwallez@chromium.org>
+Commit-Queue: Nikita Gupta <nikigupta@google.com>
+---
+ src/dawn/native/vulkan/BackendVk.cpp       | 12 +++++-
+ src/dawn/native/vulkan/VulkanFunctions.cpp | 49 +++++++++++++++-------
+ src/dawn/native/vulkan/VulkanFunctions.h   |  4 ++
+ 3 files changed, 49 insertions(+), 16 deletions(-)
+
+diff --git a/src/dawn/native/vulkan/BackendVk.cpp b/src/dawn/native/vulkan/BackendVk.cpp
+index a49853caea8..a93ea4f996b 100644
+--- a/src/dawn/native/vulkan/BackendVk.cpp
++++ b/src/dawn/native/vulkan/BackendVk.cpp
+@@ -411,14 +411,22 @@ MaybeError VulkanInstance::Initialize(const InstanceBase* instance, ICD icd) {
+ 
+     VulkanGlobalKnobs usedGlobalKnobs = {};
+     DAWN_TRY_ASSIGN(usedGlobalKnobs, CreateVkInstance(instance));
+-    *static_cast<VulkanGlobalKnobs*>(&mGlobalInfo) = usedGlobalKnobs;
+ 
+     DAWN_TRY(mFunctions.LoadInstanceProcs(mInstance, mGlobalInfo));
+ 
+     if (usedGlobalKnobs.HasExt(InstanceExt::DebugUtils)) {
+-        DAWN_TRY(RegisterDebugUtils());
++        // Workaround for buggy drivers/loaders (e.g. Adreno 610/619 on Android) that advertise
++        // VK_EXT_debug_utils in vkEnumerateInstanceExtensionProperties but return nullptr for
++        // some entrypoints in vkGetInstanceProcAddr.
++        if (mFunctions.TryLoadEXTDebugUtils(mInstance)) {
++            DAWN_TRY(RegisterDebugUtils());
++        } else {
++            usedGlobalKnobs.extensions.set(InstanceExt::DebugUtils, false);
++        }
+     }
+ 
++    *static_cast<VulkanGlobalKnobs*>(&mGlobalInfo) = usedGlobalKnobs;
++
+     DAWN_TRY_ASSIGN(mVkPhysicalDevices, GatherPhysicalDevices(mInstance, mFunctions));
+ 
+     return {};
+diff --git a/src/dawn/native/vulkan/VulkanFunctions.cpp b/src/dawn/native/vulkan/VulkanFunctions.cpp
+index b789f723fab..60b075deaf0 100644
+--- a/src/dawn/native/vulkan/VulkanFunctions.cpp
++++ b/src/dawn/native/vulkan/VulkanFunctions.cpp
+@@ -153,20 +153,6 @@ MaybeError VulkanFunctions::LoadInstanceProcs(VkInstance instance,
+     GET_INSTANCE_PROC(GetPhysicalDeviceQueueFamilyProperties2);
+     GET_INSTANCE_PROC(GetPhysicalDeviceSparseImageFormatProperties2);
+ 
+-    if (globalInfo.HasExt(InstanceExt::DebugUtils)) {
+-        GET_INSTANCE_PROC(CmdBeginDebugUtilsLabelEXT);
+-        GET_INSTANCE_PROC(CmdEndDebugUtilsLabelEXT);
+-        GET_INSTANCE_PROC(CmdInsertDebugUtilsLabelEXT);
+-        GET_INSTANCE_PROC(CreateDebugUtilsMessengerEXT);
+-        GET_INSTANCE_PROC(DestroyDebugUtilsMessengerEXT);
+-        GET_INSTANCE_PROC(QueueBeginDebugUtilsLabelEXT);
+-        GET_INSTANCE_PROC(QueueEndDebugUtilsLabelEXT);
+-        GET_INSTANCE_PROC(QueueInsertDebugUtilsLabelEXT);
+-        GET_INSTANCE_PROC(SetDebugUtilsObjectNameEXT);
+-        GET_INSTANCE_PROC(SetDebugUtilsObjectTagEXT);
+-        GET_INSTANCE_PROC(SubmitDebugUtilsMessageEXT);
+-    }
+-
+     if (globalInfo.HasExt(InstanceExt::Surface)) {
+         GET_INSTANCE_PROC(DestroySurfaceKHR);
+         GET_INSTANCE_PROC(GetPhysicalDeviceSurfaceSupportKHR);
+@@ -230,6 +216,41 @@ MaybeError VulkanFunctions::LoadInstanceProcs(VkInstance instance,
+     return {};
+ }
+ 
++bool VulkanFunctions::TryLoadEXTDebugUtils(VkInstance instance) {
++    GET_INSTANCE_PROC_NO_ERROR(CmdBeginDebugUtilsLabelEXT);
++    GET_INSTANCE_PROC_NO_ERROR(CmdEndDebugUtilsLabelEXT);
++    GET_INSTANCE_PROC_NO_ERROR(CmdInsertDebugUtilsLabelEXT);
++    GET_INSTANCE_PROC_NO_ERROR(CreateDebugUtilsMessengerEXT);
++    GET_INSTANCE_PROC_NO_ERROR(DestroyDebugUtilsMessengerEXT);
++    GET_INSTANCE_PROC_NO_ERROR(QueueBeginDebugUtilsLabelEXT);
++    GET_INSTANCE_PROC_NO_ERROR(QueueEndDebugUtilsLabelEXT);
++    GET_INSTANCE_PROC_NO_ERROR(QueueInsertDebugUtilsLabelEXT);
++    GET_INSTANCE_PROC_NO_ERROR(SetDebugUtilsObjectNameEXT);
++    GET_INSTANCE_PROC_NO_ERROR(SetDebugUtilsObjectTagEXT);
++    GET_INSTANCE_PROC_NO_ERROR(SubmitDebugUtilsMessageEXT);
++
++    if (CmdBeginDebugUtilsLabelEXT == nullptr || CmdEndDebugUtilsLabelEXT == nullptr ||
++        CmdInsertDebugUtilsLabelEXT == nullptr || CreateDebugUtilsMessengerEXT == nullptr ||
++        DestroyDebugUtilsMessengerEXT == nullptr || QueueBeginDebugUtilsLabelEXT == nullptr ||
++        QueueEndDebugUtilsLabelEXT == nullptr || QueueInsertDebugUtilsLabelEXT == nullptr ||
++        SetDebugUtilsObjectNameEXT == nullptr || SetDebugUtilsObjectTagEXT == nullptr ||
++        SubmitDebugUtilsMessageEXT == nullptr) {
++        CmdBeginDebugUtilsLabelEXT = nullptr;
++        CmdEndDebugUtilsLabelEXT = nullptr;
++        CmdInsertDebugUtilsLabelEXT = nullptr;
++        CreateDebugUtilsMessengerEXT = nullptr;
++        DestroyDebugUtilsMessengerEXT = nullptr;
++        QueueBeginDebugUtilsLabelEXT = nullptr;
++        QueueEndDebugUtilsLabelEXT = nullptr;
++        QueueInsertDebugUtilsLabelEXT = nullptr;
++        SetDebugUtilsObjectNameEXT = nullptr;
++        SetDebugUtilsObjectTagEXT = nullptr;
++        SubmitDebugUtilsMessageEXT = nullptr;
++        return false;
++    }
++    return true;
++}
++
+ #define GET_DEVICE_PROC(name)                                                        \
+     do {                                                                             \
+         name = AsVkFn<PFN_vk##name>(GetDeviceProcAddr(device, "vk" #name));          \
+diff --git a/src/dawn/native/vulkan/VulkanFunctions.h b/src/dawn/native/vulkan/VulkanFunctions.h
+index cda9e4a4c23..5f50822dea0 100644
+--- a/src/dawn/native/vulkan/VulkanFunctions.h
++++ b/src/dawn/native/vulkan/VulkanFunctions.h
+@@ -70,6 +70,10 @@ using VkFn = typename VkFnImpl<F>::type;
+ struct VulkanFunctions {
+     MaybeError LoadGlobalProcs(const DynamicLib& vulkanLib);
+     MaybeError LoadInstanceProcs(VkInstance instance, const VulkanGlobalInfo& globalInfo);
++    // Attempts to load the VK_EXT_debug_utils extension procs. Returns false if any required
++    // entrypoint is missing (workaround for buggy Android Vulkan drivers/loaders that advertise
++    // the extension but fail to expose entrypoints via vkGetInstanceProcAddr).
++    bool TryLoadEXTDebugUtils(VkInstance instance);
+     MaybeError LoadDeviceProcs(VkInstance instance,
+                                VkDevice device,
+                                const VulkanDeviceInfo& deviceInfo);

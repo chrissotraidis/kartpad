@@ -40,7 +40,7 @@ internal object KartPadExitDiagnostics {
                 val state = stateBytes?.takeIf { it.size <= 128 }
                     ?.toString(Charsets.US_ASCII)?.let { statePattern.matchEntire(it) }
                 entries.put(JSONObject()
-                    .put("timestamp_ms", exit.timestamp)
+                    .put("timestamp_ms", exit.timestamp).put("pid", exit.pid)
                     .put("reason_code", exit.reason)
                     .put("reason", reasonName(exit.reason))
                     .put("status", exit.status)

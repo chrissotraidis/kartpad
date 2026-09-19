@@ -92,6 +92,9 @@ class KartPadActivity : SDLActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Mark before recovery, resource install and SDL/native library loading.
+        KartPadExitDiagnostics.mark(this, requestedRuntimeProfile())
+        Os.setenv("KARTPAD_DIAGNOSTIC_BUILD", "${BuildConfig.VERSION_NAME}/${BuildConfig.VERSION_CODE}", true)
         saveDocumentProfile = savedInstanceState?.getString("save_document_profile")
             ?.takeIf { it in KartPadSaveStorage.profiles }
         ghostLicense = savedInstanceState?.getInt("ghost_license", -1) ?: -1
@@ -100,6 +103,7 @@ class KartPadActivity : SDLActivity() {
         Os.setenv("KARTPAD_ANDROID_FILES_DIR", filesDir.absolutePath, true)
         Os.setenv("KARTPAD_ANDROID_CACHE_DIR", cacheDir.absolutePath, true)
         KartPadRendererDiagnostics.configure(this)
+        if (BuildConfig.VERSION_NAME.contains("diagnostics")) Os.setenv("KARTPAD_FUNCTION_TIMING", "1", true)
         KartPadCharacterGraphicsTest.configure(this)
         if (BuildConfig.GAME_RUNTIME) {
             RetroRewindInstallStorage.recoverForLaunch(filesDir, requestedRuntimeProfile())
@@ -550,7 +554,16 @@ class KartPadActivity : SDLActivity() {
                 MenuRow("Report a Problem…", R.drawable.ic_kartpad_report) {
                     closeKartPadMenu(::showReportProblem)
                 },
-            ),
+            ) + if (BuildConfig.VERSION_NAME.contains("diagnostics")) listOf(
+                MenuRow("Test Native Crash…", R.drawable.ic_kartpad_report) {
+                    closeKartPadMenu {
+                        AlertDialog.Builder(this).setTitle("Test Native Crash?")
+                            .setMessage("This intentionally closes KartPad to test crash reporting. Finish your race first. Reopen KartPad afterward and export the test session. Unsaved progress may be lost.")
+                            .setNegativeButton("Cancel", null)
+                            .setPositiveButton("Crash Test") { _, _ -> nativeTestDiagnosticCrash() }.show()
+                    }
+                }
+            ) else emptyList(),
         )
     }
 
@@ -1311,12 +1324,26 @@ class KartPadActivity : SDLActivity() {
                     val save = runCatching { KartPadSaveStorage.readActive(filesDir) }.getOrNull()
                     if (save == null) { showParityBoundary("Ghost Export Failed", "No valid Original save is available."); return@setItems }
                     val choices = mutableListOf<Pair<Int, Boolean>>()
+                    var unreadable = 0
+                    var firstError: String? = null
                     for (downloaded in listOf(false, true)) for (slot in 0 until 32) {
                         val offset = 8 + ghostLicense * 0x8cc0 + if (downloaded) 8 else 4
                         val bitfield = java.nio.ByteBuffer.wrap(save, offset, 4).int
-                        if ((bitfield and (1 shl slot)) != 0 && nativeGhostTransfer(save, null, ghostLicense, slot, downloaded) != null) choices.add(slot to downloaded)
+                        if ((bitfield and (1 shl slot)) == 0) continue
+                        val exported = runCatching { nativeGhostTransfer(save, null, ghostLicense, slot, downloaded) }
+                        if (exported.getOrNull() != null) choices.add(slot to downloaded)
+                        else {
+                            unreadable += 1
+                            if (firstError == null) firstError = exported.exceptionOrNull()?.message
+                        }
                     }
-                    if (choices.isEmpty()) { showParityBoundary("No Saved Ghosts", "Complete and save an Original time trial first."); return@setItems }
+                    if (choices.isEmpty()) {
+                        if (unreadable > 0) showParityBoundary("Ghost Export Unavailable",
+                            "This license lists $unreadable saved ghosts, but they could not be exported. " +
+                                (firstError ?: "The ghost data could not be read.") + " Your save has not been changed.")
+                        else showParityBoundary("No Saved Ghosts", "This Original license has no saved personal-best or downloaded ghosts. Choose the license used for your time trial. Retro Rewind custom-track ghosts are not listed here.")
+                        return@setItems
+                    }
                     AlertDialog.Builder(this).setTitle("Choose Ghost")
                         .setItems(choices.map { "${GHOST_COURSES[it.first]} — ${if (it.second) "Downloaded" else "Personal Best"}" }.toTypedArray()) { _, choice ->
                             ghostSlot = choices[choice].first; ghostDownloaded = choices[choice].second
@@ -1784,6 +1811,16 @@ class KartPadActivity : SDLActivity() {
                 refreshControllerHandoff()
             }
         }
+        val autoAccelerate = Switch(this).apply {
+            text = "Auto-accelerate"
+            setTextColor(Color.WHITE)
+            isChecked = KartPadTouchSettings.autoAccelerate(this@KartPadActivity)
+            contentDescription = "Auto-accelerate: hold A for one second to lock; off uses normal hold controls"
+            setOnCheckedChangeListener { _, checked ->
+                KartPadTouchSettings.setAutoAccelerate(this@KartPadActivity, checked)
+                kartPadOverlay.reloadPresentationSettings()
+            }
+        }
         val modernCStick = Switch(this).apply {
             text = "Modern C-stick L/R"
             setTextColor(Color.WHITE)
@@ -1834,6 +1871,7 @@ class KartPadActivity : SDLActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(12), dp(8), 0, 0)
             addView(hide)
+            addView(autoAccelerate)
             addView(modernCStick)
             addView(moveControls)
             addView(resetTouchLayoutButton)
@@ -2294,6 +2332,7 @@ class KartPadActivity : SDLActivity() {
         showFps: Boolean, fpsSize: Int, aspectMode: Int, resolutionScale: Float,
     )
 
+    private external fun nativeTestDiagnosticCrash()
     private external fun nativeEnableActivityRecreation()
 
     private external fun nativeDebugDisplaySettings(): String

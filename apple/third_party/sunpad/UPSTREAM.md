@@ -1,6 +1,6 @@
 # SunPad mobile overlay snapshot
 
-This directory is a verbatim source snapshot of the touch interface component
+This directory began as a verbatim source snapshot of the touch interface component
 and its direct settings/input dependencies from the user-supplied SunPad
 reference at commit `e43f0ea6b797e5110787171957c9dc3c6213269c`.
 
@@ -35,3 +35,12 @@ d2cbfc15605ccf9b44303a02cef0f36a877deedd2ddba8bad84a03a4625f9c40  SunPadSettings
 d7b899d43cafd5ee4a77b3c113339676bacdd3e712719575f802459e285800b1  SunPadDiagnostics.h
 89560621c658387de44711c2d69eb89aca3eceeb8fec94ff8e26ea7424cb6be3  SunPadDiagnostics.mm
 ```
+
+## Maintained KartPad adaptations
+
+`SunPadDiagnostics.mm` adds lifecycle/thermal breadcrumbs (commit `221caaf`).
+`SunPadControllerMapping.h` and `.mm` contain KartPad controller mapping changes.
+These three files are no longer verbatim upstream copies. The snapshot verifier
+checks their pinned SHA-256 values and still compares the remaining files with
+the original SunPad commit. The diagnostic candidate does not change their bytes.
+New diagnostics live in `apple/ios/KartPadSystemDiagnostics.mm`.

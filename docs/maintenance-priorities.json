@@ -33,15 +33,15 @@
         216,
         236
       ],
-      "state": "awaiting-reporter",
-      "next_action": "Classify one actual OS/process exit per separate launch/cup/race case. #215 and #236 already confirm Android-home exit; do not re-ask that destination. Home exit alone does not distinguish native fault, Java exception or OS termination. Use the existing ApplicationExitInfo/report path; keep #208 canonical and avoid a speculative shared renderer fix.",
+      "state": "ready-local",
+      "next_action": "Code126 corrects the parent-Git Dawn cache identity, bounds startup replay, and wakes demand compilers; host/package/signer checks passed. After the owner finishes the active game, validate preserved-data cold/warm runs and frame tails. Keep warmed thermal/CPU slowdown and reporter exits separate; do not distribute more reporter builds.",
       "acceptance": "Each classified failure passes its affected import/start, cup-awards or race boundary on the exact target. Similar exits are not assumed to share a cause.",
       "dependency": {
-        "owner": "the named reporters in each linked issue",
-        "needs": "Already requested process-exit classification and exact profile/transition; preserve separate subcases."
+        "owner": "KartPad engineering",
+        "needs": "Internal analysis of retained exact-build crash and ongoing owner-session evidence; no reporter input required for the Pixel subcase."
       },
-      "checkpoint": "docs/MAINTENANCE-BOARD.md",
-      "priority_reason": "Classified crashes block stable play; distinct exits require separate evidence."
+      "checkpoint": "docs/artifacts/2026-09-19/pixel-regression-correction.md",
+      "priority_reason": "Owner stability acceptance failed on the installed candidate with a classified native crash; this actionable blocker precedes further build distribution."
     },
     {
       "id": "ios27-startup",
@@ -49,14 +49,14 @@
       "issues": [
         196
       ],
-      "state": "awaiting-reporter",
-      "next_action": "The new #196 microstackshot matches build39 and symbolizes through func_8000A3F8 to FatalMissingGuestTarget. Obtain only the missing target address/Caller LR from an existing fatal text log, as requested. Disk-write Action none is not a termination cause. Build42 is a reporting aid, not a confirmed crash correction; source ancestry does not prove regenerated translation. Independently, anonymous guest RAM is merged and local build43 is audited; it removes temporary-file backing but does not fix the missing target. Signed-device launch/race/relaunch and complete source delivery remain before publishing that candidate.",
+      "state": "ready-local",
+      "next_action": "Issue196 reopened: iPhone17ProMax/iOS27 startup remains unresolved. Anonymous guest memory does not fix the separate missing-target crash. Continue from retained exact-symbol evidence; no repeated deliberate crashes or generic analytics requests.",
       "dependency": {
-        "owner": "issue196 reporter",
-        "needs": "Existing fatal text record containing missing_target/not translated and Caller LR; no repeated crashes or generic analytics request."
+        "owner": "KartPad engineering",
+        "needs": "Internal diagnosis from retained evidence; reporter outreach is on hold."
       },
       "acceptance": "The same corrected candidate preserves existing data and passes both Original and Retro launch, race and relaunch on the matching iPhone 17 Pro Max/iOS 27 target. Package/reporter/release acceptance remain separate.",
-      "checkpoint": "docs/artifacts/2026-09-13/platform-candidate-handoff.md",
+      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
       "priority_reason": "A game that cannot launch cannot meet offline or online acceptance."
     },
     {
@@ -87,14 +87,14 @@
         193,
         211
       ],
-      "state": "awaiting-reporter",
-      "next_action": "Code91 supplies the reviewed actual-shader original/literal/original comparison for the two #193 pipelines, with durable restart-only selection, equal merge guard and bounded pipeline logs. Code91 is published; use the existing #193 three-phase handoff and await same-scene results. Keep code85 negative results; code90 was not a graphics fix. Do not repeat generic settings sweeps or claim a fix before matching target logs and affected-device comparison.",
+      "state": "ready-local",
+      "next_action": "Code121 has negative same-scene results on #102/#104/#166, including Normal mode and exact Adreno829/840 driver records. Reproduce actual failing draw/shader output internally. Keep the depth lab unaccepted; no additional builds, log requests or equivalent settings comparisons.",
       "dependency": {
-        "owner": "renderer worker and affected-device tester",
-        "needs": "Code91 same-character original/compatibility/original comparison with matching KartPadPNMTX draw_binding evidence on an affected device. Host shader validation and package audit are complete."
+        "owner": "KartPad engineering",
+        "needs": "Internal diagnosis from retained evidence; reporter outreach is on hold."
       },
       "acceptance": "A correlated actual bad draw discriminates the hypothesis; a subsequent narrow correction removes the reported corruption on the affected GPU with a matched baseline and no relevant regression.",
-      "checkpoint": "docs/artifacts/2026-09-14/issue193-targeted-pnmtx-candidate.md",
+      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
       "priority_reason": "Multiple independent reports show real-game corruption; complete a controlled affected-draw experiment."
     },
     {
@@ -111,13 +111,13 @@
         135
       ],
       "state": "ready-local",
-      "next_action": "Private code84 is packaged, non-debuggable and shell-profileable, with public83 native payload and verified symbols. Arrange the existing accepted private handoff after checking recipient version/signer; derive a Debug-signed twin before using the owner Pixel last verified on private82. Then capture one bounded warmed driven CPU sample to classify guest, GX CPU and waits. Do not rebuild native code or repeat answered settings/log/willingness requests.",
+      "next_action": "Use existing warm CPU-heavy #198/#275 captures and completed scene context. Attribute main-thread guest/GX/wait time before optimization. Existing workers and empty warm shader queues rule out a generic parallelism/shader-prewarm promise. No reporter capture is needed now.",
       "acceptance": "A matched warmed affected-device comparison shows a useful frame-time improvement with guest semantics and stability preserved. No FPS claim from a host microbenchmark.",
-      "checkpoint": "docs/MAINTENANCE-BOARD.md",
+      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
       "priority_reason": "Owner explicitly prioritizes slowdowns. Sustained low FPS after shader queues empty is the strongest measured opportunity; a local diagnostic can progress now.",
       "dependency": {
-        "owner": "performance worker and release operator",
-        "needs": "Community-signed code84 audit passed. Concrete private delivery and affected-device capture remain; owner Pixel needs a compatible signing twin. Neither install nor capture has occurred."
+        "owner": "KartPad engineering",
+        "needs": "Internal diagnosis from retained evidence; reporter outreach is on hold."
       }
     },
     {
@@ -173,6 +173,44 @@
       "acceptance": "The exact profiler source, settings, symbols, compatible signing/build recipe and capture instructions are reviewed and retained; any produced candidate is audited and immutable. Private transfer authorization and the actual reporter capture remain on warmed-performance; no measured improvement is claimed.",
       "checkpoint": "docs/artifacts/2026-09-13/maintenance-ready-actions.md",
       "priority_reason": "The reporter is already willing and signing capability exists; local preparation should not wait for the external transfer/capture gate."
+    },
+    {
+      "id": "android-vulkan-loader",
+      "priority": 1,
+      "issues": [
+        216,
+        301,
+        303
+      ],
+      "state": "ready-local",
+      "next_action": "The newer Tab A9+ subcase of #216, #301 and #303 have the exact missing vkCmdBeginDebugUtilsLabelEXT rejection. Existing evidence is sufficient. Complete internal loader/startup acceptance for the retained code123/124 backport and prepare graceful failure handling; hold additional builds and reporter requests under the current owner instruction. Keep the older #216 device separate. No affected-driver acceptance is established.",
+      "acceptance": "The exact affected driver initializes the hardware backend and reaches gameplay on an identified compatible artifact, with mandatory loader failures still rejected and existing data preserved.",
+      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
+      "priority_reason": "Three separately recorded device cases identify the same actionable loader mechanism; this subset is no longer waiting for generic logs."
+    },
+    {
+      "id": "android-powervr-capability",
+      "priority": 1,
+      "issues": [
+        304
+      ],
+      "state": "ready-local",
+      "next_action": "Review the upstream instance-stage vulkan_relax_max_inter_stage_shader_variables mechanism against the exact Dawn baseline; verify adapter/device/pipeline limits remain honest and audit GX/helper shader interfaces. Add graceful unsupported-startup handling as a separate gate. Moto G54 code121 evidence and matched symbols are sufficient; no more logs, build distribution or repeated launches requested.",
+      "acceptance": "A supported bounded path initializes and renders correctly on the reported PowerVR driver; unsupported limits return a clear recoverable launcher result without aborting. Adapter admission alone is not gameplay acceptance.",
+      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
+      "priority_reason": "New classified repeatable startup blocker; distinct from optional debug-utils loading and the depth experiment."
+    },
+    {
+      "id": "retro-wfc-payload-pin",
+      "priority": 2,
+      "issues": [
+        302
+      ],
+      "state": "ready-local",
+      "next_action": "Local pin/download correction passes production signature, old/new translation comparison and the 4102-function graph gate. Finish cross-platform package checks and integrate reviewed source; gameplay/online acceptance remains separate.",
+      "acceptance": "Reviewed payload identity and production signature are pinned, a clean self-build and relevant runtime checks pass, and unrelated or changed downloads are still rejected.",
+      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
+      "priority_reason": "Exact current-main self-build failure reproduced; endpoint changed the signed executable input rather than the track-pack archive."
     }
   ],
   "priority_review": {

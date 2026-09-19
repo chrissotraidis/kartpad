@@ -42,11 +42,11 @@ class MacOSDualModeContractTests(unittest.TestCase):
         package = (ROOT / "scripts/package-public-macos.py").read_text()
         audit = (ROOT / "scripts/audit-public-macos.py").read_text()
         for script in (package, audit):
-            self.assertIn('RELEASE_TAG = "v0.4.17-macos.1"', script)
-            self.assertIn('APP_VERSION = "0.4.17"', script)
-            self.assertIn('APP_BUILD = "39"', script)
+            self.assertIn('RELEASE_TAG = "v0.4.22-macos.1"', script)
+            self.assertIn('APP_VERSION = "0.4.22"', script)
+            self.assertIn('APP_BUILD = "43"', script)
         self.assertTrue((ROOT / "docs/INSTALL_MACOS.md").is_file())
-        self.assertTrue((ROOT / "docs/releases/v0.4.17-macos.1.md").is_file())
+        self.assertTrue((ROOT / "docs/releases/v0.4.22-macos.1.md").is_file())
         self.assertIn('"--runtime-build", type=Path, required=True', package)
         for label in ("SDL3-Zlib.txt", "FreeType.txt", "Tracy-BSD-3-Clause.txt"):
             self.assertIn(label, package)

@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "sourceRevision": "e34389bc733a21c71355402f7613015509f75c5a",
+  "sourceDirty": false,
+  "version": "0.5.0",
+  "status": "audited local candidates; coordinated public app release pending",
+  "artifacts": {
+    "KartPad-v0.5.0-code131-public-candidate-unsigned.aab": {
+      "sha256": "b923f83be0ff3bd8e45245c94529935806a00690356b22dc37ae143ffc4d9422",
+      "bytes": 91773964
+    },
+    "KartPad-v0.5.0-code131-public-candidate.apk": {
+      "sha256": "ef2742a20615cc840de5168245cb8163c9f8adc075cfab21264b6bb0c76c4653",
+      "bytes": 111760971
+    },
+    "KartPad-v0.5.0-build55-local-unsigned.ipa": {
+      "sha256": "a913e2f9ab85d71103da4896395300365db112b0fa483d355a1776b78a255dda",
+      "bytes": 41684502
+    },
+    "KartPad-v0.5.0-build55-local-macos-arm64.zip": {
+      "sha256": "ba1e57a8e2d44588be583500a5b9e24d33a51ef904ef043b7e9f524b7cae32a4",
+      "bytes": 41657129
+    }
+  },
+  "android": {
+    "versionCode": 131,
+    "nativeBuildId": "6e4a9bce0f14240287158bbe8dde9163b64d97c8",
+    "privateUnstrippedLibrarySha256": "19c7bb40c429ed23c481050e51ff405f479836bdc984c4fba98f1009476b3334",
+    "signerCertificateSha256": "c1dbe0a0d72d830a5779476b346a750d0a37515adef992cad2f3863058f7f2f2",
+    "packageAudit": "AAB and signed APK pass",
+    "runtimeAcceptance": "Normal launcher and real game intro/title rendering on disposable ARM64/API36 SwiftShader; not affected-handset performance or race-input acceptance",
+    "settingsAcceptance": "Visible Auto-accelerate OFF saves and survives force-stop plus same-version signed APK replacement; game data preserved"
+  },
+  "iosIpados": {
+    "build": 55,
+    "uuid": "4D93B1C9-EEBF-3208-ABA6-C3FF2C2ADBAC",
+    "executableSha256": "07ecaeefbf5157f764fc5a6079f3bec0216441beca77db64e75ae7ab50cdc69b",
+    "packageAudit": "Device SDK build, full app audit, IPA ZIP integrity and matching regenerated dSYM pass",
+    "runtimeAcceptance": "Physical-device acceptance pending"
+  },
+  "macos": {
+    "build": 55,
+    "packageAudit": "Package audit and ZIP readback pass; 22 entries match bytes, permissions and symlinks",
+    "runtimeAcceptance": "Build55 gameplay pending; earlier build54 Original race startup/pause/resume/menu proof is separate"
+  },
+  "dependency": {
+    "url": "https://github.com/chrissotraidis/wiicompiled/releases/download/dawn-android-20260919.1/dawn-android-aarch64.tar.gz",
+    "sha256": "c6b4efde6de30f341c46b65a1679914142059b360856d38e32f40dd55cae7fc1",
+    "anonymousDownloadVerified": true
+  },
+  "remaining": [
+    "fixed-capacity staging admission and oversized operation handling",
+    "controller mapping ownership investigation",
+    "matched affected Android workload measurements",
+    "final Apple runtime acceptance and coordinated source/notices/release packaging"
+  ]
+}

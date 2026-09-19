@@ -13,11 +13,14 @@ case "$lane" in
   *) echo "ERROR: lane must be phone or tablet" >&2; exit 64 ;;
 esac
 
-device_count="$("$adb" devices | sed -n '2,$p' | grep -c '[[:space:]]device$' || true)"
-[[ "$device_count" == 1 ]] || {
-  echo "ERROR: expected exactly one connected Android emulator/device" >&2
+emulator_targets="$("$adb" devices | awk '$1 ~ /^emulator-[0-9]+$/ && $2 == "device" {print $1}')"
+emulator_count="$(printf '%s\n' "$emulator_targets" | awk 'NF {count++} END {print count+0}')"
+[[ "$emulator_count" == 1 ]] || {
+  echo "ERROR: expected exactly one Android emulator; physical devices are not modified" >&2
   exit 1
 }
+export ANDROID_SERIAL="$emulator_targets"
+[[ "$("$adb" shell getprop ro.kernel.qemu | tr -d '\r')" == 1 ]] || exit 1
 
 "$repo_root/scripts/build-android-fixture.sh"
 apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
@@ -26,7 +29,7 @@ apk="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk"
 "$adb" shell wm dismiss-keyguard >/dev/null 2>&1 || true
 "$adb" shell settings put system accelerometer_rotation 0
 "$adb" shell settings put system user_rotation "$user_rotation"
-"$adb" shell pm clear dev.kartpad.android >/dev/null
+"$adb" shell am force-stop dev.kartpad.android >/dev/null
 "$adb" logcat -c
 "$adb" shell am start -W -n dev.kartpad.android/.KartPadActivity \
   --ez dev.kartpad.android.TEST_TOUCH_GAS_LOCK true >/dev/null

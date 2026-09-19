@@ -13,9 +13,12 @@ forking an upstream tree into KartPad.
   records the Retro Rewind version, official version-feed URL, archive URL,
   byte counts, hashes, expansion limit, `Code.pul`, Riivolution XML, and signed
   production RWFC payload.
-- `patches/wiicompiled-*.patch` contains KartPad's small Apple and dual-profile
-  deltas. The pinned upstream checkout remains detached, clean, and
-  push-disabled.
+- `vendor/wiicompiled` contains the maintained translator subtree.
+  `vendor/runtimes/{macos,ios,android,tvos}` pins the maintained runtime forks
+  (including Aurora) with Git submodules. Edit these sources and deliberately
+  advance their gitlinks; staging scripts do not replay the old patch stack.
+  The detached upstream reference and archived patches retain provenance.
+  See [source maintenance](source-maintenance/README.md).
 - `builder/kartpad_builder/release_header.py` generates the iPhone/iPad
   installer's release constants from the profile. There is no second manually
   maintained version or download URL in the app UI.
@@ -37,13 +40,15 @@ Advance one upstream at a time on a dedicated branch.
    checkout. Record the new commit and tree.
 4. Validate the production payload signature and its pinned size and hash.
    Never weaken a hash or signature check to accept a new release.
-5. Reapply KartPad's patch stack to a fresh WiiCompiled runtime and translator.
-   Resolve conflicts in the smallest patch possible; do not edit the pinned
-   checkout.
+5. Review upstream changes against the maintained translator and each runtime
+   fork. Port only reviewed changes to those sources, commit the runtime forks,
+   and advance their gitlinks. Stage fresh source with the maintained-source
+   scripts and verify it before building. Source-based maintenance does not
+   automatically import later upstream commits.
 6. Regenerate both the shared base graph and the Retro Rewind graph. Function
    counts and dispatch closure are profile gates, so an upstream change fails
    closed until the new graph is reviewed and pinned.
-7. Run builder/unit tests, patch dry-runs, fresh macOS and iOS prepares, and the
+7. Run builder/unit tests, maintained-source verification, fresh platform prepares, and the
    dual-mode regression: Original boot, Retro Rewind install/boot, mode switch,
    save isolation, controller reconnect, and relaunch.
 8. Run the isolated WFC login/race harness. When the production service is
@@ -68,3 +73,20 @@ input or generated retail graph in hosted CI, so KartPad deliberately automates
 detection and preparation while retaining the audited local build boundary.
 No Nintendo game data, Retro Rewind asset pack, translated retail graph, save,
 credential, or local test key belongs in Git or a public artifact.
+
+## Payload-only changes and current review
+
+The production Retro-WFC payload URL is mutable independently of the Retro
+Rewind pack version. A fresh download can therefore fail its pin even while
+`Code.pul` and the pack archive remain unchanged. Preserve the accepted cached
+file on rejection; validate the new payload's size, hash, header and production
+RSA signature before promotion. Then translate old and new payloads with the
+same translator, review new overlays/continuations, regenerate shards and update
+`expectedRetroFunctions` to the measured graph. Regenerate the Android release
+contract from the same profile. Do not bypass identity or signature checks.
+
+The [19 September review](artifacts/2026-09-19/cross-platform-stabilization.md)
+records the payload fix, local builds, upstream gaps and remaining device gates.
+The source migration retained upstream base `1912292c804f`; the checked upstream
+head is `83463764b8ac` (114 commits later). That count describes ancestry, not
+114 missing fixes: maintained source already includes selected backports.

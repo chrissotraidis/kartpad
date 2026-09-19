@@ -13,7 +13,9 @@ import java.util.zip.ZipOutputStream
 internal object KartPadExitTraces {
     private const val LIMIT = 1024 * 1024
 
-    fun write(context: Context, zip: ZipOutputStream) {
+    fun summary(context: Context): String = collect(context, null).toString(2)
+
+    private fun collect(context: Context, zip: ZipOutputStream?): JSONObject {
         val manifest = JSONObject().put("schema", 1)
             .put("scope", "recent app exits; not necessarily the selected runtime session")
             .put("export_version_code", BuildConfig.VERSION_CODE)
@@ -31,7 +33,7 @@ internal object KartPadExitTraces {
                     .sortedByDescending { it.timestamp }.take(3)
                 for ((index, exit) in exits.withIndex()) {
                     val native = exit.reason == ApplicationExitInfo.REASON_CRASH_NATIVE
-                    val row = JSONObject().put("timestamp_ms", exit.timestamp)
+                    val row = JSONObject().put("timestamp_ms", exit.timestamp).put("pid", exit.pid)
                         .put("reason", if (native) "native_crash" else "anr")
                     entries.put(row)
                     // Read and close before opening a ZIP entry; optional OS failure must not damage the archive.
@@ -43,10 +45,14 @@ internal object KartPadExitTraces {
                         if (trace.size > LIMIT) row.put("availability", "too_large")
                         else {
                             val name = "OS-exits/exit-$index-${exit.timestamp}." + if (native) "pb" else "txt"
-                            zip.putNextEntry(ZipEntry(name))
-                            zip.write(trace)
-                            zip.closeEntry()
-                            row.put("availability", "included").put("file", name).put("bytes", trace.size)
+                            if (native) row.put("native_summary", KartPadTombstoneSummary.summarize(trace))
+                            row.put("availability", if (zip == null) "retained" else "included").put("bytes", trace.size)
+                            if (zip != null) {
+                                zip.putNextEntry(ZipEntry(name))
+                                zip.write(trace)
+                                zip.closeEntry()
+                                row.put("file", name)
+                            }
                         }
                     }
                 }
@@ -56,6 +62,11 @@ internal object KartPadExitTraces {
                 manifest.put("availability", "unavailable")
             }
         }
+        return manifest
+    }
+
+    fun write(context: Context, zip: ZipOutputStream) {
+        val manifest = collect(context, zip)
         zip.putNextEntry(ZipEntry("OS-exits/manifest.json"))
         zip.write(manifest.toString(2).toByteArray())
         zip.closeEntry()

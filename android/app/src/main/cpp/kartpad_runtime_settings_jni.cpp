@@ -54,5 +54,10 @@ Java_dev_kartpad_android_KartPadActivity_nativeGhostTransfer(
       result=kartpad::ghost::Import(s,g,license);
     }else result=kartpad::ghost::Export(s,license,slot,downloaded);
     auto out=env->NewByteArray(result.size());if(out)env->SetByteArrayRegion(out,0,result.size(),reinterpret_cast<const jbyte*>(result.data()));return out;
-  }catch(const std::exception&){return nullptr;}
+  } catch (const std::exception& error) {
+    // Keep validation failures distinguishable from an empty license.
+    const auto exception = env->FindClass("java/lang/IllegalArgumentException");
+    if (exception) env->ThrowNew(exception, error.what());
+    return nullptr;
+  }
 }

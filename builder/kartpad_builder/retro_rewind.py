@@ -193,7 +193,10 @@ def extract_archive(archive: Path, destination: Path, config: dict[str, Any]) ->
             shutil.rmtree(stage)
 
 
-def _download(url: str, output: Path, expected_size: int, expected_sha256: str) -> None:
+def _download(
+    url: str, output: Path, expected_size: int, expected_sha256: str,
+    *, label: str = "Retro Rewind",
+) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     partial = output.with_name(output.name + f".partial.{os.getpid()}")
     digest = hashlib.sha256()
@@ -202,15 +205,15 @@ def _download(url: str, output: Path, expected_size: int, expected_sha256: str) 
     try:
         with urllib.request.urlopen(request) as response, partial.open("xb") as handle:
             if response.geturl() != url:
-                raise BuildError("pinned Retro Rewind download redirected to an unexpected URL")
+                raise BuildError(f"pinned {label} download redirected to an unexpected URL")
             while chunk := response.read(1024 * 1024):
                 total += len(chunk)
                 if total > expected_size:
-                    raise BuildError("pinned Retro Rewind download is larger than expected")
+                    raise BuildError(f"pinned {label} download is larger than expected")
                 digest.update(chunk)
                 handle.write(chunk)
         if total != expected_size or digest.hexdigest() != expected_sha256:
-            raise BuildError("pinned Retro Rewind download identity does not match the profile")
+            raise BuildError(f"pinned {label} download identity does not match the profile")
         os.replace(partial, output)
     finally:
         if partial.exists():
@@ -239,7 +242,7 @@ def prepare_inputs(profile: Profile, work_root: Path, install: bool) -> RetroRew
     except (BuildError, OSError):
         if not install:
             raise BuildError("missing pinned Retro-WFC payload; run ./scripts/build-user-ipa.sh bootstrap")
-        _download(config["payload"]["url"], payload, config["payload"]["bytes"], config["payload"]["sha256"])
+        _download(config["payload"]["url"], payload, config["payload"]["bytes"], config["payload"]["sha256"], label="Retro-WFC payload")
         validate_rwfc_payload(payload, config["payload"])
 
     return RetroRewindInputs(

@@ -1,0 +1,16 @@
+--- a/src/dawn/native/vulkan/PhysicalDeviceVk.cpp
++++ b/src/dawn/native/vulkan/PhysicalDeviceVk.cpp
+@@ -1102,7 +1102,12 @@
+ 
+         // Disable use of ExtendedDynamicState on SwitfShader. It doesn't appear to be handling all
+         // dynamic states properly, specifically some stencil ops.
+-        deviceToggles->ForceSet(Toggle::VulkanUseExtendedDynamicState, false);
++        // The availability check below owns force-disabling unsupported extensions.
++        // ForceSet may only be called once for each toggle.
++        if (GetDeviceInfo().HasExt(DeviceExt::ExtendedDynamicState) &&
++            GetDeviceInfo().extendedDynamicStateFeatures.extendedDynamicState == VK_TRUE) {
++            deviceToggles->ForceSet(Toggle::VulkanUseExtendedDynamicState, false);
++        }
+     }
+ 
+     if (IsIntelMesa()) {

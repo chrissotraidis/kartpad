@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "candidate": "0.4.25-diagnostics.3-mergefix",
+  "version_code": 121,
+  "release_url": "https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.25-diagnostics.3-mergefix-android",
+  "apk_sha256": "7b01458c8e9e436c80e314e90fa57a8e91613bda7486e7939c918c816fab96b3",
+  "signing_certificate_sha256": "c1dbe0a0d72d830a5779476b346a750d0a37515adef992cad2f3863058f7f2f2",
+  "source_commit": "a98e0c35c462bcaa78c8b9be8514fe48adad138c",
+  "automation_id": "kartpad-build-121-reporter-follow-up",
+  "cadence": "hourly; quiet when unchanged",
+  "result_vocabulary": [
+    "unchanged",
+    "improved",
+    "fixed",
+    "regression",
+    "install-blocked",
+    "ambiguous"
+  ],
+  "acceptance": "Reporter result applies only to named device/build/profile/scene. No automatic issue closure.",
+  "updated_at": "2026-09-17T10:10:27.925734+00:00",
+  "reports": [
+    {
+      "issue": 211,
+      "url": "https://github.com/chrissotraidis/kartpad/issues/211",
+      "status": "awaiting_reporter",
+      "result": null,
+      "device": "Samsung SM-S928B / Adreno 750",
+      "profile": "confirm_in_reply",
+      "prior_evidence_note": null,
+      "last_seen_comment_url": "https://github.com/chrissotraidis/kartpad/issues/211#issuecomment-5712606460",
+      "last_seen_comment_at": "2026-09-17T10:09:54Z",
+      "outreach_comment_url": "https://github.com/chrissotraidis/kartpad/issues/211#issuecomment-5712606460",
+      "evidence": []
+    },
+    {
+      "issue": 104,
+      "url": "https://github.com/chrissotraidis/kartpad/issues/104",
+      "status": "awaiting_reporter",
+      "result": null,
+      "device": "Samsung Galaxy S24 Ultra / Snapdragon 8 Gen 3",
+      "profile": "confirm_in_reply",
+      "prior_evidence_note": null,
+      "last_seen_comment_url": "https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5712607096",
+      "last_seen_comment_at": "2026-09-17T10:09:57Z",
+      "outreach_comment_url": "https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5712607096",
+      "evidence": []
+    },
+    {
+      "issue": 102,
+      "url": "https://github.com/chrissotraidis/kartpad/issues/102",
+      "status": "awaiting_reporter",
+      "result": null,
+      "device": "Samsung Galaxy Z Fold 8 / reported Snapdragon 8 Elite",
+      "profile": "confirm_in_reply",
+      "prior_evidence_note": null,
+      "last_seen_comment_url": "https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5712607648",
+      "last_seen_comment_at": "2026-09-17T10:10:00Z",
+      "outreach_comment_url": "https://github.com/chrissotraidis/kartpad/issues/102#issuecomment-5712607648",
+      "evidence": []
+    },
+    {
+      "issue": 137,
+      "url": "https://github.com/chrissotraidis/kartpad/issues/137",
+      "status": "awaiting_reporter",
+      "result": null,
+      "device": "Samsung SM-S948B / Galaxy S26 Ultra",
+      "profile": "confirm_in_reply",
+      "prior_evidence_note": "Existing race-entry crash attachment also awaits classification",
+      "last_seen_comment_url": "https://github.com/chrissotraidis/kartpad/issues/137#issuecomment-5712608584",
+      "last_seen_comment_at": "2026-09-17T10:10:04Z",
+      "outreach_comment_url": "https://github.com/chrissotraidis/kartpad/issues/137#issuecomment-5712608584",
+      "evidence": []
+    },
+    {
+      "issue": 166,
+      "url": "https://github.com/chrissotraidis/kartpad/issues/166",
+      "status": "awaiting_reporter",
+      "result": null,
+      "device": "Reporter has multiple devices; require model for result",
+      "profile": "confirm_in_reply",
+      "prior_evidence_note": null,
+      "last_seen_comment_url": "https://github.com/chrissotraidis/kartpad/issues/166#issuecomment-5712611502",
+      "last_seen_comment_at": "2026-09-17T10:10:16Z",
+      "outreach_comment_url": "https://github.com/chrissotraidis/kartpad/issues/166#issuecomment-5712611502",
+      "evidence": []
+    },
+    {
+      "issue": 120,
+      "url": "https://github.com/chrissotraidis/kartpad/issues/120",
+      "status": "awaiting_reporter",
+      "result": null,
+      "device": "OnePlus OPD2514",
+      "profile": "retro_rewind",
+      "prior_evidence_note": null,
+      "last_seen_comment_url": "https://github.com/chrissotraidis/kartpad/issues/120#issuecomment-5712613733",
+      "last_seen_comment_at": "2026-09-17T10:10:25Z",
+      "outreach_comment_url": "https://github.com/chrissotraidis/kartpad/issues/120#issuecomment-5712613733",
+      "evidence": []
+    }
+  ]
+}

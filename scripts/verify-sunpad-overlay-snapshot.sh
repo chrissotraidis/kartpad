@@ -22,7 +22,19 @@ files=(
 
 for upstream in "${files[@]}"; do
   name="$(basename "${upstream}")"
-  cmp "${reference}/${upstream}" "${snapshot}/${name}"
+  # KartPad has maintained three explicitly recorded adaptations since the
+  # original import. Verify their reviewed bytes; do not claim they are verbatim.
+  case "$name" in
+    SunPadDiagnostics.mm) expected=da46cfc2d15e571c6e6b01960859cc63e07023d703d7785e2f872588c5016b4f ;;
+    SunPadControllerMapping.h) expected=71054371f6a5a613e6ba54bb68f5505da93fe1038b10a0b0f9015e2bff17e5a3 ;;
+    SunPadControllerMapping.mm) expected=1fa1a0405c4af28f1e5b0dd581802664cb8837198cd7093c9e55d99497f93dd4 ;;
+    *) cmp "${reference}/${upstream}" "${snapshot}/${name}"; continue ;;
+  esac
+  actual="$(shasum -a 256 "${snapshot}/${name}" | awk '{print $1}')"
+  if [[ "$actual" != "$expected" ]]; then
+    echo "Unreviewed KartPad overlay adaptation: $name" >&2
+    exit 65
+  fi
 done
 
 expected_commit="e43f0ea6b797e5110787171957c9dc3c6213269c"
@@ -33,4 +45,4 @@ if [[ "${actual_commit}" != "${expected_commit}" ]]; then
 fi
 
 cmp "${reference}/LICENSE" "${repo_root}/LICENSES/GPL-3.0.txt"
-echo "SunPad overlay snapshot is byte-identical at ${expected_commit}"
+echo "SunPad overlay baseline verified at ${expected_commit}, with three pinned KartPad adaptations"

@@ -45,7 +45,7 @@
         <activity
             android:name=".KartPadActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
-            android:exported="false"
+            android:exported="${kartpadFrameCapture}"
             android:launchMode="singleTask"
             android:screenOrientation="sensorLandscape" />
         <activity

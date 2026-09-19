@@ -98,10 +98,10 @@ cmake -S "${runtime_source}" -B "${xcode_build}" -G Xcode \
   -DCMAKE_OSX_SYSROOT=iphoneos \
   -DCMAKE_OSX_ARCHITECTURES=arm64 \
   -DCMAKE_OSX_DEPLOYMENT_TARGET=16.0 \
-  -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG ${path_map_flags}" \
-  -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG ${path_map_flags}" \
-  -DCMAKE_OBJC_FLAGS_RELEASE="-O3 -DNDEBUG ${path_map_flags}" \
-  -DCMAKE_OBJCXX_FLAGS_RELEASE="-O3 -DNDEBUG ${path_map_flags}" \
+  -DCMAKE_C_FLAGS_RELEASE="-O3 -g -DNDEBUG ${path_map_flags}" \
+  -DCMAKE_CXX_FLAGS_RELEASE="-O3 -g -DNDEBUG ${path_map_flags}" \
+  -DCMAKE_OBJC_FLAGS_RELEASE="-O3 -g -DNDEBUG ${path_map_flags}" \
+  -DCMAKE_OBJCXX_FLAGS_RELEASE="-O3 -g -DNDEBUG ${path_map_flags}" \
   -DMKW_AURORA_DIR="${runtime_source}/aurora-main" \
   -DAURORA_DAWN_PACKAGE_URL="file://${dawn_archive}" \
   -DAURORA_DAWN_PACKAGE_URL_HASH="SHA256=${dawn_sha256}" \
@@ -115,7 +115,19 @@ python3 "${repo_root}/scripts/write-build-provenance.py" --repo "${repo_root}" \
   --runtime "${runtime_source}" --translation "${translation_root}" \
   --output "${xcode_build}/kartpad-build.json"
 cmake --build "${xcode_build}" --config Release --target "${product_target}" -- \
-  -sdk iphoneos CODE_SIGNING_ALLOWED=NO
+  -sdk iphoneos CODE_SIGNING_ALLOWED=NO DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
+
+# CMake's Release settings can suppress Xcode's automatic dSYM phase even with
+# -g. Explicitly preserve full symbols before removing local object-file paths.
+dsym="${xcode_build}/Release-iphoneos/KartPad.app.dSYM"
+xcrun dsymutil "${app}/KartPad" -o "${dsym}"
+app_uuid="$(xcrun dwarfdump --uuid "${app}/KartPad" | awk '{print $2}')"
+symbol_uuid="$(xcrun dwarfdump --uuid "${dsym}" | awk '{print $2}')"
+if [[ -z "$app_uuid" || "$app_uuid" != "$symbol_uuid" ]]; then
+  echo "ERROR: physical-iOS dSYM UUID does not match the app" >&2
+  exit 65
+fi
+xcrun strip -S "${app}/KartPad"
 
 cp "${xcode_build}/kartpad-build.json" "${app}/kartpad-build.json"
 "${repo_root}/scripts/audit-ios-game-app.sh" "${app}" IOS

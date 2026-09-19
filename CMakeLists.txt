@@ -259,6 +259,7 @@ if(MKW_BUILD_IOS_SIMULATOR OR MKW_BUILD_IOS_DEVICE)
 
   add_executable(KartPad MACOSX_BUNDLE
     "${KARTPAD_IOS_DIR}/KartPadAppDelegate.mm"
+    "${KARTPAD_IOS_DIR}/KartPadSystemDiagnostics.mm"
     "${KARTPAD_IOS_DIR}/KartPadShellViewController.mm"
     "${CMAKE_CURRENT_SOURCE_DIR}/apple/shared/KartPadMiiManager.mm"
     "${CMAKE_CURRENT_SOURCE_DIR}/apple/mobile/KartPadCoreBridge.mm"
@@ -284,7 +285,7 @@ if(MKW_BUILD_IOS_SIMULATOR OR MKW_BUILD_IOS_DEVICE)
     -fobjc-arc -Wall -Wextra
     "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.")
   foreach(framework IN ITEMS
-      Foundation UIKit CoreGraphics QuartzCore Metal GameController CoreMotion UniformTypeIdentifiers)
+      Foundation UIKit CoreGraphics QuartzCore Metal GameController CoreMotion UniformTypeIdentifiers MetricKit)
     find_library(KARTPAD_IOS_${framework}_FRAMEWORK ${framework} REQUIRED)
     target_link_libraries(KartPad PRIVATE "${KARTPAD_IOS_${framework}_FRAMEWORK}")
   endforeach()

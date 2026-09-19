@@ -1,0 +1,19 @@
+{
+  "source": "a98e0c3",
+  "apk": "KartPad-v0.4.25-diagnostics.3-mergefix-android-arm64.apk",
+  "sha256": "7b01458c8e9e436c80e314e90fa57a8e91613bda7486e7939c918c816fab96b3",
+  "build_id": "be9930491e079cf1945685104afd9ace791cc941",
+  "symbols_match": true,
+  "non_debuggable": true,
+  "game_activity_exported": false,
+  "package_audit_passed": true,
+  "signer": "verified existing Community Release certificate",
+  "android_build_passed": true,
+  "ios_arm64_build_passed": true,
+  "regression_tests_passed": 10,
+  "affected_device_verified": false,
+  "release_url": "https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.25-diagnostics.3-mergefix-android",
+  "release_kind": "prerelease; not latest",
+  "remote_assets_sha256_verified": true,
+  "anonymous_download_available": true
+}

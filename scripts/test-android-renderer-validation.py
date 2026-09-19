@@ -17,7 +17,7 @@ code = r'''
 #include <string_view>
 #include <vector>
 namespace wgpu {
-enum class BackendType { Vulkan };
+enum class BackendType { Vulkan, Metal };
 struct DawnTogglesDescriptor {
   void* nextInChain;
   size_t enabledToggleCount; const char* const* enabledToggles;
@@ -32,13 +32,15 @@ int main() {
     else unsetenv("KARTPAD_RENDERER_VALIDATION");
     std::vector<const char*> enableToggles;
     int cacheDescriptor = 0;
-    auto g_backendType = wgpu::BackendType::Vulkan;
+    for (auto g_backendType : {wgpu::BackendType::Vulkan, wgpu::BackendType::Metal}) {
+    enableToggles.clear();
 ''' + source[start:end] + r'''
     const bool expected = flag && std::string_view(flag) == "1";
     const auto& d = togglesDescriptor;
     auto enabled = [&](std::string_view name) {
-      return std::any_of(d.enabledToggles, d.enabledToggles+d.enabledToggleCount,
-                        [&](const char* value) { return value == name; });
+      for (size_t i=0; i<d.enabledToggleCount; ++i)
+        if (d.enabledToggles[i] == name) return true;
+      return false;
     };
 #ifdef NDEBUG
     require(enabled("skip_validation") == !expected);
@@ -51,7 +53,8 @@ int main() {
       require(std::string_view(d.disabledToggles[0]) == "skip_validation");
       require(std::string_view(d.disabledToggles[1]) == "disable_robustness");
     } else require(d.disabledToggles == nullptr);
-    require(enabled("vulkan_monolithic_pipeline_cache"));
+    require(enabled("vulkan_monolithic_pipeline_cache") == (g_backendType == wgpu::BackendType::Vulkan));
+    }
   }
 }
 '''
@@ -65,4 +68,4 @@ with tempfile.TemporaryDirectory() as directory:
             command.append('-DNDEBUG')
         subprocess.run(command + [str(cpp), '-o', str(exe)], check=True)
         subprocess.run([str(exe)], check=True)
-print('PASS: normal and opt-in Dawn toggles, five environment states, debug and release')
+print('PASS: normal and opt-in Dawn toggles, five environment states, Vulkan and Metal, debug and release')

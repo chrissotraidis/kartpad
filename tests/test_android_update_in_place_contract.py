@@ -34,8 +34,12 @@ class AndroidUpdateInPlaceContractTests(unittest.TestCase):
 
         self.assertIn('providers.gradleProperty("kartpadVersionCode")', gradle)
         self.assertIn('providers.gradleProperty("kartpadVersionName")', gradle)
-        self.assertIn('.getOrElse(85)', gradle)
-        self.assertIn('0.4.19-android.1', gradle)
+        # Version defaults advance with releases; this contract guards validation
+        # and wiring, not one historical release number.
+        self.assertIn('value.toIntOrNull()?.takeIf { it > 0 }', gradle)
+        self.assertIn('error("kartpadVersionCode must be a positive integer")', gradle)
+        self.assertIn('require(Regex("[0-9A-Za-z][0-9A-Za-z._-]{0,63}").matches(value))', gradle)
+        self.assertIn("versionName = kartpadVersionName", gradle)
         self.assertIn("versionCode = kartpadVersionCode", gradle)
         self.assertIn("KARTPAD_ANDROID_VERSION_CODE", builder)
         self.assertIn("KARTPAD_ANDROID_VERSION_NAME", builder)

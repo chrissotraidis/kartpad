@@ -1,0 +1,29 @@
+{
+  "source": "e8114c21a5879187ab616b1a2ddc1964a5803af5",
+  "apk": "KartPad-0.4.25-diagnostics.3-capture-code120-local-debug-signer.apk",
+  "sha256": "25e6391ca5fa2b6c5f2b5e5713ed36d80048ac662be717062160f237cb0f37ba",
+  "native_sha256": {
+    "lib/arm64-v8a/libSDL3.so": "d7a17c375adcb71818210581b885f59832d5f95b663aa7a7d493484a00a94753",
+    "lib/arm64-v8a/libc++_shared.so": "c4c2fe5cbcb1fba0003a31fc7ab29a9bb12df6cc187ec45a806462540e83d93b",
+    "lib/arm64-v8a/libkartpad_discio.so": "0e5bd27501b1aee71db63364f0673682e0cca3c0234d560d4c54ac87e01c0d0b",
+    "lib/arm64-v8a/libmain.so": "84d6207b3c51aea4f6d500436a27af6d62ba22d3545348cf8496349ad4b6c827"
+  },
+  "native_build_type": "RelWithDebInfo",
+  "signer": "existing local Android Debug; cannot update community signer",
+  "capture_manifest": [
+    {
+      "capture": "false",
+      "debuggable": "false",
+      "game_activity_exported": "false"
+    },
+    {
+      "capture": "true",
+      "debuggable": "true",
+      "game_activity_exported": "true"
+    }
+  ],
+  "ordinary_release_audit_rejected": true,
+  "device_capture_verified": false,
+  "main_build_id": "1d5b0e947d657d0d3cea2eac131c3dfb9daf0cb7",
+  "symbols_build_id_matches": true
+}

@@ -26,6 +26,8 @@ class AppleReportRoutingTests(unittest.TestCase):
         ios_up = ios[up_start:ios.index('\n  }', up_start)]
         source = '''#import <Foundation/Foundation.h>
 #include <cassert>
+// This fixture tests report routing, not the platform diagnostic collector.
+static NSString *KartPadSystemDiagnosticsReport() { return @"System diagnostic fixture"; }
 ''' + log_code + '''
 static NSURL *IOSUpstream(NSString *selectedTemplate) {
   NSDictionary *answers = @{ @"upstreamTemplate": selectedTemplate, @"problem": @"crashed after a race", @"diagnostics": @"reviewed log retained" };
@@ -61,6 +63,7 @@ int main() { @autoreleasepool {
   assert([text containsString:@"reportOrigin=KartPad"]);
   assert([text containsString:@"issuesURL=https://github.com/chrissotraidis/kartpad/issues"]);
   assert([text containsString:@"reviewed log"]);
+  assert([text containsString:@"System diagnostic fixture"]);
   assert([[NSString stringWithContentsOfURL:original encoding:NSUTF8StringEncoding error:nil] isEqual:input]);
   assert(Export(nil) == nil);
   NSMutableString *longLog = [NSMutableString stringWithString:@"WiiCompiled startup version\\n"];

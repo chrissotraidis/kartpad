@@ -17,6 +17,7 @@ internal object KartPadTouchSettings {
     private const val OPACITY = "control_opacity"
     private const val SIZE = "control_size"
     private const val HIDE_ON_CONTROLLER = "hide_on_controller"
+    private const val AUTO_ACCELERATE = "auto_accelerate"
     private const val MODERN_C_STICK = "modern_c_stick_horizontal"
     private const val SHOW_FPS = "show_fps"
     private const val FPS_SIZE = "fps_size"
@@ -55,6 +56,13 @@ internal object KartPadTouchSettings {
 
     fun setHideOnController(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(HIDE_ON_CONTROLLER, value).apply()
+    }
+
+    fun autoAccelerate(context: Context): Boolean = preferences(context)
+        .getBoolean(AUTO_ACCELERATE, true)
+
+    fun setAutoAccelerate(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(AUTO_ACCELERATE, value).apply()
     }
 
     fun modernCStickHorizontal(context: Context): Boolean = preferences(context)

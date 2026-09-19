@@ -17,7 +17,11 @@ fi
 
 export JAVA_HOME="$repo_root/.android-bootstrap/jdk-$KARTPAD_ANDROID_JDK_VERSION/Contents/Home"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
-export DAWN_ANDROID_ROOT="$dawn_root"
+# UI/renderer verification must be able to exercise the exact candidate dependency.
+export DAWN_ANDROID_ROOT="${KARTPAD_DAWN_ANDROID_ROOT:-$dawn_root}"
+[[ -f "$DAWN_ANDROID_ROOT/lib/cmake/Dawn/DawnTargets.cmake" ]] || {
+  echo "ERROR: candidate Dawn package is incomplete" >&2; exit 1;
+}
 export MINIZIP_ANDROID_ROOT="$minizip_root"
 export MBEDTLS_ANDROID_ROOT="$mbedtls_root"
 

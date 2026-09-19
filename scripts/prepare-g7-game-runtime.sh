@@ -79,7 +79,7 @@ for blob_asm in \
   fi
 done
 
-generated_link="${repo_root}/build/generated"
+generated_link="$(dirname "${runtime_source}")/generated"
 if [[ -e "${generated_link}" && ! -L "${generated_link}" ]]; then
   echo "ERROR: generated path exists and is not a symlink: ${generated_link}" >&2
   exit 1

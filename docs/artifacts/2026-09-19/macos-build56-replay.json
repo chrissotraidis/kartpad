@@ -1,0 +1,32 @@
+{
+  "source": "e7877946ebfe04782ecd058116c754e3baa3dd87",
+  "runtime": "7cd09b693ad202442838b1b64396a06a26b203fd",
+  "platform": "macOS arm64 Metal",
+  "version": "0.5.0",
+  "build": 56,
+  "executableSHA256": "7272a82d087645618079578560bfe3e7db6952cf9ab7c5577fbed8c336635798",
+  "scope": "Isolated portable copy of signed candidate; prior test license and keyboard mapping copied; normal user data untouched",
+  "observed": [
+    "Title -> license -> Single Player -> Time Trials -> Mario/Standard Kart M/Automatic -> Luigi Circuit -> built-in Nintendo ghost Watch Replay",
+    "Repeated replay scene restarts without process failure",
+    "Replay controls opened; Continue Replay returned to rendering",
+    "End Replay confirmation Yes returned visibly to course selection",
+    "Command-Q closed the validation process; process no longer present"
+  ],
+  "replaySceneRestarts": 5,
+  "presentations": 63600,
+  "processSamples": {
+    "count": 9,
+    "spanSeconds": 120.105,
+    "rssKiBMin": 2188096,
+    "rssKiBMax": 2196352
+  },
+  "priorTestStateUnchanged": true,
+  "limits": [
+    "Replay observation does not establish manually driven full races, cups/awards, Retro Rewind, online endurance, or affected Android GPU correctness",
+    "Short RSS window is not a memory-leak clearance",
+    "No physical iPhone or iPad connected during read-only device inventory",
+    "No physical-device changes or new reporter requests"
+  ],
+  "audio": "Four dropped blocks (1536 bytes) recorded during the full menu/replay session; no audible-quality certification"
+}

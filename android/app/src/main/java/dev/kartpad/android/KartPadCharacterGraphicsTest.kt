@@ -38,7 +38,12 @@ internal object KartPadCharacterGraphicsTest {
             output.write(mode.stored.toByteArray(Charsets.UTF_8))
             output.fd.sync()
             file.finishWrite(output)
-            check(mode(context) == mode) { "Setting publication failed" }
+            // mode() deliberately falls back to Normal on read failure. Verify
+            // exact persisted bytes here so that fallback cannot confirm a write.
+            check(file.openRead().use { input ->
+                mode.stored.toByteArray(Charsets.UTF_8).all { input.read() == (it.toInt() and 0xff) } &&
+                    input.read() == -1
+            }) { "Setting publication failed" }
         } catch (error: Exception) {
             file.failWrite(output)
             throw error

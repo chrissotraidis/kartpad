@@ -119,13 +119,15 @@
       "iosSimulatorArm64Artifact": "dawn-ios-simulator-arm64.tar.gz",
       "iosSimulatorArm64Sha256": "feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf",
       "androidArm64Artifact": "dawn-android-aarch64.tar.gz",
-      "androidArm64Url": "https://github.com/encounter/dawn-build/releases/download/v20260603.191052/dawn-android-aarch64.tar.gz",
-      "androidArm64Bytes": 11645719,
-      "androidArm64Sha256": "27d910dee1201fd1e5b6ac567f0ba2306ebf2135e9f40b6929976c365d38b09b",
-      "androidMetadataSanitization": "Replace the pinned Linux NDK API-28 liblog.so absolute path in DawnTargets.cmake with Android's logical log library; reject remaining /usr/local/lib/android/sdk paths.",
-      "androidSanitizedDawnTargetsSha256": "950622eccd03a73154849a5f682347b1f69b5cb5847cc00857eb12459fee4591",
+      "androidArm64Url": "https://github.com/chrissotraidis/wiicompiled/releases/download/dawn-android-20260919.1/dawn-android-aarch64.tar.gz",
+      "androidArm64Bytes": 10785820,
+      "androidArm64Sha256": "c6b4efde6de30f341c46b65a1679914142059b360856d38e32f40dd55cae7fc1",
+      "androidMetadataSanitization": "The maintained Android archive already links logical log and contains no builder paths. Verify extracted files against the locked archive without modifying them.",
+      "androidSanitizedDawnTargetsSha256": "f914f68fa00893267e91cd64a9d91a05f0882ea6880dc48f296ca6711b11e3db",
       "declaredAt": "ref/upstream/Wiicompiled/aurora-main/CMakeLists.txt",
-      "role": "Pinned WebGPU implementation used by vendored Aurora; macOS and iOS artifacts are hash-verified at configure time"
+      "role": "Pinned WebGPU implementation used by vendored Aurora; macOS and iOS artifacts are hash-verified at configure time",
+      "androidLibrarySha256": "26f5e7e057b2c622dab22a86e17cbf9f461d25825e1704853c2835e106f9afb3",
+      "androidDawnVersionIdentity": "b0fd045b0a694eb07ac3fcf0d741f8697b935856"
     },
     {
       "name": "SDL3 Android",

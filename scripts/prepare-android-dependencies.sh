@@ -31,38 +31,43 @@ unzip -p "$sdl_zip" SDL3-3.4.4.aar > "$repo_root/android/app/libs/SDL3-3.4.4.aar
 mv "$repo_root/android/app/libs/SDL3-3.4.4.aar.tmp" \
    "$repo_root/android/app/libs/SDL3-3.4.4.aar"
 
-dawn_archive="$cache_root/dawn-android-aarch64.tar.gz"
-fetch_locked \
-  "https://github.com/encounter/dawn-build/releases/download/v20260603.191052/dawn-android-aarch64.tar.gz" \
-  "$dawn_archive" 11645719 \
-  27d910dee1201fd1e5b6ac567f0ba2306ebf2135e9f40b6929976c365d38b09b
-dawn_root="$cache_root/dawn-v20260603.191052-android-aarch64"
-if [[ ! -f "$dawn_root/lib/cmake/Dawn/DawnTargets.cmake" ]]; then
+# Android uses the reviewed maintained archive; Apple retains its own lock entries.
+IFS=$'\t' read -r dawn_url dawn_bytes dawn_sha dawn_targets_sha dawn_library_sha dawn_version < <(
+  python3 - "$repo_root/dependencies.lock.json" <<'PYLOCK'
+import json, sys
+entry = next(item for item in json.load(open(sys.argv[1]))["dependencies"] if item["name"] == "Dawn prebuilt")
+print("\t".join(str(entry[key]) for key in ("androidArm64Url", "androidArm64Bytes", "androidArm64Sha256",
+      "androidSanitizedDawnTargetsSha256", "androidLibrarySha256", "androidDawnVersionIdentity")))
+PYLOCK
+)
+dawn_archive="$cache_root/dawn-android-${dawn_sha}.tar.gz"
+fetch_locked "$dawn_url" "$dawn_archive" "$dawn_bytes" "$dawn_sha"
+dawn_root="$cache_root/dawn-android-${dawn_sha:0:12}"
+if [[ ! -e "$dawn_root" ]]; then
   mkdir -p "$dawn_root"
   tar -xzf "$dawn_archive" -C "$dawn_root"
 fi
-dawn_targets="$dawn_root/lib/cmake/Dawn/DawnTargets.cmake"
-python3 - "$dawn_targets" <<'PY'
-from pathlib import Path
-import sys
-
-path = Path(sys.argv[1])
-text = path.read_text()
-absolute_log = "/usr/local/lib/android/sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/28/liblog.so"
-if absolute_log in text:
-    text = text.replace(absolute_log, "log")
-    path.write_text(text)
-if "/usr/local/lib/android/sdk" in text:
-    raise SystemExit("ERROR: Dawn metadata still contains its Linux CI SDK path")
-if "log;" not in text:
-    raise SystemExit("ERROR: sanitized Dawn metadata does not link logical Android log")
-PY
-sanitized_targets_sha256="$(shasum -a 256 "$dawn_targets" | awk '{print $1}')"
-if [[ "$sanitized_targets_sha256" != \
-      "950622eccd03a73154849a5f682347b1f69b5cb5847cc00857eb12459fee4591" ]]; then
-  echo "ERROR: sanitized Dawn target metadata digest changed" >&2
-  exit 1
-fi
+python3 - "$dawn_archive" "$dawn_root" "$dawn_targets_sha" "$dawn_library_sha" "$dawn_version" <<'PYDAWN'
+from pathlib import Path, PurePosixPath
+import hashlib, json, sys, tarfile
+archive, root = Path(sys.argv[1]), Path(sys.argv[2])
+with tarfile.open(archive) as package:
+    seen = set()
+    for member in package:
+        relative = PurePosixPath(member.name)
+        if not member.isfile() or relative.is_absolute() or ".." in relative.parts or member.name in seen:
+            raise SystemExit("ERROR: invalid maintained Dawn archive member")
+        seen.add(member.name)
+        path = root / relative
+        if path.is_symlink() or not path.is_file() or path.read_bytes() != package.extractfile(member).read():
+            raise SystemExit(f"ERROR: extracted Dawn dependency differs: {member.name}")
+for name, expected in (("lib/cmake/Dawn/DawnTargets.cmake", sys.argv[3]), ("lib/libwebgpu_dawn.a", sys.argv[4])):
+    if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+        raise SystemExit(f"ERROR: maintained Dawn lock differs: {name}")
+if json.loads((root / "KARTPAD-DAWN.json").read_text())["dawnVersionIdentity"] != sys.argv[5]:
+    raise SystemExit("ERROR: maintained Dawn version identity differs")
+PYDAWN
+sanitized_targets_sha256="$dawn_targets_sha"
 
 minizip_commit="55db144e03027b43263e5ebcb599bf0878ba58de"
 minizip_archive="$cache_root/minizip-ng-$minizip_commit.tar.gz"

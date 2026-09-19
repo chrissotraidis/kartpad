@@ -1,0 +1,44 @@
+{
+  "status": "candidate_not_release_approval",
+  "packagingCommit": "a6fca285efaa1a1c811d8f267abbda8295892a6d",
+  "artifacts": {
+    "KartPad-v0.5.0-android-arm64.apk": {
+      "bytes": 111769163,
+      "sha256": "3df353a99c497742dbd8797ee5721363fb29adda3e88712c499c68a0e236e752"
+    },
+    "KartPad-v0.5.0-ios-unsigned.ipa": {
+      "bytes": 41993588,
+      "sha256": "245ff7dc237fb6ac5457772d25dd34c9800d9eda93006af2f8ba5ef33a449e58"
+    },
+    "KartPad-v0.5.0-macos-arm64.zip": {
+      "bytes": 41882177,
+      "sha256": "bd5f58def88143cd5d35c759f9bd5630891db420e7528b38b1f07e43d155138f"
+    },
+    "KartPad-v0.5.0-notices.zip": {
+      "bytes": 240243,
+      "sha256": "3c65cc1baebf44cd78ddac5339806b7a37e1a5970b2b4b9d723061e89b6b56b3"
+    },
+    "KartPad-v0.5.0-source.tar.gz": {
+      "bytes": 361495458,
+      "sha256": "33c56a8d245c0dfd1eeba3391c05be6771a2b8fbbe6a7e12818ebdfe62d90bb5"
+    }
+  },
+  "independentAudit": {
+    "sourceMembers": 85,
+    "coreSourceFiles": 6887,
+    "coreFingerprintMatchesMobile": true,
+    "noticeEntries": 79,
+    "appleArchives": {
+      "KartPad-v0.5.0-ios-unsigned.ipa": {
+        "preservedOriginalEntries": 23,
+        "addedNotices": 79
+      },
+      "KartPad-v0.5.0-macos-arm64.zip": {
+        "preservedOriginalEntries": 33,
+        "addedNotices": 79
+      }
+    },
+    "checksums": "all five assets match SHA256SUMS; APK unchanged from audited public-signed input"
+  },
+  "acceptance": "Candidate packaging complete. New code133/build57 physical and game-runtime acceptance still required; previous candidate evidence is retained separately."
+}

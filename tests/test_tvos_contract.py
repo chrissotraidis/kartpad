@@ -170,9 +170,9 @@ class TvOSContractTests(unittest.TestCase):
         ios_release = (ROOT / "scripts/ios_release.py").read_text()
         for script in (ios_package, ios_audit):
             self.assertIn("from ios_release import", script)
-        self.assertIn('RELEASE_TAG = "v0.4.17-ios.1"', ios_release)
-        self.assertIn('APP_VERSION = "0.4.17"', ios_release)
-        self.assertIn('APP_BUILD = "39"', ios_release)
+        self.assertIn('RELEASE_TAG = "v0.4.24-ios.1"', ios_release)
+        self.assertIn('APP_VERSION = "0.4.24"', ios_release)
+        self.assertIn('APP_BUILD = "49"', ios_release)
         for script in (tvos_package, tvos_audit):
             self.assertIn('RELEASE_TAG = "v0.4.11-tvos.1"', script)
             self.assertIn('APP_VERSION = "0.4.11"', script)

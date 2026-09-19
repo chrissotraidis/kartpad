@@ -56,8 +56,10 @@ class DeviceCpuBaselineTests(unittest.TestCase):
             result = subprocess.run(['bash', str(ROOT / 'scripts/build-ios-device-game-app.sh'),
                                      str(prepared), str(Path(d) / 'unused-build')],
                                     capture_output=True, text=True)
-            self.assertEqual(result.returncode, 66)
-            self.assertIn('stale iOS CPU baseline', result.stderr)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('prepared source files differ', result.stderr)
+            self.assertIn('prepare a fresh runtime source', result.stderr)
+            self.assertFalse((Path(d) / 'unused-build').exists())
 
     @unittest.skipUnless(platform.system() == 'Darwin', 'requires Apple clang')
     def test_actual_acquire_instruction(self):

@@ -1,0 +1,48 @@
+{
+  "status": "candidate_not_release_approval",
+  "packagingCommit": "7aef3f5f005b5e8a54c596e7373860cf9a79dd65",
+  "artifacts": {
+    "KartPad-v0.5.0-android-arm64.apk": {
+      "bytes": 111769163,
+      "sha256": "2cd06fb340df8800bc8f1db396da7d8af89b5d1766ad982cc511b4002cac1dbe"
+    },
+    "KartPad-v0.5.0-ios-unsigned.ipa": {
+      "bytes": 41994025,
+      "sha256": "8114b279942b83a40e62c2f9a4765b5f17040d28baf64b3b7affc6e363849a7f"
+    },
+    "KartPad-v0.5.0-macos-arm64.zip": {
+      "bytes": 41879593,
+      "sha256": "26c80807ecf97fde971766769cce8a74afa9e23d03a67fdb3c023c5509672e3c"
+    },
+    "KartPad-v0.5.0-notices.zip": {
+      "bytes": 240061,
+      "sha256": "b655b404af77ae844ebef0382a40c75f5d536e60934554247a9c544fa6b8dea4"
+    },
+    "KartPad-v0.5.0-source.tar.gz": {
+      "bytes": 361480529,
+      "sha256": "cad39181c466ae710a4ec31ff93f5796344502e16a1b12dd971e039dbe1803e1"
+    }
+  },
+  "independentAudit": {
+    "noticeEntries": 79,
+    "KartPad-v0.5.0-ios-unsigned.ipa": {
+      "originalEntriesPreserved": 23,
+      "addedNoticeEntries": 79,
+      "version": "0.5.0",
+      "build": 56
+    },
+    "KartPad-v0.5.0-macos-arm64.zip": {
+      "originalEntriesPreserved": 22,
+      "addedNoticeEntries": 79,
+      "version": "0.5.0",
+      "build": 56
+    }
+  },
+  "sourceArchiveStatus": "Exact previously audited source archive; renamed only",
+  "appPayloads": "Original APK unchanged; every Apple input ZIP entry, permission and byte unchanged",
+  "publication": "Not published; superseded for release by the later ImGui partial-startup correction. Exact code132/build56 identities and audit evidence retained.",
+  "extractedPackageAudits": {
+    "macOS": "pass; signature valid on disk; symlinks and runtime resources preserved",
+    "iOS": "pass; iPhoneOS ARM64, no private/signing payload, exact executable hash unchanged"
+  }
+}

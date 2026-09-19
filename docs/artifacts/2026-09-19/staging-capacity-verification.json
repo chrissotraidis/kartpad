@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "source validated; not yet included in a new APK, IPA, or macOS app package",
+  "runtimeRevisions": {
+    "android": "ee05ec729f3d0a1ecbbca4ec9a3dc2423ee50187",
+    "ios": "94da1cdb8922d35c3453d31a03612603bd570467",
+    "macos": "7cd09b693ad202442838b1b64396a06a26b203fd",
+    "tvos": "18d6b59cac1f9953b9e3e0c353b596e6c647e31e"
+  },
+  "gpuProbe": {
+    "runtime_revision": "7cd09b693ad202442838b1b64396a06a26b203fd",
+    "runtime_dirty": false,
+    "maintained_source_sha256": "08ce20c731e28dab8cb14e3ab5d00e82440dff60d286f6c3ab2e0ec5d434a490",
+    "sha256": "11422b61de62d00642bed130c0b36e932e43f41ef3840f772b2e33900f978521"
+  },
+  "gpuBackend": "Metal, maintained Aurora and pinned Dawn, ROM-free 64x64 drawing with scaled GX tiled readback",
+  "checks": {
+    "automaticBuffers": [
+      "vertices",
+      "uniforms",
+      "indices",
+      "storage"
+    ],
+    "rawBridge": "matching direct quad pixels across automatic split",
+    "offscreen": "24 automatic splits; preserved magenta bake and suspended EFB; pending readback uniforms restaged",
+    "interpolation": "matching perspective draws established; split preserves native pixels and disables replay",
+    "worker": "16 perspective frames through real asynchronous frame worker and capacity splits",
+    "oversized": "typed failure before any draw staging allocation; cleanup and subsequent rendering verified",
+    "host": "12 focused regression tests across all four runtime pins, including ASan/UBSan source kernels",
+    "negativeControl": "prior maintained readback source fails the epoch regression on all four platforms; six earlier lifecycle modes still pass",
+    "crossCompilation": [
+      "macOS ARM64 actual linked GPU probe",
+      "Android NDK ARM64 aurora_gx and aurora_core",
+      "iPhoneOS ARM64 aurora_gx and aurora_core"
+    ],
+    "broaderRegression": "283 tests pass with PYTHONPATH=builder after refreshing stale report/menu/release fixtures; no product source changed for those fixture corrections"
+  },
+  "limits": [
+    "No new gameplay FPS claim",
+    "No physical-device run of these renderer revisions",
+    "tvOS full SDK build not performed",
+    "An operation plus retained suspended-pass data exceeding fixed capacity receives typed rejection; no primitive subdivision",
+    "Whole-application relinks, final packages, and release acceptance remain pending"
+  ],
+  "logSha256": {
+    "capacity-gpu-run.log": "de2821e69aa6fea52a29b7f3ace444ffc5ce962bdc5e7db8313ff29187d74fab",
+    "capacity-targeted-tests.log": "6db12ee5ca0aef8e9a237590df24e322159b85e89a0f95b71c4e7eae5ed2d305",
+    "capacity-epoch-negative.log": "1cf4358321e961e25f3b4fabbbd572c4a8adfe3a5fc1c4f92e318f6d51c6bc40",
+    "capacity-android-build.log": "8a5b6701f65a922587d0def18a3b17fa6f5ef0533a493a92b53d93cd9782d7ea",
+    "capacity-ios-build.log": "5f373ac1a86336338456d6b234433aed4568ff53bbd9cd4a24f012d30abfacb2",
+    "capacity-regression-corrected.log": "a9b8068a6060084a6048f4a022f2163cd08d78532a5df805e344c39309d1cfc3"
+  }
+}

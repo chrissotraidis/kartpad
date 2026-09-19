@@ -66,7 +66,7 @@
     ],
     "expectedGeneratedFunctions": 29637,
     "expectedBaseFunctions": 29065,
-    "expectedRetroFunctions": 4101
+    "expectedRetroFunctions": 4102
   },
   "retroRewind": {
     "version": "6.12.8",
@@ -90,8 +90,8 @@
     },
     "payload": {
       "url": "http://nas.play.rwfc.net/payload?g=RMCPD00",
-      "bytes": 28968,
-      "sha256": "fd8f26d6af26f1a0cfaecd1e472fe744a25d75f5136910533b7c75e3eca2f1d2"
+      "bytes": 28992,
+      "sha256": "099097a0f85a97c348123d91438438b24b112362f1fb23c94df6a343c5366471"
     }
   }
 }

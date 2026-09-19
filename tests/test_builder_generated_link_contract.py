@@ -8,8 +8,9 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 class BuildScriptContractTests(unittest.TestCase):
-    def test_ios_generated_link_tracks_the_runtime_workspace(self) -> None:
+    def test_generated_link_tracks_the_runtime_workspace(self) -> None:
         for relative in (
+            "scripts/prepare-g7-game-runtime.sh",
             "scripts/prepare-ios-game-runtime.sh",
             "scripts/build-ios-game-app.sh",
             "scripts/build-ios-device-game-app.sh",

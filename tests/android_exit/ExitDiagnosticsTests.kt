@@ -5,10 +5,11 @@ import android.content.Context
 import android.os.Build
 import org.json.JSONObject
 
-object BuildConfig { const val VERSION_CODE = 23 }
+object BuildConfig { const val VERSION_CODE = 23; const val VERSION_NAME = "host-test" }
 
 fun main() {
     testPrivateExitTraces()
+    testDiagnosticExport()
     val manager = ActivityManager()
     val context = Context(manager)
     Build.VERSION.SDK_INT = 28
@@ -32,10 +33,11 @@ fun main() {
     val exits = report.getJSONArray("exits")
     check(exits.length() == 8)
     val first = exits.getJSONObject(0)
+    check(first.getInt("pid") == 42)
     check(first.getString("reason") == "native_crash" && first.getInt("status") == 11)
     check(first.getInt("version_code") == 22 && first.getString("last_profile") == "retro_rewind")
     check(first.getLong("pss_kib") == 2048L && first.getLong("rss_kib") == 4096L)
-    check(first.keySet() == setOf("timestamp_ms", "reason_code", "reason", "status", "importance",
+    check(first.keySet() == setOf("pid", "timestamp_ms", "reason_code", "reason", "status", "importance",
         "pss_kib", "rss_kib", "version_code", "last_profile"))
     check(exits.getJSONObject(1).getString("reason") == "low_memory")
     check(exits.getJSONObject(1).isNull("version_code") && exits.getJSONObject(1).isNull("pss_kib"))
@@ -87,7 +89,15 @@ fun main() {
             check(KartPadCharacterGraphicsTest.active == KartPadCharacterGraphicsTest.Mode.NORMAL)
             check(android.system.Os.getenv("KARTPAD_RENDERER_CONST_PNMTX") == null)
         }
+        android.util.AtomicFile.readFailSuffix = "CharacterGraphicsTest"
+        check(!KartPadCharacterGraphicsTest.setMode(chooser, KartPadCharacterGraphicsTest.Mode.NORMAL))
+        android.util.AtomicFile.readFailSuffix = null
         check(!KartPadRendererDiagnostics.enabled(game))
+        fun newRendererProcess() {
+            val latch = KartPadRendererDiagnostics::class.java.getDeclaredField("configured")
+            latch.isAccessible = true
+            latch.setBoolean(null, false)
+        }
         check(KartPadRendererDiagnostics.setEnabled(chooser, true))
         KartPadRendererDiagnostics.configure(game)
         check(KartPadRendererDiagnostics.active && android.system.Os.getenv("KARTPAD_RENDERER_VALIDATION") == "1")
@@ -95,13 +105,31 @@ fun main() {
         check(!KartPadRendererDiagnostics.setEnabled(chooser, false))
         check(KartPadRendererDiagnostics.enabled(game))
         android.util.AtomicFile.failSuffix = null
+        android.util.AtomicFile.silentFailSuffix = "RendererValidation"
+        check(!KartPadRendererDiagnostics.setEnabled(chooser, false))
+        check(KartPadRendererDiagnostics.enabled(game))
+        android.util.AtomicFile.silentFailSuffix = null
         check(KartPadRendererDiagnostics.setEnabled(chooser, false))
+        KartPadRendererDiagnostics.configure(game)
+        // The native renderer caches its environment setting. Activity recreation
+        // must not relabel the running session with the next-launch preference.
+        check(KartPadRendererDiagnostics.active && android.system.Os.getenv("KARTPAD_RENDERER_VALIDATION") == "1")
+        newRendererProcess()
         KartPadRendererDiagnostics.configure(game)
         check(!KartPadRendererDiagnostics.active && android.system.Os.getenv("KARTPAD_RENDERER_VALIDATION") == "0")
         java.io.File(root, "KartPad/RendererValidation").writeText("1\nprivate-data")
         check(!KartPadRendererDiagnostics.enabled(game))
+        newRendererProcess()
+        KartPadRendererDiagnostics.configure(game)
+        check(!KartPadRendererDiagnostics.active)
+        android.util.AtomicFile.readFailSuffix = "RendererValidation"
+        // The default-off read policy must not falsely confirm a write.
+        check(!KartPadRendererDiagnostics.setEnabled(chooser, false))
+        android.util.AtomicFile.readFailSuffix = null
     } finally {
         android.util.AtomicFile.failSuffix = null
+        android.util.AtomicFile.silentFailSuffix = null
+        android.util.AtomicFile.readFailSuffix = null
         root.deleteRecursively()
     }
     println("PASS: API compatibility, bounded exit attribution, privacy, failure recovery, durable renderer setting")

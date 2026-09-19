@@ -44,6 +44,8 @@ int main() { @autoreleasepool {
     [value writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
     NSDictionary *result = report();
     assert([result[@"schema"] intValue] == 1);
+    assert([result[@"diagnostic_contract"] intValue] == 2);
+    assert([result[@"context_scope"] isEqual:@"export_time_not_selected_session"]);
     assert([result[@"runtime_profile"] isEqual:@"retro_rewind"]);
     assert([result[@"monotonic_ms"] longLongValue] > 0);
     assert([result[@"captured_unix_ms"] longLongValue] > 0);
@@ -116,6 +118,8 @@ fun main() {
    path.writeText(value.replace("\\n", "\n"))
    val result = KartPadReportContext.snapshot(context, "retro_rewind")
    check(result.getInt("schema") == 1)
+   check(result.getInt("diagnostic_contract") == 2)
+   check(result.getString("context_scope") == "export_time_not_selected_session")
    check(result.getString("runtime_profile") == "retro_rewind")
    check(result.getLong("monotonic_ms") == 1234L)
    check(!result.toString().contains(root.path))

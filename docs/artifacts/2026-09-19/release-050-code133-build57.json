@@ -1,0 +1,44 @@
+{
+  "source": "a6fca285efaa1a1c811d8f267abbda8295892a6d",
+  "artifacts": {
+    "KartPad-v0.5.0-code133-public-candidate-unsigned.aab": {
+      "bytes": 91793643,
+      "sha256": "ebbd192505ffe29f0457f1ac9ee3e67ae80c2a5988ead9d9b1c4308664983218"
+    },
+    "KartPad-v0.5.0-code133-public-candidate.apk": {
+      "bytes": 111769163,
+      "sha256": "3df353a99c497742dbd8797ee5721363fb29adda3e88712c499c68a0e236e752"
+    },
+    "KartPad-v0.5.0-build57-local-unsigned.ipa": {
+      "bytes": 41690316,
+      "sha256": "ce64782f00a3a4f23fb4104663295ca72ce208a5d7dfa7e56c9a628794db85fc"
+    },
+    "KartPad-v0.5.0-build57-local-macos-arm64.zip": {
+      "bytes": 41641956,
+      "sha256": "b52f9a5799a073df2d6b5054d86d76498ac03b68d762c5e09cc0d1b96881005f"
+    }
+  },
+  "androidBuildId": "04fa0760e3410c6250049a83f591f759eb789cce",
+  "iosDsymUuid": "A0424517-BFE3-30A2-92FF-3409084951D7",
+  "sourceFingerprint": {
+    "files": 6887,
+    "sha256": "0f4afb7f4f679d21c513ad1843c426030b6012968f2aa2463787c4932e43f272"
+  },
+  "runtimePins": {
+    "android": "75951f462a0a6caf19143f3ec7dd1618b4aca53d",
+    "ios": "6950d8fe63b64fd5b695192073c425887390ec52",
+    "macos": "c4566e50fd48672165a987062aa6a8bdbc7f05f9",
+    "tvos": "affa852212611b55209318b4068967fc726d93aa"
+  },
+  "validation": {
+    "builds": "Android NDK game AAB and public-signed APK, iPhoneOS app and Mac app pass builds/audits",
+    "mobileNativeIdentity": "APK/AAB native/assets/DEX match; retained full Android symbols match packaged BuildID; iOS app/dSYM UUID match",
+    "mobileSource": "Both embed the same clean compiled source revision and core fingerprint",
+    "appleArchives": "Every app entry read back exactly; Mac permissions and symlinks retained",
+    "normalGpuShutdown": "Fresh actual Aurora/Metal GPU probe passes independent pixels, forced splits and normal initialized shutdown",
+    "partialStartup": "Real pinned backend reproduces old null faults; corrected no-context and context-only cleanup pass; all four production-function sanitizer fixtures pass",
+    "ci": "All three checks passed on a6fca28",
+    "physicalAcceptance": "These new binaries are not yet installed; earlier code132/build56 evidence remains separate"
+  },
+  "acceptance": "Local candidates; no public app release. Physical Apple, touch/manual racing and affected-hardware acceptance remain pending."
+}

@@ -123,7 +123,14 @@ class KartPadProblemReportActivity : Activity() {
         label("Optional: prepare logs or share a report file")
         button("Save Diagnostic Log…") {
             val sessions = runCatching { KartPadDiagnosticExport.sessions(this) }.getOrDefault(emptyList())
-            if (sessions.isEmpty()) status.text = "No game session logs are available yet. You can report without logs."
+            if (sessions.isEmpty()) {
+                exportSession = null
+                launchDocument(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    type = "text/plain"
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    putExtra(Intent.EXTRA_TITLE, "KartPad-diagnostic-log.txt")
+                }, EXPORT_LOGS)
+            }
             else AlertDialog.Builder(this).setTitle("Which game session had the problem?")
                 .setItems(sessions.map { "${it.id}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
                     exportSession = sessions[index].id
@@ -370,10 +377,7 @@ class KartPadProblemReportActivity : Activity() {
                 status.text = "An export is already running. Wait for it to finish."
                 return
             }
-            val session = exportSession ?: run {
-                status.text = "Choose a game session again before exporting."
-                return
-            }
+            val session = exportSession
             // A saved file may be overwritten at the same URI; any prior review is now stale.
             reviewed.isChecked = false
             if (attachment == uri) attachment = null
@@ -417,7 +421,7 @@ class KartPadProblemReportActivity : Activity() {
     override fun onDestroy() { logCheckGeneration++; export?.onUpdate = null; super.onDestroy() }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
-    private class LocalExport(val context: android.content.Context, val destination: Uri, val session: String) {
+    private class LocalExport(val context: android.content.Context, val destination: Uri, val session: String?) {
         @Volatile var status = "Saving diagnostic log…"
         @Volatile var running = true
         @Volatile var succeeded = false

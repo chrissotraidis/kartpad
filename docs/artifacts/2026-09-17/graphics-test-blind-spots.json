@@ -1,0 +1,44 @@
+{
+  "58866e32bada1f83": {
+    "depthFunc": 3,
+    "cullMode": 2,
+    "blendMode": 0,
+    "blendSrc": 4,
+    "blendDst": 5,
+    "depthCompare": 1,
+    "depthUpdate": 1,
+    "alphaUpdate": 1,
+    "colorUpdate": 1,
+    "dynamic": {
+      "dynamic_texture_matrix_reads": 2,
+      "alpha_discard": true,
+      "texture_normalizations": 2
+    },
+    "literal": {
+      "dynamic_texture_matrix_reads": 2,
+      "alpha_discard": true,
+      "texture_normalizations": 2
+    }
+  },
+  "33c5ff18d5c180e0": {
+    "depthFunc": 3,
+    "cullMode": 2,
+    "blendMode": 0,
+    "blendSrc": 4,
+    "blendDst": 5,
+    "depthCompare": 1,
+    "depthUpdate": 1,
+    "alphaUpdate": 1,
+    "colorUpdate": 1,
+    "dynamic": {
+      "dynamic_texture_matrix_reads": 2,
+      "alpha_discard": false,
+      "texture_normalizations": 2
+    },
+    "literal": {
+      "dynamic_texture_matrix_reads": 2,
+      "alpha_discard": false,
+      "texture_normalizations": 2
+    }
+  }
+}

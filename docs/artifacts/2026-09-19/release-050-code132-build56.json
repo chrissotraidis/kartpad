@@ -1,0 +1,41 @@
+{
+  "source": "e7877946ebfe04782ecd058116c754e3baa3dd87",
+  "androidRuntime": "ba52d22a7589b0d2188468978d7b6c93d77645e8",
+  "androidBuildId": "2fa2dcd5e5bc72573076acc8191935cfdcead36e",
+  "iosDsymUuid": "13174071-7BCB-330E-A4B5-1D2FAAB71C66",
+  "artifacts": {
+    "KartPad-v0.5.0-code132-public-candidate-unsigned.aab": {
+      "sha256": "e9f5364fe9eaa6fa15cf382068e87839a3e8c839e2d9f9a2db5880ccb97944c8",
+      "bytes": 91794462
+    },
+    "KartPad-v0.5.0-code132-public-candidate.apk": {
+      "sha256": "2cd06fb340df8800bc8f1db396da7d8af89b5d1766ad982cc511b4002cac1dbe",
+      "bytes": 111769163
+    },
+    "KartPad-v0.5.0-build56-local-unsigned.ipa": {
+      "sha256": "4ad195fea44d6f54406612b2ff574c993ee0e567ddd8fdf5fedd7c96676a5878",
+      "bytes": 41690316
+    },
+    "KartPad-v0.5.0-build56-local-macos-arm64.zip": {
+      "sha256": "32e47bb3dc64f4a94b9fff188b8d25a7ba56dc92d2589e0141df5f689dfb9a5e",
+      "bytes": 41639554
+    }
+  },
+  "acceptance": "Local candidates. Package audits and exact archive/native readback pass; runtime validation in progress. Not a public app release.",
+  "validation": {
+    "localPythonTests": 286,
+    "ci": "Three required checks pass on e787794",
+    "controllerProbe": "Actual pinned SDL virtual controllers; clean runtime; ASan/UBSan with matching rebuilt Abseil; pass",
+    "androidNativePayloads": "APK/AAB identical; packaged DiscIO identical to code131 after stripping; BuildID matches retained full symbols",
+    "iosArchive": "Every app file read back byte-for-byte; matching dSYM UUID; private-path audit pass",
+    "macArchive": "22 entries read back byte-for-byte with permissions and symlinks; code signature and package audits pass",
+    "runtime": "Public-signed Android APK launches Original through normal chooser and reaches title/intro on isolated ARM64 API36 SwiftShader. Native settings and persisted toggle pass. No physical FPS or complete-race acceptance inferred.",
+    "physicalDevices": "No changes or input this cycle",
+    "androidAutoAccelerate": "Visible Controls -> Touch Control Settings toggle ON then OFF. Saved false survives process stop, same-APK replacement, and normal launcher restart; fresh hierarchy and screenshot confirm OFF.",
+    "emulatorSettingsEvidence": {
+      "defaultChecked": true,
+      "afterReplacementChecked": false,
+      "hierarchyFresh": true
+    }
+  }
+}

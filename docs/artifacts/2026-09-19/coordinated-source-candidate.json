@@ -1,0 +1,31 @@
+{
+  "bytes": 361480529,
+  "sha256": "cad39181c466ae710a4ec31ff93f5796344502e16a1b12dd971e039dbe1803e1",
+  "members": 85,
+  "source": "e7877946ebfe04782ecd058116c754e3baa3dd87",
+  "status": "candidate_not_release_approval",
+  "memberReadback": "All 85 members pass manifest coverage, byte length and SHA-256 checks; regular safe paths only",
+  "embeddedMobileSourceMatch": true,
+  "coreSourceFiles": 6874,
+  "dependencies": "Retained dependency sources from verified v0.4.24 archive; current Android Dawn patches and rebuild recipe reside in exact core snapshot",
+  "compiledArtifacts": {
+    "KartPad-v0.5.0-build56-local-macos-arm64.zip": {
+      "bytes": 41639554,
+      "sha256": "32e47bb3dc64f4a94b9fff188b8d25a7ba56dc92d2589e0141df5f689dfb9a5e"
+    },
+    "KartPad-v0.5.0-build56-local-unsigned.ipa": {
+      "bytes": 41690316,
+      "sha256": "4ad195fea44d6f54406612b2ff574c993ee0e567ddd8fdf5fedd7c96676a5878"
+    },
+    "KartPad-v0.5.0-code132-public-candidate-unsigned.aab": {
+      "bytes": 91794462,
+      "sha256": "e9f5364fe9eaa6fa15cf382068e87839a3e8c839e2d9f9a2db5880ccb97944c8"
+    },
+    "KartPad-v0.5.0-code132-public-candidate.apk": {
+      "bytes": 111769163,
+      "sha256": "2cd06fb340df8800bc8f1db396da7d8af89b5d1766ad982cc511b4002cac1dbe"
+    }
+  },
+  "packagingCommit": "ed570b5",
+  "publication": "not published"
+}

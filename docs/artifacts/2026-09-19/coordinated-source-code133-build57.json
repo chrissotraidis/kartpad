@@ -1,0 +1,11 @@
+{
+  "bytes": 361495458,
+  "sha256": "33c56a8d245c0dfd1eeba3391c05be6771a2b8fbbe6a7e12818ebdfe62d90bb5",
+  "members": 85,
+  "source": "a6fca285efaa1a1c811d8f267abbda8295892a6d",
+  "status": "candidate_not_release_approval",
+  "compilationSource": "a6fca285efaa1a1c811d8f267abbda8295892a6d",
+  "coreSourceFiles": 6887,
+  "independentReadback": "85 safe regular members; exact manifest hashes/lengths; recursive core recomputation matches both mobile embedded fingerprints",
+  "publication": "Not published"
+}

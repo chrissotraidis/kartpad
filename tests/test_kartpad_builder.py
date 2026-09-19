@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import plistlib
 import stat
@@ -16,6 +17,8 @@ from kartpad_builder.pipeline import build, cache_key, dependency_cache_key
 from kartpad_builder.profiles import Profile, ProfileError, load_profiles, select_profile, validate_profile
 from kartpad_builder.release_header import render_retro_rewind_header
 from kartpad_builder.retro_rewind import (
+    _download,
+    BuildError,
     extract_archive,
     validate_pack,
     validate_rwfc_payload,
@@ -232,6 +235,41 @@ class RetroRewindTests(unittest.TestCase):
             with self.assertRaisesRegex(Exception, "unsafe path"):
                 extract_archive(archive, root / "RetroRewind6", config)
             self.assertFalse((root.parent / "escape").exists())
+
+    def test_pinned_download_preserves_cache_and_cleans_partial_on_rejection(self) -> None:
+        url = "http://example.invalid/payload"
+        accepted = b"new payload"
+        for case, body, returned_url, message in (
+            ("oversized", accepted + b"!", url, "larger than expected"),
+            ("short", accepted[:-1], url, "identity does not match"),
+            ("wrong hash", b"x" * len(accepted), url, "identity does not match"),
+            ("redirect", accepted, url + "/redirect", "redirected"),
+        ):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
+                output = Path(temp) / "payload.bin"
+                output.write_bytes(b"previous verified payload")
+                response = io.BytesIO(body)
+                response.geturl = lambda: returned_url
+                with patch("urllib.request.urlopen", return_value=response):
+                    with self.assertRaisesRegex(BuildError, "Retro-WFC payload.*" + message):
+                        _download(url, output, len(accepted), hashlib.sha256(accepted).hexdigest(),
+                                  label="Retro-WFC payload")
+                self.assertEqual(output.read_bytes(), b"previous verified payload")
+                self.assertEqual(list(Path(temp).iterdir()), [output])
+
+    def test_pinned_download_replaces_cache_only_after_identity_matches(self) -> None:
+        url = "http://example.invalid/payload"
+        accepted = b"new payload"
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "payload.bin"
+            output.write_bytes(b"previous verified payload")
+            response = io.BytesIO(accepted)
+            response.geturl = lambda: url
+            with patch("urllib.request.urlopen", return_value=response):
+                _download(url, output, len(accepted), hashlib.sha256(accepted).hexdigest(),
+                          label="Retro-WFC payload")
+            self.assertEqual(output.read_bytes(), accepted)
+            self.assertEqual(list(Path(temp).iterdir()), [output])
 
     def test_current_production_payload_signature_and_tamper_detection(self) -> None:
         payload = REPO / "private/builder/retro-rewind-downloads/payload.RMCPD00.bin"

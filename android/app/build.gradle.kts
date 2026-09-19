@@ -12,7 +12,14 @@ val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orN
 val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
+val kartpadDiagnosticRelease = providers.gradleProperty("kartpadDiagnosticRelease")
+    .map { it.toBooleanStrict() }
+    .getOrElse(false)
 val kartpadProfileable = providers.gradleProperty("kartpadProfileable")
+    .map { it.toBooleanStrict() }
+    .getOrElse(false)
+// Private RenderDoc handoff: opt in without switching to an unoptimized Debug runtime.
+val kartpadFrameCapture = providers.gradleProperty("kartpadFrameCapture")
     .map { it.toBooleanStrict() }
     .getOrElse(false)
 val kartpadBuildAssets = layout.buildDirectory.dir("generated/assets/kartpadBuild")
@@ -50,6 +57,9 @@ val kartpadVersionName = providers.gradleProperty("kartpadVersionName")
         value
     }
     .getOrElse("0.4.24-android.1")
+require(!kartpadFrameCapture || kartpadVersionName.endsWith("-capture")) {
+    "Frame capture builds must have a version name ending in -capture"
+}
 
 android {
     namespace = "dev.kartpad.android"
@@ -64,6 +74,7 @@ android {
         versionCode = kartpadVersionCode
         versionName = kartpadVersionName
         manifestPlaceholders["kartpadProfileable"] = kartpadProfileable.toString()
+        manifestPlaceholders["kartpadFrameCapture"] = kartpadFrameCapture.toString()
         buildConfigField("boolean", "GAME_RUNTIME", (gameRuntimeSource != null).toString())
         buildConfigField("boolean", "DISC_IMAGE_IMPORT", (discIoJniRoot != null).toString())
 
@@ -99,6 +110,22 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.31.6"
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isDebuggable = kartpadFrameCapture
+            if (kartpadFrameCapture) {
+                externalNativeBuild.cmake.arguments += "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+            }
+            // Full DWARF remains available for private diagnostics and in the
+            // unstripped native build. Public bundles carry the symbol table.
+            ndk { debugSymbolLevel = if (kartpadDiagnosticRelease) "FULL" else "SYMBOL_TABLE" }
+            // Only the private owner-test candidate uses the existing local debug signer.
+            if (kartpadDiagnosticRelease) {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 

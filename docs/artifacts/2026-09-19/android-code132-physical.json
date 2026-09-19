@@ -1,0 +1,34 @@
+{
+  "installedBeforeCode": 131,
+  "candidateCode": 132,
+  "candidateSHA256": "34755ee0fced797a0e96318712f81daa8b9dc1543f43e7c30f2524962a8333f6",
+  "certificateSHA256": "61dfb51411efe50b2e7fb8d280fcfbba766792c275d1024013940760caa3afaf",
+  "publicCandidateSHA256": "2cd06fb340df8800bc8f1db396da7d8af89b5d1766ad982cc511b4002cac1dbe",
+  "publicPayloadEntriesIdentical": 131,
+  "date": "2026-09-20",
+  "device": "Pixel 9 Pro XL",
+  "system": "Android 17",
+  "installedReadbackSHA256": "34755ee0fced797a0e96318712f81daa8b9dc1543f43e7c30f2524962a8333f6",
+  "update": "In-place replacement; no uninstall or data clear; prior runtime process absent before installation",
+  "preservation": "Original and Retro Rewind 6.12.8 both remain ready in the chooser and boot through their normal launch actions. Full private save readback unavailable for this non-debuggable app.",
+  "runtime": {
+    "original": {
+      "observed": "Rendered title/attract screens; no complete manual race or input acceptance",
+      "maxRecordedPresentations": 9000,
+      "cleanExit": true,
+      "fatalIndicatorsInRetainedProcessLog": 0,
+      "backend": "Vulkan",
+      "adapter": "Mali-G715",
+      "resolutionScale": 2.0
+    },
+    "retro": {
+      "observed": "Rendered title/attract screens; no complete manual race or input acceptance",
+      "maxRecordedPresentations": 14401,
+      "cleanExit": true,
+      "fatalIndicatorsInRetainedProcessLog": 0,
+      "resolutionScale": 2.0
+    }
+  },
+  "settingsAcceptance": "Physical toggle and manual race unverified this cycle: mirror touch input did not activate controls reliably; native launcher keyboard and Back actions worked. The existing code132 emulator toggle/persistence evidence remains separate.",
+  "publication": "Candidate only; no public app release"
+}

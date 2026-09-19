@@ -5,6 +5,7 @@ class ApplicationExitInfo(
     val pss: Long = 0, val rss: Long = 0,
     val timestamp: Long = 1234567890, val status: Int = 0, val importance: Int = 100, val trace: (() -> java.io.InputStream?)? = null
 ) {
+    val pid: Int = 42
     val description: String get() = error("Private description must not be read")
     val traceInputStream: java.io.InputStream? get() = trace?.invoke() ?: if (trace == null) error("Private trace must not be read") else null
     companion object {

@@ -444,7 +444,15 @@ open class KartPadLaunchActivity : Activity() {
                     .setNegativeButton("Cancel", null)
                     .setPositiveButton("Save Locally…") { _, _ ->
                         val sessions = runCatching { KartPadDiagnosticExport.sessions(this@KartPadLaunchActivity) }.getOrDefault(emptyList())
-                        if (sessions.isEmpty()) showStatus("No game session logs are available yet.")
+                        if (sessions.isEmpty()) {
+                            // Early startup failures still have OS exit history, even without console.log.
+                            exportSession = null
+                            startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "application/zip"
+                                putExtra(Intent.EXTRA_TITLE, "KartPad-private-diagnostics.zip")
+                            }, REQUEST_DIAGNOSTICS)
+                        }
                         else AlertDialog.Builder(this@KartPadLaunchActivity).setTitle("Choose the game session")
                             .setItems(sessions.map { "${it.id}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
                                 exportSession = sessions[index].id

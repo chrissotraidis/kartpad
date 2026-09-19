@@ -14,10 +14,10 @@ final class RetroRewindRelease {
     static final String XML_PATH = "xml/RetroRewind6.xml";
     static final String XML_SHA256 = "faf88234f81e16a85403d2a86d25e2ef4b261aedb553a312b532e60a11b28200";
     static final String PAYLOAD_URL = "http://nas.play.rwfc.net/payload?g=RMCPD00";
-    static final String PAYLOAD_SHA256 = "fd8f26d6af26f1a0cfaecd1e472fe744a25d75f5136910533b7c75e3eca2f1d2";
+    static final String PAYLOAD_SHA256 = "099097a0f85a97c348123d91438438b24b112362f1fb23c94df6a343c5366471";
     static final long ARCHIVE_BYTES = 1859035109L;
     static final long MAXIMUM_EXPANDED_BYTES = 2200000000L;
     static final long CODE_PUL_BYTES = 1704868L;
     static final long XML_BYTES = 21047L;
-    static final long PAYLOAD_BYTES = 28968L;
+    static final long PAYLOAD_BYTES = 28992L;
 }

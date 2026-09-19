@@ -15,6 +15,10 @@ on:
       - 'scripts/prepare-patched-translator.sh'
       - 'scripts/write-build-provenance.py'
       - 'scripts/package-release-source.py'
+      - 'scripts/package-coordinated-source.py'
+      - 'tests/test_coordinated_source.py'
+      - 'scripts/package-coordinated-assets.py'
+      - 'tests/test_coordinated_assets.py'
       - 'scripts/restore-source-git.py'
       - 'dependencies.lock.json'
       - 'tests/runtime_sources.py'
@@ -42,6 +46,10 @@ on:
       - 'scripts/prepare-patched-translator.sh'
       - 'scripts/write-build-provenance.py'
       - 'scripts/package-release-source.py'
+      - 'scripts/package-coordinated-source.py'
+      - 'tests/test_coordinated_source.py'
+      - 'scripts/package-coordinated-assets.py'
+      - 'tests/test_coordinated_assets.py'
       - 'scripts/restore-source-git.py'
       - 'dependencies.lock.json'
       - 'tests/runtime_sources.py'
@@ -80,3 +88,4 @@ jobs:
           python3 -B -m unittest discover -s tests -p 'test_maintained_runtime_staging.py' -v
           python3 -B -m unittest discover -s tests -p 'test_maintained_translator_staging.py' -v
           python3 -B -m unittest discover -s tests -p 'test_build_provenance.py' -v
+          python3 -B -m unittest discover -s tests -p 'test_coordinated_*.py' -v
