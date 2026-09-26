@@ -37,24 +37,25 @@ size_t calc_offset_rgba8(uint32_t x, uint32_t y, uint32_t width) {
 ByteBuffer downscale(const uint8_t* src, uint32_t srcWidth, uint32_t srcHeight, uint32_t dstWidth, uint32_t dstHeight) {
   ByteBuffer dst{calc_size_rgba8(dstWidth, dstHeight)};
   auto* dstPixels = dst.data();
+  const size_t srcStride = static_cast<size_t>(srcWidth) * sizeof(RGBA8);
+  const size_t dstStride = static_cast<size_t>(dstWidth) * sizeof(RGBA8);
   for (uint32_t y = 0; y < dstHeight; ++y) {
     const uint32_t srcY0 = std::min(y * 2, srcHeight - 1);
     const uint32_t srcY1 = std::min(srcY0 + 1, srcHeight - 1);
+    const uint8_t* row0 = src + srcY0 * srcStride;
+    const uint8_t* row1 = src + srcY1 * srcStride;
+    uint8_t* dstRow = dstPixels + y * dstStride;
     for (uint32_t x = 0; x < dstWidth; ++x) {
-      const uint32_t srcX0 = std::min(x * 2, srcWidth - 1);
-      const uint32_t srcX1 = std::min(srcX0 + 1, srcWidth - 1);
-      const size_t sampleOffsets[4] = {
-          calc_offset_rgba8(srcX0, srcY0, srcWidth),
-          calc_offset_rgba8(srcX1, srcY0, srcWidth),
-          calc_offset_rgba8(srcX0, srcY1, srcWidth),
-          calc_offset_rgba8(srcX1, srcY1, srcWidth),
-      };
-      uint8_t* out = dstPixels + calc_offset_rgba8(x, y, dstWidth);
+      const uint32_t x0 = std::min(x * 2, srcWidth - 1);
+      const uint32_t x1 = std::min(x0 + 1, srcWidth - 1);
+      const size_t srcX0 = static_cast<size_t>(x0) * 4;
+      const size_t srcX1 = static_cast<size_t>(x1) * 4;
+      uint8_t* out = dstRow + x * 4;
       for (size_t channel = 0; channel < 4; ++channel) {
-        uint32_t sum = 0;
-        for (const size_t offset : sampleOffsets) {
-          sum += src[offset + channel];
-        }
+        const uint32_t sum = static_cast<uint32_t>(row0[srcX0 + channel]) +
+                             static_cast<uint32_t>(row0[srcX1 + channel]) +
+                             static_cast<uint32_t>(row1[srcX0 + channel]) +
+                             static_cast<uint32_t>(row1[srcX1 + channel]);
         out[channel] = static_cast<uint8_t>((sum + 2) / 4);
       }
     }

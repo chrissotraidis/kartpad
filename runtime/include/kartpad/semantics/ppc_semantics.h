@@ -197,15 +197,7 @@ inline double RoundToIntegerMode(double value, int rounding_mode) noexcept {
   case FE_DOWNWARD:
     return std::floor(value);
   default:
-    if (!std::isfinite(value) || std::abs(value) >= 0x1p52)
-      return value;
-    const double lower = std::floor(value);
-    const double fraction = value - lower;
-    if (fraction < 0.5)
-      return lower;
-    if (fraction > 0.5)
-      return lower + 1.0;
-    return std::fmod(std::abs(lower), 2.0) == 0.0 ? lower : lower + 1.0;
+    return std::rint(value);
   }
 }
 

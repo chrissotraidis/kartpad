@@ -164,23 +164,33 @@ std::uint64_t CheckedGuestMemory::LoadUnsigned(const std::uint32_t address,
     return read(address, width);
   }
 
+  const Mapping* mapping = FindMapping(address);
+  if (mapping == nullptr) {
+    throw MakeFault(FaultKind::Unmapped, address, width,
+                    FaultMessage("load", address, width, "unmapped byte"));
+  }
+  const std::uint64_t map_end = static_cast<std::uint64_t>(mapping->guest_base) + mapping->size;
+  if (__builtin_expect(static_cast<std::uint64_t>(address) + width > map_end, 0)) {
+    for (std::size_t index = 1; index < width; ++index) {
+      const std::uint32_t current = address + static_cast<std::uint32_t>(index);
+      const Mapping* next = FindMapping(current);
+      if (next == nullptr) {
+        throw MakeFault(FaultKind::Unmapped, address, width,
+                        FaultMessage("load", address, width, "unmapped byte"));
+      }
+      if (next != mapping) {
+        throw MakeFault(FaultKind::CrossRegion, address, width,
+                        FaultMessage("load", address, width, "crosses a mapping boundary"));
+      }
+    }
+  }
+
+  const auto& backing = backings_.at(mapping->backing);
+  const std::size_t base_offset = static_cast<std::size_t>(mapping->backing_offset + (address - mapping->guest_base));
   std::uint64_t value = 0;
-  const Mapping* first = nullptr;
   for (std::size_t index = 0; index < width; ++index) {
-    const std::uint32_t current = address + static_cast<std::uint32_t>(index);
-    const Mapping* mapping = FindMapping(current);
-    if (mapping == nullptr) {
-      throw MakeFault(FaultKind::Unmapped, address, width,
-                      FaultMessage("load", address, width, "unmapped byte"));
-    }
-    if (first != nullptr && mapping != first) {
-      throw MakeFault(FaultKind::CrossRegion, address, width,
-                      FaultMessage("load", address, width, "crosses a mapping boundary"));
-    }
-    first = mapping;
-    const std::uint64_t offset = mapping->backing_offset + current - mapping->guest_base;
     value = (value << 8U) |
-            std::to_integer<std::uint8_t>(backings_.at(mapping->backing).at(offset));
+            std::to_integer<std::uint8_t>(backing.at(base_offset + index));
   }
   return value;
 }
@@ -214,27 +224,32 @@ void CheckedGuestMemory::Store(const std::uint32_t address, const std::size_t wi
     return;
   }
 
-  const Mapping* first = nullptr;
-  for (std::size_t index = 0; index < width; ++index) {
-    const std::uint32_t current = address + static_cast<std::uint32_t>(index);
-    const Mapping* mapping = FindMapping(current);
-    if (mapping == nullptr) {
-      throw MakeFault(FaultKind::Unmapped, address, width,
-                      FaultMessage("store", address, width, "unmapped byte"));
+  const Mapping* mapping = FindMapping(address);
+  if (mapping == nullptr) {
+    throw MakeFault(FaultKind::Unmapped, address, width,
+                    FaultMessage("store", address, width, "unmapped byte"));
+  }
+  const std::uint64_t map_end = static_cast<std::uint64_t>(mapping->guest_base) + mapping->size;
+  if (__builtin_expect(static_cast<std::uint64_t>(address) + width > map_end, 0)) {
+    for (std::size_t index = 1; index < width; ++index) {
+      const std::uint32_t current = address + static_cast<std::uint32_t>(index);
+      const Mapping* next = FindMapping(current);
+      if (next == nullptr) {
+        throw MakeFault(FaultKind::Unmapped, address, width,
+                        FaultMessage("store", address, width, "unmapped byte"));
+      }
+      if (next != mapping) {
+        throw MakeFault(FaultKind::CrossRegion, address, width,
+                        FaultMessage("store", address, width, "crosses a mapping boundary"));
+      }
     }
-    if (first != nullptr && mapping != first) {
-      throw MakeFault(FaultKind::CrossRegion, address, width,
-                      FaultMessage("store", address, width, "crosses a mapping boundary"));
-    }
-    first = mapping;
   }
 
+  auto& backing = backings_.at(mapping->backing);
+  const std::size_t base_offset = static_cast<std::size_t>(mapping->backing_offset + (address - mapping->guest_base));
   for (std::size_t index = 0; index < width; ++index) {
-    const std::uint32_t current = address + static_cast<std::uint32_t>(index);
-    const Mapping* mapping = FindMapping(current);
-    const std::uint64_t offset = mapping->backing_offset + current - mapping->guest_base;
     const unsigned shift = static_cast<unsigned>((width - 1U - index) * 8U);
-    backings_.at(mapping->backing).at(offset) =
+    backing.at(base_offset + index) =
         static_cast<std::byte>((value >> shift) & 0xFFU);
   }
 }

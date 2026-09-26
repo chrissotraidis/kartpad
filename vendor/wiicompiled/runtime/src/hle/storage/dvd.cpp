@@ -1,4 +1,4 @@
-﻿#include "hle_stubs.h"
+#include "hle_stubs.h"
 #include "isa/big_endian.h"
 #include "hle/dvd_contract.h"
 #include "hle/runtime_parse_helpers.h"
@@ -24,10 +24,14 @@ extern "C" void GxNotifyGuestRamDmaWrite(uint32_t addr, uint32_t size);
 #include <string>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <mutex>
+#include <atomic>
+#include <thread>
+#include <memory>
 #include <sstream>
 #include <utility>
 
@@ -103,10 +107,24 @@ extern "C" void DVDInit_8015EA1C();
 extern "C" uint32_t g_dvdFstReservedBase;
 extern "C" uint32_t g_dvdFstReservedSize;
 
-// Byte-wise copy into guest RAM plus the DMA notification the GX caches need.
+// Fast copy into guest RAM (vectorized memcpy when contiguous, byte fallback otherwise) plus GX DMA notification.
 static void CopyToGuestAsDma(uint32_t dest, const uint8_t* data, size_t size) {
-    for (size_t i = 0; i < size; ++i) {
-        Memory::Write8(dest + static_cast<uint32_t>(i), data[i]);
+    if (size == 0) {
+        return;
+    }
+    bool copied = false;
+    try {
+        if (uint8_t* hostPtr = Memory::GetPointer(dest, size)) {
+            std::memcpy(hostPtr, data, size);
+            copied = true;
+        }
+    } catch (const Memory::AccessViolation&) {
+        copied = false;
+    }
+    if (!copied) {
+        for (size_t i = 0; i < size; ++i) {
+            Memory::Write8(dest + static_cast<uint32_t>(i), data[i]);
+        }
     }
     GxNotifyGuestRamDmaWrite(dest, static_cast<uint32_t>(size));
 }
@@ -114,6 +132,138 @@ static void CopyToGuestAsDma(uint32_t dest, const uint8_t* data, size_t size) {
 // Host path strings only ever leave this module as UTF-8 display text.
 static std::string HostPathText(const fs::path& path) {
     return RuntimeConfigFile::PathToUtf8(path);
+}
+
+// ============================================================================
+// In-Memory Disc Pre-caching & Fast Streaming
+// ============================================================================
+struct CachedDiscFile {
+    std::vector<uint8_t> data;
+};
+
+static std::mutex g_discCacheMutex;
+static std::unordered_map<std::string, std::shared_ptr<CachedDiscFile>> g_discCache;
+static std::atomic<size_t> g_discCacheBytes{0};
+static constexpr size_t kMaxDiscCacheBytes = 512 * 1024 * 1024; // 512 MiB maximum RAM cache
+static constexpr size_t kMaxSingleCachedFileSize = 32 * 1024 * 1024; // 32 MiB max per file
+
+static std::shared_ptr<CachedDiscFile> GetCachedDiscFile(const fs::path& hostPath) {
+    std::lock_guard<std::mutex> lock(g_discCacheMutex);
+    auto it = g_discCache.find(hostPath.string());
+    if (it != g_discCache.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+static std::shared_ptr<CachedDiscFile> LoadAndCacheDiscFile(const fs::path& hostPath) {
+    {
+        std::lock_guard<std::mutex> lock(g_discCacheMutex);
+        auto it = g_discCache.find(hostPath.string());
+        if (it != g_discCache.end()) {
+            return it->second;
+        }
+    }
+
+    std::error_code ec;
+    auto fileSize = fs::file_size(hostPath, ec);
+    if (ec || fileSize == 0 || fileSize > kMaxSingleCachedFileSize) {
+        return nullptr;
+    }
+
+    std::vector<uint8_t> buffer;
+    DvdReadContract::HostReadFailure failure;
+    if (!DvdReadContract::ReadExact(hostPath, 0, static_cast<uint32_t>(fileSize), buffer, failure)) {
+        return nullptr;
+    }
+
+    if (g_discCacheBytes.load(std::memory_order_relaxed) + buffer.size() > kMaxDiscCacheBytes) {
+        return nullptr;
+    }
+
+    auto cached = std::make_shared<CachedDiscFile>();
+    cached->data = std::move(buffer);
+
+    {
+        std::lock_guard<std::mutex> lock(g_discCacheMutex);
+        auto [it, inserted] = g_discCache.try_emplace(hostPath.string(), cached);
+        if (inserted) {
+            g_discCacheBytes.fetch_add(cached->data.size(), std::memory_order_relaxed);
+            return cached;
+        }
+        return it->second;
+    }
+}
+
+static bool ReadDvdFileExact(const fs::path& hostPath, uint64_t offset, uint32_t length,
+                            std::vector<uint8_t>& destination,
+                            DvdReadContract::HostReadFailure& failure) {
+    failure = DvdReadContract::HostReadFailure::None;
+
+    // Fast path: In-memory cache hit
+    if (auto cached = GetCachedDiscFile(hostPath)) {
+        if (offset > cached->data.size() || static_cast<uint64_t>(length) > cached->data.size() - offset) {
+            failure = DvdReadContract::HostReadFailure::BadOffset;
+            return false;
+        }
+        destination.assign(cached->data.begin() + offset, cached->data.begin() + offset + length);
+        return true;
+    }
+
+    // Auto-cache qualifying files on first read
+    std::error_code ec;
+    auto totalSize = fs::file_size(hostPath, ec);
+    if (!ec && totalSize > 0 && totalSize <= kMaxSingleCachedFileSize) {
+        if (auto cached = LoadAndCacheDiscFile(hostPath)) {
+            if (offset > cached->data.size() || static_cast<uint64_t>(length) > cached->data.size() - offset) {
+                failure = DvdReadContract::HostReadFailure::BadOffset;
+                return false;
+            }
+            destination.assign(cached->data.begin() + offset, cached->data.begin() + offset + length);
+            return true;
+        }
+    }
+
+    // Direct disk read fallback for large files
+    return DvdReadContract::ReadExact(hostPath, offset, length, destination, failure);
+}
+
+static void StartDiscPrecacheWorker() {
+    static std::once_flag precacheOnce;
+    std::call_once(precacheOnce, []() {
+        std::thread worker([]() {
+            std::vector<fs::path> precachePaths;
+            for (const auto& entry : g_fileEntries) {
+                if (entry.isDirectory || entry.size == 0 || entry.size > kMaxSingleCachedFileSize) {
+                    continue;
+                }
+                const std::string& p = entry.dvdPath;
+                if (p.find("/Race/Course/") != std::string::npos ||
+                    p.find("/Race/Common") != std::string::npos ||
+                    p.find("/Race/Kart/") != std::string::npos ||
+                    p.find("/Scene/") != std::string::npos ||
+                    p.find("/Boot/") != std::string::npos) {
+                    precachePaths.push_back(entry.hostPath);
+                }
+            }
+
+            size_t precachedCount = 0;
+            size_t precachedBytes = 0;
+            for (const auto& hostPath : precachePaths) {
+                if (auto cached = LoadAndCacheDiscFile(hostPath)) {
+                    ++precachedCount;
+                    precachedBytes += cached->data.size();
+                }
+            }
+            if (precachedCount > 0) {
+                RT_LOG(RT_TAG_DVD) << "In-memory disc pre-caching complete: " << precachedCount
+                                   << " course & asset archives cached ("
+                                   << (precachedBytes / (1024 * 1024)) << " MiB in RAM)" << std::endl;
+            }
+        });
+        worker.detach();
+    });
+}
 }
 
 static bool IsDvdDataRoot(const fs::path& path) {
@@ -847,6 +997,7 @@ extern "C" void DVDInit_8015EA1C()
 
     g_dvdInitialized = true;
     initializing = false;
+    StartDiscPrecacheWorker();
 }
 PPC_NATIVE_OVERRIDE_VOID(8015EA1C, DVDInit_8015EA1C, (), ());
 
@@ -904,7 +1055,7 @@ extern "C" int32_t DVDReadPrio_8015E834(uint32_t fileInfoPtr, uint32_t bufferPtr
 
     std::vector<uint8_t> tempBuf;
     DvdReadContract::HostReadFailure failure;
-    if (!DvdReadContract::ReadExact(entry.hostPath, uOffset, uLength, tempBuf, failure)) {
+    if (!ReadDvdFileExact(entry.hostPath, uOffset, uLength, tempBuf, failure)) {
         return DvdReadFatal(fileInfoPtr, HostPathText(entry.hostPath), offset, uLength,
                             DvdReadContract::Describe(failure));
     }
@@ -971,11 +1122,11 @@ extern "C" int32_t DVD__ReadAbsAsyncPrio_HLE_801628cc(uint32_t cmdBlockPtr,
         } else {
             std::vector<uint8_t> tempBuf;
             DvdReadContract::HostReadFailure failure;
-            if (!DvdReadContract::ReadExact(readInfo.entry->hostPath,
-                                            readInfo.fileOffset,
-                                            readInfo.readLength,
-                                            tempBuf,
-                                            failure)) {
+            if (!ReadDvdFileExact(readInfo.entry->hostPath,
+                                  readInfo.fileOffset,
+                                  readInfo.readLength,
+                                  tempBuf,
+                                  failure)) {
                 bytesRead = DvdReadFatal(cmdBlockPtr, HostPathText(readInfo.entry->hostPath),
                                          readInfo.fileOffset, readInfo.readLength,
                                          DvdReadContract::Describe(failure));
@@ -1087,11 +1238,11 @@ extern "C" int32_t DVDLowRead_80166330(uint32_t buffer, uint32_t length, uint32_
 
     std::vector<uint8_t> tempBuf;
     DvdReadContract::HostReadFailure failure;
-    if (!DvdReadContract::ReadExact(readInfo.entry->hostPath,
-                                    readInfo.fileOffset,
-                                    readInfo.readLength,
-                                    tempBuf,
-                                    failure)) {
+    if (!ReadDvdFileExact(readInfo.entry->hostPath,
+                          readInfo.fileOffset,
+                          readInfo.readLength,
+                          tempBuf,
+                          failure)) {
         ReportDvdReadError(HostPathText(readInfo.entry->hostPath), readInfo.fileOffset,
                            readInfo.readLength, DvdReadContract::Describe(failure));
         return finish(false);
