@@ -283,3 +283,19 @@ which points to GPU or presentation on the iPad, which renders at 4x.
 Android code 228 (`0.5.1-review.9`) and iPad build 84 were both installed in place with
 data preserved. Neither has been played.
 
+
+## Owner session, iPad build 84 (Retro Rewind, `base_1790401012_pid5953`)
+
+Chris's assessment: the iPad passes. Gameplay is much better and the earlier race
+stutter is resolved. Cup select still drops briefly, which he accepts as non-blocking.
+Logs: prewarm of 506 pipelines in 0.1 s (warm-up correctly skipped), and menu scene
+replay queued 28 recipes (the first nonzero replay). Races held 60 FPS apart from two
+waits (343 and 223 ms) at the start of a Retro course never raced before, which falls in
+the strict first two seconds. There were 8 consecutive 50 ms presents on cup select, and
+no presentation job took 30 ms or more. The cup-select cadence therefore comes from
+frame production, not presentation; the cause is still unknown and it does not affect
+gameplay. Memory peaked at 1.52 GB.
+
+The Pixel (code 227) passed offline, and Retro online joined. Code 228's deferred
+receive has not been exercised online.
+
