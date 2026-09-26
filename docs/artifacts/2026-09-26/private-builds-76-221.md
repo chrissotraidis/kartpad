@@ -208,3 +208,21 @@ Android code 225 (`0.5.1-review.6`, runtime `3f37a7c`, debug signer):
 - Installed in place on the Pixel: first-install date unchanged, both games "Ready to
   play". Not yet played.
 
+
+## Pass: expanded pipeline seed (iPad build 81, Android code 226)
+
+No new play sessions or GitHub comments since build 80 and code 225.
+
+- The bundled `initial_pipeline_cache.db` (shared by iOS and Android, merged into
+  each device database on every launch) went from 1199 to 1332 recipes. The 133 added
+  recipes come from the iPad's recorded database: Star Cup and other courses first raced
+  today. All were validated by hash, config version and size, with none rejected. Seed
+  metadata version 2 passes the integrity check. Existing players also receive the new
+  recipes on their next launch.
+- iOS: the warm-up marker now includes the seed version, so a new seed triggers one
+  more warm-up on the same OS (runtime `056a7f5`).
+- Runtimes: iOS `056a7f5` (seed commit `08a5d72`), Android `102c7a7`.
+- iPad build 81 was installed in place with identical user data. Android code 226
+  (`0.5.1-review.7`) was installed in place with the first-install date unchanged. Both
+  packages contain the 1332-row seed. Neither has been played.
+
