@@ -131,3 +131,21 @@ audits and contain the new string. Both were installed in place: the iPad's user
 manifests are identical, and the Pixel's first-install date is unchanged. Build 78 was never
 launched, so it has no play data. Not yet played or seen on screen.
 
+
+## Issue triage (26 September, afternoon)
+
+- #321 (ROG Phone 7S): the reporter's log matches the earlier symbolized
+  `vkCmdEndDebugUtilsLabelEXT` crash from the overlay's `PopDebugGroup`. The code 219+
+  change removes debug labels from release command buffers. We replied that the fix
+  ships in the next release.
+- #131 and #323: a crash when leaving the last race of a cup for the trophy ceremony,
+  seen on Android in both Original and Retro Rewind. Upstream patchzyy/Wiicompiled#106
+  closed a matching Retro Rewind panic ("ARCInitHandle: bad archive format") as a mod bug.
+  #131 reports Original too, so this is kept as a KartPad bug. It has no logs and needs a
+  reproduction; the next step is a scripted Grand Prix finish on the Mac or an emulator.
+- #195 (S25 Ultra): 60 FPS in Time Trials and about 41 in VS points to AI and item
+  simulation cost (CPU). Acknowledged.
+- #216: Retro Rewind now loads on the reporter's device. Acknowledged.
+- #119 (status bar): already handled by `hideGameSystemBars()` on focus. It was not
+  re-verified because the Pixel was in use.
+
