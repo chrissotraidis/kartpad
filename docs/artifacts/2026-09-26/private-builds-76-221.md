@@ -149,3 +149,34 @@ launched, so it has no play data. Not yet played or seen on screen.
 - #119 (status bar): already handled by `hideGameSystemBars()` on focus. It was not
   re-verified because the Pixel was in use.
 
+
+## iPad build 79 session and build 80 (26 September, about 12:00 JST)
+
+Chris played build 79 (Star Cup). He saw the cup-select screen locked at 20 FPS and
+race dips to about 44-55 FPS.
+
+Session `base_1790389436_pid5314`:
+- Full prewarm compiled 1269 pipelines in 18.3 s. Every course replay then reported all
+  recorded recipes already built (for example "214 recorded, 214 built").
+- Race waits (273, 227 and 100 ms) were on recipes absent from both the build 72 and
+  build 77 database snapshots. These were first-ever uses, likely new Star Cup content,
+  so launch prewarm cannot cover them. The earlier build 77 class of waits (known
+  recipes) did not recur.
+- Cup select: about 1200 presents at exactly 50 ms (20 FPS) with no pipeline activity.
+  This happened only in build 79. No other session, from build 60 through 77, has a
+  20 FPS window. Physical footprint reached 2.2-2.45 GB there and settled at about
+  1.52 GB, against about 0.84 GB for build 77: roughly 0.9 MB per retained pipeline. The
+  inference is that memory pressure from retaining about 1300 pipelines caused the
+  cup-select drop. The stranded-sleeper reconciler (50 ms sampling) was checked and
+  logged no resumes.
+
+Build 80 (iOS runtime `ea325f2`):
+- Retains only the 512 earliest-use prewarmed pipelines, the same bound as build 77.
+- Once per OS build (marker `pipeline_warm_os.txt` in the pipeline cache directory,
+  keyed to the kern.osversion value and the GX config version), compiles the remaining
+  recorded recipes to refill the system shader cache, then releases them. A recipe the
+  game requests or waits on during warm-up is always retained, including one already
+  held by a worker.
+- The prewarm log reports whether the warm-up pass ran or was skipped.
+- Installed in place with identical user data manifests. Not yet played.
+
