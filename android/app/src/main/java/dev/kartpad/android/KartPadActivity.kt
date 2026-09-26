@@ -971,6 +971,15 @@ class KartPadActivity : SDLActivity() {
             "Connected: ${controllers.joinToString()}. Buttons, D-pad directions, and trigger presses can be remapped. Sticks and Start stay direct."
         }))
         lateinit var dialog: AlertDialog
+        content.addView(Switch(this).apply {
+            text = "Controller auto-accelerate (hold A for one second to lock; press A to release)"
+            isChecked = KartPadTouchSettings.controllerAutoAccelerate(this@KartPadActivity)
+            contentDescription = "Controller auto-accelerate: hold A for one second to lock; press A again to release"
+            setOnCheckedChangeListener { _, checked ->
+                KartPadTouchSettings.setControllerAutoAccelerate(this@KartPadActivity, checked)
+                nativeApplyControllerAutoAccelerate(checked)
+            }
+        })
         KartPadControllerMapping.gameButtonNames.forEachIndexed { game, gameName ->
             content.addView(Button(this).apply {
                 val physical = KartPadControllerMapping.physicalButtonNames[mapping[game]]
@@ -1838,16 +1847,6 @@ class KartPadActivity : SDLActivity() {
                 kartPadOverlay.reloadPresentationSettings()
             }
         }
-        val controllerAutoAccelerate = Switch(this).apply {
-            text = "Controller auto-accelerate"
-            setTextColor(Color.WHITE)
-            isChecked = KartPadTouchSettings.controllerAutoAccelerate(this@KartPadActivity)
-            contentDescription = "Controller auto-accelerate: hold A for one second to lock; press A again to release"
-            setOnCheckedChangeListener { _, checked ->
-                KartPadTouchSettings.setControllerAutoAccelerate(this@KartPadActivity, checked)
-                nativeApplyControllerAutoAccelerate(checked)
-            }
-        }
         val modernCStick = Switch(this).apply {
             text = "Modern C-stick L/R"
             setTextColor(Color.WHITE)
@@ -1899,7 +1898,6 @@ class KartPadActivity : SDLActivity() {
             setPadding(dp(12), dp(8), 0, 0)
             addView(hide)
             addView(autoAccelerate)
-            addView(controllerAutoAccelerate)
             addView(modernCStick)
             addView(moveControls)
             addView(resetTouchLayoutButton)
