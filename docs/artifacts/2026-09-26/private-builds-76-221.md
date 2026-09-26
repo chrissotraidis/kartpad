@@ -82,3 +82,34 @@ Controls → Controller Button Mapping, where controller players look. `0.5.1-re
 debug signer, root `cc8d847`, installed in place on the Pixel (first-install date
 unchanged). The on-screen check was not possible because the phone was locked.
 
+
+## iPad build 77 play session and build 78 (26 September, 10:25 JST)
+
+Chris played build 77 on the iPad with an Xbox controller: Original, Grand Prix. He saw
+menu slowness, stalling, and dips from 60 to about 45 FPS during races.
+
+Session log `base_1790385932_pid5174`: launch prewarm compiled 503 pipelines in 3.9 s
+(Dawn 1049/1115 hits). During the race, each dip matched a single
+`Pipeline wait: 63-327 ms persistent=true`. Pipelines created went from 514 to 552 over
+the race. Every waited pipeline was already in the device recipe database and linked to
+that course scene: 11 of 11 checked, with first use between frames 2569 and 6658. At
+roughly 8 ms per pipeline during prewarm against 200-300 ms on demand, these pipelines
+were compiled from scratch. The consistent explanation is that the iPadOS 26.7 system
+shader cache never held them, because they were last compiled under 26.6.2. This is a
+reasoned inference and does not prove Apple's cache behavior.
+
+Build 78 (iOS runtime `f5a5002`):
+
+- Launch prewarm compiles every recorded recipe (limit 4096) on Apple devices with 6 GB
+  or more of memory. Other devices keep 512. Memory evidence: build 77 peaked near
+  840 MB with 552 pipelines; build 72 reached about 1085 MB with 436.
+- Two background compile workers instead of one. Priority work is still taken first.
+- Queued prewarm recipes are dropped only when first-use work alone reaches the queue
+  cap, so menu first-use builds no longer discard the latest-used race recipes.
+- Unexplained: course replay logged "N recorded, 0 queued" in every session. The full
+  prewarm makes this path mostly redundant on large devices, but it still needs a
+  diagnostic.
+
+Installed in place over the running build 77, and the before/after user data manifests are
+identical. Not yet played.
+
