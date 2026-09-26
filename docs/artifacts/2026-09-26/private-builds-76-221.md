@@ -74,3 +74,11 @@ crash recurs, and #324 was asked which device and Joy-Con setup they use.
   `f122b7348669b3fee22e5fcc881685b7fd53c8d509e11db48257640ea33d5282`, was installed in place
   on the Pixel, and the first-install date is unchanged. Not played.
 
+
+## Android code 223
+
+The Controller auto-accelerate switch moved from Touch Control Settings to the top of
+Controls → Controller Button Mapping, where controller players look. `0.5.1-review.4`,
+debug signer, root `cc8d847`, installed in place on the Pixel (first-install date
+unchanged). The on-screen check was not possible because the phone was locked.
+
