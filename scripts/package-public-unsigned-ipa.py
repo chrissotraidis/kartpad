@@ -26,7 +26,7 @@ def main() -> int:
         "output",
         type=Path,
         nargs="?",
-        help="Output IPA path (defaults to artifacts/KartPad-v0.5.1-ios-unsigned.ipa)",
+        help="Output IPA path (defaults to artifacts/KartPad-v0.5.2-ios-unsigned.ipa)",
     )
     parser.add_argument("--dependency-build", type=Path, help="Original Xcode build containing dependency license files")
     parser.add_argument("--reference-root", type=Path, help="Pinned reference checkout root (normally repo/ref)")
@@ -40,7 +40,7 @@ def main() -> int:
     output = (
         args.output.resolve()
         if args.output
-        else repo / "artifacts/KartPad-v0.5.1-ios-unsigned.ipa"
+        else repo / "artifacts/KartPad-v0.5.2-ios-unsigned.ipa"
     )
     if subprocess.check_output(
         ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all"],
@@ -75,8 +75,8 @@ def main() -> int:
     reference_root = args.reference_root or repo / "ref"
     additional_entries = {
         "INSTALL_IPA.md": repo / "docs/INSTALL_IPA.md",
-        "RELEASE_NOTES.md": repo / "docs/releases/v0.5.1.md",
-        "SOURCE_AND_REBUILD.md": repo / "docs/releases/v0.5.1-source.md",
+        "RELEASE_NOTES.md": repo / "docs/releases/v0.5.2.md",
+        "SOURCE_AND_REBUILD.md": repo / "docs/releases/v0.5.2-source.md",
         "MULTIPLAYER.md": repo / "docs/MULTIPLAYER.md",
         "LICENSE": repo / "LICENSE",
         "LICENSES/GPL-3.0.txt": repo / "LICENSES/GPL-3.0.txt",

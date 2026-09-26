@@ -1,11 +1,11 @@
-"""Exact clean full-build identity for the 0.5.1 iOS candidate; not publication approval."""
+"""Exact clean full-build identity for the 0.5.2 iOS candidate; not publication approval."""
 from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
 import subprocess
 
-RECORD = json.loads((Path(__file__).resolve().parents[1] / "docs/releases/v0.5.1-ios-build.json").read_text())
+RECORD = json.loads((Path(__file__).resolve().parents[1] / "docs/releases/v0.5.2-ios-build.json").read_text())
 RELEASE_TAG = RECORD["releaseTag"]
 APP_VERSION = RECORD["appVersion"]
 APP_BUILD = RECORD["appBuild"]
