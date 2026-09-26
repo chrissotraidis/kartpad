@@ -226,3 +226,32 @@ No new play sessions or GitHub comments since build 80 and code 225.
   (`0.5.1-review.7`) was installed in place with the first-install date unchanged. Both
   packages contain the 1332-row seed. Neither has been played.
 
+
+## Pixel code 226 Retro Rewind session and code 227 / iPad build 82
+
+Chris raced Retro Rewind single player on code 226 and saw frequent dips, especially in the
+first race.
+
+Logcat (pid 13066): 16 `KartPadPipelineWait` persistent waits, 8 of them 50-178 ms
+(for example 177.6, 149.8, 130.6 and 109.7 ms). They were clustered in the first minute
+of the race. These are Retro Rewind track recipes never compiled on this phone, so seed
+and prewarm cannot cover them. Pipelines created went from 676 to 695. After that the
+race held about 60 FPS with game CPU at 11.2-13.4 ms per present.
+
+Root cause of the stall class: each race frame copies the EFB to recurring targets, and
+every copy pass requires all preceding draws' pipelines to be ready, so any first-use
+shader in a race freezes the frame.
+
+Change (Android `a5f504a`, iOS `3ce544d`): `aurora_set_race_copy_skip` is set true
+when a course archive loads and false when a menu archive loads. From 120 frames after
+race start, a GXCopyTex whose target was also produced in the previous frame is not
+persistent, so an unready draw is skipped for that frame and the next frame redraws it.
+This requires "Skip draws while shaders compile" (default on). Menus, one-shot bakes and
+the first two seconds of each race remain strict. The expected visible effect is an
+object missing for a frame or two in the effect copy, in place of a 50-300 ms freeze.
+This has not been verified on a device.
+
+Android code 227 (`0.5.1-review.8`) was installed in place on the Pixel with the
+first-install date unchanged. iPad build 82 was installed in place with identical user
+data. Neither has been played.
+
