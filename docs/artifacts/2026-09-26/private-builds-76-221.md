@@ -51,3 +51,26 @@ Replies were posted on #319, #320, #322, #323 and #324. No retests were requeste
 before publication. #322 and #323 were asked for a diagnostic export if the freeze or
 crash recurs, and #324 was asked which device and Joy-Con setup they use.
 
+
+## Follow-up: iPad build 77 and Android code 222
+
+- **Launch prewarm cannot force game-thread compiles (iOS).** The synchronous-build cap now
+  counts only first-use (priority) pipelines. Before this change, 512 queued prewarm entries
+  could exceed the 256 cap, which would compile new pipelines on the game thread when
+  "Skip draws while shaders compile" is off. Demand still promotes a queued prewarm recipe
+  to the front. iOS runtime `232484c`.
+- **Single sideways Joy-Con (Android).** Android's Bluetooth stack does not give SDL
+  HIDAPI access to Joy-Cons, so a lone Joy-Con arrives from the kernel driver in its
+  upright layout. The runtime now reads the controller's vendor and product IDs
+  (057e:2006 left, 057e:2007 right), rotates the stick to the rail-up grip, and moves the
+  thumb buttons to the face positions (left Minus pauses). This runs before the player's
+  button remapping, so the mapping screen can correct any per-phone label differences.
+  Pairs and other controllers are unchanged. Android runtime `0fcbc65`.
+- The host gamepad contract test covers left/right rotation and pass-through for other
+  controllers. No Joy-Con hardware was tested.
+- iPad build 77 was installed in place, and the before/after user data manifests are identical.
+  It was not launched because another task was running BlueWake on the iPad.
+- Android code 222 (`0.5.1-review.3`, debug signer `61dfb514…`), SHA-256
+  `f122b7348669b3fee22e5fcc881685b7fd53c8d509e11db48257640ea33d5282`, was installed in place
+  on the Pixel, and the first-install date is unchanged. Not played.
+
