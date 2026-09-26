@@ -231,7 +231,16 @@ if(MKW_HOST_DARWIN)
 endif()
 target_include_directories(kartpad_host PUBLIC runtime/include)
 target_compile_features(kartpad_host PUBLIC cxx_std_20)
-target_compile_options(kartpad_host PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(kartpad_host PRIVATE
+  -Wall -Wextra -Wpedantic -Werror
+  $<$<CONFIG:Release>:-O3>
+)
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+  set_property(TARGET kartpad_host PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
 
 foreach(capability IN ITEMS
     MKW_HOST_WINDOWS MKW_HOST_DARWIN MKW_HOST_X86_64 MKW_HOST_ARM64

@@ -61,7 +61,7 @@ static std::atomic_bool g_skipUnreadyGxPipelines = false;
 static size_t g_pipelinesPerFrame = 0;
 // Keep first-use compilation bounded. The render command stream remains ordered;
 // it waits for a queued pipeline only when the corresponding draw is consumed.
-constexpr size_t MaxQueuedPipelineBuilds = 256;
+constexpr size_t MaxQueuedPipelineBuilds = 1024;
 // First-use compilation works best as a short parallel burst. Leave two logical processors for the
 // render and game threads, and cap large hosts to limit driver submissions and memory use.
 constexpr size_t ReservedLogicalProcessors = 2;

@@ -5,7 +5,12 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#include <arm_neon.h>
+#endif
 
 #include <SDL3/SDL_init.h>
 
@@ -104,7 +109,7 @@ void AudioBackend::Shutdown() {
 }
 
 uint32_t AudioBackend::QueueLimitBytesLocked() const {
-    constexpr uint32_t queueMs = 120;
+    constexpr uint32_t queueMs = 240;
 
     const uint64_t bytesPerSecond = static_cast<uint64_t>(m_spec.freq) *
                                     static_cast<uint64_t>(m_spec.channels) *
@@ -157,15 +162,19 @@ bool AudioBackend::PushWiiAiSamplesBE16(const uint8_t* data, size_t bytes) {
     }
 
     const size_t frameCount = sampleCount / 2;
-    for (size_t frame = 0; frame < frameCount; ++frame) {
-        const size_t rightOffset = frame * 4;
-        const size_t leftOffset = rightOffset + 2;
-        const uint16_t right = static_cast<uint16_t>(data[rightOffset]) << 8 |
-                               static_cast<uint16_t>(data[rightOffset + 1]);
-        const uint16_t left = static_cast<uint16_t>(data[leftOffset]) << 8 |
-                              static_cast<uint16_t>(data[leftOffset + 1]);
-        m_convertBuffer[frame * 2] = static_cast<int16_t>(left);
-        m_convertBuffer[frame * 2 + 1] = static_cast<int16_t>(right);
+    size_t frame = 0;
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+    for (; frame + 4 <= frameCount; frame += 4) {
+        uint8x16_t in_vec = vld1q_u8(data + frame * 4);
+        uint8x16_t out_vec = vrev32q_u8(in_vec);
+        vst1q_u8(reinterpret_cast<uint8_t*>(&m_convertBuffer[frame * 2]), out_vec);
+    }
+#endif
+    for (; frame < frameCount; ++frame) {
+        uint32_t val;
+        std::memcpy(&val, data + frame * 4, sizeof(uint32_t));
+        uint32_t out = __builtin_bswap32(val);
+        std::memcpy(&m_convertBuffer[frame * 2], &out, sizeof(uint32_t));
     }
 
     const int lenBytes = static_cast<int>(frameCount * 2 * sizeof(int16_t));
