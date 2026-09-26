@@ -255,3 +255,31 @@ Android code 227 (`0.5.1-review.8`) was installed in place on the Pixel with the
 first-install date unchanged. iPad build 82 was installed in place with identical user
 data. Neither has been played.
 
+
+## Owner sessions on code 227 and iPad build 82, then code 228 and iPad build 84
+
+**Pixel, code 227.** Offline single player and Grand Prix held about 60 FPS with no dips,
+confirmed by Chris ("working way better now ... no dips at all"). Retro online connected,
+but the game thread froze every ~5 s: 24 `KartPadNetStall socket_ioctlv command=12`
+(IOCTLV_SO_RECVFROM) waits of 227-1196 ms.
+
+**iPad, build 82 (Retro Rewind profile, `base_1790399397_pid5864`).** The warm-up pass ran
+from cache: 1294 pipelines in 0.1 s. Memory peaked at 1.46 GB. Most windows held 60 FPS.
+Four persistent waits (327, 77, 325, 100 ms) hit a Retro course never raced before (the
+first scene visit recorded 0 recipes), in the menus and near race start. About 13
+consecutive 50 ms presents still occurred on cup select, so the 20 FPS cadence did not
+come from pipeline memory. The Pixel runs the same screen at full rate on a slower CPU,
+which points to GPU or presentation on the iPad, which renders at 4x.
+
+**Changes:**
+- Race copies count as recurring when produced within four frames (previously one
+  frame), because some effects refresh every other frame. Android `f7347f4`, iOS
+  `5a0732f`.
+- iOS logs presentation jobs of 30-250 ms (one per second) with their stage
+  breakdown, to find the source of the cup-select 50 ms cadence (`5a0732f`).
+- Deferred blocking TCP receive (see [deferred-recv.md](deferred-recv.md)): Android
+  `c5ad680`, iOS `cbe43de`.
+
+Android code 228 (`0.5.1-review.9`) and iPad build 84 were both installed in place with
+data preserved. Neither has been played.
+
