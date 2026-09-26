@@ -47,12 +47,12 @@ The projects are independently maintained.
 
 | Platform | Download | Setup |
 | --- | --- | --- |
-| Android ARM64 | [0.5.0 · code 135](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0) | [Android 9+ with Vulkan](docs/INSTALL_ANDROID.md) |
-| iPhone / iPad | [0.5.0 · build 59](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0) | [iOS/iPadOS 16+; re-sign the IPA](docs/INSTALL_IPA.md) |
-| Apple Silicon Mac | [0.5.0 · build 59](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0) | [macOS 14+](docs/INSTALL_MACOS.md) |
+| Android ARM64 | [0.5.1 · code 229](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) | [Android 9+ with Vulkan](docs/INSTALL_ANDROID.md) |
+| iPhone / iPad | [0.5.1 · build 85](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) | [iOS/iPadOS 16+; re-sign the IPA](docs/INSTALL_IPA.md) |
+| Apple Silicon Mac | [0.5.1 · build 85](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) | [macOS 14+](docs/INSTALL_MACOS.md) |
 | Apple TV experimental preview | [0.4.11 · build 9](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.11-tvos.1) | [tvOS 17+; re-sign the IPA](docs/INSTALL_TVOS.md) |
 
-**0.5.0 combines Android, iPhone/iPad and Mac downloads in one release.** It adds a persistent touch auto-accelerate switch, fixes Android controller assignment, preserves vehicle thumbnails while shaders compile, and corrects framebuffer-copy and graphics-startup failures. See the [release notes](docs/releases/v0.5.0.md) and [mobile settings guide](docs/SETTINGS.md). Device-specific graphics and performance limitations remain; this is not a universal FPS improvement claim.
+**0.5.1 is out for Android, iPhone/iPad and Mac.** Smoother play: KartPad prepares graphics at launch (shown as *Preparing graphics* in the top-left), menus and courses prepare their graphics during loading, races no longer freeze while a new effect compiles, and online play no longer stalls while waiting for the server. It also adds controller auto-accelerate, single Joy-Con support, an Android crash fix for older Adreno drivers, more detailed crash logging, and an opt-in experimental fix for broken characters on Snapdragon phones. See the [release notes](docs/releases/v0.5.1.md) and [mobile settings guide](docs/SETTINGS.md). Some device-specific graphics and low-end performance limits remain.
 
 **0.4.22 moved KartPad to maintained WiiCompiled source** with pinned platform
 branches, preserving the existing game behavior and repository history. Source
@@ -108,7 +108,7 @@ known issues. Android's suggested starting point is **1x Native**. Sustained
 <details>
 <summary>Can I download an IPA or playable app?</summary>
 
-Yes—use the [platform downloads above](#downloads). The current iPhone/iPad and Mac builds are **0.5.0 build 59**, alongside **Android code135** in the same release. Apple TV retains its separate experimental preview. Apple IPAs need re-signing. Every package requires your own supported game data. A [Personal IPA Builder](docs/BUILDER.md) is also available.
+Yes—use the [platform downloads above](#downloads). The current iPhone/iPad and Mac builds are **0.5.1 build 85**, alongside **Android code 229** in the same release. Apple TV retains its separate experimental preview. Apple IPAs need re-signing. Every package requires your own supported game data. A [Personal IPA Builder](docs/BUILDER.md) is also available.
 
 </details>
 
@@ -177,7 +177,7 @@ Experimentally, on **macOS only**, using the direct Bluetooth pairing flow. It s
 <details>
 <summary>How much storage does KartPad use?</summary>
 
-Package size varies by platform and version; the iPhone/iPad IPA download is about **45 MB**. Extracted base-game data is roughly **2.5 GiB**, and Retro content, the original image and temporary installation files require more. Android setup recommends at least **6 GiB free**. Check the platform guide and leave room for updates; the IPA download size is not the installed-data footprint.
+Package size varies by platform and version; the iPhone/iPad IPA download is about **65 MB**. Extracted base-game data is roughly **2.5 GiB**, and Retro content, the original image and temporary installation files require more. Android setup recommends at least **6 GiB free**. Check the platform guide and leave room for updates; the IPA download size is not the installed-data footprint.
 
 </details>
 

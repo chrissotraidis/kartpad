@@ -1,11 +1,11 @@
 # KartPad status
 
-**September 20 release checkpoint:** [KartPad 0.5.0](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0) is the latest stable release, with Android code135 and iPhone/iPad/Mac build59 together. PR #307 is merged; all six release downloads are verified. Android thumbnail correction is owner-confirmed. The iPad update preserved all 30 backed-up save/settings files and normal launch is verified. [Fixes and remaining limits](releases/v0.5.0-readiness.md) · [Publication and issue follow-up](artifacts/2026-09-20/release-050-publication.json).
+**September 26 release checkpoint:** [KartPad 0.5.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) is the latest stable release, with Android code 229 and iPhone/iPad/Mac build 85, all built cleanly from de3a99c. All six downloads were re-downloaded anonymously and match their checksums; the APK carries the 0.5.0 release signer. The owner accepted gameplay on private iPad build 84 (the iPad stutter regression is resolved) and Pixel code 227 (offline play, with Retro online joining). [Release notes](releases/v0.5.1.md) · [Final package record](artifacts/2026-09-26/release-051-final.md).
 
 [Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
 [Canonical active queue](MAINTENANCE-BOARD.md).
 
-Updated: 20 September 2026. This page summarizes acceptance, not a full test log.
+Updated: 26 September 2026. This page summarizes acceptance, not a full test log.
 Use the [maintenance board](MAINTENANCE-BOARD.md) for candidate ownership and
 next actions, and [known issues](KNOWN-ISSUES.md) for current reports.
 
@@ -20,9 +20,9 @@ pending. These older test builds are retained for historical comparison. Current
 
 | Platform | Package | Acceptance boundary |
 | --- | --- | --- |
-| Android | [0.5.0, code135](releases/v0.5.0.md) | Owner confirms the black-thumbnail repair; exact installed APK and public payload verified. Broader handset geometry and sustained performance remain open. |
-| iPhone / iPad | [0.5.0, build59](releases/v0.5.0.md) | Physical iPad installed in place with verified data preservation and normal launch. Reproduced renderer crashes corrected; no build59 full-gameplay or current iPhone acceptance claim. |
-| Apple Silicon Mac | [0.5.0, build59](releases/v0.5.0.md) | App/ZIP signed and audited; actual renderer validation suite passes. Existing owner app preserved; broad controller and gameplay acceptance remain separate. |
+| Android | [0.5.1, code 229](releases/v0.5.1.md) | Owner accepted offline play and Retro online joining on private code 227 (same fixes). Update in place over 0.5.0 verified on an emulator (2,044 game files preserved). The Adreno character fix is opt-in and unconfirmed on affected phones. |
+| iPhone / iPad | [0.5.1, build 85](releases/v0.5.1.md) | Owner accepted gameplay on private build 84; the exact build 85 is installed in place on the owner's iPad with saves preserved. A brief cup-select slowdown remains. |
+| Apple Silicon Mac | [0.5.1, build 85](releases/v0.5.1.md) | App/ZIP audited; launch and about two minutes of play in a host smoke check. Broad gameplay and controller acceptance remain separate. |
 | Apple TV experimental | [0.4.11, build 9](releases/v0.4.11-tvos.1.md) | Published identity-fix and compiler-hardened package; exact-build hardware acceptance remains open |
 
 [Download and install](../README.md#downloads). All listed packages include the
