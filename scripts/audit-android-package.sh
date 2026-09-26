@@ -93,7 +93,9 @@ has_discio=0
 if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libkartpad_discio.so; then
   has_discio=1
   # A stale prebuilt disc reader shipped in 0.5.1 without RVZ support (#314).
-  unzip -p "$apk" lib/arm64-v8a/libkartpad_discio.so | grep -a -F -q 'ISO, WBFS or RVZ image' || {
+  # grep -c reads the whole stream; grep -q would stop early and trip pipefail via SIGPIPE.
+  rvz_marker_count="$(unzip -p "$apk" lib/arm64-v8a/libkartpad_discio.so | grep -a -F -c 'ISO, WBFS or RVZ image' || true)"
+  [[ "${rvz_marker_count:-0}" -ge 1 ]] || {
     echo "ERROR: libkartpad_discio.so predates RVZ import; rebuild it with scripts/build-android-discio-probe.sh" >&2
     exit 1
   }
