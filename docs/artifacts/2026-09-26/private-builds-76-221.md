@@ -180,3 +180,31 @@ Build 80 (iOS runtime `ea325f2`):
 - The prewarm log reports whether the warm-up pass ran or was skipped.
 - Installed in place with identical user data manifests. Not yet played.
 
+
+## Pixel code 224 session and Android code 225 (26 September, about 12:10 JST)
+
+Chris raced Original on the Pixel 9 Pro XL with code 224 and saw occasional dips. He saw
+no shader notice.
+
+Logcat (pid 3123, about 3 minutes):
+- 57-60 FPS in five-second windows. Game CPU was 12.4-13.5 ms per present, with the main
+  thread 70-80% occupied.
+- 11 `KartPadPipelineWait` persistent waits of 8.6-23.6 ms. These are recipes outside
+  the 128-recipe Android prewarm; several were the same hashes the iPad waited on. Waits
+  are short because the Vulkan driver cache is warm.
+- Worst frames of 42-70 ms occurred with no pipeline wait. `present_deadline_lateness`
+  reached a maximum of 56 ms, which points to the game thread being late: a CPU spike on a
+  budget already ~13 of 16.7 ms. There was no thermal throttling or device-lost event.
+- The notice did not appear because Android's 128-recipe prewarm finished before gameplay.
+
+Android code 225 (`0.5.1-review.6`, runtime `3f37a7c`, debug signer):
+- Prewarms 512 recipes on phones with 6 GB or more of RAM (128 otherwise). Prewarm
+  entries no longer count toward the first-use queue or sync caps.
+- Adds `Long present interval` logging (gaps of 50 ms or more, at most once per second).
+- Includes the Adreno-gated CPU vertex repack (`a4befb7`, off on the Mali Pixel; see
+  [adreno-geometry-root-cause.md](adreno-geometry-root-cause.md)) and the crash and health
+  logging additions (`5486906`, `f5699bd`; see
+  [android-persistent-issues.md](android-persistent-issues.md)).
+- Installed in place on the Pixel: first-install date unchanged, both games "Ready to
+  play". Not yet played.
+
