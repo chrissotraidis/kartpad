@@ -1056,6 +1056,7 @@ class KartPadActivity : SDLActivity() {
 
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
+        nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
     }
 
     private fun showMotionSteering() {
@@ -1837,6 +1838,16 @@ class KartPadActivity : SDLActivity() {
                 kartPadOverlay.reloadPresentationSettings()
             }
         }
+        val controllerAutoAccelerate = Switch(this).apply {
+            text = "Controller auto-accelerate"
+            setTextColor(Color.WHITE)
+            isChecked = KartPadTouchSettings.controllerAutoAccelerate(this@KartPadActivity)
+            contentDescription = "Controller auto-accelerate: hold A for one second to lock; press A again to release"
+            setOnCheckedChangeListener { _, checked ->
+                KartPadTouchSettings.setControllerAutoAccelerate(this@KartPadActivity, checked)
+                nativeApplyControllerAutoAccelerate(checked)
+            }
+        }
         val modernCStick = Switch(this).apply {
             text = "Modern C-stick L/R"
             setTextColor(Color.WHITE)
@@ -1888,6 +1899,7 @@ class KartPadActivity : SDLActivity() {
             setPadding(dp(12), dp(8), 0, 0)
             addView(hide)
             addView(autoAccelerate)
+            addView(controllerAutoAccelerate)
             addView(modernCStick)
             addView(moveControls)
             addView(resetTouchLayoutButton)
@@ -2355,6 +2367,7 @@ class KartPadActivity : SDLActivity() {
 
     private external fun nativeGhostTransfer(save: ByteArray, ghost: ByteArray?, license: Int, slot: Int, downloaded: Boolean): ByteArray?
     private external fun nativeApplyControllerMapping(mapping: IntArray)
+    private external fun nativeApplyControllerAutoAccelerate(enabled: Boolean)
     private external fun nativeControllerDevices(): Array<String>
     private external fun nativeAssignControllerPlayer(instance: Long, player: Int): Boolean
     private external fun nativeClearControllerPlayer(player: Int): Boolean

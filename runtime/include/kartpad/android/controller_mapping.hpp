@@ -51,4 +51,10 @@ void PublishControllerButtonMapping(
     const ControllerButtonMapping& mapping) noexcept;
 ControllerButtonMapping ReadControllerButtonMapping() noexcept;
 
+// Controller auto-accelerate (off by default; the touch A button has its own).
+// Apply runs on the guest input thread with the mapped Classic buttons.
+void PublishControllerAutoAccelerate(bool enabled) noexcept;
+uint32_t ApplyControllerAutoAccelerate(uint32_t chan, uint32_t classicButtons,
+                                       bool connected) noexcept;
+
 }  // namespace kartpad::android

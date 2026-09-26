@@ -5,6 +5,7 @@
 #import "SunPadInputMixer.h"
 
 #import <GameController/GameController.h>
+#import <TargetConditionals.h>
 
 #include <algorithm>
 #include <array>
@@ -56,6 +57,66 @@ KartPadPhysicalControllerSample SampleFromGamepad(GCExtendedGamepad *gamepad) {
   sample.leftTrigger = gamepad.leftTrigger.value;
   sample.rightTrigger = gamepad.rightTrigger.value;
   return sample;
+}
+
+// A single Joy-Con (and other small controllers) has no extended profile. Its
+// micro profile provides the stick as a direction pad plus A, X and Menu; any
+// other buttons appear only in the physical profile under standard names.
+BOOL UsesMicroProfile(GCController *controller) {
+#if TARGET_OS_TV
+  (void)controller;
+  return NO;  // The Siri Remote is also a micro gamepad and has its own input path.
+#else
+  return controller.extendedGamepad == nil && controller.microGamepad != nil;
+#endif
+}
+
+BOOL IsSupportedController(GCController *controller) {
+  return controller.extendedGamepad != nil || UsesMicroProfile(controller);
+}
+
+BOOL ProfileButtonPressed(GCPhysicalInputProfile *profile, NSString *name) {
+  return profile.buttons[name].isPressed;
+}
+
+KartPadPhysicalControllerSample SampleFromMicroGamepad(GCController *controller) {
+  GCMicroGamepad *micro = controller.microGamepad;
+  GCPhysicalInputProfile *profile = controller.physicalInputProfile;
+  KartPadPhysicalControllerSample sample;
+  uint8_t buttons = 0;
+  if (micro.buttonA.isPressed) buttons |= SunPadPhysicalControllerButtonA;
+  if (micro.buttonX.isPressed || ProfileButtonPressed(profile, GCInputButtonB)) {
+    buttons |= SunPadPhysicalControllerButtonB;
+  }
+  if (ProfileButtonPressed(profile, GCInputLeftShoulder) ||
+      ProfileButtonPressed(profile, GCInputRightShoulder) ||
+      ProfileButtonPressed(profile, GCInputButtonY)) {
+    buttons |= SunPadPhysicalControllerButtonLeftShoulder;
+  }
+  sample.faceButtons = static_cast<SunPadPhysicalControllerButton>(buttons);
+  sample.menu = micro.buttonMenu.isPressed ||
+      ProfileButtonPressed(profile, GCInputButtonMenu) ||
+      ProfileButtonPressed(profile, GCInputButtonOptions);
+  sample.dpadUp = micro.dpad.up.isPressed;
+  sample.dpadDown = micro.dpad.down.isPressed;
+  sample.dpadLeft = micro.dpad.left.isPressed;
+  sample.dpadRight = micro.dpad.right.isPressed;
+  sample.leftX = micro.dpad.xAxis.value;
+  sample.leftY = micro.dpad.yAxis.value;
+  return sample;
+}
+
+KartPadPhysicalControllerSample SampleFromController(GCController *controller) {
+  GCExtendedGamepad *gamepad = controller.extendedGamepad;
+  return gamepad != nil ? SampleFromGamepad(gamepad)
+                        : SampleFromMicroGamepad(controller);
+}
+
+void ClearControllerHandlers(GCController *controller) {
+  controller.extendedGamepad.valueChangedHandler = nil;
+  if (UsesMicroProfile(controller)) {
+    controller.physicalInputProfile.valueDidChangeHandler = nil;
+  }
 }
 
 }  // namespace
@@ -141,7 +202,7 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   _started = NO;
   [NSNotificationCenter.defaultCenter removeObserver:self];
   for (GCController *controller in _configuredControllers.allValues) {
-    controller.extendedGamepad.valueChangedHandler = nil;
+    ClearControllerHandlers(controller);
     controller.playerIndex = GCControllerPlayerIndexUnset;
   }
   [_configuredControllers removeAllObjects];
@@ -159,14 +220,13 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   [self reconcileControllers];
 }
 
-- (void)publishController:(GCController *)controller
-                  gamepad:(GCExtendedGamepad *)gamepad {
+- (void)publishController:(GCController *)controller {
   const int slot = _slots.SlotFor(ControllerInstanceID(controller));
   if (slot < 0 || slot >= static_cast<int>(SunPadControllerSlots::kMaxPlayers)) {
     return;
   }
   const SunPadInputState state = KartPadAdaptPhysicalControllerSample(
-      SampleFromGamepad(gamepad), [SunPadControllerMappingStore mapping]);
+      SampleFromController(controller), [SunPadControllerMappingStore mapping]);
   {
     std::scoped_lock lock(_stateMutex);
     const std::size_t index = static_cast<std::size_t>(slot);
@@ -180,24 +240,31 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
 
 - (void)configureController:(GCController *)controller
                        slot:(const std::size_t)slot {
-  GCExtendedGamepad *gamepad = controller.extendedGamepad;
-  if (gamepad == nil) return;
+  if (!IsSupportedController(controller)) return;
   controller.handlerQueue = dispatch_get_main_queue();
   __weak KartPadPhysicalControllers *weakSelf = self;
   __weak GCController *weakController = controller;
-  gamepad.valueChangedHandler = ^(GCExtendedGamepad *pad,
-                                  GCControllerElement *element) {
-    (void)element;
-    // Sample inside the event callback. Deferring the read again can turn a
-    // quick press/release into two released samples before the game polls.
+  // Sample inside the event callback. Deferring the read again can turn a
+  // quick press/release into two released samples before the game polls.
+  void (^publish)(void) = ^{
     KartPadPhysicalControllers *strongSelf = weakSelf;
     GCController *strongController = weakController;
     if (strongSelf != nil && strongController != nil) {
-      [strongSelf publishController:strongController gamepad:pad];
+      [strongSelf publishController:strongController];
     }
   };
+  if (GCExtendedGamepad *gamepad = controller.extendedGamepad) {
+    gamepad.valueChangedHandler = ^(GCExtendedGamepad *, GCControllerElement *) {
+      publish();
+    };
+  } else {
+    controller.physicalInputProfile.valueDidChangeHandler =
+        ^(GCPhysicalInputProfile *, GCControllerElement *) {
+          publish();
+        };
+  }
   controller.playerIndex = PlayerIndexForSlot(slot);
-  [self publishController:controller gamepad:gamepad];
+  [self publishController:controller];
 }
 
 - (void)reconcileControllers {
@@ -207,7 +274,7 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
 - (void)reconcileControllerList:(NSArray<GCController *> *)controllers {
   std::vector<uintptr_t> instances;
   for (GCController *controller in controllers) {
-    if (controller.extendedGamepad != nil) {
+    if (IsSupportedController(controller)) {
       instances.push_back(ControllerInstanceID(controller));
     }
   }
@@ -216,7 +283,7 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   for (const SunPadControllerSlotChange& change : result.removed) {
     NSNumber *key = @(change.instance);
     GCController *controller = _configuredControllers[key];
-    controller.extendedGamepad.valueChangedHandler = nil;
+    ClearControllerHandlers(controller);
     controller.playerIndex = GCControllerPlayerIndexUnset;
     [_configuredControllers removeObjectForKey:key];
     {
@@ -231,7 +298,7 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   }
 
   for (GCController *controller in controllers) {
-    if (controller.extendedGamepad == nil) continue;
+    if (!IsSupportedController(controller)) continue;
     const uintptr_t instance = ControllerInstanceID(controller);
     const int slot = _slots.SlotFor(instance);
     if (slot < 0) continue;

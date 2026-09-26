@@ -8,7 +8,7 @@
 // substituting the production slot, latch, mapping, or connection code.
 @interface KartPadPhysicalControllers (Fixture)
 - (void)reconcileControllerList:(NSArray<GCController *> *)controllers;
-- (void)publishController:(GCController *)controller gamepad:(GCExtendedGamepad *)gamepad;
+- (void)publishController:(GCController *)controller;
 @end
 
 #include <cstdlib>
@@ -49,9 +49,9 @@ void TestRegistrationAndReconnect() {
   for (unsigned player = 1; player < 4; ++player) {
     GCController *pad = pads[player];
     [pad.extendedGamepad.buttonA setValue:1];
-    [bridge publishController:pad gamepad:pad.extendedGamepad];
+    [bridge publishController:pad];
     [pad.extendedGamepad.buttonA setValue:0];
-    [bridge publishController:pad gamepad:pad.extendedGamepad];
+    [bridge publishController:pad];
     for (unsigned probe = 0; probe < 8; ++probe) {
       Require([bridge isPlayerConnected:player], "WPAD connection query lost physical pad");
     }
@@ -70,6 +70,27 @@ void TestRegistrationAndReconnect() {
   Require([bridge isPlayerConnected:1], "reconnected player missing");
   Require(![bridge isPlayerConnected:4] && ![bridge isPlayerConnected:NSUIntegerMax],
           "invalid player accepted");
+  [bridge reconcileControllerList:@[]];
+}
+
+// A single Joy-Con reports only a micro profile: stick as a direction pad.
+void TestMicroProfileController() {
+  KartPadPhysicalControllers *bridge = [KartPadPhysicalControllers new];
+  GCController *joyCon = [GCController controllerWithMicroGamepad];
+  [bridge reconcileControllerList:@[joyCon]];
+  Require([bridge isPlayerConnected:0], "micro controller not assigned");
+  [joyCon.microGamepad.buttonA setValue:1];
+  [joyCon.microGamepad.dpad setValueForXAxis:1 yAxis:0];
+  [bridge publishController:joyCon];
+  SunPadInputState state{};
+  Require([bridge consumePlayer:0 state:&state], "micro controller cannot read");
+  Require((state.buttons & SunPadButtonA) != 0, "micro A missing");
+  Require(state.stickX > 100, "micro stick does not steer");
+  [joyCon.microGamepad.buttonA setValue:0];
+  [joyCon.microGamepad.dpad setValueForXAxis:0 yAxis:0];
+  [bridge publishController:joyCon];
+  [bridge consumePlayer:0 state:&state];
+  Require(state.buttons == 0 && state.stickX == 0, "micro input stuck");
   [bridge reconcileControllerList:@[]];
 }
 
@@ -145,6 +166,7 @@ int main() {
       TestControllerSampleMapping();
       TestSharedAndTriggerMapping();
       TestRegistrationAndReconnect();
+      TestMicroProfileController();
       std::cout << "KartPad mobile physical-controller bridge passed\n";
       return EXIT_SUCCESS;
     } catch (const std::exception& error) {

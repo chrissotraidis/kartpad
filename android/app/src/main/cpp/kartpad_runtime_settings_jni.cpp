@@ -37,6 +37,12 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerMapping(
   kartpad::android::PublishControllerButtonMapping(mapping);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerAutoAccelerate(
+    JNIEnv*, jobject, jboolean enabled) {
+  kartpad::android::PublishControllerAutoAccelerate(enabled == JNI_TRUE);
+}
+
 #include "kartpad/ghost/rkg.h"
 extern "C" JNIEXPORT jbyteArray JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeGhostTransfer(

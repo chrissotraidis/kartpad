@@ -28,6 +28,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <array>
+#include <chrono>
+
+#include "kartpad/input/auto_accelerate.h"
 
 extern "C" int g_gxFrameCount;
 #include <atomic>
@@ -36,6 +40,12 @@ static BOOL KartPadAutoAccelerateEnabled() {
   NSNumber *saved = [NSUserDefaults.standardUserDefaults objectForKey:kKartPadAutoAccelerateKey];
   return saved == nil || saved.boolValue;
 }
+
+// Controller auto-accelerate is separate from the touch A lock and off by default.
+static NSString *const kKartPadControllerAutoAccelerateKey = @"KartPadControllerAutoAccelerate";
+static std::atomic<bool> gKartPadControllerAutoAccelerate{
+    [NSUserDefaults.standardUserDefaults boolForKey:kKartPadControllerAutoAccelerateKey]};
+static std::array<kartpad::input::AutoAccelerateLatch, 4> gKartPadControllerAccelerateLatches;
 
 static std::atomic<float> gKartPadFpsScale{1.0f};
 extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std::memory_order_relaxed);}
@@ -1977,6 +1987,15 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
             forControlEvents:UIControlEventValueChanged];
     [stack insertArrangedSubview:[self settingsRowWithTitle:@"Touch auto-accelerate" control:autoAccelerate]
                          atIndex:MIN((NSUInteger)3, stack.arrangedSubviews.count)];
+    UISwitch *controllerAutoAccelerate = [UISwitch new];
+    controllerAutoAccelerate.on = gKartPadControllerAutoAccelerate.load();
+    controllerAutoAccelerate.accessibilityLabel = @"Controller auto-accelerate";
+    controllerAutoAccelerate.accessibilityHint = @"Hold controller A for one second to lock acceleration. Press A again to release.";
+    [controllerAutoAccelerate addTarget:self action:@selector(kartPadControllerAutoAccelerateChanged:)
+                       forControlEvents:UIControlEventValueChanged];
+    [stack insertArrangedSubview:[self settingsRowWithTitle:@"Controller auto-accelerate"
+                                                    control:controllerAutoAccelerate]
+                         atIndex:MIN((NSUInteger)4, stack.arrangedSubviews.count)];
   }
 }
 
@@ -2728,6 +2747,12 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   (void)fullPress;
   const BOOL pressed = pressure > 0;
   [super rPressureChanged:pressed ? 255 : 0 fullPress:pressed];
+}
+
+- (void)kartPadControllerAutoAccelerateChanged:(UISwitch *)sender {
+  [NSUserDefaults.standardUserDefaults setBool:sender.on
+                                        forKey:kKartPadControllerAutoAccelerateKey];
+  gKartPadControllerAutoAccelerate.store(sender.on);
 }
 
 - (void)kartPadAutoAccelerateChanged:(UISwitch *)sender {
@@ -4165,6 +4190,23 @@ extern "C" bool KartPadMobileReadClassicInputForPlayer(
                                                             state:&source];
   } else {
     return false;
+  }
+  // Latch only physical-controller input. Player 1 also carries touch, whose A
+  // button has its own lock, so it latches only while a controller is connected.
+  auto &accelerateLatch = gKartPadControllerAccelerateLatches[player];
+  const bool controllerActive = player == 0
+      ? [KartPadPhysicalControllers sharedControllers].connectedControllerCount > 0
+      : source.connected != 0;
+  if (controllerActive) {
+    const auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    if (accelerateLatch.Apply((source.buttons & SunPadButtonA) != 0,
+                              static_cast<uint64_t>(nowMs),
+                              gKartPadControllerAutoAccelerate.load(std::memory_order_relaxed))) {
+      source.buttons |= SunPadButtonA;
+    }
+  } else {
+    accelerateLatch.Reset();
   }
   KartPadClassicInputState adapted =
       kartpad::mobile::AdaptSunPadInput(source);

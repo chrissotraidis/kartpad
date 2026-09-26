@@ -1,5 +1,6 @@
 #include "kartpad/android/gamepad_contract.h"
 #include "kartpad/android/controller_mapping.hpp"
+#include "kartpad/input/auto_accelerate.h"
 
 #include <cmath>
 #include <cstdint>
@@ -148,5 +149,34 @@ int main() {
   if (passed) {
     std::cout << "Android SDL gamepad contract passed\n";
   }
+  {
+    kartpad::input::AutoAccelerateLatch latch;
+    passed &= Require(!latch.Apply(true, 0, false) || !latch.locked(),
+                      "disabled auto-accelerate never locks");
+    passed &= Require(!latch.Apply(false, 5000, false),
+                      "disabled auto-accelerate follows release");
+    latch.Apply(true, 1000, true);
+    passed &= Require(!latch.locked() && latch.Apply(true, 1999, true) && !latch.locked(),
+                      "auto-accelerate waits one second");
+    passed &= Require(latch.Apply(true, 2000, true) && latch.locked(),
+                      "one-second hold locks accelerate");
+    passed &= Require(latch.Apply(false, 2100, true),
+                      "locked accelerate survives release");
+    passed &= Require(latch.Apply(true, 3000, true) && !latch.locked(),
+                      "next press unlocks while held");
+    passed &= Require(latch.Apply(true, 9000, true) && !latch.locked(),
+                      "unlocking press cannot relock");
+    passed &= Require(!latch.Apply(false, 9100, true),
+                      "release after unlock stops accelerate");
+    latch.Apply(true, 10000, true);
+    latch.Apply(false, 10500, true);
+    passed &= Require(!latch.Apply(false, 12000, true) && !latch.locked(),
+                      "short press does not lock");
+    latch.Apply(true, 13000, true);
+    latch.Apply(true, 14000, true);
+    passed &= Require(!latch.Apply(false, 14100, false),
+                      "disabling clears a lock");
+  }
+
   return passed ? 0 : 1;
 }
