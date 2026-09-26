@@ -92,6 +92,11 @@ expected_native_members="$(printf '%s\n' \
 has_discio=0
 if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libkartpad_discio.so; then
   has_discio=1
+  # A stale prebuilt disc reader shipped in 0.5.1 without RVZ support (#314).
+  unzip -p "$apk" lib/arm64-v8a/libkartpad_discio.so | grep -a -F -q 'ISO, WBFS or RVZ image' || {
+    echo "ERROR: libkartpad_discio.so predates RVZ import; rebuild it with scripts/build-android-discio-probe.sh" >&2
+    exit 1
+  }
   expected_native_members="$(printf '%s\n' "$expected_native_members" \
     lib/arm64-v8a/libkartpad_discio.so | sort)"
 fi

@@ -116,6 +116,11 @@ if [[ ! -f "$discio_jni_root/arm64-v8a/libkartpad_discio.so" ]]; then
       "$discio_jni_root"
   fi
 fi
+if ! grep -a -F -q 'ISO, WBFS or RVZ image' "$discio_jni_root/arm64-v8a/libkartpad_discio.so"; then
+  echo "ERROR: $discio_jni_root/arm64-v8a/libkartpad_discio.so predates RVZ import." >&2
+  echo "Rebuild it with scripts/build-android-discio-probe.sh into a fresh stage directory." >&2
+  exit 1
+fi
 
 export JAVA_HOME="$repo_root/.android-bootstrap/jdk-$KARTPAD_ANDROID_JDK_VERSION/Contents/Home"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
