@@ -150,6 +150,26 @@ int main() {
     std::cout << "Android SDL gamepad contract passed\n";
   }
   {
+    // Sideways Joy-Con: upright stick and buttons rotate to the rail-up grip.
+    RawGamepadState upright{};
+    upright.connected = true;
+    upright.left_y = 30000;  // Toward the lower end of an upright left Joy-Con.
+    upright.buttons = kGamepadDpadLeft | kGamepadBack;
+    const auto leftJoyCon = RotateSidewaysJoyCon(upright, kNintendoVendorId, kJoyConLeftProductId);
+    passed &= Require(leftJoyCon.left_x == 30000 && leftJoyCon.left_y == 0,
+                      "left Joy-Con lower end steers right");
+    passed &= Require(leftJoyCon.buttons == (kGamepadSouth | kGamepadStart),
+                      "left Joy-Con thumb button accelerates and Minus pauses");
+    upright.left_y = -32768;
+    upright.buttons = kGamepadEast;
+    const auto rightJoyCon = RotateSidewaysJoyCon(upright, kNintendoVendorId, kJoyConRightProductId);
+    passed &= Require(rightJoyCon.left_x == 32767 && rightJoyCon.buttons == kGamepadSouth,
+                      "right Joy-Con top steers right and A accelerates");
+    const auto pair = RotateSidewaysJoyCon(upright, kNintendoVendorId, 0x2008);
+    passed &= Require(pair.left_y == -32768 && pair.buttons == kGamepadEast,
+                      "other controllers are unchanged");
+  }
+  {
     kartpad::input::AutoAccelerateLatch latch;
     passed &= Require(!latch.Apply(true, 0, false) || !latch.locked(),
                       "disabled auto-accelerate never locks");

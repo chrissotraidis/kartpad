@@ -117,4 +117,54 @@ inline ClassicInputState MapGamepadToClassic(const RawGamepadState& input) {
   return output;
 }
 
+// A single Joy-Con reaches Android through the kernel driver in its upright
+// layout; SDL only rotates Joy-Cons it opens through HIDAPI, which Android
+// Bluetooth does not provide. Rotate a lone left or right Joy-Con to the
+// sideways (rail up) grip: the stick steers, and the four buttons under the
+// right thumb become the face buttons. Pairs and other controllers pass through.
+inline constexpr uint16_t kNintendoVendorId = 0x057e;
+inline constexpr uint16_t kJoyConLeftProductId = 0x2006;
+inline constexpr uint16_t kJoyConRightProductId = 0x2007;
+
+inline int16_t NegateAxis(int16_t value) {
+  return static_cast<int16_t>(std::clamp(-static_cast<int32_t>(value), -32767, 32767));
+}
+
+inline RawGamepadState RotateSidewaysJoyCon(RawGamepadState input,
+                                            uint16_t vendor, uint16_t product) {
+  if (vendor != kNintendoVendorId ||
+      (product != kJoyConLeftProductId && product != kJoyConRightProductId)) {
+    return input;
+  }
+  const bool left = product == kJoyConLeftProductId;
+  const int16_t x = input.left_x;
+  const int16_t y = input.left_y;
+  input.left_x = left ? y : NegateAxis(y);
+  input.left_y = left ? NegateAxis(x) : x;
+
+  const uint32_t buttons = input.buttons;
+  const auto moved = [buttons](uint32_t from, uint32_t to) {
+    return (buttons & from) != 0 ? to : 0u;
+  };
+  constexpr uint32_t faceAndDpad = kGamepadSouth | kGamepadEast | kGamepadWest |
+      kGamepadNorth | kGamepadDpadUp | kGamepadDpadDown | kGamepadDpadLeft |
+      kGamepadDpadRight;
+  uint32_t rotated = buttons & ~faceAndDpad;
+  if (left) {
+    rotated |= moved(kGamepadDpadLeft, kGamepadSouth) |
+               moved(kGamepadDpadDown, kGamepadEast) |
+               moved(kGamepadDpadUp, kGamepadWest) |
+               moved(kGamepadDpadRight, kGamepadNorth);
+    // The left Joy-Con has Minus but no Plus; use it to pause.
+    if ((buttons & kGamepadBack) != 0) rotated = (rotated & ~kGamepadBack) | kGamepadStart;
+  } else {
+    rotated |= moved(kGamepadEast, kGamepadSouth) |
+               moved(kGamepadNorth, kGamepadEast) |
+               moved(kGamepadSouth, kGamepadWest) |
+               moved(kGamepadWest, kGamepadNorth);
+  }
+  input.buttons = rotated;
+  return input;
+}
+
 }  // namespace kartpad::android
