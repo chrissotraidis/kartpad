@@ -48,11 +48,11 @@ The projects are independently maintained.
 | Platform | Download | Setup |
 | --- | --- | --- |
 | Android ARM64 | [0.5.2 · code 230](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.2) | [Android 9+ with Vulkan](docs/INSTALL_ANDROID.md) |
-| iPhone / iPad | [0.5.1 · build 85](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) | [iOS/iPadOS 16+; re-sign the IPA](docs/INSTALL_IPA.md) |
+| iPhone / iPad | [0.5.2 · build 86](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.2) | [iOS/iPadOS 16+; re-sign the IPA](docs/INSTALL_IPA.md) |
 | Apple Silicon Mac | [0.5.1 · build 85](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) | [macOS 14+](docs/INSTALL_MACOS.md) |
 | Apple TV experimental preview | [0.4.11 · build 9](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.11-tvos.1) | [tvOS 17+; re-sign the IPA](docs/INSTALL_TVOS.md) |
 
-**Android 0.5.2** fixes a race-load crash with Renderer Validation on and adds RVZ import ([notes](docs/releases/v0.5.2.md)). **0.5.1 is out for Android, iPhone/iPad and Mac.** Smoother play: KartPad prepares graphics at launch (shown as *Preparing graphics* in the top-left), menus and courses prepare their graphics during loading, races no longer freeze while a new effect compiles, and online play no longer stalls while waiting for the server. It also adds controller auto-accelerate, single Joy-Con support, an Android crash fix for older Adreno drivers, more detailed crash logging, and an opt-in experimental fix for broken characters on Snapdragon phones. See the [release notes](docs/releases/v0.5.1.md) and [mobile settings guide](docs/SETTINGS.md). Some device-specific graphics and low-end performance limits remain.
+**0.5.2** (Android and iPhone/iPad) fixes a race-load crash with Renderer Validation on and adds RVZ import on Android ([notes](docs/releases/v0.5.2.md)). **0.5.1 is out for Android, iPhone/iPad and Mac.** Smoother play: KartPad prepares graphics at launch (shown as *Preparing graphics* in the top-left), menus and courses prepare their graphics during loading, races no longer freeze while a new effect compiles, and online play no longer stalls while waiting for the server. It also adds controller auto-accelerate, single Joy-Con support, an Android crash fix for older Adreno drivers, more detailed crash logging, and an opt-in experimental fix for broken characters on Snapdragon phones. See the [release notes](docs/releases/v0.5.1.md) and [mobile settings guide](docs/SETTINGS.md). Some device-specific graphics and low-end performance limits remain.
 
 **0.4.22 moved KartPad to maintained WiiCompiled source** with pinned platform
 branches, preserving the existing game behavior and repository history. Source
