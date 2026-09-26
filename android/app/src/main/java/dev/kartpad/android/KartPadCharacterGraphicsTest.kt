@@ -7,8 +7,9 @@ import java.io.File
 
 /** Experimental character indexing comparison. Configure only before native startup. */
 internal object KartPadCharacterGraphicsTest {
-    enum class Mode(val stored: String, val label: String, val environment: String?) {
+    enum class Mode(val stored: String, val label: String, val environment: String?, val repack: Boolean = false) {
         NORMAL("normal", "Normal", null),
+        CHARACTER_FIX("repack", "Experimental: fix broken characters (Snapdragon)", null, repack = true),
         ORIGINAL("original", "Compare: original indexing", "0"),
         COMPATIBILITY("compatibility", "Compare: compatibility indexing", "1"),
     }
@@ -57,6 +58,8 @@ internal object KartPadCharacterGraphicsTest {
         val value = active.environment
         if (value == null) Os.unsetenv("KARTPAD_RENDERER_CONST_PNMTX")
         else Os.setenv("KARTPAD_RENDERER_CONST_PNMTX", value, true)
+        // The CPU vertex repack is off unless chosen here (untested on affected Adreno phones).
+        Os.setenv("KARTPAD_RENDERER_VERTEX_REPACK", if (active.repack) "1" else "0", true)
         configured = true
     }
 }
