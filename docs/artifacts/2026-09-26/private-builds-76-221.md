@@ -113,3 +113,21 @@ Build 78 (iOS runtime `f5a5002`):
 Installed in place over the running build 77, and the before/after user data manifests are
 identical. Not yet played.
 
+
+## iPad build 79 and Android code 224: launch graphics notice
+
+The top-left overlay used to show only "N shaders compiling". While launch prewarm runs, it
+now reads "Preparing graphics: X of Y" with a second line, "Racing before this finishes
+may stutter". Afterwards it returns to the short compile count. The overlay is drawn
+whenever the startup screen is hidden. This comes from the new
+`aurora_get_pipeline_prewarm_progress` in both runtimes.
+
+iOS also sets background prewarm workers to half of the compile workers (at least one),
+and the course replay log now splits recorded recipes into queued, already built,
+pending and rejected, to explain the earlier "0 queued" results.
+
+Runtimes: iOS `f2d66d9`, Android `79f1db6`; root `77ed4b9`. Both passed their build
+audits and contain the new string. Both were installed in place: the iPad's user data
+manifests are identical, and the Pixel's first-install date is unchanged. Build 78 was never
+launched, so it has no play data. Not yet played or seen on screen.
+
