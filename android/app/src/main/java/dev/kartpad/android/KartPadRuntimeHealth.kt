@@ -1,8 +1,11 @@
 package dev.kartpad.android
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
@@ -60,12 +63,21 @@ internal object KartPadRuntimeHealth {
         } else null
         val temp = battery?.takeIf { it.hasExtra(BatteryManager.EXTRA_TEMPERATURE) }
             ?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)?.div(10.0)
+        val memory = runCatching {
+            ActivityManager.MemoryInfo().also {
+                context.getSystemService(ActivityManager::class.java)?.getMemoryInfo(it)
+            }
+        }.getOrNull()?.takeIf { it.totalMem > 0 }
         val line = JSONObject()
             .put("schema", 2)
             .put("pid", android.os.Process.myPid())
             .put("unix_ms", System.currentTimeMillis())
             .put("pss_kib", runCatching { android.os.Debug.getPss() }.getOrNull() ?: JSONObject.NULL)
             .put("physical_footprint_bytes", JSONObject.NULL)
+            .put("device_ram_mib", memory?.totalMem?.div(1_048_576) ?: JSONObject.NULL)
+            .put("available_ram_mib", memory?.availMem?.div(1_048_576) ?: JSONObject.NULL)
+            .put("system_low_memory", memory?.lowMemory ?: JSONObject.NULL)
+            .put("network", networkKind(context))
             .put("elapsed_ms", elapsed)
             .put("version_code", BuildConfig.VERSION_CODE)
             .put("api", Build.VERSION.SDK_INT)
@@ -82,4 +94,18 @@ internal object KartPadRuntimeHealth {
             .toString()
         KartPadHealthJournal(File(context.filesDir, "KartPad/Logs/android-health.log")).append(line)
     }
+
+    /** Transport class only (wifi, cellular, vpn, ...); never addresses, SSIDs or carriers. */
+    private fun networkKind(context: Context): String = runCatching {
+        val manager = context.getSystemService(ConnectivityManager::class.java)
+            ?: return@runCatching "unknown"
+        val caps = manager.getNetworkCapabilities(manager.activeNetwork) ?: return@runCatching "none"
+        val kinds = listOf(
+            NetworkCapabilities.TRANSPORT_VPN to "vpn",
+            NetworkCapabilities.TRANSPORT_WIFI to "wifi",
+            NetworkCapabilities.TRANSPORT_CELLULAR to "cellular",
+            NetworkCapabilities.TRANSPORT_ETHERNET to "ethernet",
+        ).filter { caps.hasTransport(it.first) }.map { it.second }
+        kinds.joinToString("+").ifEmpty { "other" }
+    }.getOrDefault("unknown")
 }
