@@ -41,7 +41,10 @@ fi
 
 if [[ "${resume}" == "0" ]]; then
   mkdir -p "$(dirname "${work_source}")" "$(dirname "${work_build}")"
-  cp -R "${source_root}" "${work_source}"
+  # Copy the contents: ref/upstream/dolphin can be a symlink, and copying the link itself
+  # would apply the patches below to the shared pinned checkout.
+  mkdir -p "${work_source}"
+  cp -R "${source_root}/." "${work_source}/"
   patch --batch -p1 -d "${work_source}" < \
     "${repo_root}/patches/dolphin-android-discio-probe.patch"
 elif [[ ! -f "${work_build}/CMakeCache.txt" ]]; then
