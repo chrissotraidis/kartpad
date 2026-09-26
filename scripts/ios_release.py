@@ -40,6 +40,8 @@ def verify_source_equivalence(repo: Path, packaging_commit: str) -> None:
         "scripts/ios_release.py", "scripts/package-public-unsigned-ipa.py",
         "scripts/audit-public-unsigned-ipa.py", "scripts/package-android-release-notices.py",
         "tests/test_ios_release_provenance.py", "tests/test_android_public_release_contract.py",
+        "scripts/package-public-macos.py", "scripts/audit-public-macos.py",
+        "tests/test_macos_dual_mode_contract.py",
     }
     if any(not p.startswith("docs/") and p not in packaging for p in changed):
         raise ValueError("packaging commit changes inputs beyond documentation and release packaging")

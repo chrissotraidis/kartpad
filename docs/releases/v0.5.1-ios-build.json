@@ -1,28 +1,28 @@
 {
-  "appBuild": "73",
+  "appBuild": "85",
   "appVersion": "0.5.1",
   "buildManifest": {
     "kartpad_source": {
-      "files": 7380,
-      "sha256": "dba656fe31e321d3edce389f49cb089937c559aaad3880f024382ef47f367a4e"
+      "files": 7397,
+      "sha256": "ccadff741e7e594a6c1a71e267f2a7de6ed85627f9e84d9f495ec1794b94dcc8"
     },
     "prepared_runtime": {
       "files": 896,
-      "sha256": "b65a64adc08f55624726d6f8831058dda98f4143e39e504ecf272db13abf3ae8"
+      "sha256": "e97bb2e1346ad8e2a585009b86e5ae3fb373a0d5a78035d1992666c11d338500"
     },
     "schema": 1,
     "scope": "source_inputs_only_not_dependency_or_binary_identity",
     "source_dependencies": [
       {
-        "commit": "c1c9cfffce278164fffe5aa913ce3e5bb7f90732",
+        "commit": "ce9e90aea7682489da6b045e5b2b83f02a0f21f3",
         "dirty": false
       },
       {
-        "commit": "36e5f73646a3bf14fcf52e5575fd2cbce940641d",
+        "commit": "cbe43de21dc08e70ed3dea7bd93658ca118986c7",
         "dirty": false
       },
       {
-        "commit": "10360ad21d3b1a9bce5f966c95deb7086beac3e6",
+        "commit": "69cdba9143ca7150ccb59e8eb039c8c2870243d3",
         "dirty": false
       },
       {
@@ -31,12 +31,12 @@
       }
     ],
     "source_dirty": false,
-    "source_revision": "353aea5eb61895350fe7186a7ba3a46b0e8177a3",
+    "source_revision": "de3a99c9054042f07e2840066b1bd06f4012659b",
     "translation": {
       "files": 30030,
       "sha256": "9e0b11d3bb1fe97f6cccecd8420008b24450297e337ba29506f10ff262b2f1b3"
     }
   },
-  "executableSHA256": "8c7585a6a5ab95bbc80e26b2d6939d06d1ce7eeab2b919354d27ca116974389e",
+  "executableSHA256": "2adc1caf16ffba9628e97868c77b7d2019bc0918fad2d0c2618517ec31a4caf6",
   "releaseTag": "v0.5.1"
 }

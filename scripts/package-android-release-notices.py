@@ -14,17 +14,17 @@ import zipfile
 
 TAG = "v0.5.1"
 VERSION = "0.5.1"
-CODE = 220
+CODE = 229
 # Exact candidate; changing notes must not relabel its compiled source as HEAD.
-APPROVED_SOURCE = "353aea5eb61895350fe7186a7ba3a46b0e8177a3"
-APPROVED_APK = "d2e4104dfd01cd64d8589601ae2983f353da9a24446c28645898c7f68a5af58c"
-APPROVED_AAB = "217f160435f3ae2ed6f5d78eaa9c81f277210a301e6f28ab620585812628705b"
+APPROVED_SOURCE = "de3a99c9054042f07e2840066b1bd06f4012659b"
+APPROVED_APK = "89859d4d08492013fa8a979f9732e8a2a33f883142812770e75f6b956fae4b19"
+APPROVED_AAB = "673df6a36bf0c63fb4ea443420837a7f05e2c96703ebe0b6e400ee5d632049dd"
 APPROVED_SOURCE_ARCHIVE = "26a41f8911b8cc945ef26b0b058a97430679a7978dc67fe17cada470dc714770"
 APPROVED_NATIVE = {
     "lib/arm64-v8a/libSDL3.so": "d7a17c375adcb71818210581b885f59832d5f95b663aa7a7d493484a00a94753",
     "lib/arm64-v8a/libc++_shared.so": "c4c2fe5cbcb1fba0003a31fc7ab29a9bb12df6cc187ec45a806462540e83d93b",
     "lib/arm64-v8a/libkartpad_discio.so": "0e5bd27501b1aee71db63364f0673682e0cca3c0234d560d4c54ac87e01c0d0b",
-    "lib/arm64-v8a/libmain.so": "a6c6ecabeadbf0820a8685911950e3dc833be9045a90ef1d954e803e21d3c19e"
+    "lib/arm64-v8a/libmain.so": "8180940e3cf4188a7132e55263785d9843f97b00145df54917a4990b0631d9de"
 }
 REPO = Path(__file__).resolve().parents[1]
 
@@ -152,7 +152,9 @@ def main() -> None:
                        "tools/android63-base-common-shards.json",
                        "tests/test_android_public_release_contract.py",
                        "scripts/audit-android-bundle.sh", "tests/test_android_bundle_audit_contract.py",
-                       "tests/test_android_update_in_place_contract.py")
+                       "tests/test_android_update_in_place_contract.py",
+                       "scripts/package-public-macos.py", "scripts/audit-public-macos.py",
+                       "tests/test_macos_dual_mode_contract.py")
     if any(not name.startswith("docs/") and name not in packaging_files
            for name in changed):
         parser.error("packaging source differs from candidate beyond documentation/packager")
@@ -166,11 +168,11 @@ def main() -> None:
         "containsTranslatedGameCode": True, "containsGameData": False,
         "containsPrivateSigningMaterial": False, "publicationApproval": "pending explicit owner approval",
         "upstreamRightsConfirmed": False, "profileableByShell": False, "debuggable": False,
-        "physicalAcceptance": "Owner waived private code219 and iPad build72 play-session gate on 25 September 2026; these are unverified, not passed. Earlier code218 Retro race feedback does not establish code220 or reporter-device acceptance. Disposable emulator code135 to code220 installation preserved all 2044 staged game files; Ready to play and gameplay verification remain incomplete.",
+        "physicalAcceptance": "Owner played private code227 on a Pixel 9 Pro XL: offline play passed and Retro online joined. Private code228 and public code229 have not been played on a physical Android device, and the deferred network receive has not been exercised online. Disposable emulator: public code135 updated in place to code229 kept all 2044 staged game files, first-install time and data inodes; Ready to play was shown and touch input reached the New Licence screen. No race was played on code229.",
         "sourceArchive": {"filename": args.source_archive.name, "bytes": args.source_archive.stat().st_size,
                           "sha256": sha(args.source_archive.read_bytes()),
                           "reconstruction": "Exact current Git snapshots, prepared Android runtime and pinned dependency source archives are supplied. Private translated game functions are regenerated from user-supplied inputs using delivered emitters and recipes. No new independent second-host or bit-identical rebuild claim."},
-        "releaseTwin": "Private code219 uses a development signer. Public code220 uses the established public signer. No owner device was modified during release preparation.",
+        "releaseTwin": "Private code227 and code228 use a development signer. Public code229 uses the established public signer. No owner device was modified during release preparation.",
         "noticesSHA256": {n: sha(b) for n, b in sorted(data.items())},
     }
     data["PROVENANCE.json"] = (json.dumps(provenance, indent=2, sort_keys=True) + "\n").encode()
