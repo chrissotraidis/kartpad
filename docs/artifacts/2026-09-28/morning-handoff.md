@@ -42,7 +42,7 @@ Host graphics tests: 241 pass, same 4 old failures as the baseline.
    - Leave a menu idle for 5 min (#301 idle freeze); it should keep animating.
    - Make sure `debug.kartpad.dawn_interstage_floor` is unset on the phone (it is only a test hook).
 2. **iPad** (device build `build/ios88/xcode/Release-iphoneos/KartPad.app`, built 01:00 from `d5a01c93`,
-   clean source, diagnostics NO; contains the #330 and #135 changes, no simulator input hook. Its Info.plist
+   clean source, diagnostics NO; contains the #330 change and the since-reverted under-6 GB prewarm change (inactive on 6 GB+ iPads), no simulator input hook. Its Info.plist
    still says 0.5.1 / 72 (placeholder from PublicProducts.cmake; the release scripts stamp the real number),
    so treat it as a test build only. Unsigned; sign and install in place with backup/readback):
    - Race, Home 60 s, return: normal speed.
