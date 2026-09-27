@@ -46,6 +46,7 @@ Host graphics tests: 241 pass, same 4 old failures as the baseline.
    still says 0.5.1 / 72 (placeholder from PublicProducts.cmake; the release scripts stamp the real number),
    so treat it as a test build only. Unsigned; sign and install in place with backup/readback):
    - Race, Home 60 s, return: normal speed.
+   - Watch the very first launch after installing: #310 reports one crash on the first launch of every update.
    - Cup select stays 60 FPS (#327); launch shows black, no chooser flash.
    - Log shows `Pipeline prewarm plan: retain 512, warm-up pass …` (8 GB+ iPad).
 
