@@ -169,3 +169,17 @@ result decides whether 619 behaves like 750.
 is CPU-bound (84–90% main-thread occupancy). The #330 backlog cap may change how a starved guest
 thread recovers; recheck with the reporter after the next build.
 
+
+## 00:50 #135 (A10X iPad slower since 0.5.1)
+
+- Build 60's runtime (`36e5f73`) prewarmed 128 pipelines at launch. Since 0.5.1 the runtime keeps 512
+  (~460 MB) and, once per OS build, compiles every recorded recipe (up to 4096) in the background. The
+  warm-up marker is only written when that pass finishes, so on a slow 3-core A10X with 4 GB it can restart
+  every launch. That matches "10 FPS on course select, still 10 after a second launch".
+- Fix (iOS `$(git -C vendor/runtimes/ios log --oneline -1 | cut -c1-7)`, macOS matching for parity): under 6 GB, retain 128 and skip the
+  warm-up pass; 6 GB+ unchanged. New log line `Pipeline prewarm plan: retain N, warm-up pass yes/no`.
+  Test override `KARTPAD_PREWARM_LOW_MEMORY=1`.
+- Simulator: normal launch "retain 512 … 511 pipelines in 0.2 s"; forced low-memory "retain 128, warm-up
+  pass no (under 6 GB) … 128 pipelines", scripted run reaches a Luigi Circuit race normally.
+- Trade-off: after an iOS update, low-memory devices can stutter once on each first-seen effect in races
+  (as build 60 did). Morning check: none here; needs the A10X tester.
