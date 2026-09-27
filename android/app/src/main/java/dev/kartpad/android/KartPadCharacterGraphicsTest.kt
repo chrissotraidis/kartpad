@@ -8,7 +8,8 @@ import java.io.File
 /** Experimental character indexing comparison. Configure only before native startup. */
 internal object KartPadCharacterGraphicsTest {
     enum class Mode(val stored: String, val label: String, val environment: String?, val repack: String = "0") {
-        NORMAL("normal", "Normal", null),
+        // Empty repack = let the renderer decide (on for Adreno 8xx, off elsewhere).
+        NORMAL("normal", "Automatic (recommended)", null, repack = ""),
         CHARACTER_FIX("repack", "Experimental: fix broken characters (Snapdragon)", null, repack = "1"),
         FULL_FIX("repack_all", "Experimental: fix characters and track textures (Snapdragon, may be slower)", null, repack = "2"),
         INVISIBLE_FIX("repack_const", "Experimental: fix invisible characters (Snapdragon 8 Gen 3 / S24)", "2", repack = "1"),
@@ -60,8 +61,9 @@ internal object KartPadCharacterGraphicsTest {
         val value = active.environment
         if (value == null) Os.unsetenv("KARTPAD_RENDERER_CONST_PNMTX")
         else Os.setenv("KARTPAD_RENDERER_CONST_PNMTX", value, true)
-        // The CPU vertex repack is off unless chosen here (untested on affected Adreno phones).
-        Os.setenv("KARTPAD_RENDERER_VERTEX_REPACK", active.repack, true)
+        // Automatic leaves the choice to the renderer; the other modes pin it explicitly.
+        if (active.repack.isEmpty()) Os.unsetenv("KARTPAD_RENDERER_VERTEX_REPACK")
+        else Os.setenv("KARTPAD_RENDERER_VERTEX_REPACK", active.repack, true)
         configured = true
     }
 }
