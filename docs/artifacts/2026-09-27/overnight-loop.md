@@ -234,3 +234,17 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 ## 02:10
 
 - #196: Retro online "just keeps searching" on iPhone 17 Pro Max; the simulator joined a live room on current source. Asked for a Report a Problem export after 2 min of searching and Wi-Fi vs mobile data (#206 showed mobile-data matchmaking failing with 86420).
+
+## 02:45 #135 report disproves the prewarm theory; change reverted
+
+- Report KP-4C6A7EF8 (iPad7,3 = iPad Pro 10.5 A10X, 3 cores, 4 GB, 0.5.3/87): every launch logs
+  "Pipeline prewarm finished: ~506 pipelines in 0.5 s, warm-up pass skipped". So the full warm-up was not
+  running and launch prep was not the cause. Footprint ~0.9 GB, fine.
+- Frame telemetry: 50-59 FPS in menus, then 17-22 FPS (p50 58 ms) at course select, in all three sessions,
+  including one with thermal state 0. Slow presentation jobs show 36-40 ms in drawable acquire, i.e. the GPU
+  is behind. Thermal state was "serious" (2) from launch in two of three sessions, which makes it worse.
+- Reverted the under-6 GB prewarm change in the iOS and macOS runtimes (revert commits above); the parent pin
+  is updated below. Corrected the reply on #135.
+- Open: what makes course select GPU-heavy on the A10X since build 60. Candidates to compare with build 60:
+  render size (window 1112x834, native 2224x1668 at 1x) and the preview video path. Needs a build 60 vs 87
+  frame capture on an A10X-class device.
