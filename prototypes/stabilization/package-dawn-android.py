@@ -26,8 +26,9 @@ def main():
     parser.add_argument('source', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('--strip', type=Path, required=True, help='Pinned Android NDK llvm-strip')
+    parser.add_argument('--identity', default=IDENTITY, help='Expected KARTPAD_DAWN_VERSION (default: the reviewed production identity)')
     args = parser.parse_args()
-    if (args.source / 'KARTPAD_DAWN_VERSION').read_text().strip() != IDENTITY:
+    if (args.source / 'KARTPAD_DAWN_VERSION').read_text().strip() != args.identity:
         parser.error('source does not carry the reviewed Dawn identity')
     if args.output.exists():
         parser.error('output already exists')
@@ -78,7 +79,7 @@ def main():
         if b'/Users/' in data or b'/usr/local/lib/android/sdk' in data:
             parser.error(f'host path remains in {name}')
     record = {
-        'schemaVersion': 1, 'dawnVersionIdentity': IDENTITY,
+        'schemaVersion': 1, 'dawnVersionIdentity': args.identity,
         'upstreamRevision': '13abc3bc8ea2d3c2050f9e77a12d012108ceee24',
         'upstreamSourceArchiveSHA256': '713bea5b92d4f6c5175752fd7cbf1c3c5ce36598ff5dd98685d8a1216614ebba',
         'upstreamSourceURL': 'https://github.com/google/dawn/archive/13abc3bc8ea2d3c2050f9e77a12d012108ceee24.tar.gz',

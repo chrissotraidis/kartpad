@@ -38,3 +38,45 @@ iPhone/iPad simulators and macOS; physical devices in the morning. Nothing pushe
 - **Morning check (Pixel):** start a race, press Home for 60 s, return: the race timer should
   advance one second per second, and the exported log should show the `dropped … backlog` line.
 
+
+## 23:00–23:45
+
+### #193 (S24 Ultra, invisible bodies): eligibility ruled out
+
+- Added a mode-2 log line for skinned (PNMTXIDX-direct) draws that keep the dynamic lookup
+  (runtime `4624085`, pinned in the parent).
+- Build 0.5.5-test4 / 236 on the emulator, "fix invisible characters" option, A-spam through
+  character select, kart select and the race intro: **no skipped recipes**; 11 constant-lookup
+  shader variants, all `postex=20 nrm=10`. So on the S24 the bodies vanish inside the constant
+  shader itself. The one untested change on that path is `2ff436e` (texture-matrix indices through
+  the same switch), which 0.5.4 does not have. Needs a test build on an S24.
+
+### #135 (A10X iPad): real regression, not the first-launch preparation
+
+- Tester: still 10 FPS on course select after a second full launch. `3a688ad` (#327) only adds a
+  failed fast-path check before the same slow read, so it can't explain 35 → 10 FPS. Asked for a
+  Report a Problem export from course select.
+
+### Simulator input for iOS checks
+
+- iOS runtime `eecd79e`: `KARTPAD_SIM_INPUT="A@5000,DOWN@7000,A@7500+20000"` presses GameCube
+  buttons on port 0 (simulator builds only, `TARGET_OS_SIMULATOR`). Pass with
+  `SIMCTL_CHILD_KARTPAD_SIM_INPUT=… xcrun simctl launch`. A press every 1.5 s from 8 s reaches a
+  50cc Grand Prix race on Luigi Circuit; the race timer ran 30.5 s over 30 s of wall time.
+
+### #304 (PowerVR BXM-8-256): Dawn rejects the only GPU
+
+- Moto G54 log: `Insufficient Vulkan limits for maxInterStageShaderVariables` → no adapter.
+  PowerVR reports the Vulkan floor of 64 components; our Dawn (`b0fd045`) requires 72
+  (16 × 4 + 8). Upstream Dawn main (`99807f3`) added `VulkanRelaxMaxInterStageShaderVariables`,
+  accepting 14 variables on ImgTec. KartPad's GX shaders use at most 14 locations (2 lighting +
+  2 colors + 2 channels + 8 texcoords).
+- New `prototypes/stabilization/dependencies/dawn-imgtec-interstage-floor.patch`: accept the 64
+  floor on ImgTec (this Dawn's PhysicalDevice can't see instance toggles, so no toggle), plus an
+  Android test property `debug.kartpad.dawn_interstage_floor=1` that makes any GPU report the floor.
+  Built with `build-dawn-android.sh` (seed restored from the pinned 13abc3bc archive): identity
+  `70112ffd…`, archive `014027e7…`, library `a6ad79d7…`, CMake targets unchanged (`f914f68f…`).
+  `package-dawn-android.py` gained `--identity` (default unchanged).
+- Test build 0.5.5-test5 / 237 uses it through a temporary local lock edit (restored; production
+  lock unchanged). Next: emulator with the test property set.
+

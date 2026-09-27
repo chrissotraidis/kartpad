@@ -33,9 +33,11 @@ PY
 python3 prototypes/stabilization/verify-dawn-dependencies.py "$output/source" > "$output/dependencies.json"
 patch --batch -p1 -d "$output/source" < prototypes/stabilization/dependencies/dawn-optional-debug-utils.patch
 patch --batch -p1 -d "$output/source" < prototypes/stabilization/dependencies/dawn-swiftshader-dynamic-state.patch
+patch --batch -p1 -d "$output/source" < prototypes/stabilization/dependencies/dawn-imgtec-interstage-floor.patch
 python3 prototypes/stabilization/pin-dawn-version.py "$output/source" \
   prototypes/stabilization/dependencies/dawn-optional-debug-utils.patch \
-  prototypes/stabilization/dependencies/dawn-swiftshader-dynamic-state.patch > "$output/version.txt"
+  prototypes/stabilization/dependencies/dawn-swiftshader-dynamic-state.patch \
+  prototypes/stabilization/dependencies/dawn-imgtec-interstage-floor.patch > "$output/version.txt"
 sdk="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}"
 path_flags="-O3 -DNDEBUG -ffile-prefix-map=$repo_root=KartPad -fmacro-prefix-map=$repo_root=KartPad"
 cmake -S "$output/source" -B "$output/build" -G Ninja \

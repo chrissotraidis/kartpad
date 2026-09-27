@@ -1,0 +1,55 @@
+--- a/src/dawn/native/vulkan/PhysicalDeviceVk.cpp	2026-09-27 23:07:50
++++ b/src/dawn/native/vulkan/PhysicalDeviceVk.cpp	2026-09-27 23:09:00
+@@ -32,6 +32,10 @@
+ #include <string>
+ #include <utility>
+ #include <vector>
++
++#if defined(__ANDROID__)
++#include <sys/system_properties.h>
++#endif
+ 
+ #include "dawn/platform/DawnPlatform.h"
+ #include "src/dawn/common/GPUInfo.h"
+@@ -848,14 +852,38 @@
+     // multisampling. Vulkan does not provide a reliable way of enforcing this so must potentially
+     // use another vec4f slot to emulate this behavior. So on any WebGPU Vulkan backend
+     // `maxVertexOutputComponents` must be no less than 72 = (16 * 4 + 8).
+-    if (vkLimits.maxVertexOutputComponents < baseLimits.v1.maxInterStageShaderVariables * 4 + 8 ||
+-        vkLimits.maxFragmentInputComponents < baseLimits.v1.maxInterStageShaderVariables * 4 + 8) {
++    // KartPad (#304), after upstream Dawn's VulkanRelaxMaxInterStageShaderVariables: some PowerVR
++    // (ImgTec) drivers report only the Vulkan-spec floor of 64 components, below the 72 needed
++    // for 16 inter-stage variables. Accept that floor (14 variables) instead of rejecting the
++    // only adapter on those phones.
++    uint32_t interStageShaderVariablesBase = baseLimits.v1.maxInterStageShaderVariables;
++    uint32_t maxVertexOutputComponents = vkLimits.maxVertexOutputComponents;
++    uint32_t maxFragmentInputComponents = vkLimits.maxFragmentInputComponents;
++    bool relaxInterStage = gpu_info::IsImgTec(GetVendorId());
++#if defined(__ANDROID__)
++    // Test hook: debug.kartpad.dawn_interstage_floor=1 makes any GPU report the 64-component
++    // floor and take the relaxed path, so it can be exercised on an emulator.
++    {
++        char value[PROP_VALUE_MAX] = {};
++        if (__system_property_get("debug.kartpad.dawn_interstage_floor", value) > 0 &&
++            value[0] == '1') {
++            maxVertexOutputComponents = std::min(maxVertexOutputComponents, 64u);
++            maxFragmentInputComponents = std::min(maxFragmentInputComponents, 64u);
++            relaxInterStage = true;
++        }
++    }
++#endif
++    if (relaxInterStage) {
++        interStageShaderVariablesBase = std::min(interStageShaderVariablesBase, 14u);
++    }
++    if (maxVertexOutputComponents < interStageShaderVariablesBase * 4 + 8 ||
++        maxFragmentInputComponents < interStageShaderVariablesBase * 4 + 8) {
+         return DAWN_INTERNAL_ERROR("Insufficient Vulkan limits for maxInterStageShaderVariables");
+     }
+     // Reserve 1 for position and 1 for emulated fragment pixel center.
+     auto constexpr kNumReservedVariables = 1 + 1;
+     limits->v1.maxInterStageShaderVariables =
+-        std::min(vkLimits.maxVertexOutputComponents, vkLimits.maxFragmentInputComponents) / 4 -
++        std::min(maxVertexOutputComponents, maxFragmentInputComponents) / 4 -
+         kNumReservedVariables;
+ 
+     CHECK_AND_SET_V1_MAX_LIMIT(maxComputeSharedMemorySize, maxComputeWorkgroupStorageSize);
