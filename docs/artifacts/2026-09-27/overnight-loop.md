@@ -219,3 +219,9 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
   differs (menu keeps animating). So the report is Android- or device-specific; the Pixel morning pass
   includes 5 min idle on a menu.
 
+
+## 01:05
+
+- #313: tester's email reply mentions a new export that GitHub didn't attach (email replies drop files). Asked him to upload in the browser and confirm the version.
+- #119 (system bars): emulator build 238, swipe down/up shows the bars during a game; they hide again within ~6 s both times. Asked the reporter to recheck on 0.5.4.
+
