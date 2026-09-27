@@ -146,3 +146,26 @@ iPhone/iPad simulators and macOS; physical devices in the morning. Nothing pushe
 Test APKs, all signed with the release key `c1dbe0a0…`: `work/android238/kartpad-238.apk` is the newest
 (pacing fix, crash prompt, Automatic mode 1, PowerVR Dawn patch, #193 logging).
 
+
+## 00:40 GPU and symptom table, from every issue's logs
+
+| GPU (driver date) | Phone | Symptom | Issue |
+| --- | --- | --- | --- |
+| Adreno 610 | Honor X7c, Redmi Note 11 | renders; CPU-bound (Honor X7c 29 ms/frame) | #313, #303 |
+| Adreno 618 | — | slow | #275 |
+| Adreno 619 (Jan 2026) | Moto G85 | **invisible bodies, only eyes and face**; CPU 17–22 ms/frame | #301 |
+| Adreno 619 (May 2025) | Galaxy Tab S7 FE | "graphics different", crash before first race | #102 |
+| Adreno 650 | Retroid Pocket 5 | renders perfectly; frame drops | #103 |
+| Adreno 732 | Xiaomi Pad 7 | renders correctly | #166 |
+| Adreno 740 | ROG Phone 7S | launch crash (debug labels), fixed in 0.5.1 | #321 |
+| Adreno 750 (Jun and Sep 2025) | S24 Ultra, Lenovo TB710FU | **invisible bodies, only eyes and mustache**; option 1 and "invisible" option don't help | #104, #193, #211, #323 |
+| Adreno 829 / 840 | HONOR, Z Fold 8, OnePlus 15, S26, Red Magic 11 | **vertex explosion**; option 1 fixes characters, option 2 also fixes textures (Original); Retro loses karts on Fold 8 | #102, #137, #166, #308, #316 |
+
+So "invisible bodies" spans two generations (619 and 750) while 650/732 are fine. It is not tied to one
+GPU model, and Automatic (8xx only) does not cover it. #301 was asked to try option 1 on 0.5.4; its
+result decides whether 619 behaves like 750.
+
+#301 also reports the game "freezing while FPS shows 60 unless given constant input". Its 0.5.0 log
+is CPU-bound (84–90% main-thread occupancy). The #330 backlog cap may change how a starved guest
+thread recovers; recheck with the reporter after the next build.
+
