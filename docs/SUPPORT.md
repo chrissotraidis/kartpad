@@ -174,32 +174,31 @@ Older diagnostic builds include bounded `process-exits.json` OS metadata on
 Android 11+. A missing record does not establish no crash, and a manual stop
 can produce a user-requested exit. See the [beta test steps](releases/v0.4.12-android.2.md).
 
-**Android private reporting candidate:** describe the problem in **Report a
-Problem…**, choose the visible destination, then tap **Open GitHub Draft**.
-No local file or missing-log explanation is required to open the browser.
-Attach reviewed logs or screenshots on GitHub. Returning to the app keeps your
-draft. If no browser can open it, the screen shows an error and keeps the draft.
-These labels describe the private candidate, not a newly published release;
-older builds use **Report on GitHub…** and may ask for a log choice first.
+**Android, sending a diagnostic file:**
 
-**Android:** **••• → Report a Problem… → Share Report…** produces a short
-version/device/profile summary and your answers. It does **not** automatically
-include runtime logs. Choose **Export Private Logs…** in that report screen,
-or **Export Private Diagnostics…** on the Original/Retro Rewind chooser, to
-save logs locally. Exporting neither uploads a file nor selects an attachment.
+1. On the game chooser, tap **Help → Export Private Diagnostics… → Save Locally…**.
+2. Pick the game session that had the problem (the newest one if it just happened;
+   the time shown is when its log was last written) and save the ZIP.
+3. Attach the ZIP to your GitHub issue.
 
-**The session chooser is a source change awaiting a tested release.** In builds
-with **Choose the game session**, select the run that failed before saving the
-ZIP. The displayed timestamp is the console's last modification time, not a
-verified session start time. After a crash and relaunch, the newest run may not
-be the failed one. The selection remains fixed while the save picker is open.
+This works even if the game closes before it writes a log: the ZIP then still has
+Android's record of how the app closed and any crash traces it kept. Nothing is
+uploaded by KartPad.
 
-That export includes only the selected session's `console.log` and available
-`crash_*.txt`, plus a README and export-time context. It excludes other sessions,
-root-level `android-health.log`, OS exit history, and memory dumps. Long logs
-retain their header and recent tail with an explicit omission marker. Read the
-session's own startup information for its version; the installed/export-time
-app version may differ. Missing session metadata is unknown.
+Builds after 0.5.4 also ask on the next launch when the game closed unexpectedly
+(a crash, "not responding", a game error, or running out of memory while on screen).
+**Save Diagnostics…** saves that game's file, then **Open GitHub Report** opens a
+draft with your version and device filled in; attach the file there. Normal quits,
+swiping KartPad away and Android closing it in the background don't trigger it.
+
+**Report a Problem…** (on the chooser and in **•••**) opens a GitHub draft with your
+version, device and settings filled in. It doesn't attach logs; export them as above.
+
+The ZIP holds the chosen session's `console.log` and any `crash_*.txt`, Android's
+recent exit records and crash traces, recent health samples, a README and
+export-time context. It has no other sessions, game data, saves or memory dumps.
+Long logs keep their header and recent tail with an omission marker. The session's
+own startup lines give its version; the installed app version may differ.
 
 Older builds have no session chooser and can include several runs, health
 history and OS exit records. Open the ZIP locally and select the relevant

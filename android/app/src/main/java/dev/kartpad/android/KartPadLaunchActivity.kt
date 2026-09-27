@@ -37,6 +37,8 @@ open class KartPadLaunchActivity : Activity() {
     private var gameDataReady = false
     private var pendingProfile: String? = null
     private var exportSession: String? = null
+    private var crashReason: String? = null
+    private var crashExport = false
     private lateinit var preferredLaunch: KartPadPreferredLaunch
     private var darkMode = true
     private lateinit var preferenceButton: Button
@@ -66,8 +68,60 @@ open class KartPadLaunchActivity : Activity() {
             savedInstanceState?.getBoolean(STATE_PREFERRED_CONSUMED) == true ||
                 intent.getBooleanExtra(EXTRA_SKIP_PREFERRED_GAME, false) || pausedProfile() != null,
         )
+        crashReason = savedInstanceState?.getString("crash_reason")
+        crashExport = savedInstanceState?.getBoolean("crash_export") == true
+        val crash = if (pausedProfile() == null && savedInstanceState == null) unseenCrash() else null
+        // After an unexpected exit, stay on the chooser so the report prompt is seen.
+        if (crash != null) preferredLaunch.consumed = true
         KartPadExitDiagnostics.mark(this, pausedProfile() ?: "chooser")
         rebuildContent()
+        crash?.let { showCrashPrompt(it) }
+    }
+
+    /** An unexpected game exit from the last day that has not been offered yet; marks it offered. */
+    private fun unseenCrash(): String? {
+        val (time, reason) = KartPadExitDiagnostics.lastUnexpectedGameExit(this) ?: return null
+        val prefs = getSharedPreferences("kartpad_launcher", MODE_PRIVATE)
+        if (time <= prefs.getLong(PREF_CRASH_OFFERED, 0L) || System.currentTimeMillis() - time > CRASH_PROMPT_WINDOW_MS) return null
+        prefs.edit().putLong(PREF_CRASH_OFFERED, time).apply()
+        return reason
+    }
+
+    private fun showCrashPrompt(reason: String) {
+        crashReason = reason
+        AlertDialog.Builder(this)
+            .setTitle("KartPad closed unexpectedly")
+            .setMessage("Your last game ended unexpectedly ($reason). A diagnostic file from that game is the best way to find the cause. Save it, then attach it to a GitHub report. Nothing is uploaded; the file stays on your device until you share it.")
+            .setNegativeButton("Not Now", null)
+            .setPositiveButton("Save Diagnostics…") { _, _ ->
+                exportSession = null // The newest session is the one that just ended.
+                crashExport = true
+                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "application/zip"
+                    putExtra(Intent.EXTRA_TITLE, "KartPad-crash-diagnostics.zip")
+                }, REQUEST_DIAGNOSTICS)
+            }.show()
+    }
+
+    private fun offerCrashReport() {
+        val reason = crashReason ?: "crash"
+        AlertDialog.Builder(this)
+            .setTitle("Diagnostics saved")
+            .setMessage("Open a GitHub report now? Attach the file you just saved and say what you were doing when it closed.")
+            .setNegativeButton("Later", null)
+            .setPositiveButton("Open GitHub Report") { _, _ ->
+                val uri = android.net.Uri.parse("https://github.com/chrissotraidis/kartpad/issues/new").buildUpon()
+                    .appendQueryParameter("template", "bug_report.yml")
+                    .appendQueryParameter("title", "[Bug]: KartPad closed unexpectedly ($reason)")
+                    .appendQueryParameter("revision", "${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})")
+                    .appendQueryParameter("platform", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}; Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
+                    .appendQueryParameter("summary", "The game closed unexpectedly ($reason).")
+                    .appendQueryParameter("diagnostics", "Attached: KartPad-crash-diagnostics.zip, saved from the prompt after the game closed.")
+                    .build()
+                runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+                    .onFailure { showStatus("No browser is available to open GitHub.") }
+            }.show()
     }
 
     override fun onResume() {
@@ -95,6 +149,8 @@ open class KartPadLaunchActivity : Activity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("diagnostic_session", exportSession)
+        outState.putString("crash_reason", crashReason)
+        outState.putBoolean("crash_export", crashExport)
         outState.putBoolean(STATE_PREFERRED_CONSUMED, preferredLaunch.consumed)
         super.onSaveInstanceState(outState)
     }
@@ -522,19 +578,27 @@ open class KartPadLaunchActivity : Activity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != REQUEST_DIAGNOSTICS || resultCode != RESULT_OK) return
+        if (requestCode != REQUEST_DIAGNOSTICS) return
+        val fromCrashPrompt = crashExport
+        crashExport = false
+        if (resultCode != RESULT_OK) return
         val destination = data?.data ?: return
-        val session = exportSession ?: run { showStatus("Choose the game session again before exporting."); return }
+        // Null means no session was listed (for example a crash before the first log line); the
+        // export then still carries Android's exit records and crash traces.
+        val session = exportSession
         showStatus("Exporting private diagnostics…")
         validator.execute {
             val succeeded = runCatching {
                 KartPadDiagnosticExport.write(applicationContext, destination, session)
             }.isSuccess
             runOnUiThread {
-                if (!isFinishing && !isDestroyed) showStatus(
-                    if (succeeded) "Private diagnostics saved. Nothing was uploaded."
-                    else "Diagnostics export failed. The destination may contain an incomplete archive.",
-                )
+                if (!isFinishing && !isDestroyed) {
+                    showStatus(
+                        if (succeeded) "Private diagnostics saved. Nothing was uploaded."
+                        else "Diagnostics export failed. The destination may contain an incomplete archive.",
+                    )
+                    if (succeeded && fromCrashPrompt) offerCrashReport()
+                }
             }
         }
     }
@@ -560,6 +624,8 @@ open class KartPadLaunchActivity : Activity() {
             "dev.kartpad.android.TEST_MODE_CHOOSER_GAME_DATA_VALID"
         private const val REQUEST_GAME_DATA = 4_303
         private const val REQUEST_DIAGNOSTICS = 4_304
+        private const val PREF_CRASH_OFFERED = "crash_prompt_offered_ms"
+        private const val CRASH_PROMPT_WINDOW_MS = 24L * 60 * 60 * 1000
     }
 
     /** One focusable row retains the same selection callback and controller behavior. */

@@ -54,7 +54,7 @@ body:
     id: diagnostics
     attributes:
       label: Reviewed diagnostics and screenshots
-      description: Use the platform steps in docs/SUPPORT.md. Attach a bounded report or relevant redacted log excerpts. The in-app GitHub button does not attach the report file automatically.
+      description: "A diagnostic file is the fastest way to a fix. Android: on the game chooser tap Help → Export Private Diagnostics…, pick the session that had the problem, and drag the ZIP in here. iPhone/iPad: ••• → Report a Problem…. Mac: Help → Report a Problem…. For graphics problems, add a screenshot or short video. Nothing is attached automatically."
   - type: input
     id: related-report
     attributes:

@@ -24,6 +24,34 @@ internal object KartPadExitDiagnostics {
         }
     }
 
+    /**
+     * The newest exit of the game process, when it ended unexpectedly: (timestamp, short reason).
+     * Normal quits (exit status 0), swipes from Recents and background memory kills return null.
+     */
+    fun lastUnexpectedGameExit(context: Context): Pair<Long, String>? {
+        if (Build.VERSION.SDK_INT < 30) return null
+        return runCatching {
+            val manager = context.getSystemService(ActivityManager::class.java) ?: return null
+            val exit = manager.getHistoricalProcessExitReasons(context.packageName, 0, 8).firstOrNull { record ->
+                val profile = record.processStateSummary?.takeIf { it.size <= 128 }
+                    ?.toString(Charsets.US_ASCII)?.let { statePattern.matchEntire(it) }?.groupValues?.get(2)
+                profile == "base" || profile == "retro_rewind"
+            } ?: return null
+            val foreground = exit.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+            val reason = when (exit.reason) {
+                ApplicationExitInfo.REASON_CRASH, ApplicationExitInfo.REASON_CRASH_NATIVE -> "crash"
+                ApplicationExitInfo.REASON_ANR -> "not responding"
+                ApplicationExitInfo.REASON_INITIALIZATION_FAILURE -> "failed to start"
+                ApplicationExitInfo.REASON_EXIT_SELF -> "game error".takeIf { exit.status != 0 }
+                ApplicationExitInfo.REASON_LOW_MEMORY -> "out of memory".takeIf { foreground }
+                ApplicationExitInfo.REASON_SIGNALED, ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE ->
+                    "closed by Android".takeIf { foreground }
+                else -> null
+            } ?: return null
+            exit.timestamp to reason
+        }.getOrNull()
+    }
+
     fun snapshot(context: Context): String {
         val report = JSONObject().put("schema", 1)
             .put("export_version_code", BuildConfig.VERSION_CODE)

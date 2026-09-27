@@ -48,3 +48,20 @@ Android launch exits, asking for Export Private Diagnostics if still failing: #1
 - Test build 234 (signed `c1dbe0a0…`, installed on AVD) still has the mode 2 Automatic; the
   next build picks up the change.
 
+
+## Getting logs from reporters (evening)
+
+- **Launcher bug fixed:** Help → Export Private Diagnostics refused to save when no game session
+  existed ("Choose the game session again before exporting."), which is exactly the case of phones
+  that close before writing a log (#143, #200, #208, #236). It now exports with Android's exit
+  records and crash traces.
+- **Crash prompt:** after the game process ends unexpectedly (crash, ANR, non-zero exit, or a
+  foreground memory/signal kill) within the last day, the chooser offers Save Diagnostics once,
+  then a prefilled GitHub draft. Verified on build 0.5.5-test3 / 235 (release signer
+  `c1dbe0a0…`): `am crash` on the game process → prompt → ZIP with session
+  `base_…_pid5881` and `java_crash`/`base` exit → GitHub new-issue link. Not re-offered
+  on relaunch; a force-stop with a paused game does not prompt. Android only; iOS has no reliable
+  equivalent, since iOS ends background apps without a record.
+- Bug form and `docs/SUPPORT.md` now give the export steps directly.
+- Asked for a diagnostics export on #192, #206, #257, #313.
+
