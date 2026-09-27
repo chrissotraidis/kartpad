@@ -248,3 +248,5 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 - Open: what makes course select GPU-heavy on the A10X since build 60. Candidates to compare with build 60:
   render size (window 1112x834, native 2224x1668 at 1x) and the preview video path. Needs a build 60 vs 87
   frame capture on an A10X-class device.
+
+- Correction: `36e5f73` is the 0.5.1 iOS runtime pin (128 commits after build 60), not build 60 itself. Since `36e5f73` no commit touches render size or presentation setup, so the #135 GPU change lies between build 60 and 0.5.1; bisect by device frame capture.
