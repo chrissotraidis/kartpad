@@ -183,3 +183,9 @@ thread recovers; recheck with the reporter after the next build.
   pass no (under 6 GB) … 128 pipelines", scripted run reaches a Luigi Circuit race normally.
 - Trade-off: after an iOS update, low-memory devices can stutter once on each first-seen effect in races
   (as build 60 did). Morning check: none here; needs the A10X tester.
+
+## 00:55 #101 follow-up and #135 reply
+
+- Kode-Z retested 0.5.3 on iPhone 15 Pro Max (2796x1290): 3D proportions match the simulator's Hor+ view,
+  but 2D HUD elements (countdown, place, timer) are visibly wide. Open item: 2D layout in Fill Screen.
+- Told #135 the likely cause and that the next update restores the lighter launch prewarm under 6 GB.
