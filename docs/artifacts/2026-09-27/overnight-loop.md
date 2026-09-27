@@ -263,3 +263,8 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 ## 06:10
 
 - #310 (iPad 9th gen, 0.5.3): 25 min offline + 20 min online with no crashes, "near perfect"; only lag when a custom (Retro) track loads. New detail: after every update the game crashes once right after the first launch, then never again. Asked for the iOS analytics entry. Candidate: first launch after an update rebuilds the pipeline cache (#135 notes); morning iPad check: note whether the first launch of the new build crashes.
+
+## 07:00 end of overnight loop
+
+- #310: tester sent a cpu_resource report (69% CPU over 131 s, no action taken), not the first-launch crash; clarified which entry to look for.
+- Loop ended at 07:00 JST. Morning checklist: docs/artifacts/2026-09-28/morning-handoff.md.
