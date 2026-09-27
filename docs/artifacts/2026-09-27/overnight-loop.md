@@ -225,3 +225,8 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 - #313: tester's email reply mentions a new export that GitHub didn't attach (email replies drop files). Asked him to upload in the browser and confirm the version.
 - #119 (system bars): emulator build 238, swipe down/up shows the bars during a game; they hide again within ~6 s both times. Asked the reporter to recheck on 0.5.4.
 
+
+## 01:40 #313 on 0.5.4
+
+- Honor X7c (Adreno 610), 0.5.4/232, 0.5x, 16:9: race main-thread CPU 36-42 ms per frame (88-92% busy), 20-25 FPS; worst 70-78 ms/frame (12-13 FPS) in some stretches; first launch after update queued 403 pipelines. Thermal 0, no power save. Same CPU-bound profile as 0.5.0 (29 ms at 24 FPS in a different scene): 0.5.4 did not move this phone. Told the tester plainly; no more files needed.
+
