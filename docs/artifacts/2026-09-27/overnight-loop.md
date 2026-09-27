@@ -202,3 +202,13 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
   likely the wider field of view (Hor+), which makes nearby geometry at the screen edges look pulled
   sideways, not a HUD bug. Not replying again until there's something concrete; the earlier reply
   overstated the HUD point and should be corrected with any follow-up.
+
+## 01:05
+
+- Android emulator build 238 log: exactly one `[vi] dropped 76190 ms retrace backlog` after the app sat in the
+  background; none during normal slow emulator play, so the cap doesn't fire on a merely slow device.
+- Dawn upstream (`99807f3`) vs ours: no new Qualcomm-specific toggles, so no upstream driver workaround to
+  borrow for #193/#301.
+- #101 closed: reporter says Fill Screen looks fine after trying again.
+- Started the iPad device build `build/ios88` (tmux `kp-ios88b`) for the morning test.
+- Morning handoff written to `docs/artifacts/2026-09-28/morning-handoff.md`.
