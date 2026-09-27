@@ -41,8 +41,10 @@ Host graphics tests: 241 pass, same 4 old failures as the baseline.
      log shows `repack mode=off source=auto`.
    - Leave a menu idle for 5 min (#301 idle freeze); it should keep animating.
    - Make sure `debug.kartpad.dawn_interstage_floor` is unset on the phone (it is only a test hook).
-2. **iPad** (device build `build/ios88/xcode/Release-iphoneos/KartPad.app`, being built overnight;
-   unsigned, sign and install in place with backup/readback):
+2. **iPad** (device build `build/ios88/xcode/Release-iphoneos/KartPad.app`, built 01:00 from `d5a01c93`,
+   clean source, diagnostics NO; contains the #330 and #135 changes, no simulator input hook. Its Info.plist
+   still says 0.5.1 / 72 (placeholder from PublicProducts.cmake; the release scripts stamp the real number),
+   so treat it as a test build only. Unsigned; sign and install in place with backup/readback):
    - Race, Home 60 s, return: normal speed.
    - Cup select stays 60 FPS (#327); launch shows black, no chooser flash.
    - Log shows `Pipeline prewarm plan: retain 512, warm-up pass …` (8 GB+ iPad).
