@@ -254,3 +254,8 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 ## 04:15
 
 - #167 (Helio G200 / Mali-G57, 0.5.4): 20-30 FPS regardless of 1x/0.75x/0.5x, so CPU-bound like #313. Asked for an export via the browser.
+
+## 05:15
+
+- #102: tvllerr (Z Fold 8) reports Retro Rewind and Original both fully correct, no missing karts or item boxes. Conflicts with itsgeri (Retro loses karts with the all-draws option). Asked which option; if all-draws, Automatic could go back to mode 2 after a Retro check on a Fold 8. Automatic stays mode 1 for now.
+- #310: tester will try 0.5.3; nothing to do.
