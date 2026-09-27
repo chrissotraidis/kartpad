@@ -189,3 +189,16 @@ thread recovers; recheck with the reporter after the next build.
 - Kode-Z retested 0.5.3 on iPhone 15 Pro Max (2796x1290): 3D proportions match the simulator's Hor+ view,
   but 2D HUD elements (countdown, place, timer) are visibly wide. Open item: 2D layout in Fill Screen.
 - Told #135 the likely cause and that the next update restores the lighter launch prewarm under 6 GB.
+
+## 01:00 #101: HUD measurement (temporary probe, removed)
+
+Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 simulator (2556x1179, 2.17:1):
+
+- Original 4:3: race HUD layout 608x527 (1.15:1) shown in a 4:3 viewport, so the game's own HUD is
+  about 1.16x wide there too; that is how the Wii draws it.
+- Fill Screen: the same layout becomes 1016x527 (1.93:1) in a 2.17:1 viewport, about 1.13x wide.
+- So Fill Screen's HUD is no wider, relative to its height, than the original 4:3 game. Screenshots side by
+  side (`work/profile/ortho-0.png`, `ortho-2.png`) agree. The "stretched" impression on #101 is most
+  likely the wider field of view (Hor+), which makes nearby geometry at the screen edges look pulled
+  sideways, not a HUD bug. Not replying again until there's something concrete; the earlier reply
+  overstated the HUD point and should be corrected with any follow-up.
