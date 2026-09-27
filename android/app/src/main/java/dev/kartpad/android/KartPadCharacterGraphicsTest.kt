@@ -11,6 +11,7 @@ internal object KartPadCharacterGraphicsTest {
         NORMAL("normal", "Normal", null),
         CHARACTER_FIX("repack", "Experimental: fix broken characters (Snapdragon)", null, repack = "1"),
         FULL_FIX("repack_all", "Experimental: fix characters and track textures (Snapdragon, may be slower)", null, repack = "2"),
+        INVISIBLE_FIX("repack_const", "Experimental: fix invisible characters (Snapdragon 8 Gen 3 / S24)", "2", repack = "1"),
         ORIGINAL("original", "Compare: original indexing", "0"),
         COMPATIBILITY("compatibility", "Compare: compatibility indexing", "1"),
     }
