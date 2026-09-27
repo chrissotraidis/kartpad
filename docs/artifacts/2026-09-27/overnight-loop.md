@@ -123,3 +123,26 @@ iPhone/iPad simulators and macOS; physical devices in the morning. Nothing pushe
 - **#101 (Fill Screen, iPhone 15 Pro Max):** screenshot shows the 3D and HUD stretched horizontally,
   as expected for a 4:3 game shown full width without widening the projection. Not changed tonight.
 
+
+## 00:35
+
+- **#101 (Fill Screen):** iPhone 16 simulator, Fill Screen (`SunPadAspectRatioMode=2`), Luigi Circuit:
+  3D is Hor+ and correctly proportioned (screenshot `work/issue101/fill.png`); only the 2D HUD is a little
+  wide. The report's 7 Sep screenshot predates the dynamic EGG canvas. Asked the reporter to recheck on
+  0.5.3. Simulator setting restored to Original.
+
+## Morning checks on physical devices
+
+1. **Pixel, #330:** start a race, Home for 60 s, return. The timer should advance 1 s per second, and the
+   exported log should show `[vi] dropped … ms retrace backlog after a stall`.
+2. **Pixel, crash prompt:** force a crash (`adb shell am crash <game pid>`), reopen KartPad, save the ZIP from
+   the prompt, and confirm the GitHub draft opens.
+3. **Pixel, regression pass on the newest test APK:** Original and Retro race, one online race, and
+   Automatic character mode shows `repack mode=off source=auto` (the Pixel isn't Adreno).
+4. **iPad, #330 and #327:** Home for 60 s mid-race, return, and confirm normal speed. Cup select stays at 60 FPS.
+5. **Still needs testers' phones:** #304 PowerVR (Moto G54), #193 S24 (runtime `2ff436e`), #102 Retro on
+   Z Fold 8 with all-draws, #135 A10X course select.
+
+Test APKs, all signed with the release key `c1dbe0a0…`: `work/android238/kartpad-238.apk` is the newest
+(pacing fix, crash prompt, Automatic mode 1, PowerVR Dawn patch, #193 logging).
+
