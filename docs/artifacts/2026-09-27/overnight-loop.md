@@ -212,3 +212,10 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 - #101 closed: reporter says Fill Screen looks fine after trying again.
 - Started the iPad device build `build/ios88` (tmux `kp-ios88b`) for the morning test.
 - Morning handoff written to `docs/artifacts/2026-09-28/morning-handoff.md`.
+
+## 01:15 #301 idle freeze: not reproduced on the simulator
+
+- iPhone simulator, Class select left with no input for ~6.5 min, screenshot every 20 s: every consecutive pair
+  differs (menu keeps animating). So the report is Android- or device-specific; the Pixel morning pass
+  includes 5 min idle on a menu.
+

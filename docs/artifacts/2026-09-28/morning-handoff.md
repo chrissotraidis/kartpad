@@ -39,6 +39,7 @@ Host graphics tests: 241 pass, same 4 old failures as the baseline.
    - `adb shell am crash <game pid>` then reopen: prompt → save ZIP → GitHub draft.
    - Original and Retro race, one online race; Help shows "Automatic (recommended)";
      log shows `repack mode=off source=auto`.
+   - Leave a menu idle for 5 min (#301 idle freeze); it should keep animating.
    - Make sure `debug.kartpad.dawn_interstage_floor` is unset on the phone (it is only a test hook).
 2. **iPad** (device build `build/ios88/xcode/Release-iphoneos/KartPad.app`, being built overnight;
    unsigned, sign and install in place with backup/readback):
