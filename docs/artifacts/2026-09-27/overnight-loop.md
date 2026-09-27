@@ -108,3 +108,18 @@ iPhone/iPad simulators and macOS; physical devices in the morning. Nothing pushe
   restore the production lock (`work/dawn-imgtec/dependencies.lock.production.json`). The build only
   reads the lock at dependency preparation.
 
+
+## 00:20–00:30
+
+- **#304 confirmed on the emulator:** build 0.5.5-test6 / 238, floor forced: log shows
+  `Adapter maxInterStageShaderVariables: 14` (the relaxed path), adapter ready, character select
+  and races render. Without the patch this GPU configuration returns "No supported adapters".
+  Remaining gate: a real PowerVR BXM phone (Moto G54, #304).
+- **#330 on macOS:** Mac runtime built with the pacing change (`build/macthp/runtime-build/RetroRewind`,
+  contains the `retrace backlog` string); compiles and links cleanly.
+- **#313 (Honor X7c, Adreno 610):** tester sent a 0.5.0 export. Main thread 86% busy, 29.5 ms CPU per
+  frame, pipelines all built (`queued=0`), FPS 51 → 24 as the race went on at 0.5× resolution:
+  CPU-bound. Asked for the same on 0.5.4.
+- **#101 (Fill Screen, iPhone 15 Pro Max):** screenshot shows the 3D and HUD stretched horizontally,
+  as expected for a 4:3 game shown full width without widening the projection. Not changed tonight.
+
