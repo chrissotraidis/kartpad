@@ -259,3 +259,7 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 
 - #102: tvllerr (Z Fold 8) reports Retro Rewind and Original both fully correct, no missing karts or item boxes. Conflicts with itsgeri (Retro loses karts with the all-draws option). Asked which option; if all-draws, Automatic could go back to mode 2 after a Retro check on a Fold 8. Automatic stays mode 1 for now.
 - #310: tester will try 0.5.3; nothing to do.
+
+## 06:10
+
+- #310 (iPad 9th gen, 0.5.3): 25 min offline + 20 min online with no crashes, "near perfect"; only lag when a custom (Retro) track loads. New detail: after every update the game crashes once right after the first launch, then never again. Asked for the iOS analytics entry. Candidate: first launch after an update rebuilds the pipeline cache (#135 notes); morning iPad check: note whether the first launch of the new build crashes.
