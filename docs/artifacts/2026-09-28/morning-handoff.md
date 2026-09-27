@@ -23,7 +23,7 @@ Detailed evidence for each item is in `docs/artifacts/2026-09-27/overnight-loop.
 | Crash prompt after unexpected exit; export works with no session | Android | log collection | emulator `am crash` → prompt → ZIP → GitHub | Pixel |
 | Automatic uses character repack (mode 1) on Adreno 8xx | Android | #102 | emulator; tester evidence | Z Fold 8 / OnePlus 15 |
 | Accept PowerVR 64-component floor (Dawn patch) | Android | #304 | emulator forced floor: `maxInterStageShaderVariables: 14`, races | real PowerVR; needs new Dawn package + lock |
-| Lighter launch prewarm under 6 GB | iOS, Mac | #135 | iPhone sim (forced) | A10X tester |
+| (reverted) lighter prewarm under 6 GB: #135 report showed warm-up already skipped; A10X course select is GPU-bound | — | #135 | — | build 60 vs 87 GPU comparison |
 | #193 skipped-recipe logging, inter-stage limit log | Android | #193, #304 | emulator | — |
 | Black iOS launch screen, no chooser flash | iOS | #327 | sim | iPad |
 | Repack copy fast path | Android | #316 | host tests | — |
