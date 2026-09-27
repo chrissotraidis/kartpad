@@ -80,3 +80,31 @@ iPhone/iPad simulators and macOS; physical devices in the morning. Nothing pushe
 - Test build 0.5.5-test5 / 237 uses it through a temporary local lock edit (restored; production
   lock unchanged). Next: emulator with the test property set.
 
+
+## 23:45–00:20
+
+### #304 PowerVR: emulator check of the Dawn patch
+
+- 0.5.5-test5 / 237 (release signer `c1dbe0a0…`, patched Dawn `70112ffd…`) with
+  `debug.kartpad.dawn_interstage_floor=1`: adapter `ready`, Luigi Circuit race renders with no
+  shader or pipeline errors in the log. The log didn't print the limit, so runtime `35257c4` adds
+  `Adapter maxInterStageShaderVariables: N`; build 238 carries it. Property reset to 0 afterwards.
+- Replied on #304 with the cause, and that it's unverified on a real PowerVR phone.
+
+### Retro Rewind on the iPhone simulator
+
+- Pack 6.12.8 downloaded from the pinned URL (sha `9dc9f689…`, matches `RetroRewindRelease`) and
+  extracted into the simulator app's `Library/Application Support/KartPad/RetroRewind`.
+- With scripted input: title → license → Single Player → 200cc SNES Mario Circuit 1 race; and
+  Retro WFC → privacy notice → Permit → "Connecting to Retro WFC…" → VS Worldwide (197 players) →
+  Retro VS → character select → joined a live room. Left immediately. So Retro online works on
+  current iOS source; #196's "won't load me in" needs the tester's details.
+
+### Build notes
+
+- `scripts/build-android-game-app.sh` rejects `~/GitHub/kartpad/build/dolphin-android-discio-jni`
+  (pre-RVZ). Use `build/discio-rvz2-jni` in this worktree.
+- For a Dawn test build, point `dependencies.lock.json` at the local archive, start the build, then
+  restore the production lock (`work/dawn-imgtec/dependencies.lock.production.json`). The build only
+  reads the lock at dependency preparation.
+
