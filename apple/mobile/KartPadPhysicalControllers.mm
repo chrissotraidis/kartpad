@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <mutex>
 #include <vector>
@@ -115,6 +116,7 @@ KartPadPhysicalControllerSample SampleFromController(GCController *controller) {
 void ClearControllerHandlers(GCController *controller) {
   controller.extendedGamepad.valueChangedHandler = nil;
   if (UsesMicroProfile(controller)) {
+    controller.microGamepad.valueChangedHandler = nil;
     controller.physicalInputProfile.valueDidChangeHandler = nil;
   }
 }
@@ -227,6 +229,13 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
   }
   const SunPadInputState state = KartPadAdaptPhysicalControllerSample(
       SampleFromController(controller), [SunPadControllerMappingStore mapping]);
+  if (UsesMicroProfile(controller) && (state.buttons != 0 || state.stickX != 0 || state.stickY != 0)) {
+    static std::atomic<int> logged{0};
+    if (logged.fetch_add(1, std::memory_order_relaxed) < 12) {
+      SunPadLog(@"micro controller input slot=%d buttons=0x%04x stick=%d,%d", slot + 1,
+                state.buttons, state.stickX, state.stickY);
+    }
+  }
   {
     std::scoped_lock lock(_stateMutex);
     const std::size_t index = static_cast<std::size_t>(slot);
@@ -258,10 +267,24 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
       publish();
     };
   } else {
+    // A single Joy-Con reports through its micro profile. Listen on both that
+    // profile and the physical profile: iOS does not guarantee the physical
+    // profile's handler fires for every micro controller, and publishing twice
+    // is harmless because each publish reads the complete current state.
+    controller.microGamepad.valueChangedHandler = ^(GCMicroGamepad *, GCControllerElement *) {
+      publish();
+    };
     controller.physicalInputProfile.valueDidChangeHandler =
         ^(GCPhysicalInputProfile *, GCControllerElement *) {
           publish();
         };
+    NSArray<NSString *> *buttons =
+        [controller.physicalInputProfile.buttons.allKeys sortedArrayUsingSelector:@selector(compare:)];
+    NSArray<NSString *> *dpads =
+        [controller.physicalInputProfile.dpads.allKeys sortedArrayUsingSelector:@selector(compare:)];
+    SunPadLog(@"micro controller vendor=%@ category=%@ buttons=%@ dpads=%@",
+              controller.vendorName ?: @"unknown", controller.productCategory ?: @"unknown",
+              [buttons componentsJoinedByString:@","], [dpads componentsJoinedByString:@","]);
   }
   controller.playerIndex = PlayerIndexForSlot(slot);
   [self publishController:controller];
