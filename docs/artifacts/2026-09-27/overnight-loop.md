@@ -250,3 +250,7 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
   frame capture on an A10X-class device.
 
 - Correction: `36e5f73` is the 0.5.1 iOS runtime pin (128 commits after build 60), not build 60 itself. Since `36e5f73` no commit touches render size or presentation setup, so the #135 GPU change lies between build 60 and 0.5.1; bisect by device frame capture.
+
+## 04:15
+
+- #167 (Helio G200 / Mali-G57, 0.5.4): 20-30 FPS regardless of 1x/0.75x/0.5x, so CPU-bound like #313. Asked for an export via the browser.
