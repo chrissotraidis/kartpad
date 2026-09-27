@@ -230,3 +230,7 @@ Logged every orthographic projection in a Luigi Circuit race on the iPhone 16 si
 
 - Honor X7c (Adreno 610), 0.5.4/232, 0.5x, 16:9: race main-thread CPU 36-42 ms per frame (88-92% busy), 20-25 FPS; worst 70-78 ms/frame (12-13 FPS) in some stretches; first launch after update queued 403 pipelines. Thermal 0, no power save. Same CPU-bound profile as 0.5.0 (29 ms at 24 FPS in a different scene): 0.5.4 did not move this phone. Told the tester plainly; no more files needed.
 
+
+## 02:10
+
+- #196: Retro online "just keeps searching" on iPhone 17 Pro Max; the simulator joined a live room on current source. Asked for a Report a Problem export after 2 min of searching and Wi-Fi vs mobile data (#206 showed mobile-data matchmaking failing with 86420).
