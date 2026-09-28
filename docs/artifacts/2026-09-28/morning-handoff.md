@@ -68,3 +68,5 @@ Host graphics tests: 241 pass, same 4 old failures as the baseline.
 - Version tag added next to KartPad on the Android and iPhone/iPad choosers and as the Mac window subtitle (255a4b16, f406efb1).
 - Pixel 9 Pro XL: 0.5.1-review.9/228 -> 0.5.5-test7/239 in place (debug signer 61dfb514..., matching the installed app); both games still Ready to play; chooser shows v0.5.5-test7 (239).
 - iPad Pro: build/ios89 built (diagnostics NO), stamped 0.5.5-test/89 and signed (work/ipad89-install/signed). Not installed: the iPad is not on USB (network only), data backup copies hang, and another task (BlueWake) has an AFC transfer stuck on the same iPad for 11+ min.
+- iPad Pro (USB): backed up 34 app-data files, installed 0.5.5-test/89 in place, read back 34/34 unchanged; Mario Kart Wii.wbfs still present. Chooser shows v0.5.5-test (89), both games Ready to play.
+- First launch after install stayed on the black launch screen for 18+ s (process running); relaunch showed the chooser normally. Possibly the same first-launch-after-update problem as #310.
