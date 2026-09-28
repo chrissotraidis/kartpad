@@ -47,6 +47,11 @@ class Profile:
     def accepts(self, image_sha256: str) -> bool:
         return any(item["sha256"] == image_sha256 for item in self.accepted_images)
 
+    @property
+    def accepts_verified_extraction(self) -> bool:
+        """Other containers are allowed only if extraction proves the pinned executables."""
+        return self.data["containers"].get("acceptVerifiedExtraction") is True
+
 
 def _require(value: Any, expected: type, location: str) -> Any:
     if not isinstance(value, expected):
@@ -88,6 +93,8 @@ def validate_profile(data: dict[str, Any], source: str = "profile") -> None:
     images = _require(containers.get("acceptedImages"), list, f"{source}.containers.acceptedImages")
     if not extensions or not images:
         raise ProfileError(f"{source}: at least one extension and accepted image are required")
+    if "acceptVerifiedExtraction" in containers and not isinstance(containers["acceptVerifiedExtraction"], bool):
+        raise ProfileError(f"{source}.containers.acceptVerifiedExtraction must be true or false")
     seen: set[str] = set()
     for index, image in enumerate(images):
         _require(image, dict, f"{source}.containers.acceptedImages[{index}]")
@@ -162,13 +169,20 @@ def load_profiles(directory: Path) -> list[Profile]:
     return profiles
 
 
-def select_profile(profiles: Iterable[Profile], image_sha256: str, requested: str = "auto") -> Profile:
+def select_profile(profiles: Iterable[Profile], image_sha256: str, requested: str = "auto",
+                   extension: str | None = None) -> Profile:
     candidates = list(profiles)
     if requested != "auto":
         candidates = [profile for profile in candidates if profile.id == requested]
         if not candidates:
             raise ProfileError(f"unknown profile: {requested}")
     matches = [profile for profile in candidates if profile.accepts(image_sha256)]
+    if not matches and extension is not None:
+        # A different dump or container of the same disc (ISO, RVZ, another WBFS)
+        # is accepted provisionally; extraction must then reproduce the profile's
+        # disc identity and exact main.dol/StaticR.rel hashes or the build stops.
+        matches = [profile for profile in candidates if profile.accepts_verified_extraction
+                   and extension in profile.data["containers"]["extensions"]]
     if len(matches) != 1:
         if requested == "auto":
             raise ProfileError(f"no supported profile matches image SHA-256 {image_sha256}")

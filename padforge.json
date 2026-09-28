@@ -9,9 +9,14 @@
     {
       "type": "wii-disc",
       "formats": [
-        "wbfs"
+        "iso",
+        "wbfs",
+        "rvz",
+        "wia",
+        "gcz",
+        "ciso"
       ],
-      "description": "Your own PAL RMCP01 disc image. The current profile accepts one pinned WBFS image; ISO and RVZ variants are planned."
+      "description": "Your own PAL RMCP01 revision 0 disc image. Any dump or container is accepted if extraction reproduces the profile's exact main.dol and StaticR.rel."
     }
   ],
   "targets": {

@@ -28,7 +28,8 @@ already held by a server or clear bans; affected accounts may need service-admin
 help. Never reset identities or delete saves as a workaround.
 
 1. Build your personal IPA with the [Personal IPA Builder](BUILDER.md). It
-   runs on an Apple Silicon Mac and accepts the Builder's supported disc image.
+   runs on an Apple Silicon Mac and accepts your own supported disc image as
+   ISO, WBFS or RVZ.
 2. Keep the IPA private. It contains code translated from your game and must
    not be shared or uploaded.
 3. Re-sign and install it with AltStore Classic plus AltServer or another

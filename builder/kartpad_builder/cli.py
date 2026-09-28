@@ -62,11 +62,13 @@ def main(argv: list[str] | None = None) -> int:
             raise ProfileError(f"disc image does not exist: {args.image}")
         suffix = args.image.suffix.lower().removeprefix(".")
         image_sha256 = sha256_file(args.image)
-        profile = select_profile(profiles, image_sha256, args.profile)
+        profile = select_profile(profiles, image_sha256, args.profile, extension=suffix)
         if suffix not in profile.data["containers"]["extensions"]:
             raise ProfileError(f"unsupported disc-image extension for {profile.id}: .{suffix}")
         if args.command == "inspect":
-            print(json.dumps({"imageSHA256": image_sha256, "profileId": profile.id, "displayName": profile.display_name}, indent=2))
+            acceptance = "pinned image" if profile.accepts(image_sha256) else "verified after extraction"
+            print(json.dumps({"imageSHA256": image_sha256, "profileId": profile.id,
+                              "displayName": profile.display_name, "acceptance": acceptance}, indent=2))
             return 0
         prepare_dependencies(repo_root(), profile, install=False)
         result = build(

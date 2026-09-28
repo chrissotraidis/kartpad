@@ -54,6 +54,21 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ProfileError, "no supported profile"):
             select_profile(load_profiles(PROFILES), "0" * 64)
 
+    def test_other_dumps_are_provisional_until_extraction_verifies(self) -> None:
+        profiles = load_profiles(PROFILES)
+        self.assertTrue(profiles[0].accepts_verified_extraction)
+        self.assertIs(select_profile(profiles, "0" * 64, extension="rvz"), profiles[0])
+        with self.assertRaisesRegex(ProfileError, "no supported profile"):
+            select_profile(profiles, "0" * 64, extension="zip")
+        data = json.loads((PROFILES / "mkwii-rmcp01-rev0.json").read_text())
+        data["containers"]["acceptVerifiedExtraction"] = False
+        strict = Profile(Path("strict.json"), data)
+        with self.assertRaisesRegex(ProfileError, "no supported profile"):
+            select_profile([strict], "0" * 64, extension="iso")
+        data["containers"]["acceptVerifiedExtraction"] = "yes"
+        with self.assertRaisesRegex(ProfileError, "true or false"):
+            validate_profile(data)
+
     def test_cache_key_changes_for_each_input(self) -> None:
         profile = load_profiles(PROFILES)[0]
         baseline = cache_key(profile, "a" * 64, "b" * 64)

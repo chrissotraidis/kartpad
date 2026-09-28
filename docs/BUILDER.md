@@ -8,8 +8,12 @@ progress; this page describes only commands that exist today.
 
 ## Current preview
 
-The first Builder preview supports one verified input: the pinned PAL
-`RMCP01` revision 0 WBFS development image. It produces an unsigned,
+The Builder accepts your own PAL `RMCP01` revision 0 disc image as ISO, WBFS,
+RVZ, WIA, GCZ or CISO. The pinned development WBFS is recognized by its hash;
+any other dump is accepted provisionally and must extract to the profile's disc
+identity and exact `main.dol` and `StaticR.rel` hashes, or the build stops
+before translation. (Checked 29 Sep 2026 with ISO and RVZ converted from the
+pinned image; a different game's disc is refused.) It produces an unsigned,
 personalized IPA for local signing. The Builder and compatibility metadata are
 public; disc data, extracted files, translated code, signing material, and the
 resulting IPA remain ignored and private.
