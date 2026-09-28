@@ -122,6 +122,13 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool) -> list[st
         if not install:
             raise BuildError("missing pinned physical-iOS Dawn archive; run ./scripts/build-user-ipa.sh bootstrap")
         _download(dawn["iosArm64Url"], dawn["iosArm64Sha256"], dawn_output)
+    # The Mac app build (scripts/prepare-g7-game-runtime.sh) reads this archive
+    # but nothing fetched it, so fresh clones could not build the Mac app.
+    mac_output = repo / "build/dependency-cache" / f"dawn-darwin-arm64-{dawn['version']}.tar.gz"
+    if install and (not mac_output.is_file()
+                    or hashlib.sha256(mac_output.read_bytes()).hexdigest() != dawn["darwinArm64Sha256"]):
+        mac_url = f"{dawn['repository']}/releases/download/{dawn['version']}/{dawn['darwinArm64Artifact']}"
+        _download(mac_url, dawn["darwinArm64Sha256"], mac_output)
     if "retroRewind" in profile.data:
         from .retro_rewind import prepare_inputs
 
