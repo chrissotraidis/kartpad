@@ -1362,6 +1362,16 @@ void KartPadMacShellInstall(void) {
     [NSApplication sharedApplication];
     InstallSettingsShortcutMonitor();
     InstallMenu();
+    // Small version tag under the window title so testers can tell builds apart.
+    NSBundle *bundle = NSBundle.mainBundle;
+    NSString *version = [NSString stringWithFormat:@"v%@ (%@)",
+        [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?",
+        [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?"];
+    [NSNotificationCenter.defaultCenter addObserverForName:NSWindowDidBecomeMainNotification
+        object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+      NSWindow *window = note.object;
+      if (window.subtitle.length == 0) window.subtitle = version;
+    }];
   });
 }
 

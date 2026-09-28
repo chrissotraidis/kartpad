@@ -1036,7 +1036,14 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
       [mark.heightAnchor constraintEqualToConstant:48]]];
   UILabel *brand = [self label:@"KartPad" style:UIFontTextStyleTitle1 secondary:NO];
   brand.font = [UIFontMetrics.defaultMetrics scaledFontForFont:[UIFont systemFontOfSize:30 weight:UIFontWeightBold]];
-  UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[mark, brand]];
+  // Small version tag so testers can tell builds apart at a glance.
+  NSBundle *bundle = NSBundle.mainBundle;
+  UILabel *version = [self label:[NSString stringWithFormat:@"v%@ (%@)",
+      [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?",
+      [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?"]
+                           style:UIFontTextStyleFootnote secondary:YES];
+  version.accessibilityIdentifier = @"kartpad.version";
+  UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[mark, brand, version]];
   identity.axis = UILayoutConstraintAxisHorizontal;
   identity.alignment = UIStackViewAlignmentCenter;
   identity.spacing = 12;

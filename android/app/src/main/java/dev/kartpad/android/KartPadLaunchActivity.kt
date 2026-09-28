@@ -365,6 +365,9 @@ open class KartPadLaunchActivity : Activity() {
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(12) })
             addView(label("KartPad", 30f).apply { setTypeface(typeface, Typeface.BOLD) })
+            // Small version tag so testers can tell builds apart at a glance.
+            addView(label("v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", 13f, true),
+                LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(10) })
         }
         header.addView(brand, LinearLayout.LayoutParams(if (largeText) -1 else 0, -2, if (largeText) 0f else 1f))
         val theme = ImageButton(this).apply {
