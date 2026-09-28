@@ -44,8 +44,59 @@
     },
     "macos": {
       "hosts": {
-        "macos-arm64": "planned"
-      }
+        "macos-arm64": "experimental"
+      },
+      "output": "zip",
+      "check": "none",
+      "steps": [
+        {
+          "stage": "preflight",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/build-user-ipa.sh",
+            "doctor"
+          ]
+        },
+        {
+          "stage": "translate",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/translate-retro-rewind.sh",
+            "--image",
+            "{disc}",
+            "--retro-root",
+            "{repo}/private/builder/retro-rewind-downloads/6.12.8-extracted/RetroRewind6",
+            "--payload",
+            "{repo}/private/builder/retro-rewind-downloads/payload.RMCPD00.bin"
+          ],
+          "env": {
+            "KARTPAD_TRANSLATION_JOBS": "{jobs}"
+          }
+        },
+        {
+          "stage": "compile",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/build-macos-app.sh",
+            "{repo}/private/self-build/retro-rewind/translation",
+            "{work}/macos-source",
+            "{work}/macos-build",
+            "{work}/KartPad.app",
+            "dual"
+          ]
+        },
+        {
+          "stage": "package",
+          "command": [
+            "/usr/bin/ditto",
+            "-c",
+            "-k",
+            "--keepParent",
+            "{work}/KartPad.app",
+            "{output}"
+          ]
+        }
+      ]
     },
     "android": {
       "hosts": {
