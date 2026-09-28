@@ -399,5 +399,18 @@ class PackagingTests(unittest.TestCase):
                 audit_app(app, ("/Users/private",))
 
 
+class BootstrapTests(unittest.TestCase):
+    def test_interrupted_clone_reports_a_recoverable_error(self) -> None:
+        import subprocess
+        from kartpad_builder.bootstrap import _verify_checkout
+        from kartpad_builder.errors import BuildError
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            subprocess.run(["git", "init", "-q", str(root / "ref/upstream/partial")], check=True)
+            dependency = {"name": "partial", "path": "ref/upstream/partial", "commit": "0" * 40, "tree": "0" * 40}
+            with self.assertRaisesRegex(BuildError, "incomplete .*bootstrap again"):
+                _verify_checkout(root, dependency)
+
+
 if __name__ == "__main__":
     unittest.main()

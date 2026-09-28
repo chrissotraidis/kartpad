@@ -31,7 +31,14 @@ def _verify_checkout(repo: Path, dependency: dict[str, Any]) -> None:
     path = repo / dependency["path"]
     if not (path / ".git").exists():
         raise BuildError(f"missing pinned source {dependency['name']}: {path}")
-    commit = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD^{commit}"], text=True).strip()
+    head = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD^{commit}"],
+                          capture_output=True, text=True)
+    if head.returncode != 0:
+        raise BuildError(
+            f"{dependency['name']} checkout at {path} is incomplete (for example after an "
+            "interrupted bootstrap). Move that folder aside and run "
+            "./scripts/build-user-ipa.sh bootstrap again; nothing was changed.")
+    commit = head.stdout.strip()
     tree = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD^{tree}"], text=True).strip()
     if commit != dependency["commit"] or tree != dependency["tree"]:
         raise BuildError(f"{dependency['name']} does not match dependencies.lock.json")
