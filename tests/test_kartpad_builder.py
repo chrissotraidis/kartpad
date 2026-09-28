@@ -361,6 +361,14 @@ class PackagingTests(unittest.TestCase):
                 self.assertEqual(provenance["softwareLicense"], "GPL-3.0-only")
                 self.assertEqual(provenance["gameCodeRedistributionRights"], "not-cleared")
                 self.assertNotIn("redistributionAllowed", provenance)
+            events = [json.loads(line) for line in
+                      (root / "work/logs/progress.jsonl").read_text().splitlines()]
+            self.assertTrue(all(event["schema_version"] == 1 for event in events))
+            self.assertEqual([(event["event"], event["stage"]) for event in events], [
+                ("stage_started", "preflight"), ("stage_completed", "preflight"),
+                *[("stage_skipped", stage) for stage in
+                  ("extract", "translate", "dependencies", "generate", "compile")],
+                ("stage_started", "package"), ("stage_completed", "package")])
 
     def test_unsafe_additional_entry_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

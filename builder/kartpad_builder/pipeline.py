@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -16,6 +18,39 @@ from .retro_rewind import RetroRewindInputs, prepare_inputs
 
 
 PIPELINE_VERSION = 1
+
+
+class ProgressLog:
+    """Newline-delimited JSON stage events that frontends such as PadForge read.
+
+    Written to `<work-root>/logs/progress.jsonl`. Events describe stages only;
+    compiler output stays in the ordinary build log.
+    """
+
+    def __init__(self, path: Path | None) -> None:
+        self.path = path
+        self.started = time.monotonic()
+
+    def emit(self, event: str, stage: str, **fields: Any) -> None:
+        if self.path is None:
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        record = {"schema_version": 1, "event": event, "stage": stage,
+                  "elapsed_seconds": round(time.monotonic() - self.started, 2), **fields}
+        with self.path.open("a") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+    @contextlib.contextmanager
+    def stage(self, name: str):
+        self.emit("stage_started", name)
+        begun = time.monotonic()
+        try:
+            yield
+        except BaseException as error:
+            self.emit("stage_failed", name, stage_elapsed_seconds=round(time.monotonic() - begun, 2),
+                      error=type(error).__name__)
+            raise
+        self.emit("stage_completed", name, stage_elapsed_seconds=round(time.monotonic() - begun, 2))
 
 
 def source_fingerprint(repo: Path) -> str:
@@ -301,11 +336,17 @@ def build(
     workspace = profile_root / "builds" / key
     extraction = profile_root / "inputs" / image_sha256 / "disc"
     translation = translation_override or workspace / "translation"
-    retro = prepare_inputs(profile, work_root, install=False)
+    progress = ProgressLog(work_root / "logs/progress.jsonl")
+    with progress.stage("preflight"):
+        retro = prepare_inputs(profile, work_root, install=False)
     if app_override is None:
-        extract(profile, image, extraction)
+        with progress.stage("extract"):
+            extract(profile, image, extraction)
         if translation_override is None:
-            translate(profile, repo, extraction, translation, jobs, retro)
+            with progress.stage("translate"):
+                translate(profile, repo, extraction, translation, jobs, retro)
+        else:
+            progress.emit("stage_skipped", "translate", reason="translation override supplied")
         runtime_source = workspace / "ios-runtime-source"
         xcode_build = workspace / "ios-device-xcode"
         discio_key = dependency_cache_key(
@@ -319,30 +360,41 @@ def build(
         )
         discio_source = repo / f"build/builder-dependencies/discio-iphoneos-{discio_key}-source"
         discio_build = repo / f"build/builder-dependencies/discio-iphoneos-{discio_key}-build"
-        if not (discio_build / "Source/Core/DiscIO/libdiscio.a").is_file():
-            run([str(repo / "scripts/build-ios-discio-probe.sh"), str(repo / "ref/upstream/dolphin"), str(discio_source), str(discio_build), "iphoneos"])
-        if not runtime_source.exists():
-            runtime_stage = runtime_source.with_name(runtime_source.name + ".partial")
-            if runtime_stage.exists():
-                shutil.rmtree(runtime_stage)
-            env = os.environ.copy()
-            env["KARTPAD_PREPARE_ONLY"] = "1"
-            env["KARTPAD_DISCIO_SOURCE_DIR"] = str(discio_source)
-            env["KARTPAD_DISCIO_BUILD_DIR"] = str(discio_build)
-            try:
-                run([str(repo / "scripts/prepare-ios-game-runtime.sh"), str(translation), str(runtime_stage), str(workspace / "runtime-build"), "dual"], env=env)
-                runtime_stage.rename(runtime_source)
-            except Exception:
+        with progress.stage("dependencies"):
+            if not (discio_build / "Source/Core/DiscIO/libdiscio.a").is_file():
+                run([str(repo / "scripts/build-ios-discio-probe.sh"), str(repo / "ref/upstream/dolphin"), str(discio_source), str(discio_build), "iphoneos"])
+        with progress.stage("generate"):
+            if not runtime_source.exists():
+                runtime_stage = runtime_source.with_name(runtime_source.name + ".partial")
                 if runtime_stage.exists():
                     shutil.rmtree(runtime_stage)
-                raise
-        env = os.environ.copy()
-        env["KARTPAD_DISCIO_SOURCE_DIR"] = str(discio_source)
-        env["KARTPAD_DISCIO_BUILD_DIR"] = str(discio_build)
-        run([str(repo / "scripts/build-ios-device-game-app.sh"), str(runtime_source), str(xcode_build), str(translation), "dual"], env=env)
+                env = os.environ.copy()
+                env["KARTPAD_PREPARE_ONLY"] = "1"
+                env["KARTPAD_DISCIO_SOURCE_DIR"] = str(discio_source)
+                env["KARTPAD_DISCIO_BUILD_DIR"] = str(discio_build)
+                try:
+                    run([str(repo / "scripts/prepare-ios-game-runtime.sh"), str(translation), str(runtime_stage), str(workspace / "runtime-build"), "dual"], env=env)
+                    runtime_stage.rename(runtime_source)
+                except Exception:
+                    if runtime_stage.exists():
+                        shutil.rmtree(runtime_stage)
+                    raise
+        with progress.stage("compile"):
+            env = os.environ.copy()
+            env["KARTPAD_DISCIO_SOURCE_DIR"] = str(discio_source)
+            env["KARTPAD_DISCIO_BUILD_DIR"] = str(discio_build)
+            run([str(repo / "scripts/build-ios-device-game-app.sh"), str(runtime_source), str(xcode_build), str(translation), "dual"], env=env)
         app = xcode_build / "Release-iphoneos/KartPad.app"
     else:
+        for skipped in ("extract", "translate", "dependencies", "generate", "compile"):
+            progress.emit("stage_skipped", skipped, reason="prebuilt app override supplied")
         app = app_override
+    with progress.stage("package"):
+        return _package(repo, profile, image_sha256, output, fingerprint, key, app, workspace)
+
+
+def _package(repo: Path, profile: Profile, image_sha256: str, output: Path, fingerprint: str,
+             key: str, app: Path, workspace: Path) -> BuildResult:
     audit_app(app, (str(repo), str(Path.home()), str(workspace)))
     provenance = {
         "schemaVersion": 1,
