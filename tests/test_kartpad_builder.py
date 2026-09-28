@@ -344,7 +344,7 @@ class PackagingTests(unittest.TestCase):
             root = Path(temp)
             app = self.make_app(root)
             # Reuse a synthetic app; this packaging check needs no game or network inputs.
-            with patch("kartpad_builder.pipeline.prepare_inputs"):
+            with patch("kartpad_builder.pipeline.prepare_inputs") as prepare:
                 result = build(
                     repo=REPO,
                     profile=load_profiles(PROFILES)[0],
@@ -354,6 +354,7 @@ class PackagingTests(unittest.TestCase):
                     work_root=root / "work",
                     app_override=app,
                 )
+            self.assertEqual(prepare.call_args.args[1], REPO / "private/builder")
             with zipfile.ZipFile(result.ipa) as archive:
                 for name in ("LICENSE", "RIGHTS_AND_LICENSES.md", "THIRD_PARTY_NOTICES.md"):
                     self.assertEqual(archive.read(name), (REPO / name).read_bytes())

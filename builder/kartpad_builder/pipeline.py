@@ -338,7 +338,9 @@ def build(
     translation = translation_override or workspace / "translation"
     progress = ProgressLog(work_root / "logs/progress.jsonl")
     with progress.stage("preflight"):
-        retro = prepare_inputs(profile, work_root, install=False)
+        # Bootstrap downloads pinned inputs to the checkout's shared cache; builds in
+        # any --work-root read them from there rather than expecting a second copy.
+        retro = prepare_inputs(profile, repo / "private/builder", install=False)
     if app_override is None:
         with progress.stage("extract"):
             extract(profile, image, extraction)
