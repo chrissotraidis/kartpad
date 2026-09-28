@@ -14,12 +14,10 @@ namespace IOS::ES {
 
 namespace {
 
-constexpr std::array<u8, 16> kRetailCommonKey = {
-    0xeb, 0xe4, 0x2a, 0x22, 0x5e, 0x85, 0x93, 0xe4,
-    0x48, 0xd9, 0xc5, 0x45, 0x73, 0x81, 0xaa, 0xf7};
-constexpr std::array<u8, 16> kKoreanCommonKey = {
-    0x63, 0xb8, 0x2b, 0xb4, 0xf4, 0x61, 0x4e, 0x2e,
-    0x13, 0xf2, 0xfe, 0xfb, 0xba, 0x4c, 0x9b, 0x7e};
+// KartPad does not ship console keys. The user's own Wii common key is loaded
+// at import time by KartPadDiscExtractor and handed in here.
+std::array<u8, 16> g_userCommonKey{};
+bool g_hasUserCommonKey = false;
 
 size_t SignatureSize(SignatureType type) {
   switch (type) {
@@ -154,8 +152,10 @@ u8 TicketReader::GetCommonKeyIndex() const {
 }
 
 std::array<u8, 16> TicketReader::GetTitleKey() const {
-  const std::array<u8, 16>& commonKey =
-      GetCommonKeyIndex() == 1 ? kKoreanCommonKey : kRetailCommonKey;
+  // Only the retail common key (index 0) is supported; KartPad accepts PAL
+  // RMCP01 discs only.
+  if (!g_hasUserCommonKey || GetCommonKeyIndex() != 0) return {};
+  const std::array<u8, 16>& commonKey = g_userCommonKey;
   std::array<u8, 16> iv{};
   std::copy_n(m_bytes.data() + offsetof(Ticket, title_id), sizeof(Ticket::title_id),
               iv.begin());
@@ -166,6 +166,11 @@ std::array<u8, 16> TicketReader::GetTitleKey() const {
                titleKey.data(), titleKey.size());
   }
   return titleKey;
+}
+
+void KartPadSetUserCommonKey(const std::array<u8, 16>& key) {
+  g_userCommonKey = key;
+  g_hasUserCommonKey = true;
 }
 
 }  // namespace IOS::ES
