@@ -1037,13 +1037,13 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   UILabel *brand = [self label:@"KartPad" style:UIFontTextStyleTitle1 secondary:NO];
   brand.font = [UIFontMetrics.defaultMetrics scaledFontForFont:[UIFont systemFontOfSize:30 weight:UIFontWeightBold]];
   // Small version tag so testers can tell builds apart at a glance.
-  NSBundle *bundle = NSBundle.mainBundle;
-  UILabel *version = [self label:[NSString stringWithFormat:@"v%@ (%@)",
-      [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?",
-      [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?"]
+  NSBundle *versionBundle = NSBundle.mainBundle;
+  UILabel *versionTag = [self label:[NSString stringWithFormat:@"v%@ (%@)",
+      [versionBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?",
+      [versionBundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?"]
                            style:UIFontTextStyleFootnote secondary:YES];
-  version.accessibilityIdentifier = @"kartpad.version";
-  UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[mark, brand, version]];
+  versionTag.accessibilityIdentifier = @"kartpad.version";
+  UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[mark, brand, versionTag]];
   identity.axis = UILayoutConstraintAxisHorizontal;
   identity.alignment = UIStackViewAlignmentCenter;
   identity.spacing = 12;
