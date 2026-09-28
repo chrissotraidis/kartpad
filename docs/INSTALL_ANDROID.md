@@ -1,8 +1,15 @@
 # Install KartPad on Android
 
+> [!IMPORTANT]
+> **Downloads retired.** Prebuilt KartPad APKs are no longer published, and
+> the release links on this page no longer work. A build-it-yourself version is
+> in progress. Today the [Personal IPA Builder](BUILDER.md) builds an
+> iPhone/iPad app on an Apple Silicon Mac from your own disc image. The settings,
+> save and troubleshooting guidance below still applies to installed apps.
+
 ## Current update
 
-[**0.5.0 / code 135**](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0)
+**0.5.0 / code 135** (retired)
 adds a persistent Auto-accelerate opt-out, fixes controller assignment, and
 corrects generated vehicle thumbnails, framebuffer copies and graphics-startup
 failures. The owner confirmed the thumbnail repair on the tested Pixel. This
@@ -14,7 +21,7 @@ The latest update also aligns the mobile settings order and labels, adds **Game 
 
 ## Download and first launch
 
-1. Open the [current Android release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0).
+1. Open the current Android release (retired).
    Download `KartPad-v0.5.0-android-arm64.apk`, `SHA256SUMS.txt`, and the companion
    notices ZIP. APK is Android's installable format; IPA is Apple-only. The AAB
    is a developer bundle and is not needed for installation (it is not published).

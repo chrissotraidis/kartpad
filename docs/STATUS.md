@@ -1,6 +1,12 @@
 # KartPad status
 
-**September 26 release checkpoint:** [KartPad 0.5.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.1) is the latest stable release, with Android code 229 and iPhone/iPad/Mac build 85, all built cleanly from de3a99c. All six downloads were re-downloaded anonymously and match their checksums; the APK carries the 0.5.0 release signer. The owner accepted gameplay on private iPad build 84 (the iPad stutter regression is resolved) and Pixel code 227 (offline play, with Retro online joining). [Release notes](releases/v0.5.1.md) · [Final package record](artifacts/2026-09-26/release-051-final.md).
+**29 September 2026:** prebuilt downloads have been retired and all earlier
+releases are no longer available. KartPad publishes source only; users build
+their own app with the [Personal IPA Builder](BUILDER.md) (iPhone/iPad on an
+Apple Silicon Mac today; Mac and Android targets in progress). The checkpoint
+below is kept as a record of the last published version.
+
+**September 26 release checkpoint:** KartPad 0.5.1 (retired) is the latest stable release, with Android code 229 and iPhone/iPad/Mac build 85, all built cleanly from de3a99c. All six downloads were re-downloaded anonymously and match their checksums; the APK carries the 0.5.0 release signer. The owner accepted gameplay on private iPad build 84 (the iPad stutter regression is resolved) and Pixel code 227 (offline play, with Retro online joining). [Release notes](releases/v0.5.1.md) · [Final package record](artifacts/2026-09-26/release-051-final.md).
 
 [Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
 [Canonical active queue](MAINTENANCE-BOARD.md).

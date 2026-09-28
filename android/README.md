@@ -1,7 +1,8 @@
 # KartPad Android
 
-Android is a supported community platform. The current public release is
-[`v0.5.0 / code135`](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0).
+Android is a supported community platform. Prebuilt APK downloads have been
+retired; the last published release was `v0.5.0 / code135` (no longer
+available). A build-it-yourself Android path is in progress.
 Read [installation, update safety and known limits](../docs/INSTALL_ANDROID.md)
 and the [current release notes](../docs/releases/v0.5.0.md).
 Sustained 60 FPS and complete device/controller coverage are not claimed.

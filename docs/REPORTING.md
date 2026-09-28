@@ -62,8 +62,8 @@ installation and saves intact while troubleshooting.
 
 Direct reporting changes are available as prereleases:
 
-- [Android code 90](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.20-android-reporting.1)
-- [iPhone/iPad build 42](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.20-ios-reporting.1)
+- Android code 90 (retired)
+- iPhone/iPad build 42 (retired)
 
 These leave stable downloads in place. Build/package checks passed; physical
 reporting-flow acceptance remains pending. Android retains the public code85

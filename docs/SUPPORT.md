@@ -39,7 +39,7 @@ still needs a verified translation profile before a playable candidate exists.
 
 KartPad stores saves in Android's **internal app-private storage**, so its save
 folder is not exposed through a normal file manager under `Android/data`.
-The [current Android release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.18-android.1)
+The current Android release (retired)
 includes transfers for Original, Retro Rewind and Retro Rewind (Separate Save).
 Root access is not needed:
 
@@ -165,7 +165,7 @@ See [#100](https://github.com/chrissotraidis/kartpad/issues/100) and the
 
 ## Collect a useful report
 
-The [Android 0.4.12-android.2 diagnostic beta](https://github.com/chrissotraidis/kartpad/releases/tag/v0.4.12-android.2)
+The Android 0.4.12-android.2 diagnostic beta (retired)
 adds optional **Renderer Validation** on the chooser, off by default. When
 requested for a graphics report, compare the same scene/settings with it off
 and on, then turn it off for normal play. It enables actual game-renderer
