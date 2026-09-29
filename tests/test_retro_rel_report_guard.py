@@ -17,10 +17,49 @@ from unittest.mock import patch
 REPO = Path(__file__).resolve().parents[1]
 SCRIPT = REPO / 'scripts/inject-retro-rel-report-guard.py'
 FIXTURES = REPO / 'tests/fixtures/rel_report'
-FUNCTION = (FIXTURES / 'function.cpp').read_text()
 SPEC = importlib.util.spec_from_file_location('rel_guard', SCRIPT)
 GUARD = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GUARD)
+
+# Synthetic control flow assembled from the guard's own anchors, so the
+# repository holds no separate copy of the report function's shape. The loop
+# and cleanup bodies exist only to exercise the harness.
+FUNCTION = (
+    '#include "recomp_mod_loader.h"\n'
+    + GUARD.SIGNATURE + '\n'
+    '    uint32_t r0 = ctx->lr;\n'
+    '    uint32_t r1 = ctx->gpr[1];\n'
+    '    uint32_t r4 = 0;\n'
+    '    uint32_t r28 = ctx->gpr[3];\n'
+    '    uint32_t r29 = ctx->gpr[29];\n'
+    '    uint32_t r30 = ctx->gpr[30];\n'
+    '    const auto saved = *ctx;\n'
+    '    r1 = (r1 - 32);\n'
+    '    ctx->gpr[1] = r1;\n'
+    + GUARD.HEADER_ENTRY + '\n'
+    '    (void)r4;\n'
+    + GUARD.TABLE_ENTRY + '\n'
+    'loc_8000A4E4:\n{\n'
+    '    observed.push_back(MemoryInline::FlatRead32(r30));\n'
+    '    observed.push_back(MemoryInline::FlatRead32(r30 + 4));\n'
+    '    r30 += 8;\n'
+    '    r29 += 1;\n'
+    '}\n'
+    'loc_8000A510:\n{\n'
+    '    if (r29 < MemoryInline::FlatRead32(r28 + 12)) goto loc_8000A4E4;\n'
+    '}\n'
+    'loc_8000A51C:\n{\n'
+    '    ctx->lr = r0;\n'
+    '    r1 = (r1 + 32);\n'
+    '    ctx->gpr[1] = r1;\n'
+    '    ctx->gpr[28] = saved.gpr[28];\n'
+    '    ctx->gpr[29] = saved.gpr[29];\n'
+    '    ctx->gpr[30] = saved.gpr[30];\n'
+    '    ctx->gpr[31] = saved.gpr[31];\n'
+    '    return;\n'
+    '}\n'
+    '}\n'
+    '// RECOMP_GUEST_ABI synthetic fixture\n')
 sys.path.insert(0, str(REPO / 'builder'))
 from kartpad_builder.pipeline import BuildError, translate
 from kartpad_builder.profiles import Profile
