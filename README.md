@@ -146,7 +146,7 @@ unfinished. See [online status](docs/ONLINE.md) and
 <details>
 <summary>Does KartPad support Retro Rewind, and what if it updates?</summary>
 
-Yes, with the separately installed **6.12.8** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#downloads) if a compatibility update is requested.
+Yes, with the separately installed **6.12.8** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#get-kartpad) if a compatibility update is requested.
 
 </details>
 
