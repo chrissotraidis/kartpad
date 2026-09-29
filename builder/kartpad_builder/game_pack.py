@@ -1,10 +1,13 @@
-"""Build a player's KartPad game pack for Android, on Windows, Linux or macOS.
+"""Build a player's KartPad game pack from their own disc.
 
-The published APK contains no game code. This extracts the player's own disc,
-translates it, and compiles the result into one library (libkartpad_game.so)
-that links against the published app's runtime (lib/arm64-v8a/libmain.so) and
-is loaded from the app's storage. Tools: the Android NDK, CMake, Ninja, .NET 8
-and nodtool; PadForge downloads and checks them.
+The published apps contain no game code. This extracts the disc, translates
+it, and compiles one library against the published app's runtime:
+
+- Android (Windows, Linux or macOS): libkartpad_game.so, linked against the
+  APK's lib/arm64-v8a/libmain.so and loaded from the app's storage. Tools: the
+  Android NDK, CMake, Ninja, .NET 8 and nodtool (PadForge supplies them).
+- iPhone (macOS with Xcode): libkartpad_game.dylib, placed in the published
+  IPA's Frameworks folder; the player's sideloading tool signs the result.
 """
 from __future__ import annotations
 
@@ -25,6 +28,7 @@ from .profiles import Profile, sha256_file
 from .retro_rewind import prepare_inputs
 
 HOST_TAGS = {"Darwin": "darwin-x86_64", "Linux": "linux-x86_64", "Windows": "windows-x86_64"}
+IOS_PACK_GITLINKS = ("vendor/runtimes/ios", "vendor/wiicompiled")
 
 
 @dataclass(frozen=True)
@@ -78,6 +82,24 @@ def app_runtime(app: Path, destination: Path) -> Path:
     return library
 
 
+def _translated(repo, profile, image, image_sha256, work_root, jobs, gitlinks):
+    """Extract and translate the disc (cached); returns (workspace, translation, progress)."""
+    fingerprint = source_fingerprint(repo, gitlinks)
+    key = cache_key(profile, image_sha256, fingerprint)
+    profile_root = work_root / profile.id
+    workspace = profile_root / "builds" / key
+    extraction = profile_root / "inputs" / image_sha256 / "disc"
+    translation = workspace / "translation"
+    progress = ProgressLog(work_root / "logs/progress.jsonl")
+    with progress.stage("preflight"):
+        retro = prepare_inputs(profile, repo / "private/builder", install=False)
+    with progress.stage("extract"):
+        extract(profile, image, extraction)
+    with progress.stage("translate"):
+        translate(profile, repo, extraction, translation, jobs, retro)
+    return workspace, translation, progress
+
+
 def build_android_pack(
     repo: Path,
     profile: Profile,
@@ -88,20 +110,9 @@ def build_android_pack(
     work_root: Path,
     jobs: int = 2,
 ) -> PackResult:
-    fingerprint = source_fingerprint(repo, ANDROID_PACK_GITLINKS)
-    key = cache_key(profile, image_sha256, fingerprint)
-    profile_root = work_root / profile.id
-    workspace = profile_root / "builds" / key
-    extraction = profile_root / "inputs" / image_sha256 / "disc"
-    translation = workspace / "translation"
-    progress = ProgressLog(work_root / "logs/progress.jsonl")
     ndk = find_ndk(repo)
-    with progress.stage("preflight"):
-        retro = prepare_inputs(profile, repo / "private/builder", install=False)
-    with progress.stage("extract"):
-        extract(profile, image, extraction)
-    with progress.stage("translate"):
-        translate(profile, repo, extraction, translation, jobs, retro)
+    workspace, translation, progress = _translated(
+        repo, profile, image, image_sha256, work_root, jobs, ANDROID_PACK_GITLINKS)
     with progress.stage("compile"):
         runtime = workspace / "android-runtime"
         if not runtime.is_dir():
@@ -131,4 +142,72 @@ def build_android_pack(
     with progress.stage("package"):
         output.parent.mkdir(parents=True, exist_ok=True)
         run([str(_ndk_tool(ndk, "llvm-strip")), "--strip-unneeded", "-o", str(output), str(built)])
+    return PackResult(pack=output, pack_sha256=sha256_file(output))
+
+
+def _xcrun(tool: str) -> str:
+    import subprocess
+    return subprocess.check_output(["xcrun", "--find", tool], text=True).strip()
+
+
+def build_ios_pack(
+    repo: Path,
+    profile: Profile,
+    image: Path,
+    image_sha256: str,
+    app: Path,
+    output: Path,
+    work_root: Path,
+    jobs: int = 2,
+) -> PackResult:
+    """The published empty IPA with the player's game pack inside (unsigned)."""
+    if platform.system() != "Darwin":
+        raise BuildError("iPhone game packs need a Mac with Xcode for now")
+    workspace, translation, progress = _translated(
+        repo, profile, image, image_sha256, work_root, jobs, IOS_PACK_GITLINKS)
+    with progress.stage("compile"):
+        runtime = workspace / "ios-runtime"
+        if not runtime.is_dir():
+            runtime_stage.stage(repo, "ios", runtime)
+        executable = workspace / "app" / "KartPad"
+        executable.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(app) as archive:
+            try:
+                executable.write_bytes(archive.read("Payload/KartPad.app/KartPad"))
+            except KeyError as error:
+                raise BuildError(f"not a KartPad IPA: {app}") from error
+            if "Payload/KartPad.app/Frameworks/libkartpad_game.dylib" in archive.namelist():
+                raise BuildError(f"this IPA already contains a game pack: {app}")
+        build = workspace / "ios-pack-build"
+        run(["cmake", "-S", str(runtime / "game_pack"), "-B", str(build), "-G", "Ninja",
+             "-DCMAKE_SYSTEM_NAME=iOS", "-DCMAKE_SYSTEM_PROCESSOR=arm64",
+             "-DCMAKE_OSX_SYSROOT=iphoneos", "-DCMAKE_OSX_ARCHITECTURES=arm64",
+             "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0", "-DCMAKE_BUILD_TYPE=Release",
+             f"-DMKW_TRANSLATED_SHARD_MANIFEST={translation / 'build_shards/shards.cmake'}",
+             f"-DMKW_GAME_PACK_RUNTIME={executable}",
+             f"-DMKW_KARTPAD_RUNTIME_INCLUDE={repo / 'runtime/include'}",
+             f"-DKARTPAD_APP_VERSION={load_version(repo)['version']}",
+             "-DMKW_GAME_PACK_DEFINITIONS=KARTPAD_UNOBSERVED_FP_STATUS=1"])
+        run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
+    built = build / "libkartpad_game.dylib"
+    with progress.stage("check"):
+        run([sys.executable, str(repo / "scripts/check-game-pack-state.py"),
+             _xcrun("llvm-nm"), str(built), str(executable)])
+    with progress.stage("package"):
+        pack = workspace / "libkartpad_game.dylib"
+        pack.write_bytes(built.read_bytes())
+        run([_xcrun("strip"), "-x", str(pack)])
+        run([_xcrun("install_name_tool"), "-id", "@rpath/libkartpad_game.dylib", str(pack)])
+        output.parent.mkdir(parents=True, exist_ok=True)
+        partial = output.with_name(output.name + ".partial")
+        with zipfile.ZipFile(app) as source, zipfile.ZipFile(
+                partial, "w", compression=zipfile.ZIP_DEFLATED) as target:
+            for item in source.infolist():
+                target.writestr(item, source.read(item))
+            info = zipfile.ZipInfo("Payload/KartPad.app/Frameworks/libkartpad_game.dylib",
+                                   (1980, 1, 1, 0, 0, 0))
+            info.create_system = 3
+            info.external_attr = 0o100755 << 16
+            target.writestr(info, pack.read_bytes(), compress_type=zipfile.ZIP_DEFLATED)
+        partial.replace(output)
     return PackResult(pack=output, pack_sha256=sha256_file(output))

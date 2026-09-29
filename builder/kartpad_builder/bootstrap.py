@@ -17,10 +17,13 @@ REQUIRED_COMMANDS = {
     "ios": ("cmake", "ninja", "git", "rg", "python3", "dotnet", "nodtool", "xcrun"),
     # The game pack builds on Windows, Linux and macOS (PadForge supplies the tools).
     "android-pack": ("cmake", "ninja", "git", "dotnet", "nodtool"),
+    "ios-pack": ("cmake", "ninja", "git", "dotnet", "nodtool", "xcrun"),
 }
 # Source checkouts each target reads; the iPhone build uses the profile's full list.
 ANDROID_PACK_SOURCES = ("WiiCompiled",)
 ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", "vendor/wiicompiled")
+PACK_GITLINKS = {"android-pack": ANDROID_PACK_GITLINKS,
+                 "ios-pack": ("vendor/runtimes/ios", "vendor/wiicompiled")}
 
 
 def load_lock(repo: Path) -> dict[str, Any]:
@@ -119,8 +122,8 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
         raise BuildError(f"missing required commands: {', '.join(missing_commands)}")
     lock = load_lock(repo)
     dependencies = _dependency_map(lock)
-    if target == "android-pack":
-        _prepare_gitlinks(repo, list(ANDROID_PACK_GITLINKS), install)
+    if target in PACK_GITLINKS:
+        _prepare_gitlinks(repo, list(PACK_GITLINKS[target]), install)
         required = list(ANDROID_PACK_SOURCES)
     else:
         runtime = dependencies.get("KartPad WiiCompiled runtime fork")
@@ -142,7 +145,7 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
             run(["git", "-C", str(path), "remote", "set-url", "--push", "origin", "DISABLED"])
         _verify_checkout(repo, dependency)
 
-    if target == "android-pack":
+    if target in PACK_GITLINKS:
         from .retro_rewind import prepare_inputs
 
         inputs = prepare_inputs(profile, repo / "private/builder", install)

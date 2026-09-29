@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .android_pack import build_android_pack
+from .game_pack import build_android_pack, build_ios_pack
 from .bootstrap import prepare_dependencies
 from .pipeline import BuildError, build
 from .profiles import ProfileError, load_profiles, select_profile, sha256_file
@@ -27,10 +27,10 @@ def parser() -> argparse.ArgumentParser:
     sub.add_parser("profiles", help="List supported static-recompilation profiles")
     doctor = sub.add_parser("doctor", help="Verify tools and pinned Builder dependencies")
     doctor.add_argument("--profile", default="mkwii-rmcp01-rev0")
-    doctor.add_argument("--target", choices=("ios", "android-pack"), default="ios")
+    doctor.add_argument("--target", choices=("ios", "android-pack", "ios-pack"), default="ios")
     bootstrap = sub.add_parser("bootstrap", help="Fetch and verify pinned Builder dependencies")
     bootstrap.add_argument("--profile", default="mkwii-rmcp01-rev0")
-    bootstrap.add_argument("--target", choices=("ios", "android-pack"), default="ios")
+    bootstrap.add_argument("--target", choices=("ios", "android-pack", "ios-pack"), default="ios")
     inspect = sub.add_parser("inspect", help="Identify a disc image without extracting it")
     inspect.add_argument("image", type=Path)
     inspect.add_argument("--profile", default="auto")
@@ -42,11 +42,11 @@ def parser() -> argparse.ArgumentParser:
     build_parser.add_argument("--jobs", type=int, choices=range(1, 9), default=2)
     build_parser.add_argument("--translation-root", type=Path, help=argparse.SUPPRESS)
     build_parser.add_argument("--app", type=Path, help=argparse.SUPPRESS)
-    pack = sub.add_parser("build-pack", help="Build a private Android game pack for the published app")
-    pack.add_argument("platform", choices=("android",))
+    pack = sub.add_parser("build-pack", help="Build a private game pack for the published app")
+    pack.add_argument("platform", choices=("android", "ios"))
     pack.add_argument("image", type=Path)
     pack.add_argument("--app", type=Path, required=True,
-                      help="The published KartPad APK (or its lib/arm64-v8a/libmain.so)")
+                      help="The published KartPad APK (or its libmain.so) or empty IPA")
     pack.add_argument("--profile", default="auto")
     pack.add_argument("--output", type=Path, default=repo_root() / "artifacts/KartPad-game-pack.so")
     pack.add_argument("--work-root", type=Path, default=repo_root() / "private/builder")
@@ -84,10 +84,11 @@ def main(argv: list[str] | None = None) -> int:
                               "displayName": profile.display_name, "acceptance": acceptance}, indent=2))
             return 0
         if args.command == "build-pack":
-            prepare_dependencies(repo_root(), profile, install=False, target="android-pack")
+            prepare_dependencies(repo_root(), profile, install=False, target=f"{args.platform}-pack")
             if not args.app.is_file():
                 raise ProfileError(f"published app does not exist: {args.app}")
-            pack_result = build_android_pack(
+            builder = build_android_pack if args.platform == "android" else build_ios_pack
+            pack_result = builder(
                 repo=repo_root(), profile=profile, image=args.image.resolve(),
                 image_sha256=image_sha256, app=args.app.resolve(), output=args.output.resolve(),
                 work_root=args.work_root.resolve(), jobs=args.jobs)
