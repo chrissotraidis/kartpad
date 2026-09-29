@@ -184,7 +184,7 @@ if [[ "$has_discio" == 1 ]]; then
   discio_needed="$(printf '%s\n' "$discio_dynamic" |
     sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
   expected_discio_needed="$(printf '%s\n' \
-    libc++_shared.so libc.so libdl.so libm.so libEGL.so libOpenSLES.so \
+    libc++_shared.so libc.so libdl.so libm.so libEGL.so \
     libandroid.so liblog.so | sort)"
   [[ "$discio_needed" == "$expected_discio_needed" ]] || {
     echo "ERROR: libkartpad_discio.so dependency set differs from the allowlist" >&2
