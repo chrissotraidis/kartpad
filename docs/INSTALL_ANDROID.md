@@ -1,13 +1,22 @@
 # Install KartPad on Android
 
 > [!IMPORTANT]
-> **Downloads retired.** Prebuilt KartPad APKs are no longer published, and
-> the release links on this page no longer work. A build-it-yourself version is
-> in progress. Today the [Personal IPA Builder](BUILDER.md) builds an
-> iPhone/iPad app on an Apple Silicon Mac from your own disc image. The settings,
-> save and troubleshooting guidance below still applies to installed apps.
+> **KartPad 0.6.0 is the current Android release.** The APK contains no game
+> code: you make a game pack on your own Windows, Mac or Linux computer with
+> PadForge and add it in the app. Follow [Get KartPad](../README.md#get-kartpad)
+> for the steps. Older version notes below are kept for reference; the
+> settings, save and troubleshooting guidance still applies.
 
 ## Current update
+
+**0.6.0 / build 240** makes the APK game-code-free. KartPad asks for your
+PadForge game pack the first time you play and keeps one pack per KartPad
+version. Importing a disc image now uses your own `common-key.bin`; an
+extracted game data folder needs no key. It updates 0.5.x in place with the same
+signing key, keeping saves. See the
+[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.6.0).
+
+### Earlier: 0.5.0
 
 **0.5.0 / code 135** (retired)
 adds a persistent Auto-accelerate opt-out, fixes controller assignment, and
@@ -21,23 +30,25 @@ The latest update also aligns the mobile settings order and labels, adds **Game 
 
 ## Download and first launch
 
-1. Open the current Android release (retired).
-   Download `KartPad-v0.5.0-android-arm64.apk`, `SHA256SUMS.txt`, and the companion
-   notices ZIP. APK is Android's installable format; IPA is Apple-only. The AAB
-   is a developer bundle and is not needed for installation (it is not published).
+1. Make your game pack with PadForge as described in
+   [Get KartPad](../README.md#get-kartpad). From the
+   [latest release](https://github.com/chrissotraidis/kartpad/releases/latest),
+   download `KartPad-v0.6.0-android.apk` and `SHA256SUMS`.
 2. Use an ARM64 phone/tablet with Vulkan and Android 9/API 28 or newer. The
    tested physical device is Pixel 9 Pro XL; the oldest OS/vendor GPU combinations
    and all other phones are not certified. Allow at least 6 GiB free for setup,
    plus space for the source image and optional Retro Rewind installation.
-3. Verify the APK against `SHA256SUMS.txt` (`shasum -a 256 FILE.apk` on macOS,
+3. Verify the APK against `SHA256SUMS` (`shasum -a 256 FILE.apk` on macOS,
    `sha256sum FILE.apk` on Linux, or `Get-FileHash FILE.apk -Algorithm SHA256`
    in PowerShell). Open it on the phone and, if requested, allow that browser or
    file manager to install this app. No USB debugging is required for normal
    installation. Revoke that install permission afterward if you enabled it.
-4. Open KartPad, choose Original, and import your own supported PAL **RMCP01
-   revision 0** WBFS/ISO using the system picker. A filename/extension alone is
-   not sufficient: the exact profile's identity checks must pass. Keep the
-   original image backed up; neither the APK nor this repository supplies it.
+4. Open KartPad and tap the Mario Kart Wii card. Choose **Choose file** and pick
+   your `KartPad-v0.6.0-android-personal.so` game pack. Then import your own
+   PAL **RMCP01 revision 0** game data: an extracted `DATA` folder (no key
+   needed), or an ISO/WBFS/RVZ image plus your own `common-key.bin`. The exact
+   profile's identity checks must pass. Keep the original image backed up;
+   neither the APK nor this repository supplies it or the key.
 5. Choose Retro Rewind to download, verify and install the separately hosted
    official **6.12.8** pack. Use matching current content; if KartPad reports a
    newer incompatible profile, wait for a matching KartPad update. Never bypass
