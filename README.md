@@ -36,9 +36,40 @@ The projects are independently maintained.
 > Build, test and device records describe what was checked. This disclosure
 > concerns KartPad's workflow, not the authorship of its upstream projects.
 
-## Downloads
+## Get KartPad
 
-Previous builds have been retired; a new version is in progress.
+KartPad is free, and you make your own copy from your own Mario Kart Wii disc
+in one step with [PadForge](https://github.com/chrissotraidis/padforge).
+
+The app on the [releases page](https://github.com/chrissotraidis/kartpad/releases)
+contains no game code. PadForge reads your disc (an ISO, WBFS or RVZ of the PAL
+RMCP01 release) on your computer and builds the game part for you. Nothing from
+your disc is uploaded anywhere.
+
+**Android** (PadForge on Windows, Mac or Linux)
+
+1. Install `KartPad-v0.6.0-android.apk` from the latest release. It updates an
+   earlier KartPad in place; your saves stay.
+2. On your computer, install [Python](https://www.python.org/downloads/) 3.11 or
+   newer and download [PadForge](https://github.com/chrissotraidis/padforge/releases).
+3. In the PadForge folder, run:
+   ```
+   python -m padforge make kartpad android --disc "Mario Kart Wii.wbfs"
+   ```
+   The first run downloads the tools and the Retro Rewind pack it needs (about
+   3 GB) and takes a while; later versions reuse them.
+4. Copy the file it makes to your phone, open KartPad and choose **Choose file**.
+
+**iPhone and iPad** (PadForge on a Mac)
+
+Run `python -m padforge make kartpad ios --disc "Mario Kart Wii.wbfs"` and
+install the IPA it makes with your usual sideloading tool (AltStore, SideStore
+or Sideloadly). See [iPhone/iPad setup](docs/INSTALL_IPA.md).
+
+Each KartPad version needs a copy made for that version: after an update,
+KartPad asks you to run PadForge again.
+
+### Source maintenance
 
 **0.4.22 moved KartPad to maintained WiiCompiled source** with pinned platform
 branches, preserving the existing game behavior and repository history. Source
@@ -87,7 +118,8 @@ known issues. Android's suggested starting point is **1x Native**. Sustained
 <details>
 <summary>Can I download an IPA or playable app?</summary>
 
-Previous builds have been retired; a new version is in progress.
+Yes: the app is on the releases page, and you add the game from your own disc
+with PadForge. See [Get KartPad](#get-kartpad).
 
 </details>
 
