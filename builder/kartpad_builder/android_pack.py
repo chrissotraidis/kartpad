@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import runtime_stage
+from .bootstrap import ANDROID_PACK_GITLINKS
 from .errors import BuildError
 from .packaging import load_version
 from .pipeline import ProgressLog, cache_key, extract, run, source_fingerprint, translate
@@ -87,7 +88,7 @@ def build_android_pack(
     work_root: Path,
     jobs: int = 2,
 ) -> PackResult:
-    fingerprint = source_fingerprint(repo)
+    fingerprint = source_fingerprint(repo, ANDROID_PACK_GITLINKS)
     key = cache_key(profile, image_sha256, fingerprint)
     profile_root = work_root / profile.id
     workspace = profile_root / "builds" / key

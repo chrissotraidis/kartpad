@@ -55,11 +55,14 @@ class ProgressLog:
         self.emit("stage_completed", name, stage_elapsed_seconds=round(time.monotonic() - begun, 2))
 
 
-def source_fingerprint(repo: Path) -> str:
+def source_fingerprint(repo: Path, required: tuple[str, ...] | None = None) -> str:
     # Git's parent diff only records a submodule's "dirty" flag. Hash each
     # initialized source repository so two different local edits cannot reuse
     # the same build cache.
-    def fingerprint(root: Path) -> bytes:
+    # With `required`, top-level submodules outside that list may be left
+    # uninitialized (their pinned commit is still hashed): an Android game pack
+    # never reads the iOS, macOS or tvOS runtimes.
+    def fingerprint(root: Path, required: tuple[str, ...] | None = None) -> bytes:
         tracked = subprocess.check_output(["git", "-C", str(root), "ls-files", "-s", "-z"])
         diff = subprocess.check_output([
             "git", "-C", str(root), "diff", "--binary", "--no-ext-diff",
@@ -77,11 +80,13 @@ def source_fingerprint(repo: Path) -> str:
                 continue
             child = root / os.fsdecode(name)
             if not (child / ".git").exists():
+                if required is not None and os.fsdecode(name) not in required:
+                    continue
                 raise BuildError(f"Missing initialized source submodule: {child}; run git submodule update --init --recursive")
             digest.update(name + b"\0" + fingerprint(child))
         return digest.digest()
 
-    return fingerprint(repo).hex()
+    return fingerprint(repo, required).hex()
 
 
 def cache_key(profile: Profile, image_sha256: str, source_sha256: str) -> str:
