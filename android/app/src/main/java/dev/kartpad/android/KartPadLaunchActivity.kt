@@ -193,6 +193,11 @@ open class KartPadLaunchActivity : Activity() {
             }
             return
         }
+        if (KartPadGamePack.required && !KartPadGamePack.isInstalled(this)) {
+            pendingProfile = profile
+            askForGamePack()
+            return
+        }
         if (!gameDataReady) {
             pendingProfile = profile
             startActivityForResult(
@@ -213,6 +218,11 @@ open class KartPadLaunchActivity : Activity() {
     }
 
     private fun launch(profile: String) {
+        if (KartPadGamePack.required && !KartPadGamePack.isInstalled(this)) {
+            pendingProfile = profile
+            askForGamePack()
+            return
+        }
         requestedProfileFile().delete()
         Log.i(LOG_TAG, "A3 mode chooser selected=$profile")
         startActivity(
@@ -223,6 +233,30 @@ open class KartPadLaunchActivity : Activity() {
         // place. Do not leave the chooser behind the SDL activity where Back
         // could imply that another profile can be selected in this process.
         finish()
+    }
+
+    private fun askForGamePack() {
+        AlertDialog.Builder(this)
+            .setTitle("Add your game pack")
+            .setMessage(
+                "KartPad does not include the game. On a Windows, Mac or Linux computer, " +
+                    "use PadForge to build a game pack from your own Mario Kart Wii disc, " +
+                    "copy the file to this device, then choose it here. " +
+                    "You only need to do this once per KartPad version.",
+            )
+            .setNegativeButton("Get PadForge") { _, _ ->
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(KartPadGamePack.PADFORGE_URL)))
+            }
+            .setNeutralButton("Cancel") { _, _ -> pendingProfile = null }
+            .setPositiveButton("Choose file") { _, _ ->
+                startActivityForResult(
+                    Intent(Intent.ACTION_OPEN_DOCUMENT)
+                        .addCategory(Intent.CATEGORY_OPENABLE)
+                        .setType("*/*"),
+                    REQUEST_GAME_PACK,
+                )
+            }
+            .show()
     }
 
     private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
@@ -522,6 +556,28 @@ open class KartPadLaunchActivity : Activity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_GAME_PACK) {
+            val source = data?.data
+            if (resultCode != RESULT_OK || source == null) {
+                pendingProfile = null
+                return
+            }
+            showStatus("Adding your game pack…")
+            validator.execute {
+                val error = KartPadGamePack.import(applicationContext, source)
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    if (error != null) {
+                        pendingProfile = null
+                        showStatus(error)
+                    } else {
+                        showStatus("Game pack added.")
+                        pendingProfile?.let { profile -> pendingProfile = null; selectMode(profile) }
+                    }
+                }
+            }
+            return
+        }
         if (requestCode != REQUEST_DIAGNOSTICS || resultCode != RESULT_OK) return
         val destination = data?.data ?: return
         val session = exportSession ?: run { showStatus("Choose the game session again before exporting."); return }
@@ -560,6 +616,7 @@ open class KartPadLaunchActivity : Activity() {
             "dev.kartpad.android.TEST_MODE_CHOOSER_GAME_DATA_VALID"
         private const val REQUEST_GAME_DATA = 4_303
         private const val REQUEST_DIAGNOSTICS = 4_304
+        private const val REQUEST_GAME_PACK = 4_305
     }
 
     /** One focusable row retains the same selection callback and controller behavior. */

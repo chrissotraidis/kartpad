@@ -20,6 +20,8 @@ discio_build="${KARTPAD_DISCIO_BUILD_DIR:-${repo_root}/build/dolphin-ios-discio-
 sse2neon_url="https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
 sse2neon_sha256="44b9fa3dec3a52ea473246e04b9f692a4e5b0ed654299eef7fe7ec3049e223e0"
 prepare_only="${KARTPAD_PREPARE_ONLY:-0}"
+# The publishable game-pack app stages the runtime without any translation.
+without_translation="${KARTPAD_PREPARE_WITHOUT_TRANSLATION:-0}"
 
 case "${product}" in
   base) product_target="WiiCompiled" ;;
@@ -32,19 +34,25 @@ if [[ "${prepare_only}" != "0" && "${prepare_only}" != "1" ]]; then
   echo "ERROR: KARTPAD_PREPARE_ONLY must be 0 or 1" >&2
   exit 64
 fi
+if [[ "${without_translation}" == "1" && "${prepare_only}" != "1" ]]; then
+  echo "ERROR: KARTPAD_PREPARE_WITHOUT_TRANSLATION requires KARTPAD_PREPARE_ONLY=1" >&2
+  exit 64
+fi
 
 if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
   echo "ERROR: the iOS game-runtime build requires arm64 macOS" >&2
   exit 1
 fi
-if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
-  echo "ERROR: missing real-title translation: ${translation_root}" >&2
-  exit 1
+if [[ "${without_translation}" != "1" ]]; then
+  if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
+    echo "ERROR: missing real-title translation: ${translation_root}" >&2
+    exit 1
+  fi
+  python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
+    "${translation_root}/functions/func_8000A440.cpp"
+  python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards \
+    "${translation_root}/build_shards"
 fi
-python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
-  "${translation_root}/functions/func_8000A440.cpp"
-python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards \
-  "${translation_root}/build_shards"
 if [[ -e "${runtime_source}" || -e "${runtime_build}" ]]; then
   echo "ERROR: output already exists; choose fresh output paths" >&2
   exit 1

@@ -65,7 +65,7 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   if(NOT EXISTS "${KARTPAD_GAME_RUNTIME_SOURCE}/CMakeLists.txt")
     message(FATAL_ERROR "Prepared game runtime is missing: ${KARTPAD_GAME_RUNTIME_SOURCE}")
   endif()
-  if(NOT EXISTS "${KARTPAD_TRANSLATED_SHARD_MANIFEST}")
+  if(NOT MKW_GAME_PACK STREQUAL "APP" AND NOT EXISTS "${KARTPAD_TRANSLATED_SHARD_MANIFEST}")
     message(FATAL_ERROR
       "Private translated shard manifest is missing: ${KARTPAD_TRANSLATED_SHARD_MANIFEST}")
   endif()
@@ -78,20 +78,23 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   list(PREPEND CMAKE_PREFIX_PATH "${DAWN_ANDROID_ROOT}")
   set(Dawn_DIR "${DAWN_ANDROID_ROOT}/lib/cmake/Dawn" CACHE PATH "" FORCE)
   set(MKW_AURORA_DIR "${KARTPAD_GAME_RUNTIME_SOURCE}/aurora-main" CACHE PATH "" FORCE)
-  set(MKW_TRANSLATED_SHARD_MANIFEST
-    "${KARTPAD_TRANSLATED_SHARD_MANIFEST}" CACHE FILEPATH "" FORCE)
+  if(KARTPAD_TRANSLATED_SHARD_MANIFEST)
+    set(MKW_TRANSLATED_SHARD_MANIFEST
+      "${KARTPAD_TRANSLATED_SHARD_MANIFEST}" CACHE FILEPATH "" FORCE)
+  endif()
   set(MKW_KARTPAD_RUNTIME_INCLUDE
     "${KARTPAD_REPO_ROOT}/runtime/include" CACHE PATH "" FORCE)
   set(MKW_KARTPAD_REPO_ROOT "${KARTPAD_REPO_ROOT}" CACHE PATH "" FORCE)
   set(MKW_TRANSLATED_COMPILE_JOBS 2 CACHE STRING "" FORCE)
-  # Preserve arithmetic/rounding semantics while merging the scalar exception
-  # capture + clear at an opaque out-of-line ARM64 call boundary.
-  add_compile_definitions(KARTPAD_ANDROID_COMBINED_FENV=1)
-  # Skip host overflow/underflow/inexact capture while the guest leaves the
-  # matching FPSCR enables clear. Results and register writes are unchanged;
-  # only sticky status bits read by OS context/exception paths differ. See
-  # docs/artifacts/2026-09-23/android-copy-stream-loop.md.
-  add_compile_definitions(KARTPAD_ANDROID_UNOBSERVED_FP_STATUS=1)
+  # Definitions that shape runtime code inlined into translated functions. One
+  # list, shared with scripts/build-game-pack.sh so a game pack matches its app:
+  # KARTPAD_ANDROID_COMBINED_FENV preserves arithmetic/rounding semantics while
+  # merging the scalar exception capture + clear at an opaque ARM64 call
+  # boundary; KARTPAD_ANDROID_UNOBSERVED_FP_STATUS skips host overflow/underflow/
+  # inexact capture while the guest leaves the matching FPSCR enables clear
+  # (see docs/artifacts/2026-09-23/android-copy-stream-loop.md).
+  file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/translated-definitions.txt" KARTPAD_TRANSLATED_DEFINITIONS)
+  add_compile_definitions(${KARTPAD_TRANSLATED_DEFINITIONS})
   add_subdirectory("${KARTPAD_GAME_RUNTIME_SOURCE}" game-runtime)
   # Local debug game builds hash pipeline configurations on the measured draw path.
   # Keep xxHash's debug assertions; optimize only this measured integer hot path.

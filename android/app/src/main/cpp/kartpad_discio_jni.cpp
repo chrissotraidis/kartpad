@@ -1,15 +1,21 @@
 #include <jni.h>
 
 #include <algorithm>
+#include <array>
 #include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
 
+#include "Common/CommonTypes.h"
 #include "DiscIO/DiscExtractor.h"
 #include "DiscIO/Filesystem.h"
 #include "DiscIO/Volume.h"
 #include "kartpad_disc_image_volume.h"
+
+namespace IOS::ES {
+void KartPadSetUserCommonKey(const std::array<u8, 16>& key);
+}
 
 namespace {
 
@@ -47,10 +53,18 @@ bool ExportCheckedDirectory(const DiscIO::Volume& volume,
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_dev_kartpad_android_KartPadDiscImageImporter_nativeExtract(
-    JNIEnv* env, jobject, jint fd, jstring destination_string) {
+    JNIEnv* env, jobject, jint fd, jstring destination_string, jbyteArray common_key) {
   if (fd < 0 || destination_string == nullptr) {
     return Error(env, "The selected disc image could not be opened.");
   }
+  // KartPad does not include console keys: reading an encrypted Wii disc image
+  // needs the player's own 16-byte Wii common key.
+  if (common_key == nullptr || env->GetArrayLength(common_key) != 16) {
+    return Error(env, "KartPad needs your Wii common key (common-key.bin) to read a disc image.");
+  }
+  std::array<u8, 16> key{};
+  env->GetByteArrayRegion(common_key, 0, 16, reinterpret_cast<jbyte*>(key.data()));
+  IOS::ES::KartPadSetUserCommonKey(key);
   const char* destination_chars =
       env->GetStringUTFChars(destination_string, nullptr);
   if (destination_chars == nullptr) return nullptr;

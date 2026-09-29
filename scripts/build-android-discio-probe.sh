@@ -47,6 +47,8 @@ if [[ "${resume}" == "0" ]]; then
   cp -R "${source_root}/." "${work_source}/"
   patch --batch -p1 -d "${work_source}" < \
     "${repo_root}/patches/dolphin-android-discio-probe.patch"
+  patch --batch -p1 -d "${work_source}" < \
+    "${repo_root}/patches/dolphin-android-discio-coreless.patch"
 elif [[ ! -f "${work_build}/CMakeCache.txt" ]]; then
   echo "ERROR: DiscIO resume build is not configured" >&2
   exit 66
@@ -83,7 +85,8 @@ path_map_flags="-ffile-prefix-map=${work_source}=Dolphin -fmacro-prefix-map=${wo
   -DUSE_UPNP=OFF \
   -DUSE_SYSTEM_LIBS=OFF \
   -DKARTPAD_ANDROID_DISCIO_PROBE_SOURCE="${repo_root}/tests/ios_discio_probe.cpp" \
-  -DKARTPAD_ANDROID_DISCIO_JNI_SOURCE="${repo_root}/android/app/src/main/cpp/kartpad_discio_jni.cpp"
+  -DKARTPAD_ANDROID_DISCIO_JNI_SOURCE="${repo_root}/android/app/src/main/cpp/kartpad_discio_jni.cpp" \
+  -DKARTPAD_ANDROID_DISCIO_FORMATS_SOURCE="${repo_root}/apple/ios/KartPadDiscFormats.cpp"
 "${cmake_bin}" --build "${work_build}" --target \
   kartpad-android-discio-probe kartpad_discio --parallel 2
 

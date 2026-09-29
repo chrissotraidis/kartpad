@@ -76,6 +76,20 @@ class KartPadGameDataActivity : Activity() {
             status.text = "Disc-image import is unavailable in this build."
             return
         }
+        if (!KartPadCommonKey.isInstalled(filesDir)) {
+            AlertDialog.Builder(this)
+                .setTitle("Your Wii Common Key")
+                .setMessage(
+                    "Reading a disc image needs your own 16-byte Wii common key, saved as common-key.bin " +
+                        "(for example from a BootMii NAND backup of your Wii). KartPad keeps it privately on this device.\n\n" +
+                        "No key? Choose an extracted game data folder instead (Dolphin: right-click the game, Properties, Filesystem, Extract Entire Disc).",
+                )
+                .setPositiveButton("Choose common-key.bin…") { _, _ -> chooseCommonKey() }
+                .setNeutralButton("Use Extracted Folder…") { _, _ -> chooseExtractedFolder() }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return
+        }
         startActivityForResult(
             Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -86,10 +100,27 @@ class KartPadGameDataActivity : Activity() {
         )
     }
 
+    private fun chooseCommonKey() {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            },
+            REQUEST_COMMON_KEY,
+        )
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != RESULT_OK) return
         val selected = data?.data ?: return
+        if (requestCode == REQUEST_COMMON_KEY) {
+            runCatching { KartPadCommonKey.install(contentResolver, selected, filesDir) }
+                .onSuccess { chooseDiscImage() }
+                .onFailure { error -> showImportFailure(error) }
+            return
+        }
         if (requestCode == REQUEST_DISC_IMAGE) {
             importDiscImage(selected)
             return
@@ -302,6 +333,7 @@ class KartPadGameDataActivity : Activity() {
         const val ACTION_REMOVE = "remove"
         private const val REQUEST_EXTRACTED_FOLDER = 4_401
         private const val REQUEST_DISC_IMAGE = 4_402
+        private const val REQUEST_COMMON_KEY = 4_403
         private const val STATE_CHANGED = "changed"
         private const val STATE_ACTION_CONSUMED = "automatic_action_consumed"
     }

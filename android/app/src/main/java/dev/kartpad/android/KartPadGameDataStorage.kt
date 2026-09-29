@@ -129,7 +129,7 @@ internal object KartPadGameDataStorage {
         check(staging.mkdir()) { "The game-data staging folder could not be created." }
         return try {
             progress("Extracting the selected Wii disc image…")
-            KartPadDiscImageImporter.extract(resolver, image, staging)
+            KartPadDiscImageImporter.extract(resolver, image, staging, filesDir)
             progress("Validating extracted game data…")
             localValidationError(staging)?.let { throw IllegalArgumentException(it) }
             val counter = countLocalTree(staging)
