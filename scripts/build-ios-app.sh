@@ -30,8 +30,26 @@ KARTPAD_IOS_GAME_PACK_APP=1 "$repo_root/scripts/build-ios-device-game-app.sh" \
   "$stage/runtime" "$stage/xcode" none dual
 
 app="$stage/xcode/Release-iphoneos/KartPad.app"
-mkdir -p "$stage/ipa/Payload" "$stage/out"
-ditto "$app" "$stage/ipa/Payload/KartPad.app"
+# Local symbols include the hidden forwarders named after guest addresses; the
+# game pack binds only to exported symbols, which stay.
+xcrun strip -x "$app/KartPad"
 ipa="$stage/out/KartPad-v$version-ios-unsigned.ipa"
-(cd "$stage/ipa" && zip -qry "$ipa" Payload)
+# The builder's packager stamps version.json into Info.plist and adds licenses.
+PYTHONPATH="$repo_root/builder" python3 - "$repo_root" "$app" "$ipa" <<'PY'
+import sys
+from pathlib import Path
+from kartpad_builder.packaging import load_version, package_unsigned_ipa
+repo, app, ipa = (Path(arg) for arg in sys.argv[1:])
+version = load_version(repo)
+provenance = {
+    "schemaVersion": 1,
+    "appVersion": version["version"],
+    "appBuild": version["build"],
+    "containsUserSuppliedTranslatedCode": False,
+    "gamePack": "added by PadForge from the player's own disc",
+    "softwareLicense": "GPL-3.0-only",
+}
+licenses = {name: repo / name for name in ("LICENSE", "RIGHTS_AND_LICENSES.md", "THIRD_PARTY_NOTICES.md")}
+print(package_unsigned_ipa(app, ipa, provenance, licenses, version))
+PY
 echo "Publishable app (no game code): $ipa"
