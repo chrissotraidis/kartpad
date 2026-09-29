@@ -8,6 +8,6 @@ Mean volume: -36.2 dB
 Maximum volume: -17.6 dB
 
 The temporary WAV was used only for numeric validation and is not retained in
-the repository. The runtime-console.txt independently records that the same
+the repository. The runtime console log (kept privately) independently records that the same
 KartPad process opened 32 kHz stereo playback at gain 1 and queued a non-silent
 PCM block.
