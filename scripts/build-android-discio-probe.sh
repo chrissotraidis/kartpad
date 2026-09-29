@@ -6,6 +6,11 @@ source_root="${1:-${repo_root}/ref/upstream/dolphin}"
 work_source="${2:-${repo_root}/build/dolphin-android-discio-source}"
 work_build="${3:-${repo_root}/build/dolphin-android-discio-build}"
 stage_root="${4:-${repo_root}/build/dolphin-android-discio-jni}"
+# Absolute paths: the private-path check below must look for the full path.
+absolute() { case "$1" in /*) printf '%s\n' "$1" ;; *) printf '%s/%s\n' "$PWD" "$1" ;; esac; }
+work_source="$(absolute "${work_source}")"
+work_build="$(absolute "${work_build}")"
+stage_root="$(absolute "${stage_root}")"
 resume="${KARTPAD_DISCIO_RESUME:-0}"
 sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
 ndk_root="${sdk_root}/ndk/29.0.14206865"
@@ -88,7 +93,7 @@ path_map_flags="-ffile-prefix-map=${work_source}=Dolphin -fmacro-prefix-map=${wo
   -DKARTPAD_ANDROID_DISCIO_JNI_SOURCE="${repo_root}/android/app/src/main/cpp/kartpad_discio_jni.cpp" \
   -DKARTPAD_ANDROID_DISCIO_FORMATS_SOURCE="${repo_root}/apple/ios/KartPadDiscFormats.cpp"
 "${cmake_bin}" --build "${work_build}" --target \
-  kartpad-android-discio-probe kartpad_discio --parallel 2
+  kartpad-android-discio-probe kartpad_discio --parallel "${KARTPAD_DISCIO_JOBS:-2}"
 
 binary="${work_build}/kartpad-android-discio-probe"
 if [[ ! -f "${binary}" ]]; then
