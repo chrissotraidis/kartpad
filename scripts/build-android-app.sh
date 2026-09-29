@@ -5,7 +5,8 @@
 # translation.
 #
 # Usage: scripts/build-android-app.sh [OUTPUT_ROOT]
-#   KARTPAD_ANDROID_PACKAGE_FORMAT=apk (debug, default) or apk-release
+#   KARTPAD_ANDROID_PACKAGE_FORMAT=apk (debug, default), apk-release, or aab
+#   (the release bundle; sign it with scripts/derive-android-release-apk.sh)
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
@@ -15,7 +16,8 @@ package_format="${KARTPAD_ANDROID_PACKAGE_FORMAT:-apk}"
 case "$package_format" in
   apk) package_task=assembleDebug; package_path="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk" ;;
   apk-release) package_task=assembleRelease; package_path="$repo_root/android/app/build/outputs/apk/release/app-release-unsigned.apk" ;;
-  *) echo "ERROR: KARTPAD_ANDROID_PACKAGE_FORMAT must be apk or apk-release" >&2; exit 64 ;;
+  aab) package_task=bundleRelease; package_path="$repo_root/android/app/build/outputs/bundle/release/app-release.aab" ;;
+  *) echo "ERROR: KARTPAD_ANDROID_PACKAGE_FORMAT must be apk, apk-release or aab" >&2; exit 64 ;;
 esac
 out_root="${1:-$repo_root/build/android-app}"
 stage="$out_root/$(date +%Y%m%d-%H%M%S)"
@@ -68,6 +70,10 @@ export MBEDTLS_ANDROID_ROOT="$mbedtls_root"
 mkdir -p "$stage/out"
 cp "$package_path" "$stage/out/"
 # The game pack links against exactly this runtime library.
-unzip -o -q -j "$package_path" 'lib/arm64-v8a/libmain.so' -d "$stage/out"
+if [[ "$package_format" == aab ]]; then
+  unzip -o -q -j "$package_path" 'base/lib/arm64-v8a/libmain.so' -d "$stage/out"
+else
+  unzip -o -q -j "$package_path" 'lib/arm64-v8a/libmain.so' -d "$stage/out"
+fi
 echo "Runtime for game packs: $stage/out/libmain.so"
 echo "Publishable app (no game code): $stage/out/$(basename "$package_path")"
