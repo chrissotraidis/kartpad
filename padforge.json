@@ -100,10 +100,59 @@
     },
     "android": {
       "hosts": {
-        "macos-arm64": "planned",
-        "linux-x86_64": "planned",
-        "windows-x86_64": "planned"
-      }
+        "macos-arm64": "experimental",
+        "windows-arm64": "experimental",
+        "windows-x86_64": "experimental",
+        "linux-x86_64": "experimental"
+      },
+      "tools": [
+        "git",
+        "dotnet",
+        "cmake",
+        "ninja",
+        "android-ndk",
+        "nodtool"
+      ],
+      "output": "so",
+      "check": "none",
+      "steps": [
+        {
+          "stage": "preflight",
+          "command": [
+            "{python}",
+            "-m",
+            "kartpad_builder.cli",
+            "bootstrap",
+            "--target",
+            "android-pack"
+          ],
+          "env": {
+            "PYTHONPATH": "{repo}/builder"
+          }
+        },
+        {
+          "stage": "build",
+          "command": [
+            "{python}",
+            "-m",
+            "kartpad_builder.cli",
+            "build-pack",
+            "android",
+            "{disc}",
+            "--app",
+            "{app}",
+            "--work-root",
+            "{work}",
+            "--output",
+            "{output}",
+            "--jobs",
+            "{jobs}"
+          ],
+          "env": {
+            "PYTHONPATH": "{repo}/builder"
+          }
+        }
+      ]
     }
   },
   "requirements": {
