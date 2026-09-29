@@ -334,6 +334,24 @@ class PackagingTests(unittest.TestCase):
                 mode = archive.getinfo("Payload/KartPad.app/KartPad").external_attr >> 16
                 self.assertTrue(mode & stat.S_IXUSR)
 
+    def test_ipa_is_stamped_with_the_shared_version(self) -> None:
+        from kartpad_builder.packaging import load_version
+        version = load_version(REPO)
+        self.assertRegex(version["version"], r"^\d+\.\d+\.\d+$")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app = self.make_app(root)
+            output = root / "stamped.ipa"
+            package_unsigned_ipa(app, output, {"schemaVersion": 1}, None, version)
+            with zipfile.ZipFile(output) as archive:
+                plist = plistlib.loads(archive.read("Payload/KartPad.app/Info.plist"))
+            self.assertEqual(plist["CFBundleShortVersionString"], version["version"])
+            self.assertEqual(plist["CFBundleVersion"], str(version["build"]))
+            self.assertEqual(plist["CFBundleIdentifier"], "dev.kartpad.app")
+            # The source app is not modified.
+            with (app / "Info.plist").open("rb") as handle:
+                self.assertNotIn("CFBundleVersion", plistlib.load(handle))
+
     def test_additional_public_release_entries_are_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

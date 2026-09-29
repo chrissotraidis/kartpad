@@ -47,12 +47,15 @@ val prepareKartpadIcon by tasks.registering(Copy::class) {
     from(rootProject.file("../apple/ios/Assets.xcassets/KartPadChecker.imageset/checker.png")) { rename { "kartpad_checker.png" } }
     into(kartpadIconResources.map { it.dir("drawable-nodpi") })
 }
+// One KartPad version for every platform (repository root version.json).
+val kartpadRelease = groovy.json.JsonSlurper()
+    .parse(rootProject.file("../version.json")) as Map<*, *>
 val kartpadVersionCode = providers.gradleProperty("kartpadVersionCode")
     .map { value ->
         value.toIntOrNull()?.takeIf { it > 0 }
             ?: error("kartpadVersionCode must be a positive integer")
     }
-    .getOrElse(117)
+    .getOrElse((kartpadRelease["build"] as Number).toInt())
 val kartpadVersionName = providers.gradleProperty("kartpadVersionName")
     .map { value ->
         require(Regex("[0-9A-Za-z][0-9A-Za-z._-]{0,63}").matches(value)) {
@@ -60,7 +63,7 @@ val kartpadVersionName = providers.gradleProperty("kartpadVersionName")
         }
         value
     }
-    .getOrElse("0.4.24-android.1")
+    .getOrElse(kartpadRelease["version"] as String)
 require(!kartpadFrameCapture || kartpadVersionName.endsWith("-capture")) {
     "Frame capture builds must have a version name ending in -capture"
 }

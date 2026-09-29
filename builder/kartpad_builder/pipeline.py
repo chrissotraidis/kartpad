@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import BuildError
-from .packaging import audit_app, package_unsigned_ipa
+from .packaging import audit_app, load_version, package_unsigned_ipa
 from .profiles import Profile, canonical_json, sha256_file
 from .retro_rewind import RetroRewindInputs, prepare_inputs
 
@@ -398,9 +398,12 @@ def build(
 def _package(repo: Path, profile: Profile, image_sha256: str, output: Path, fingerprint: str,
              key: str, app: Path, workspace: Path) -> BuildResult:
     audit_app(app, (str(repo), str(Path.home()), str(workspace)))
+    version = load_version(repo)
     provenance = {
         "schemaVersion": 1,
         "builderVersion": "0.2.0-preview.3",
+        "appVersion": version["version"],
+        "appBuild": version["build"],
         "pipelineVersion": PIPELINE_VERSION,
         "profileId": profile.id,
         "profileSHA256": profile.profile_sha256,
@@ -415,5 +418,5 @@ def _package(repo: Path, profile: Profile, image_sha256: str, output: Path, fing
         name: repo / name
         for name in ("LICENSE", "RIGHTS_AND_LICENSES.md", "THIRD_PARTY_NOTICES.md")
     }
-    digest = package_unsigned_ipa(app, output, provenance, license_entries)
+    digest = package_unsigned_ipa(app, output, provenance, license_entries, version)
     return BuildResult(ipa=output, ipa_sha256=digest, app=app, cache_key=key)

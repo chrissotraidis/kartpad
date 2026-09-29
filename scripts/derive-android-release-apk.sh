@@ -2,6 +2,8 @@
 # Derive a public-signing candidate only; never install, upload or generate keys.
 set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
+release_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" version)"
+release_build="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" build)"
 source "$repo_root/scripts/android-toolchain-versions.sh"
 if [[ $# != 2 ]]; then
   echo "Usage: $0 INPUT.aab OUTPUT.apk" >&2
@@ -22,8 +24,8 @@ fi
 export JAVA_HOME="$repo_root/.android-bootstrap/jdk-$KARTPAD_ANDROID_JDK_VERSION/Contents/Home"
 sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
 bundletool="$repo_root/.android-bootstrap/dependencies/bundletool-all-1.18.1.jar"
-export KARTPAD_ANDROID_EXPECTED_VERSION_NAME="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-0.4.12-android.2}"
-export KARTPAD_ANDROID_EXPECTED_VERSION_CODE="${KARTPAD_ANDROID_EXPECTED_VERSION_CODE:-23}"
+export KARTPAD_ANDROID_EXPECTED_VERSION_NAME="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-${release_version}}"
+export KARTPAD_ANDROID_EXPECTED_VERSION_CODE="${KARTPAD_ANDROID_EXPECTED_VERSION_CODE:-${release_build}}"
 export KARTPAD_ANDROID_REQUIRE_RELEASE=1
 "$repo_root/scripts/audit-android-bundle.sh" "$bundle"
 identity="$("$JAVA_HOME/bin/keytool" -list -v -keystore "$KARTPAD_ANDROID_KEYSTORE" \
