@@ -17,7 +17,10 @@ object KartPadGamePack {
 
     val required: Boolean get() = BuildConfig.GAME_PACK_APP
 
-    fun file(context: Context) = File(context.filesDir, "gamepack/libkartpad_game.so")
+    // One pack per app version: after an update the player is asked for a new
+    // pack instead of starting one built for the previous version.
+    fun file(context: Context) =
+        File(context.filesDir, "gamepack/libkartpad_game-${BuildConfig.VERSION_NAME}.so")
 
     fun isInstalled(context: Context) = file(context).isFile
 
@@ -38,6 +41,8 @@ object KartPadGamePack {
                 partial.delete()
                 return "The game pack could not be saved."
             }
+            // Packs for other app versions can never load again.
+            destination.parentFile?.listFiles()?.forEach { if (it != destination) it.delete() }
             return null
         } catch (error: Exception) {
             partial.delete()
