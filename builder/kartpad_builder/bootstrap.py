@@ -13,7 +13,14 @@ from .pipeline import BuildError, run
 from .profiles import Profile
 
 
-REQUIRED_COMMANDS = ("cmake", "ninja", "git", "rg", "python3", "dotnet", "nodtool", "xcrun")
+REQUIRED_COMMANDS = {
+    "ios": ("cmake", "ninja", "git", "rg", "python3", "dotnet", "nodtool", "xcrun"),
+    # The game pack builds on Windows, Linux and macOS (PadForge supplies the tools).
+    "android-pack": ("cmake", "ninja", "git", "dotnet", "nodtool"),
+}
+# Source checkouts each target reads; the iPhone build uses the profile's full list.
+ANDROID_PACK_SOURCES = ("WiiCompiled",)
+ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", "vendor/wiicompiled")
 
 
 def load_lock(repo: Path) -> dict[str, Any]:
@@ -47,7 +54,11 @@ def _verify_checkout(repo: Path, dependency: dict[str, Any]) -> None:
 
 
 def _prepare_runtime_sources(repo: Path, dependency: dict[str, Any], install: bool) -> None:
-    for relative in dependency["platformPaths"].values():
+    _prepare_gitlinks(repo, list(dependency["platformPaths"].values()), install)
+
+
+def _prepare_gitlinks(repo: Path, relatives: list[str], install: bool) -> None:
+    for relative in relatives:
         path = repo / relative
         tracked = subprocess.check_output([
             "git", "-C", str(repo), "ls-files", "--stage", "-z", "--", relative,
@@ -91,16 +102,31 @@ def _download(url: str, expected_sha256: str, output: Path) -> None:
             partial.unlink()
 
 
-def prepare_dependencies(repo: Path, profile: Profile, install: bool) -> list[str]:
-    missing_commands = [command for command in REQUIRED_COMMANDS if shutil.which(command) is None]
+def _has_command(command: str) -> bool:
+    if command == "dotnet":
+        from .pipeline import find_dotnet
+        try:
+            find_dotnet()
+            return True
+        except BuildError:
+            return False
+    return shutil.which(command) is not None
+
+
+def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: str = "ios") -> list[str]:
+    missing_commands = [command for command in REQUIRED_COMMANDS[target] if not _has_command(command)]
     if missing_commands:
         raise BuildError(f"missing required commands: {', '.join(missing_commands)}")
     lock = load_lock(repo)
     dependencies = _dependency_map(lock)
-    runtime = dependencies.get("KartPad WiiCompiled runtime fork")
-    if runtime is not None:
-        _prepare_runtime_sources(repo, runtime, install)
-    required = profile.data["sourceDependencies"]
+    if target == "android-pack":
+        _prepare_gitlinks(repo, list(ANDROID_PACK_GITLINKS), install)
+        required = list(ANDROID_PACK_SOURCES)
+    else:
+        runtime = dependencies.get("KartPad WiiCompiled runtime fork")
+        if runtime is not None:
+            _prepare_runtime_sources(repo, runtime, install)
+        required = profile.data["sourceDependencies"]
     for name in required:
         if name not in dependencies:
             raise BuildError(f"profile names an unknown dependency: {name}")
@@ -116,6 +142,11 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool) -> list[st
             run(["git", "-C", str(path), "remote", "set-url", "--push", "origin", "DISABLED"])
         _verify_checkout(repo, dependency)
 
+    if target == "android-pack":
+        from .retro_rewind import prepare_inputs
+
+        inputs = prepare_inputs(profile, repo / "private/builder", install)
+        return required + [f"Retro Rewind {inputs.version}", "Retro-WFC production payload"]
     dawn = dependencies["Dawn prebuilt"]
     dawn_output = repo / "build/dependency-cache" / f"dawn-ios-arm64-{dawn['version']}.tar.gz"
     if not dawn_output.is_file() or hashlib.sha256(dawn_output.read_bytes()).hexdigest() != dawn["iosArm64Sha256"]:

@@ -4,8 +4,10 @@ import contextlib
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -110,6 +112,38 @@ def run(command: list[str], *, env: dict[str, str] | None = None) -> None:
 
 def _hex(value: int | str) -> str:
     return value if isinstance(value, str) else f"0x{value:08X}"
+
+
+def _script(path: Path) -> list[str]:
+    """Run repository Python helpers with this interpreter (no shebangs on Windows)."""
+    return [sys.executable, str(path)] if path.suffix == ".py" else [str(path)]
+
+
+def find_dotnet() -> str:
+    for candidate in (
+        os.environ.get("DOTNET_ROOT") and str(Path(os.environ["DOTNET_ROOT"]) / ("dotnet.exe" if os.name == "nt" else "dotnet")),
+        "/opt/homebrew/opt/dotnet@8/bin/dotnet",
+        shutil.which("dotnet"),
+    ):
+        if candidate and Path(candidate).is_file():
+            return candidate
+    raise BuildError("missing .NET 8 SDK (dotnet)")
+
+
+def prepare_translator(repo: Path) -> Path:
+    """Stage the pinned translator source and build it; returns Translator.Cli.dll."""
+    stage = repo / "build/wiicompiled-fpscr"
+    run(_script(repo / "scripts/stage-maintained-translator.py") + [str(stage)])
+    project = stage / "translator/src/Translator.Cli/Translator.Cli.csproj"
+    run([find_dotnet(), "build", str(project), "-c", "Release"])
+    return project.parent / "bin/Release/net8.0/Translator.Cli.dll"
+
+
+def _add_underscore_aliases(blob: Path, prefix: str) -> None:
+    """Give each data blob symbol a leading-underscore alias for Mach-O consumers."""
+    pattern = re.compile(r"^\.globl (" + prefix + r"[^\n]+)\n\1:", re.M)
+    text = blob.read_text()
+    blob.write_text(pattern.sub(r".globl \1\n.globl _\1\n\1:\n_\1:", text))
 
 
 def write_translator_manifest(
@@ -267,39 +301,38 @@ def translate(
             or "set(MKW_HAVE_RETRO_REWIND_SHARDS ON)" not in graph
         ):
             raise BuildError("cached translation failed profile validation")
-        guard = repo / "scripts/inject-retro-rel-report-guard.py"
-        run([str(guard), "--verify", str(output / "functions" / "func_8000A440.cpp")])
-        run([str(guard), "--verify-shards", str(output / "build_shards")])
+        guard = _script(repo / "scripts/inject-retro-rel-report-guard.py")
+        run(guard + ["--verify", str(output / "functions" / "func_8000A440.cpp")])
+        run(guard + ["--verify-shards", str(output / "build_shards")])
         print(f"Reused validated translation: {output}")
         return
-    run([str(repo / "scripts/prepare-patched-translator.sh")])
+    translator = prepare_translator(repo)
     output.mkdir(parents=True, exist_ok=True)
     mod_output = output.parent / "mod"
     manifest = output / "kartpad-builder-profile.yml"
     write_translator_manifest(profile, repo, extraction, output, manifest, retro, mod_output)
-    translator = repo / "build/wiicompiled-fpscr/translator/src/Translator.Cli/bin/Release/net8.0/Translator.Cli.dll"
-    dotnet = shutil.which("dotnet") or "/opt/homebrew/opt/dotnet@8/bin/dotnet"
+    dotnet = find_dotnet()
     config = profile.data["translation"]
     metadata = output / "base_translation_output.json"
     entry = _hex(config["entryPoints"][0])
     run([dotnet, str(translator), "translate-recursive", entry, "--project", str(manifest), "--profile", "retro-rewind", "--threads", str(jobs), "--prune-stale", "--output-metadata", str(metadata)])
     for injector in config["injectors"]:
-        run([str(repo / injector["script"]), str(output / "functions" / injector["function"])])
+        run(_script(repo / injector["script"]) + [str(output / "functions" / injector["function"])])
     base_manifest = output / "base/base_manifest.json"
     run([dotnet, str(translator), "emit-base-manifest", "--project", str(manifest), "--profile", "retro-rewind", "--out", str(base_manifest.parent), "--functions-dir", str(output / "functions"), "--translation-output-metadata", str(metadata), "--region", profile.data["game"]["region"]])
     run([dotnet, str(translator), "translate-mod", "--project", str(manifest), "--profile", "retro-rewind", "--base-manifest", str(base_manifest), "--base-translation-output-metadata", str(metadata), "--code-pul", str(retro.code_pul), "--mod-root", str(retro.root), "--mod-name", "Retro Rewind", "--region", profile.data["game"]["region"], "--out", str(mod_output), "--prefer-cached-inputs", "--emit-cpp", "--threads", str(jobs), "--retro-wfc-payload", str(retro.payload)])
     run([dotnet, str(translator), "generate-data-init", "--project", str(manifest), "--profile", "retro-rewind"])
     blob = output / "data_sections_init_blobs.S"
     if ".globl _kData_" not in blob.read_text():
-        run(["perl", "-0pi", "-e", r"s/^\.globl (kData_[^\n]+)\n\1:/.globl $1\n.globl _$1\n$1:\n_$1:/mg", str(blob)])
+        _add_underscore_aliases(blob, "kData_")
     mod_blob = mod_output / "cpp/mod_data_patches_blobs.S"
     if mod_blob.is_file() and ".globl _k" not in mod_blob.read_text():
-        run(["perl", "-0pi", "-e", r"s/^\.globl (k[^\n]+)\n\1:/.globl $1\n.globl _$1\n$1:\n_$1:/mg", str(mod_blob)])
+        _add_underscore_aliases(mod_blob, "k")
     run([dotnet, str(translator), "emit-build-shards", "--project", str(manifest), "--profile", "retro-rewind", "--base-metadata", str(metadata), "--base-functions-dir", str(output / "functions"), "--native-source-dir", str(repo / "build/wiicompiled-fpscr/runtime/src"), "--resolved-profile", str(mod_output / "resolved_dispatch_profile.json"), "--retro-cpp-dir", str(mod_output / "cpp"), "--out", str(output / "build_shards")])
-    guard = repo / "scripts/inject-retro-rel-report-guard.py"
-    run([str(guard), "--inject-shards", str(output / "build_shards")])
-    run([str(guard), "--verify", str(output / "functions" / "func_8000A440.cpp")])
-    run([str(guard), "--verify-shards", str(output / "build_shards")])
+    guard = _script(repo / "scripts/inject-retro-rel-report-guard.py")
+    run(guard + ["--inject-shards", str(output / "build_shards")])
+    run(guard + ["--verify", str(output / "functions" / "func_8000A440.cpp")])
+    run(guard + ["--verify-shards", str(output / "build_shards")])
     count = len(list((output / "functions").glob("func_*.cpp")))
     graph = shards.read_text()
     if (

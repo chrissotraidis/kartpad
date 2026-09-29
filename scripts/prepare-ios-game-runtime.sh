@@ -17,8 +17,6 @@ dawn_archive="${repo_root}/build/dependency-cache/dawn-ios-simulator-arm64-v2026
 dawn_sha256="feb5c4e07da90c47d2f279bf83c43bc67db01dac1138cb9af8ea9b5b50c67fbf"
 discio_source="${KARTPAD_DISCIO_SOURCE_DIR:-${repo_root}/build/dolphin-ios-discio-iphonesimulator-source}"
 discio_build="${KARTPAD_DISCIO_BUILD_DIR:-${repo_root}/build/dolphin-ios-discio-iphonesimulator-build}"
-sse2neon_url="https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
-sse2neon_sha256="44b9fa3dec3a52ea473246e04b9f692a4e5b0ed654299eef7fe7ec3049e223e0"
 prepare_only="${KARTPAD_PREPARE_ONLY:-0}"
 # The publishable game-pack app stages the runtime without any translation.
 without_translation="${KARTPAD_PREPARE_WITHOUT_TRANSLATION:-0}"
@@ -86,26 +84,9 @@ case "${prepare_platform}" in
   *) echo "ERROR: unsupported preparation platform: ${prepare_platform}" >&2; exit 64 ;;
 esac
 python3 "${repo_root}/scripts/stage-maintained-runtime.py" "${prepare_platform}" "${runtime_source}"
-PYTHONPATH="${repo_root}/builder" python3 -m kartpad_builder.release_header \
-  "${repo_root}/builder/profiles/mkwii-rmcp01-rev0.json" \
-  "${runtime_source}/third_party/kartpad-profile/kartpad_retro_rewind_release.h"
-
-mkdir -p "${runtime_source}/third_party/sse2neon"
-cached_sse2neon="${repo_root}/build/dependency-cache/sse2neon-${sse2neon_sha256}.h"
-if [[ -f "${cached_sse2neon}" ]] &&
-   [[ "$(shasum -a 256 "${cached_sse2neon}" | awk '{print $1}')" == "${sse2neon_sha256}" ]]; then
-  cp "${cached_sse2neon}" "${runtime_source}/third_party/sse2neon/sse2neon.h"
-else
-  curl --fail --location --silent --show-error \
-    "${sse2neon_url}" -o "${runtime_source}/third_party/sse2neon/sse2neon.h"
-  mkdir -p "$(dirname "${cached_sse2neon}")"
-  cp "${runtime_source}/third_party/sse2neon/sse2neon.h" "${cached_sse2neon}"
-fi
-actual_sse2neon_sha256="$(shasum -a 256 "${runtime_source}/third_party/sse2neon/sse2neon.h" | awk '{print $1}')"
-if [[ "${actual_sse2neon_sha256}" != "${sse2neon_sha256}" ]]; then
-  echo "ERROR: sse2neon hash mismatch: ${actual_sse2neon_sha256}" >&2
-  exit 1
-fi
+# Retro Rewind release header and pinned sse2neon (shared with the
+# cross-platform game-pack build).
+PYTHONPATH="${repo_root}/builder" python3 -m kartpad_builder.runtime_stage extras "${runtime_source}"
 
 if [[ "${prepare_only}" == "1" ]]; then
   echo "Prepared integrated iOS runtime source: ${runtime_source}"

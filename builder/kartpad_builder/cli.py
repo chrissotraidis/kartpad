@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .android_pack import build_android_pack
 from .bootstrap import prepare_dependencies
 from .pipeline import BuildError, build
 from .profiles import ProfileError, load_profiles, select_profile, sha256_file
@@ -26,8 +27,10 @@ def parser() -> argparse.ArgumentParser:
     sub.add_parser("profiles", help="List supported static-recompilation profiles")
     doctor = sub.add_parser("doctor", help="Verify tools and pinned Builder dependencies")
     doctor.add_argument("--profile", default="mkwii-rmcp01-rev0")
+    doctor.add_argument("--target", choices=("ios", "android-pack"), default="ios")
     bootstrap = sub.add_parser("bootstrap", help="Fetch and verify pinned Builder dependencies")
     bootstrap.add_argument("--profile", default="mkwii-rmcp01-rev0")
+    bootstrap.add_argument("--target", choices=("ios", "android-pack"), default="ios")
     inspect = sub.add_parser("inspect", help="Identify a disc image without extracting it")
     inspect.add_argument("image", type=Path)
     inspect.add_argument("--profile", default="auto")
@@ -39,6 +42,15 @@ def parser() -> argparse.ArgumentParser:
     build_parser.add_argument("--jobs", type=int, choices=range(1, 9), default=2)
     build_parser.add_argument("--translation-root", type=Path, help=argparse.SUPPRESS)
     build_parser.add_argument("--app", type=Path, help=argparse.SUPPRESS)
+    pack = sub.add_parser("build-pack", help="Build a private Android game pack for the published app")
+    pack.add_argument("platform", choices=("android",))
+    pack.add_argument("image", type=Path)
+    pack.add_argument("--app", type=Path, required=True,
+                      help="The published KartPad APK (or its lib/arm64-v8a/libmain.so)")
+    pack.add_argument("--profile", default="auto")
+    pack.add_argument("--output", type=Path, default=repo_root() / "artifacts/KartPad-game-pack.so")
+    pack.add_argument("--work-root", type=Path, default=repo_root() / "private/builder")
+    pack.add_argument("--jobs", type=int, choices=range(1, 17), default=2)
     return result
 
 
@@ -55,7 +67,8 @@ def main(argv: list[str] | None = None) -> int:
             profile = next((item for item in profiles if item.id == args.profile), None)
             if profile is None:
                 raise ProfileError(f"unknown profile: {args.profile}")
-            dependencies = prepare_dependencies(repo_root(), profile, install=args.command == "bootstrap")
+            dependencies = prepare_dependencies(repo_root(), profile, install=args.command == "bootstrap",
+                                                target=args.target)
             print(f"Builder dependencies verified for {profile.id}: {', '.join(dependencies)}")
             return 0
         if not args.image.is_file():
@@ -69,6 +82,18 @@ def main(argv: list[str] | None = None) -> int:
             acceptance = "pinned image" if profile.accepts(image_sha256) else "verified after extraction"
             print(json.dumps({"imageSHA256": image_sha256, "profileId": profile.id,
                               "displayName": profile.display_name, "acceptance": acceptance}, indent=2))
+            return 0
+        if args.command == "build-pack":
+            prepare_dependencies(repo_root(), profile, install=False, target="android-pack")
+            if not args.app.is_file():
+                raise ProfileError(f"published app does not exist: {args.app}")
+            pack_result = build_android_pack(
+                repo=repo_root(), profile=profile, image=args.image.resolve(),
+                image_sha256=image_sha256, app=args.app.resolve(), output=args.output.resolve(),
+                work_root=args.work_root.resolve(), jobs=args.jobs)
+            print(f"Built private game pack: {pack_result.pack}")
+            print(f"SHA-256: {pack_result.pack_sha256}")
+            print("Keep it private: it contains game code translated from your own disc.")
             return 0
         prepare_dependencies(repo_root(), profile, install=False)
         result = build(
