@@ -53,8 +53,8 @@ neither KartPad nor PadForge includes game files or console keys.
 - For **iPhone and iPad**: an Apple Silicon Mac with
   [Xcode](https://apps.apple.com/app/xcode/id497799835) installed, iOS or iPadOS
   16 or newer, and a sideloading tool (AltStore, SideStore or Sideloadly).
-- Free space: a few GB on the computer for PadForge's tools, and at least
-  6 GB on the phone or tablet for the game data.
+- Free space: about 16 GB on the computer for PadForge's tools and build files,
+  and at least 6 GB on the phone or tablet for the game data.
 
 ### 1. Make your copy with PadForge
 
@@ -73,7 +73,7 @@ neither KartPad nor PadForge includes game files or console keys.
    - **Linux:** in the folder, run `sh padforge.sh` (needs Python 3.9+ and Git).
 3. Choose **Android** or **iPhone/iPad**, drag your disc image into the window,
    press Enter, then press Enter again to save to Downloads (or type a folder).
-4. Wait. The first run downloads a few GB of tools and takes about 10 minutes
+4. Wait. The first run downloads about 4 GB of tools and takes about 10 minutes
    to an hour, depending on the computer. Later runs reuse the tools.
 
 PadForge saves `KartPad-v0.6.0-android-personal.so` (the Android game pack)
