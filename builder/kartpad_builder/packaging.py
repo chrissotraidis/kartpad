@@ -23,6 +23,25 @@ def _walk_files(root: Path) -> list[Path]:
     return sorted((path for path in root.rglob("*") if path.is_file()), key=lambda p: p.as_posix())
 
 
+def load_version(repo: Path) -> dict[str, Any]:
+    """Read the single KartPad version (version.json) shared by every platform."""
+    data = json.loads((repo / "version.json").read_text())
+    version, build = data.get("version"), data.get("build")
+    if not isinstance(version, str) or not version or not isinstance(build, int) or build < 1:
+        raise PackageError("version.json needs a version string and a positive integer build")
+    return {"version": version, "build": build}
+
+
+def _stamped_plist(path: Path, version: dict[str, Any]) -> bytes:
+    with path.open("rb") as handle:
+        raw = handle.read()
+    plist = plistlib.loads(raw)
+    plist["CFBundleShortVersionString"] = version["version"]
+    plist["CFBundleVersion"] = str(version["build"])
+    binary = raw.startswith(b"bplist")
+    return plistlib.dumps(plist, fmt=plistlib.FMT_BINARY if binary else plistlib.FMT_XML)
+
+
 def audit_app(app: Path, private_prefixes: tuple[str, ...] = ()) -> dict[str, Any]:
     if not app.is_dir() or app.suffix != ".app":
         raise PackageError(f"not an app bundle: {app}")
@@ -56,6 +75,7 @@ def package_unsigned_ipa(
     output: Path,
     provenance: dict[str, Any],
     additional_entries: dict[str, Path] | None = None,
+    version: dict[str, Any] | None = None,
 ) -> str:
     audit_app(app)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -67,7 +87,8 @@ def package_unsigned_ipa(
     for path in _walk_files(app):
         relative = path.relative_to(app).as_posix()
         mode = stat.S_IMODE(path.stat().st_mode)
-        entries.append((f"{app_root}/{relative}", path.read_bytes(), mode))
+        data = _stamped_plist(path, version) if version and relative == "Info.plist" else path.read_bytes()
+        entries.append((f"{app_root}/{relative}", data, mode))
     for name, path in sorted((additional_entries or {}).items()):
         parts = Path(name).parts
         if not name or name.startswith("/") or ".." in parts or not path.is_file():

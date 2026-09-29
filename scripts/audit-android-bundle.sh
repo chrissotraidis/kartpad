@@ -2,6 +2,8 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
+release_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" version)"
+release_build="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" build)"
 # shellcheck source=android-toolchain-versions.sh
 source "$repo_root/scripts/android-toolchain-versions.sh"
 bundle="${1:-$repo_root/android/app/build/outputs/bundle/release/app-release.aab}"
@@ -27,7 +29,7 @@ done
 
 "$java" -jar "$bundletool" validate --bundle="$bundle" >/dev/null
 manifest="$($java -jar "$bundletool" dump manifest --bundle="$bundle")"
-expected_version_name="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-0.4.12-android.2}"
+expected_version_name="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-${release_version}}"
 if [[ -n "${KARTPAD_ANDROID_EXPECTED_VERSION_CODE:-}" ]]; then
   [[ "$manifest" == *"android:versionCode=\"$KARTPAD_ANDROID_EXPECTED_VERSION_CODE\""* ]] || {
     echo "ERROR: AAB version code does not match the requested code" >&2; exit 1;

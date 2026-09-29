@@ -54,6 +54,21 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ProfileError, "no supported profile"):
             select_profile(load_profiles(PROFILES), "0" * 64)
 
+    def test_other_dumps_are_provisional_until_extraction_verifies(self) -> None:
+        profiles = load_profiles(PROFILES)
+        self.assertTrue(profiles[0].accepts_verified_extraction)
+        self.assertIs(select_profile(profiles, "0" * 64, extension="rvz"), profiles[0])
+        with self.assertRaisesRegex(ProfileError, "no supported profile"):
+            select_profile(profiles, "0" * 64, extension="zip")
+        data = json.loads((PROFILES / "mkwii-rmcp01-rev0.json").read_text())
+        data["containers"]["acceptVerifiedExtraction"] = False
+        strict = Profile(Path("strict.json"), data)
+        with self.assertRaisesRegex(ProfileError, "no supported profile"):
+            select_profile([strict], "0" * 64, extension="iso")
+        data["containers"]["acceptVerifiedExtraction"] = "yes"
+        with self.assertRaisesRegex(ProfileError, "true or false"):
+            validate_profile(data)
+
     def test_cache_key_changes_for_each_input(self) -> None:
         profile = load_profiles(PROFILES)[0]
         baseline = cache_key(profile, "a" * 64, "b" * 64)
@@ -319,6 +334,24 @@ class PackagingTests(unittest.TestCase):
                 mode = archive.getinfo("Payload/KartPad.app/KartPad").external_attr >> 16
                 self.assertTrue(mode & stat.S_IXUSR)
 
+    def test_ipa_is_stamped_with_the_shared_version(self) -> None:
+        from kartpad_builder.packaging import load_version
+        version = load_version(REPO)
+        self.assertRegex(version["version"], r"^\d+\.\d+\.\d+$")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app = self.make_app(root)
+            output = root / "stamped.ipa"
+            package_unsigned_ipa(app, output, {"schemaVersion": 1}, None, version)
+            with zipfile.ZipFile(output) as archive:
+                plist = plistlib.loads(archive.read("Payload/KartPad.app/Info.plist"))
+            self.assertEqual(plist["CFBundleShortVersionString"], version["version"])
+            self.assertEqual(plist["CFBundleVersion"], str(version["build"]))
+            self.assertEqual(plist["CFBundleIdentifier"], "dev.kartpad.app")
+            # The source app is not modified.
+            with (app / "Info.plist").open("rb") as handle:
+                self.assertNotIn("CFBundleVersion", plistlib.load(handle))
+
     def test_additional_public_release_entries_are_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -344,7 +377,7 @@ class PackagingTests(unittest.TestCase):
             root = Path(temp)
             app = self.make_app(root)
             # Reuse a synthetic app; this packaging check needs no game or network inputs.
-            with patch("kartpad_builder.pipeline.prepare_inputs"):
+            with patch("kartpad_builder.pipeline.prepare_inputs") as prepare:
                 result = build(
                     repo=REPO,
                     profile=load_profiles(PROFILES)[0],
@@ -354,6 +387,7 @@ class PackagingTests(unittest.TestCase):
                     work_root=root / "work",
                     app_override=app,
                 )
+            self.assertEqual(prepare.call_args.args[1], REPO / "private/builder")
             with zipfile.ZipFile(result.ipa) as archive:
                 for name in ("LICENSE", "RIGHTS_AND_LICENSES.md", "THIRD_PARTY_NOTICES.md"):
                     self.assertEqual(archive.read(name), (REPO / name).read_bytes())
@@ -361,6 +395,14 @@ class PackagingTests(unittest.TestCase):
                 self.assertEqual(provenance["softwareLicense"], "GPL-3.0-only")
                 self.assertEqual(provenance["gameCodeRedistributionRights"], "not-cleared")
                 self.assertNotIn("redistributionAllowed", provenance)
+            events = [json.loads(line) for line in
+                      (root / "work/logs/progress.jsonl").read_text().splitlines()]
+            self.assertTrue(all(event["schema_version"] == 1 for event in events))
+            self.assertEqual([(event["event"], event["stage"]) for event in events], [
+                ("stage_started", "preflight"), ("stage_completed", "preflight"),
+                *[("stage_skipped", stage) for stage in
+                  ("extract", "translate", "dependencies", "generate", "compile")],
+                ("stage_started", "package"), ("stage_completed", "package")])
 
     def test_unsafe_additional_entry_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -389,6 +431,19 @@ class PackagingTests(unittest.TestCase):
             (app / "KartPad").write_bytes(b"prefix /Users/private/build suffix")
             with self.assertRaisesRegex(PackageError, "private build path"):
                 audit_app(app, ("/Users/private",))
+
+
+class BootstrapTests(unittest.TestCase):
+    def test_interrupted_clone_reports_a_recoverable_error(self) -> None:
+        import subprocess
+        from kartpad_builder.bootstrap import _verify_checkout
+        from kartpad_builder.errors import BuildError
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            subprocess.run(["git", "init", "-q", str(root / "ref/upstream/partial")], check=True)
+            dependency = {"name": "partial", "path": "ref/upstream/partial", "commit": "0" * 40, "tree": "0" * 40}
+            with self.assertRaisesRegex(BuildError, "incomplete .*bootstrap again"):
+                _verify_checkout(root, dependency)
 
 
 if __name__ == "__main__":

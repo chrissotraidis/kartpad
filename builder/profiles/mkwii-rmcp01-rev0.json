@@ -18,6 +18,7 @@
   },
   "containers": {
     "extensions": ["iso", "gcm", "gcz", "ciso", "wbfs", "wia", "rvz"],
+    "acceptVerifiedExtraction": true,
     "acceptedImages": [
       {
         "format": "wbfs",

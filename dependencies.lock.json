@@ -13,7 +13,10 @@
       "pushDisabled": true,
       "maintainedSource": {
         "path": "vendor/wiicompiled",
-        "method": "git-subtree-squash",
+        "method": "git-submodule",
+        "repository": "https://github.com/chrissotraidis/wiicompiled.git",
+        "branch": "kartpad-translator",
+        "commit": "9d563f98953c7b263f00e542e1d63c65fcf0876a",
         "upstreamBase": "83463764b8acda394e058b0c689a10b8561fc380",
         "activeConsumers": [
           "translator"

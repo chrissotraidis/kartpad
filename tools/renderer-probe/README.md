@@ -13,7 +13,7 @@ Its package is `dev.kartpad.rendererprobe`; installing it does not replace
 
 ## Run
 
-[Download the audited Android diagnostic APK](https://github.com/chrissotraidis/kartpad/releases/tag/renderer-probe-v0.2.0).
+Download the audited Android diagnostic APK (retired).
 
 You do not need to run KartPad first. This separate app supplies all of its
 own synthetic inputs.

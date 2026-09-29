@@ -1,15 +1,19 @@
 # KartPad Personal IPA Builder
 
-KartPad uses static recompilation. The public Builder translates a supported
-game executable on the user's Mac before Apple signing. It remains useful for
-developers and future verified compatibility profiles even though the latest
-public preview also publishes one audited unsigned IPA containing the current
-supported ARM64 translation.
+KartPad uses static recompilation. The Builder translates a supported game
+executable on your own Mac, from your own disc image, before you sign the app.
+Prebuilt KartPad downloads have been retired, so the Builder is currently the
+way to get KartPad on iPhone and iPad. Mac and Android Builder targets are in
+progress; this page describes only commands that exist today.
 
 ## Current preview
 
-The first Builder preview supports one verified input: the pinned PAL
-`RMCP01` revision 0 WBFS development image. It produces an unsigned,
+The Builder accepts your own PAL `RMCP01` revision 0 disc image as ISO, WBFS,
+RVZ, WIA, GCZ or CISO. The pinned development WBFS is recognized by its hash;
+any other dump is accepted provisionally and must extract to the profile's disc
+identity and exact `main.dol` and `StaticR.rel` hashes, or the build stops
+before translation. (Checked 29 Sep 2026 with ISO and RVZ converted from the
+pinned image; a different game's disc is refused.) It produces an unsigned,
 personalized IPA for local signing. The Builder and compatibility metadata are
 public; disc data, extracted files, translated code, signing material, and the
 resulting IPA remain ignored and private.
@@ -44,6 +48,14 @@ The default output is ignored at
 user's game executable, whose redistribution rights KartPad does not clear.
 The Builder records that game-content status separately from the GPLv3 software
 license; it does not impose a blanket redistribution ban on GPL-covered code.
+Keep the personal IPA private: do not share or upload it.
+
+While it runs, the Builder appends stage events (`preflight`, `extract`,
+`translate`, `dependencies`, `generate`, `compile`, `package`) as JSON lines
+to `logs/progress.jsonl` under the work root. Frontends can show the current
+stage and elapsed time from that file; compiler output stays in the normal log.
+The repository's `padforge.json` describes the Builder's inputs, targets and
+status for tools that drive it.
 
 ## Compatibility profiles
 

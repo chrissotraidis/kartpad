@@ -31,7 +31,14 @@ def _verify_checkout(repo: Path, dependency: dict[str, Any]) -> None:
     path = repo / dependency["path"]
     if not (path / ".git").exists():
         raise BuildError(f"missing pinned source {dependency['name']}: {path}")
-    commit = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD^{commit}"], text=True).strip()
+    head = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD^{commit}"],
+                          capture_output=True, text=True)
+    if head.returncode != 0:
+        raise BuildError(
+            f"{dependency['name']} checkout at {path} is incomplete (for example after an "
+            "interrupted bootstrap). Move that folder aside and run "
+            "./scripts/build-user-ipa.sh bootstrap again; nothing was changed.")
+    commit = head.stdout.strip()
     tree = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD^{tree}"], text=True).strip()
     if commit != dependency["commit"] or tree != dependency["tree"]:
         raise BuildError(f"{dependency['name']} does not match dependencies.lock.json")
@@ -115,6 +122,13 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool) -> list[st
         if not install:
             raise BuildError("missing pinned physical-iOS Dawn archive; run ./scripts/build-user-ipa.sh bootstrap")
         _download(dawn["iosArm64Url"], dawn["iosArm64Sha256"], dawn_output)
+    # The Mac app build (scripts/prepare-g7-game-runtime.sh) reads this archive
+    # but nothing fetched it, so fresh clones could not build the Mac app.
+    mac_output = repo / "build/dependency-cache" / f"dawn-darwin-arm64-{dawn['version']}.tar.gz"
+    if install and (not mac_output.is_file()
+                    or hashlib.sha256(mac_output.read_bytes()).hexdigest() != dawn["darwinArm64Sha256"]):
+        mac_url = f"{dawn['repository']}/releases/download/{dawn['version']}/{dawn['darwinArm64Artifact']}"
+        _download(mac_url, dawn["darwinArm64Sha256"], mac_output)
     if "retroRewind" in profile.data:
         from .retro_rewind import prepare_inputs
 

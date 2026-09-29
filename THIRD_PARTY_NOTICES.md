@@ -53,6 +53,6 @@ KartPad's platform runtime source is maintained in the actual
 [WiiCompiled fork](https://github.com/chrissotraidis/wiicompiled), derived from
 [patchzyy/WiiCompiled](https://github.com/patchzyy/wiicompiled). The pinned
 `vendor/runtimes/` submodules preserve the upstream runtime and vendored Aurora
-licenses and notices. KartPad's translator changes are maintained in the
-`vendor/wiicompiled/` subtree. See [source maintenance](docs/source-maintenance/README.md)
+licenses and notices. KartPad's translator changes are maintained on the fork's
+`kartpad-translator` branch, pinned at `vendor/wiicompiled/`. See [source maintenance](docs/source-maintenance/README.md)
 for exact source ownership, upstream identity and contribution workflow.

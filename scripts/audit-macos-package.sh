@@ -7,6 +7,8 @@ if [[ $# -lt 1 || $# -gt 2 || "$1" != /* || "$1" != *.app ]]; then
 fi
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+release_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" version)"
+release_build="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" build)"
 app="$1"
 product="${2:-dual}"
 case "${product}" in base|retro-rewind|dual) ;; *) exit 64 ;; esac
@@ -24,8 +26,8 @@ icon_name="$(plutil -extract CFBundleIconFile raw "${plist}")"
 executable="${contents}/MacOS/${executable_name}"
 
 test "${bundle_identifier}" = "dev.kartpad.app"
-test "$(plutil -extract CFBundleShortVersionString raw "${plist}")" = "${KARTPAD_EXPECTED_VERSION:-0.4.22}"
-test "$(plutil -extract CFBundleVersion raw "${plist}")" = "${KARTPAD_EXPECTED_BUILD:-43}"
+test "$(plutil -extract CFBundleShortVersionString raw "${plist}")" = "${KARTPAD_EXPECTED_VERSION:-${release_version}}"
+test "$(plutil -extract CFBundleVersion raw "${plist}")" = "${KARTPAD_EXPECTED_BUILD:-${release_build}}"
 test "$(plutil -extract NSBluetoothAlwaysUsageDescription raw "${plist}")" = \
   "KartPad uses Bluetooth to pair and connect an experimental Wii Remote and Nunchuk."
 test -x "${executable}"

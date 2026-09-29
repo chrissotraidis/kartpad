@@ -13,7 +13,7 @@ forking an upstream tree into KartPad.
   records the Retro Rewind version, official version-feed URL, archive URL,
   byte counts, hashes, expansion limit, `Code.pul`, Riivolution XML, and signed
   production RWFC payload.
-- `vendor/wiicompiled` contains the maintained translator subtree.
+- `vendor/wiicompiled` pins the maintained translator (fork branch `kartpad-translator`).
   `vendor/runtimes/{macos,ios,android,tvos}` pins the maintained runtime forks
   (including Aurora) with Git submodules. Edit these sources and deliberately
   advance their gitlinks; staging scripts do not replay the old patch stack.

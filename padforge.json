@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "id": "kartpad",
+  "name": "KartPad",
+  "game": "Mario Kart Wii (Wii, RMCP01)",
+  "kind": "disc-translation",
+  "status": "experimental",
+  "inputs": [
+    {
+      "type": "wii-disc",
+      "formats": [
+        "iso",
+        "wbfs",
+        "rvz",
+        "wia",
+        "gcz",
+        "ciso"
+      ],
+      "description": "Your own PAL RMCP01 revision 0 disc image. Any dump or container is accepted if extraction reproduces the profile's exact main.dol and StaticR.rel."
+    }
+  ],
+  "targets": {
+    "ios": {
+      "hosts": {
+        "macos-arm64": "experimental"
+      },
+      "command": [
+        "/bin/bash",
+        "{repo}/scripts/build-user-ipa.sh",
+        "build",
+        "{disc}",
+        "--work-root",
+        "{work}",
+        "--output",
+        "{output}",
+        "--jobs",
+        "{jobs}"
+      ],
+      "modes": {
+        "full": []
+      },
+      "output": "ipa",
+      "check": "kartpad-ipa"
+    },
+    "macos": {
+      "hosts": {
+        "macos-arm64": "experimental"
+      },
+      "output": "zip",
+      "check": "none",
+      "steps": [
+        {
+          "stage": "preflight",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/build-user-ipa.sh",
+            "doctor"
+          ]
+        },
+        {
+          "stage": "translate",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/translate-retro-rewind.sh",
+            "--image",
+            "{disc}",
+            "--retro-root",
+            "{repo}/private/builder/retro-rewind-downloads/6.12.8-extracted/RetroRewind6",
+            "--payload",
+            "{repo}/private/builder/retro-rewind-downloads/payload.RMCPD00.bin"
+          ],
+          "env": {
+            "KARTPAD_TRANSLATION_JOBS": "{jobs}"
+          }
+        },
+        {
+          "stage": "compile",
+          "command": [
+            "/bin/bash",
+            "{repo}/scripts/build-macos-app.sh",
+            "{repo}/private/self-build/retro-rewind/translation",
+            "{work}/macos-source",
+            "{work}/macos-build",
+            "{work}/KartPad.app",
+            "dual"
+          ]
+        },
+        {
+          "stage": "package",
+          "command": [
+            "/usr/bin/ditto",
+            "-c",
+            "-k",
+            "--keepParent",
+            "{work}/KartPad.app",
+            "{output}"
+          ]
+        }
+      ]
+    },
+    "android": {
+      "hosts": {
+        "macos-arm64": "planned",
+        "linux-x86_64": "planned",
+        "windows-x86_64": "planned"
+      }
+    }
+  },
+  "requirements": {
+    "disk_gb": 60,
+    "tools": [
+      {
+        "name": "git",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "cmake",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "ninja",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "python3",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "rg",
+        "version_args": [
+          "--version"
+        ]
+      },
+      {
+        "name": "dotnet",
+        "version_args": [
+          "--version"
+        ],
+        "min_version": "8"
+      },
+      {
+        "name": "xcodebuild",
+        "version_args": [
+          "-version"
+        ],
+        "note": "Install Xcode and its iOS platform"
+      }
+    ]
+  },
+  "stages": [
+    "preflight",
+    "extract",
+    "translate",
+    "compile",
+    "app",
+    "package"
+  ],
+  "publication": {
+    "public_binaries": false,
+    "reason": "Personal builds contain translated game code; public releases are source only."
+  }
+}

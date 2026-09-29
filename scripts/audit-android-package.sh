@@ -2,6 +2,8 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
+release_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" version)"
+release_build="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "${repo_root}/version.json" build)"
 # shellcheck source=android-toolchain-versions.sh
 source "$repo_root/scripts/android-toolchain-versions.sh"
 sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
@@ -16,7 +18,7 @@ for tool in "$aapt2" "$zipalign" "$readelf"; do
 done
 
 badging="$("$aapt2" dump badging "$apk")"
-expected_version_name="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-0.4.12-android.2}"
+expected_version_name="${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-${release_version}}"
 if [[ -n "${KARTPAD_ANDROID_EXPECTED_VERSION_CODE:-}" ]]; then
   [[ "$badging" == *"versionCode='$KARTPAD_ANDROID_EXPECTED_VERSION_CODE'"* ]] || {
     echo "ERROR: APK version code does not match the requested code" >&2; exit 1;

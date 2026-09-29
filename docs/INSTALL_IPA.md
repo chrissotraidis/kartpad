@@ -1,8 +1,15 @@
-# Install the KartPad unsigned IPA
+# Install KartPad on iPhone and iPad
 
-KartPad **0.5.0 (build 59)** is the unsigned ARM64 IPA for iPhone and iPad,
-with the official Retro Rewind 6.12.8 profile. Re-sign it with your existing
-compatible Apple identity and update in place.
+> [!IMPORTANT]
+> **Downloads retired.** Prebuilt KartPad IPAs are no longer published. Build
+> your own unsigned IPA on an Apple Silicon Mac with the
+> [Personal IPA Builder](BUILDER.md), then sign and install it as below. A
+> simpler build-it-yourself version is in progress.
+
+The last published version was **0.5.0 (build 59)**, an unsigned ARM64 IPA for
+iPhone and iPad with the official Retro Rewind 6.12.8 profile. A personal
+build is also unsigned: re-sign it with your existing compatible Apple
+identity and update in place.
 
 This update adds a persistent Auto-accelerate opt-out and corrects shader
 startup pressure, framebuffer-copy crashes, and incomplete generated textures.
@@ -20,16 +27,20 @@ Older IPAs should remain offline. This does not erase incorrect serial history
 already held by a server or clear bans; affected accounts may need service-admin
 help. Never reset identities or delete saves as a workaround.
 
-1. Download `KartPad-v0.5.0-ios-unsigned.ipa` and `SHA256SUMS.txt` from the
-   [official iPhone/iPad release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.5.0).
-2. Run `shasum -a 256 KartPad-v0.5.0-ios-unsigned.ipa` on a Mac and
-   compare it with the IPA row in `SHA256SUMS.txt`. The source download is optional for normal installation.
+1. Build your personal IPA with the [Personal IPA Builder](BUILDER.md). It
+   runs on an Apple Silicon Mac and accepts your own supported disc image as
+   ISO, WBFS or RVZ.
+2. Keep the IPA private. It contains code translated from your game and must
+   not be shared or uploaded.
 3. Re-sign and install it with AltStore Classic plus AltServer or another
    compatible IPA-signing workflow. AltStore PAL cannot import arbitrary
    unsigned IPA files.
 4. On first launch, choose **Import Game** on the Mario Kart Wii card and select
    your own legally obtained PAL (Europe) `RMCP01` revision 0 ISO/WBFS. An extracted
-   DATA folder also works; convert RVZ before importing.
+   DATA folder also works; convert RVZ before importing. Importing an ISO/WBFS
+   needs your own 16-byte Wii common key saved as `common-key.bin` in
+   **Files → On My iPhone/iPad → KartPad**; KartPad does not include it. An
+   extracted DATA folder does not need the key.
 5. Choose **Mario Kart Wii** for the original game or **Retro Rewind** for the
    optional expanded game. KartPad can download, verify, and install the
    official version-locked Retro Rewind 6.12.8 full pack.
