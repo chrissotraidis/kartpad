@@ -138,6 +138,7 @@
     "android": {
       "hosts": {
         "macos-arm64": "experimental",
+        "macos-x86_64": "experimental",
         "windows-arm64": "experimental",
         "windows-x86_64": "experimental",
         "linux-x86_64": "experimental"
