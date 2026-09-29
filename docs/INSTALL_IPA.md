@@ -1,17 +1,16 @@
 # Install KartPad on iPhone and iPad
 
 > [!IMPORTANT]
-> **Downloads retired.** Prebuilt KartPad IPAs are no longer published. Build
-> your own unsigned IPA on an Apple Silicon Mac with the
-> [Personal IPA Builder](BUILDER.md), then sign and install it as below. A
-> simpler build-it-yourself version is in progress.
+> **KartPad 0.6.0 is the current release.** On an Apple Silicon Mac with Xcode,
+> [PadForge](https://github.com/chrissotraidis/padforge/releases/latest) makes a
+> complete personal IPA from your own disc. See
+> [Get KartPad](../README.md#get-kartpad) for the steps.
 
-The last published version was **0.5.0 (build 59)**, an unsigned ARM64 IPA for
-iPhone and iPad with the official Retro Rewind 6.12.8 profile. A personal
-build is also unsigned: re-sign it with your existing compatible Apple
-identity and update in place.
+PadForge's IPA is unsigned: sign and install it with your existing compatible
+Apple identity and update in place to keep your saves. Older version notes
+below are kept for reference.
 
-This update adds a persistent Auto-accelerate opt-out and corrects shader
+0.5.0 added a persistent Auto-accelerate opt-out and corrected shader
 startup pressure, framebuffer-copy crashes, and incomplete generated textures.
 See the [release notes](releases/v0.5.0.md).
 
@@ -27,9 +26,9 @@ Older IPAs should remain offline. This does not erase incorrect serial history
 already held by a server or clear bans; affected accounts may need service-admin
 help. Never reset identities or delete saves as a workaround.
 
-1. Build your personal IPA with the [Personal IPA Builder](BUILDER.md). It
-   runs on an Apple Silicon Mac and accepts your own supported disc image as
-   ISO, WBFS or RVZ.
+1. Make your personal IPA with PadForge (see
+   [Get KartPad](../README.md#get-kartpad)). It runs on an Apple Silicon Mac
+   with Xcode and accepts your own supported disc image as ISO, WBFS or RVZ.
 2. Keep the IPA private. It contains code translated from your game and must
    not be shared or uploaded.
 3. Re-sign and install it with AltStore Classic plus AltServer or another

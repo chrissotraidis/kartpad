@@ -38,31 +38,87 @@ The projects are independently maintained.
 
 ## Get KartPad
 
-KartPad is free. The app on the [releases page](https://github.com/chrissotraidis/kartpad/releases)
-contains no game code: you add the game part yourself, made on your own computer
-from your own Mario Kart Wii disc (an ISO, WBFS or RVZ of the PAL RMCP01
-release) with [PadForge](https://github.com/chrissotraidis/padforge). Nothing
-from your disc is uploaded anywhere.
+KartPad is free. The apps on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest)
+contain no game code. You make the game part yourself with
+[PadForge](https://github.com/chrissotraidis/padforge), on your own computer,
+from your own Mario Kart Wii disc. Nothing from your disc is uploaded, and
+neither KartPad nor PadForge includes game files or console keys.
 
-1. Download PadForge for your computer from its
-   [latest release](https://github.com/chrissotraidis/padforge/releases/latest),
-   unzip it and start it (`PadForge.cmd` on Windows, `PadForge.command` on a
-   Mac, `sh padforge.sh` on Linux).
-2. Choose KartPad, drag your disc image into the window and pick a folder.
-   The first run downloads the tools it needs (a few GB) and takes a while;
-   later versions reuse them.
+**What you need**
 
-**Android** (PadForge on Windows, Mac or Linux): install
-`KartPad-v0.6.0-android.apk` from the latest release (it updates an earlier
-KartPad in place; your saves stay). PadForge makes a game pack; copy it to your
-phone, open KartPad, tap **Play Game** and **Choose file**.
+- Your own Mario Kart Wii disc image: PAL (Europe) **RMCP01** revision 0, as
+  ISO, WBFS or RVZ. Other regions are not supported.
+- For **Android**: a Windows, Mac or Linux computer, and an ARM64 phone or
+  tablet with Vulkan and Android 9 or newer.
+- For **iPhone and iPad**: an Apple Silicon Mac with
+  [Xcode](https://apps.apple.com/app/xcode/id497799835) installed, iOS or iPadOS
+  16 or newer, and a sideloading tool (AltStore, SideStore or Sideloadly).
+- Free space: a few GB on the computer for PadForge's tools, and at least
+  6 GB on the phone or tablet for the game data.
 
-**iPhone and iPad** (PadForge on a Mac with Xcode): PadForge makes a complete
-KartPad IPA. Install it with your usual sideloading tool (AltStore, SideStore
-or Sideloadly). See [iPhone/iPad setup](docs/INSTALL_IPA.md).
+### 1. Make your copy with PadForge
 
-Each KartPad version needs its own game pack: after an update, KartPad asks you
-to run PadForge again.
+1. Download the ZIP for your computer from PadForge's
+   [latest release](https://github.com/chrissotraidis/padforge/releases/latest)
+   and unzip it.
+2. Start it:
+   - **Windows:** double-click `PadForge.cmd` (Python is included). If Windows
+     says it protected your PC, choose **More info**, then **Run anyway**.
+   - **Mac:** once, run `xcode-select --install` in Terminal. Then
+     double-click `PadForge.command`. The first time, macOS says Apple could
+     not verify it: choose **Done**, open **System Settings → Privacy &
+     Security**, scroll down, choose **Open Anyway** next to PadForge.command
+     and confirm. (Or, in Terminal, type `sh `, drag `PadForge.command` into
+     the window and press Return.)
+   - **Linux:** in the folder, run `sh padforge.sh` (needs Python 3.9+ and Git).
+3. Choose **Android** or **iPhone/iPad**, drag your disc image into the window,
+   press Enter, then press Enter again to save to Downloads (or type a folder).
+4. Wait. The first run downloads a few GB of tools and takes about 10 minutes
+   to an hour, depending on the computer. Later runs reuse the tools.
+
+PadForge saves `KartPad-v0.6.0-android-personal.so` (the Android game pack)
+or `KartPad-v0.6.0-ios-personal.ipa` (the complete iPhone/iPad app). Keep it
+to yourself: it contains game code made from your disc.
+
+### 2. Install it
+
+**Android**
+
+1. Install `KartPad-v0.6.0-android.apk` from the
+   [latest release](https://github.com/chrissotraidis/kartpad/releases/latest).
+   It updates KartPad 0.5.x in place and keeps your saves. Do not uninstall first.
+2. Copy the `.so` game pack to the phone (USB, cloud drive or similar).
+3. Open KartPad and tap the Mario Kart Wii card. When KartPad asks for your
+   game pack, choose **Choose file** and pick the `.so`.
+
+**iPhone and iPad**
+
+Install `KartPad-v0.6.0-ios-personal.ipa` with AltStore, SideStore or
+Sideloadly. Install over your existing KartPad with the same tool and Apple ID
+to keep your saves. See [iPhone/iPad setup](docs/INSTALL_IPA.md).
+
+### 3. Add your game data (first install only)
+
+KartPad also reads the tracks, art and music from your disc on the device.
+If you are updating from 0.5.x, this is already done. Otherwise choose one:
+
+- **Extracted folder (easiest, no key needed).** Install
+  [Dolphin](https://dolphin-emu.org/download/) on your computer, add your disc
+  image, right-click Mario Kart Wii → **Properties → Filesystem**, right-click
+  the disc and choose **Extract Entire Disc**. Copy the `DATA` folder it makes
+  (the one containing `files` and `sys`) to your device and choose it with
+  **Import from Extracted Game Data Folder** (Android) or **Import from
+  Extracted Folder** (iPhone/iPad).
+- **Disc image.** Choose your ISO or WBFS (Android also accepts RVZ). This needs
+  your own Wii's 16-byte common key saved as `common-key.bin`, for example from
+  a BootMii NAND backup of your console. KartPad and PadForge do not include
+  it and we cannot provide it; if you do not have one, use the extracted folder.
+
+After that, tap **Play Game**. Retro Rewind is optional: choose its card and
+KartPad downloads the official pack for you.
+
+**After every KartPad update**, run PadForge again: each KartPad version needs
+its own game pack or IPA. There is no Mac download for 0.6.0.
 
 ### Source maintenance
 
