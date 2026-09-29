@@ -88,7 +88,8 @@ def _translated(repo, profile, image, image_sha256, work_root, jobs, gitlinks):
     key = cache_key(profile, image_sha256, fingerprint)
     profile_root = work_root / profile.id
     workspace = profile_root / "builds" / key
-    extraction = profile_root / "inputs" / image_sha256 / "disc"
+    # Short folder names keep extracted paths under Windows' 260-character limit.
+    extraction = profile_root / "inputs" / image_sha256[:16] / "disc"
     translation = workspace / "translation"
     progress = ProgressLog(work_root / "logs/progress.jsonl")
     with progress.stage("preflight"):
