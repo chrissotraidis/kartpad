@@ -113,6 +113,7 @@
         "android-ndk",
         "nodtool"
       ],
+      "published_app": "KartPad-v{version}-android.apk",
       "output": "so",
       "check": "none",
       "steps": [
