@@ -57,6 +57,12 @@ cmake -S "$stage/runtime/game_pack" -B "$stage/build" -G Ninja "${toolchain[@]}"
   -DKARTPAD_APP_VERSION="$version" \
   -DMKW_GAME_PACK_DEFINITIONS="$definitions"
 cmake --build "$stage/build" --target kartpad_game --parallel "$jobs"
+if [[ "$platform" == android ]]; then
+  nm_tool="$ndk/toolchains/llvm/prebuilt/$(uname -s | tr '[:upper:]' '[:lower:]')-x86_64/bin/llvm-nm"
+else
+  nm_tool="$(xcrun --find llvm-nm 2>/dev/null || xcrun --find nm)"
+fi
+python3 "$repo_root/scripts/check-game-pack-state.py" "$nm_tool" "$stage/build/$built" "$runtime_lib"
 
 mkdir -p "$(dirname "$output")"
 if [[ "$platform" == android ]]; then
