@@ -7,8 +7,8 @@ capture_path="${build_dir}/g7-aurora-translated-gx.bmp"
 dawn_archive="${repo_root}/build/dependency-cache/dawn-darwin-arm64-v20260603.191052.tar.gz"
 
 "${repo_root}/scripts/generate-g7-translated-fixture.sh" >/dev/null
-cmp "${repo_root}/generated/g7/translation/functions/func_80001000.cpp" \
-  "${repo_root}/runtime/generated/g7/func_80001000.cpp"
+test "$(shasum -a 256 "${repo_root}/generated/g7/translation/functions/func_80001000.cpp" | awk '{print $1}')" = \
+  "$(cat "${repo_root}/fixtures/g7/func_80001000.sha256")"
 
 cmake_args=(
   -S "${repo_root}"

@@ -9,6 +9,8 @@ if [[ "${build_dir}" != /* ]]; then
   exit 64
 fi
 
+"${repo_root}/scripts/generate-g7-translated-fixture.sh" >/dev/null
+
 cmake -S "${repo_root}" -B "${build_dir}" -G Xcode \
   -DCMAKE_SYSTEM_NAME=iOS \
   -DCMAKE_OSX_SYSROOT=iphoneos \

@@ -131,17 +131,25 @@ target_include_directories(kartpad_memory PUBLIC runtime/include)
 target_compile_features(kartpad_memory PUBLIC cxx_std_20)
 target_compile_options(kartpad_memory PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
-add_executable(kartpad_translated_semantics_fixture
-  runtime/generated/g6/func_80001000.cpp
-  runtime/tests/translated_semantics_fixture.cpp
-)
-target_include_directories(kartpad_translated_semantics_fixture PRIVATE
-  runtime/include runtime/translation_shim)
-target_link_libraries(kartpad_translated_semantics_fixture PRIVATE kartpad_memory)
-target_compile_features(kartpad_translated_semantics_fixture PRIVATE cxx_std_20)
-target_compile_options(kartpad_translated_semantics_fixture PRIVATE
-  -Wall -Wextra -Wpedantic -Werror -fno-fast-math -ffp-contract=off -ffp-model=strict)
-add_test(NAME kartpad_translated_semantics_fixture COMMAND kartpad_translated_semantics_fixture)
+# Synthetic translator fixtures are generated from KartPad's own fixture DOLs
+# (scripts/generate-g6-translated-fixture.sh, scripts/generate-g7-translated-fixture.sh)
+# and checked against fixtures/g6|g7/func_80001000.sha256; they are not tracked.
+set(KARTPAD_G6_FIXTURE "${CMAKE_CURRENT_SOURCE_DIR}/generated/g6/translation/functions/func_80001000.cpp")
+set(KARTPAD_G7_FIXTURE "${CMAKE_CURRENT_SOURCE_DIR}/generated/g7/translation/functions/func_80001000.cpp")
+
+if(EXISTS "${KARTPAD_G6_FIXTURE}")
+  add_executable(kartpad_translated_semantics_fixture
+    "${KARTPAD_G6_FIXTURE}"
+    runtime/tests/translated_semantics_fixture.cpp
+  )
+  target_include_directories(kartpad_translated_semantics_fixture PRIVATE
+    runtime/include runtime/translation_shim)
+  target_link_libraries(kartpad_translated_semantics_fixture PRIVATE kartpad_memory)
+  target_compile_features(kartpad_translated_semantics_fixture PRIVATE cxx_std_20)
+  target_compile_options(kartpad_translated_semantics_fixture PRIVATE
+    -Wall -Wextra -Wpedantic -Werror -fno-fast-math -ffp-contract=off -ffp-model=strict)
+  add_test(NAME kartpad_translated_semantics_fixture COMMAND kartpad_translated_semantics_fixture)
+endif()
 
 add_library(kartpad_scheduler STATIC
   runtime/src/scheduler/guest_scheduler.cpp
@@ -150,17 +158,24 @@ target_include_directories(kartpad_scheduler PUBLIC runtime/include PRIVATE runt
 target_compile_features(kartpad_scheduler PUBLIC cxx_std_20)
 target_compile_options(kartpad_scheduler PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
+if((MKW_BUILD_IOS_SIMULATOR OR MKW_BUILD_IOS_DEVICE) AND NOT EXISTS "${KARTPAD_G7_FIXTURE}")
+  message(FATAL_ERROR "Run scripts/generate-g7-translated-fixture.sh first: "
+    "the iOS shell links the generated synthetic g7 fixture.")
+endif()
+
 if(MKW_HOST_DARWIN)
-  add_library(kartpad_g7_translated STATIC
-    runtime/generated/g7/func_80001000.cpp
-    runtime/src/translation/fixture_runtime.cpp
-  )
-  target_include_directories(kartpad_g7_translated
-    PUBLIC runtime/include runtime/translation_shim)
-  target_link_libraries(kartpad_g7_translated PUBLIC kartpad_memory)
-  target_compile_features(kartpad_g7_translated PUBLIC cxx_std_20)
-  target_compile_options(kartpad_g7_translated PRIVATE
-    -Wall -Wextra -Wpedantic -Werror -fno-fast-math -ffp-contract=off)
+  if(EXISTS "${KARTPAD_G7_FIXTURE}")
+    add_library(kartpad_g7_translated STATIC
+      "${KARTPAD_G7_FIXTURE}"
+      runtime/src/translation/fixture_runtime.cpp
+    )
+    target_include_directories(kartpad_g7_translated
+      PUBLIC runtime/include runtime/translation_shim)
+    target_link_libraries(kartpad_g7_translated PUBLIC kartpad_memory)
+    target_compile_features(kartpad_g7_translated PUBLIC cxx_std_20)
+    target_compile_options(kartpad_g7_translated PRIVATE
+      -Wall -Wextra -Wpedantic -Werror -fno-fast-math -ffp-contract=off)
+  endif()
 
   if(MKW_BUILD_MACOS)
     add_executable(kartpad_player_identity_tests
@@ -176,7 +191,9 @@ if(MKW_HOST_DARWIN)
     target_link_libraries(kartpad_player_identity_tests PRIVATE
       "${IDENTITY_FOUNDATION_FRAMEWORK}")
     add_test(NAME kartpad.mii.player-identity COMMAND kartpad_player_identity_tests)
+  endif()
 
+  if(MKW_BUILD_MACOS AND TARGET kartpad_g7_translated)
     add_executable(KartPadG7Frame MACOSX_BUNDLE runtime/apps/KartPadG7Frame.mm)
     target_include_directories(KartPadG7Frame PRIVATE runtime/translation_shim)
     target_link_libraries(KartPadG7Frame PRIVATE kartpad_g7_translated)
@@ -218,15 +235,17 @@ if(MKW_HOST_DARWIN)
     target_compile_options(kartpad_g7_aurora_host_frame PRIVATE
       -Wall -Wextra -Wpedantic -Werror)
 
-    add_executable(kartpad_g7_aurora_translated_gx
-      runtime/apps/g7_aurora_translated_gx.cpp)
-    target_include_directories(kartpad_g7_aurora_translated_gx PRIVATE
-      runtime/translation_shim)
-    target_link_libraries(kartpad_g7_aurora_translated_gx PRIVATE
-      kartpad_g7_translated aurora::core aurora::gx aurora::main aurora::vi)
-    target_compile_features(kartpad_g7_aurora_translated_gx PRIVATE cxx_std_20)
-    target_compile_options(kartpad_g7_aurora_translated_gx PRIVATE
-      -Wall -Wextra -Wpedantic -Werror -fno-fast-math -ffp-contract=off)
+    if(TARGET kartpad_g7_translated)
+      add_executable(kartpad_g7_aurora_translated_gx
+        runtime/apps/g7_aurora_translated_gx.cpp)
+      target_include_directories(kartpad_g7_aurora_translated_gx PRIVATE
+        runtime/translation_shim)
+      target_link_libraries(kartpad_g7_aurora_translated_gx PRIVATE
+        kartpad_g7_translated aurora::core aurora::gx aurora::main aurora::vi)
+      target_compile_features(kartpad_g7_aurora_translated_gx PRIVATE cxx_std_20)
+      target_compile_options(kartpad_g7_aurora_translated_gx PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -fno-fast-math -ffp-contract=off)
+    endif()
   endif()
 endif()
 target_include_directories(kartpad_host PUBLIC runtime/include)

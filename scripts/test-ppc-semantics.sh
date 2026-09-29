@@ -5,8 +5,8 @@ repo=${0:A:h:h}
 cd "$repo"
 
 ./scripts/generate-g6-translated-fixture.sh
-cmp generated/g6/translation/functions/func_80001000.cpp \
-  runtime/generated/g6/func_80001000.cpp
+test "$(shasum -a 256 generated/g6/translation/functions/func_80001000.cpp | awk '{print $1}')" = \
+  "$(cat fixtures/g6/func_80001000.sha256)"
 
 arm_build=build/g6-semantics-arm64
 x86_build=build/g6-semantics-x86_64
