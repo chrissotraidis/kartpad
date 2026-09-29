@@ -2,6 +2,7 @@
 """Execute production cache admission and worker scheduling with SQLite/fake compiler jobs."""
 from pathlib import Path
 import argparse
+import re
 import subprocess
 import tempfile
 
@@ -13,7 +14,12 @@ source = parser.parse_args().source.read_text()
 loader = source[source.index('template <typename PipelineConfig, typename CreateFn>\nstatic void load_pipeline_cache_entries'):source.index('\nstatic void load_pipeline_cache()')]
 worker = source[source.index('static void pipeline_worker()'):source.index('\nstatic void build_synchronous_pipelines_for_frame()')]
 promotion = source[source.index('template <typename Queue>\nstatic auto find_pending_pipeline'):source.index('// A persistent resolve')]
-constants = '\n'.join(line for line in source.splitlines() if line.startswith('constexpr size_t Max') and any(n in line for n in ['MaxPipelineWorkers', 'MaxBackgroundPipelineWorkers', 'MaxPrewarmPipelineBuilds']))
+# Each runtime pin declares its own subset of these (iOS/macOS add warm-only
+# prewarm and a runtime background-worker cap); take whichever this one has.
+names = ['MaxPipelineWorkers', 'MaxBackgroundPipelineWorkers', 'MaxPrewarmPipelineBuilds',
+         'RetainedPrewarmPipelineBuilds', 'g_maxBackgroundPipelineWorkers', 'g_prewarmWarmOnly', 'prewarmLoaded']
+constants = '\n'.join(re.sub(r'^static ', '', line) for line in source.splitlines()
+                      if re.match(r'(static |constexpr )[\w: ]+\b(' + '|'.join(names) + r')\s*=', line))
 preamble = r'''
 #include <sqlite3.h>
 #include <algorithm>
@@ -78,7 +84,7 @@ int main() {
  }
  sqlite3_finalize(insert);
  assert(sqlite3_prepare_v2(db,"SELECT hash,config,frame FROM recipes WHERE type=? AND version=? ORDER BY frame",-1,&g_pipelineCacheLoadStmt,nullptr)==SQLITE_OK);
- size_t remaining=MaxPrewarmPipelineBuilds;
+ size_t remaining=128;  // a prewarm budget; the loader must stop exactly there
  load_pipeline_cache_entries<Config>(ShaderType::Clear,1,[](auto){},remaining);
  load_pipeline_cache_entries<Config>(ShaderType::GX,1,[](auto){},remaining);
  assert(!aborted && loaded.size()==128 && remaining==0);
