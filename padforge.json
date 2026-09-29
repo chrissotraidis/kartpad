@@ -24,23 +24,54 @@
       "hosts": {
         "macos-arm64": "experimental"
       },
-      "command": [
-        "/bin/bash",
-        "{repo}/scripts/build-user-ipa.sh",
-        "build",
-        "{disc}",
-        "--work-root",
-        "{work}",
-        "--output",
-        "{output}",
-        "--jobs",
-        "{jobs}"
+      "tools": [
+        "git",
+        "dotnet",
+        "cmake",
+        "ninja",
+        "nodtool"
       ],
-      "modes": {
-        "full": []
-      },
+      "published_app": "KartPad-v{version}-ios-unsigned.ipa",
       "output": "ipa",
-      "check": "kartpad-ipa"
+      "check": "none",
+      "steps": [
+        {
+          "stage": "preflight",
+          "command": [
+            "{python}",
+            "-m",
+            "kartpad_builder.cli",
+            "bootstrap",
+            "--target",
+            "ios-pack"
+          ],
+          "env": {
+            "PYTHONPATH": "{repo}/builder"
+          }
+        },
+        {
+          "stage": "build",
+          "command": [
+            "{python}",
+            "-m",
+            "kartpad_builder.cli",
+            "build-pack",
+            "ios",
+            "{disc}",
+            "--app",
+            "{app}",
+            "--work-root",
+            "{work}",
+            "--output",
+            "{output}",
+            "--jobs",
+            "{jobs}"
+          ],
+          "env": {
+            "PYTHONPATH": "{repo}/builder"
+          }
+        }
+      ]
     },
     "macos": {
       "hosts": {
