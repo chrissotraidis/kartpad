@@ -74,8 +74,7 @@ neither KartPad nor PadForge includes game files or console keys.
 3. Choose **Android** or **iPhone/iPad**, drag your disc image into the window,
    press Enter, then press Enter again to save to Downloads (or type a folder).
 4. Wait. The first run downloads about 4 GB of tools and takes about 10 minutes
-   to an hour, depending on the computer. Later runs reuse the tools. If the
-   build stops, PadForge shows the reason and where to ask for help.
+   to an hour, depending on the computer. Later runs reuse the tools.
 
 PadForge saves `KartPad-v0.6.0-android-personal.so` (the Android game pack)
 or `KartPad-v0.6.0-ios-personal.ipa` (the complete iPhone/iPad app). Keep it
