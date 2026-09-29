@@ -160,4 +160,8 @@ if rg -a -F -q "${repo_root}" "${app}/KartPad"; then
   echo "ERROR: physical-iOS app exposes its private KartPad build path" >&2
   exit 65
 fi
-echo "Built full translated physical-iOS game app: ${app}"
+if [[ "${pack_app}" == 1 ]]; then
+  echo "Built physical-iOS app without game code: ${app}"
+else
+  echo "Built full translated physical-iOS game app: ${app}"
+fi

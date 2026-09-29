@@ -21,7 +21,13 @@ DATA_TYPES = set("BbDdVvSs")
 
 def symbols(nm, path, dynamic):
     args = [nm, "--defined-only"] + (["-D"] if dynamic else []) + [path]
-    out = subprocess.run(args, check=True, capture_output=True, text=True).stdout
+    run = subprocess.run(args, capture_output=True, text=True)
+    if run.returncode != 0 and dynamic:
+        # Mach-O has no separate dynamic table: exported means external.
+        run = subprocess.run([nm, "--defined-only", "-g", path], capture_output=True, text=True)
+    if run.returncode != 0:
+        sys.exit(run.stderr.strip())
+    out = run.stdout
     result = {}
     for line in out.splitlines():
         parts = line.split()
@@ -44,6 +50,15 @@ def main():
     if bad:
         print("ERROR: the game pack has its own copy of app runtime state:", file=sys.stderr)
         for readable in bad:
+            print(f"  {readable}", file=sys.stderr)
+        return 1
+    # C++ thread_local accessors (_ZTW...) are never exported by the app; the
+    # runtime headers must declare pack-side thread-locals with __thread.
+    undefined = subprocess.run([nm, "-u", pack], check=True, capture_output=True, text=True).stdout.split()
+    wrappers = sorted({name for name in undefined if name.lstrip("_").startswith("ZTW")} - app_defined)
+    if wrappers:
+        print("ERROR: the game pack calls thread-local accessors the app does not export:", file=sys.stderr)
+        for readable in demangle(wrappers):
             print(f"  {readable}", file=sys.stderr)
         return 1
     print(f"Game pack state check passed ({len(shared)} allowed lookup caches).")
