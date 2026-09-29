@@ -260,7 +260,10 @@ def extract(profile: Profile, image: Path, output: Path) -> None:
     if not executable:
         raise BuildError(f"missing {extractor['command']} {extractor['version']}")
     version = subprocess.check_output([executable, "--version"], text=True).strip()
-    if version != f"{extractor['command']} {extractor['version']}":
+    # "nodtool 2.0.0-alpha.9" on macOS; "nodtool.EXE 2.0.0-alpha.9 <commit>" on Windows.
+    words = version.split()
+    name = words[0].lower().removesuffix(".exe") if words else ""
+    if name != extractor["command"] or len(words) < 2 or words[1] != extractor["version"]:
         raise BuildError(f"expected {extractor['command']} {extractor['version']}, found {version}")
     output.parent.mkdir(parents=True, exist_ok=True)
     stage = output.with_name(output.name + f".partial.{os.getpid()}")
