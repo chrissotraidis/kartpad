@@ -232,10 +232,8 @@ key_markers="$(grep -E -- '-----(BEGIN|END) (RSA |EC |OPENSSH )?PRIVATE KEY-----
 expected_key_markers=""
 # Every Android target links KartPad's pinned Mbed TLS 4 parser archives.
 key_marker_repetitions=2
-if [[ "$has_discio" == 1 ]]; then
-  # Product APKs additionally carry Dolphin DiscIO's historical parser.
-  key_marker_repetitions=$((key_marker_repetitions + 1))
-fi
+# The coreless disc-import library (libkartpad_discio.so) links no TLS code,
+# so it adds no parser strings.
 if (( key_marker_repetitions > 0 )); then
   # mbedTLS's PEM parser contains these six format delimiters as code strings;
   # exact cardinality prevents an actual packaged PEM block from hiding there.
