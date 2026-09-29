@@ -14,3 +14,7 @@
 	path = vendor/runtimes/tvos
 	url = https://github.com/chrissotraidis/wiicompiled.git
 	branch = kartpad-tvos
+[submodule "vendor/wiicompiled"]
+	path = vendor/wiicompiled
+	url = https://github.com/chrissotraidis/wiicompiled.git
+	branch = kartpad-translator
