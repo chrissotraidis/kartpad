@@ -14,6 +14,7 @@ Usage: check-game-pack-state.py NM PACK APP_RUNTIME
 """
 import subprocess
 import sys
+from pathlib import Path
 
 ALLOWED = ("ResolveDirectCpuTargetInfoCached",)
 DATA_TYPES = set("BbDdVvSs")
@@ -36,14 +37,28 @@ def symbols(nm, path, dynamic):
     return result
 
 
+def _demangler(nm):
+    """llvm-cxxfilt beside the nm in use (NDK, Xcode), else c++filt, else none."""
+    tool = Path(nm)
+    for candidate in (tool.with_name("llvm-cxxfilt" + tool.suffix), Path("c++filt")):
+        try:
+            subprocess.run([str(candidate), "--version"], capture_output=True, check=False)
+            return str(candidate)
+        except OSError:
+            continue
+    return None
+
+
 def main():
     if len(sys.argv) != 4:
         sys.exit(__doc__)
     nm, pack, app = sys.argv[1:]
     pack_data = {name for name, kind in symbols(nm, pack, False).items() if kind in DATA_TYPES}
     app_defined = set(symbols(nm, app, True)) | set(symbols(nm, app, False))
-    demangle = lambda names: subprocess.run(
-        ["c++filt"], input="\n".join(names), capture_output=True, text=True).stdout.split("\n")
+    cxxfilt = _demangler(nm)
+    demangle = (lambda names: subprocess.run(
+        [cxxfilt], input="\n".join(names), capture_output=True, text=True).stdout.split("\n")) \
+        if cxxfilt else list
     shared = sorted(pack_data & app_defined)
     bad = [readable for name, readable in zip(shared, demangle(shared))
            if not any(allowed in readable for allowed in ALLOWED)]
