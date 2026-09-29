@@ -16,6 +16,12 @@
         "gcz",
         "ciso"
       ],
+      "game_ids": [
+        "RMCP01"
+      ],
+      "revisions": [
+        0
+      ],
       "description": "Your own PAL RMCP01 revision 0 disc image. Any dump or container is accepted if extraction reproduces the profile's exact main.dol and StaticR.rel."
     }
   ],
