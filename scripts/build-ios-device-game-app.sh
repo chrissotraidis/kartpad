@@ -19,6 +19,13 @@ runtime_source="$(absolute_from_repo "${1:-build/g14-ios-game-runtime-source}")"
 xcode_build="$(absolute_from_repo "${2:-build/g14-ios-device-game-app-xcode}")"
 translation_root="$(absolute_from_repo "${3:-private/g8-full-translation}")"
 product="${4:-dual}"
+# KARTPAD_IOS_GAME_PACK_APP=1 builds the publishable app: no translation is read
+# and the player's game pack (built by PadForge) supplies the game code.
+pack_app="${KARTPAD_IOS_GAME_PACK_APP:-0}"
+case "${pack_app}" in
+  0|1) ;;
+  *) echo "ERROR: KARTPAD_IOS_GAME_PACK_APP must be 0 or 1" >&2; exit 64 ;;
+esac
 dawn_archive="${repo_root}/build/dependency-cache/dawn-ios-arm64-v20260603.191052.tar.gz"
 dawn_sha256="a361fcca75929fa5c766cfcde979c010a6da7d805e5db8e15c75e73fd8260e78"
 discio_source="${KARTPAD_DISCIO_SOURCE_DIR:-${repo_root}/build/dolphin-ios-discio-iphoneos-source}"
@@ -46,14 +53,23 @@ if ! rg -F -q 'CMAKE_OSX_SYSROOT MATCHES "iphoneos|iPhoneOS"' \
   echo "ERROR: stale iOS CPU baseline; prepare a fresh runtime source before building" >&2
   exit 66
 fi
-if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
-  echo "ERROR: missing real-title translation: ${translation_root}" >&2
-  exit 66
+if [[ "${pack_app}" == 1 ]]; then
+  translation_flags=(-DMKW_GAME_PACK=APP
+    "-DKARTPAD_APP_VERSION=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${repo_root}/version.json")")
+  provenance_flags=()
+else
+  if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
+    echo "ERROR: missing real-title translation: ${translation_root}" >&2
+    exit 66
+  fi
+  python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
+    "${translation_root}/functions/func_8000A440.cpp"
+  python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards \
+    "${translation_root}/build_shards"
+  translation_flags=(-DMKW_GAME_PACK=OFF
+    "-DMKW_TRANSLATED_SHARD_MANIFEST=${translation_root}/build_shards/shards.cmake")
+  provenance_flags=(--translation "${translation_root}")
 fi
-python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
-  "${translation_root}/functions/func_8000A440.cpp"
-python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards \
-  "${translation_root}/build_shards"
 if [[ ! -f "${dawn_archive}" ]] ||
    [[ "$(shasum -a 256 "${dawn_archive}" | awk '{print $1}')" != "${dawn_sha256}" ]]; then
   echo "ERROR: missing or mismatched pinned physical-iOS Dawn archive" >&2
@@ -82,7 +98,9 @@ restore_generated_link() {
   fi
 }
 trap restore_generated_link EXIT
-ln -sfn "${translation_root}" "${generated_link}"
+if [[ "${pack_app}" == 0 ]]; then
+  ln -sfn "${translation_root}" "${generated_link}"
+fi
 
 "${repo_root}/scripts/verify-sunpad-overlay-snapshot.sh"
 plutil -lint "${repo_root}/apple/ios/RuntimeInfo.plist" \
@@ -111,14 +129,14 @@ cmake -S "${runtime_source}" -B "${xcode_build}" -G Xcode \
   -DMKW_AURORA_DIR="${runtime_source}/aurora-main" \
   -DAURORA_DAWN_PACKAGE_URL="file://${dawn_archive}" \
   -DAURORA_DAWN_PACKAGE_URL_HASH="SHA256=${dawn_sha256}" \
-  -DMKW_TRANSLATED_SHARD_MANIFEST="${translation_root}/build_shards/shards.cmake" \
+  "${translation_flags[@]}" \
   -DMKW_KARTPAD_RUNTIME_INCLUDE="${repo_root}/runtime/include" \
   -DMKW_KARTPAD_REPO_ROOT="${repo_root}" \
   -DMKW_KARTPAD_DISCIO_SOURCE_DIR="${discio_source}" \
   -DMKW_KARTPAD_DISCIO_BUILD_DIR="${discio_build}" \
   -DMKW_TRANSLATED_COMPILE_JOBS=2
 python3 "${repo_root}/scripts/write-build-provenance.py" --repo "${repo_root}" \
-  --runtime "${runtime_source}" --translation "${translation_root}" \
+  --runtime "${runtime_source}" ${provenance_flags[@]+"${provenance_flags[@]}"} \
   --output "${xcode_build}/kartpad-build.json"
 cmake --build "${xcode_build}" --config Release --target "${product_target}" -- \
   -sdk iphoneos CODE_SIGNING_ALLOWED=NO \
@@ -142,4 +160,8 @@ if rg -a -F -q "${repo_root}" "${app}/KartPad"; then
   echo "ERROR: physical-iOS app exposes its private KartPad build path" >&2
   exit 65
 fi
-echo "Built full translated physical-iOS game app: ${app}"
+if [[ "${pack_app}" == 1 ]]; then
+  echo "Built physical-iOS app without game code: ${app}"
+else
+  echo "Built full translated physical-iOS game app: ${app}"
+fi

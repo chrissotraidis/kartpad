@@ -1164,9 +1164,11 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 @property(nonatomic, assign) BOOL choosingGameDataCopy;
 @property(nonatomic, assign) BOOL receivedRetroDownload;
 @property(nonatomic, assign) BOOL retroVersionChecked;
+@property(nonatomic, assign) BOOL gamePackReady;
 @property(nonatomic, assign) NSInteger lastRetroDownloadPercent;
 - (BOOL)run;
 - (void)showOptions;
+- (void)showGamePackRequired;
 - (void)presentGameDataPicker;
 - (void)showRetroRewindOptions;
 - (void)checkRetroRewindVersionAndContinue;
@@ -1305,6 +1307,10 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 - (void)completeSelectedMode {
+  if (!self.gamePackReady) {
+    [self showGamePackRequired];
+    return;
+  }
   if (!KartPadInstalledGameDataIsValid()) {
     [self showOptions];
     return;
@@ -1638,6 +1644,28 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   [self.root presentViewController:options animated:YES completion:nil];
 }
 
+// The published app contains no game code. PadForge builds the player's own
+// KartPad from their disc on a computer, with the game pack inside the app.
+- (void)showGamePackRequired {
+  UIAlertController *alert =
+      [UIAlertController alertControllerWithTitle:@"Add Your Game with PadForge"
+          message:@"This copy of KartPad contains no game code. On a Mac, PadForge builds your own KartPad from your Mario Kart Wii disc. Install that copy over this one; your saves stay."
+          preferredStyle:UIAlertControllerStyleAlert];
+  [alert addAction:[UIAlertAction actionWithTitle:@"Get PadForge"
+                                            style:UIAlertActionStyleDefault
+                                          handler:^(UIAlertAction *action) {
+    (void)action;
+    [UIApplication.sharedApplication
+        openURL:[NSURL URLWithString:@"https://github.com/chrissotraidis/padforge"]
+        options:@{}
+        completionHandler:nil];
+  }]];
+  [alert addAction:[UIAlertAction actionWithTitle:@"Back"
+                                            style:UIAlertActionStyleCancel
+                                          handler:nil]];
+  [self.root presentViewController:alert animated:YES completion:nil];
+}
+
 - (void)documentPicker:(UIDocumentPickerViewController *)controller
     didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
   (void)controller;
@@ -1686,6 +1714,17 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 - (BOOL)run {
+#if defined(MKW_GAME_PACK_APP) && MKW_GAME_PACK_APP
+  // PadForge places the player's game pack in the app's Frameworks folder.
+  NSString *gamePack = [NSBundle.mainBundle.privateFrameworksPath
+      stringByAppendingPathComponent:@"libkartpad_game.dylib"];
+  self.gamePackReady = [NSFileManager.defaultManager fileExistsAtPath:gamePack];
+  if (self.gamePackReady) {
+    setenv("KARTPAD_GAME_PACK", gamePack.fileSystemRepresentation, 1);
+  }
+#else
+  self.gamePackReady = YES;
+#endif
   // Create the Files-visible app directory before first-launch UI is shown.
   // UIFileSharingEnabled and LSSupportsOpeningDocumentsInPlace expose this
   // Documents directory as On My iPhone/iPad -> KartPad.

@@ -36,9 +36,35 @@ The projects are independently maintained.
 > Build, test and device records describe what was checked. This disclosure
 > concerns KartPad's workflow, not the authorship of its upstream projects.
 
-## Downloads
+## Get KartPad
 
-Previous builds have been retired; a new version is in progress.
+KartPad is free. The app on the [releases page](https://github.com/chrissotraidis/kartpad/releases)
+contains no game code: you add the game part yourself, made on your own computer
+from your own Mario Kart Wii disc (an ISO, WBFS or RVZ of the PAL RMCP01
+release) with [PadForge](https://github.com/chrissotraidis/padforge). Nothing
+from your disc is uploaded anywhere.
+
+1. Download PadForge for your computer from its
+   [latest release](https://github.com/chrissotraidis/padforge/releases/latest),
+   unzip it and start it (`PadForge.cmd` on Windows, `PadForge.command` on a
+   Mac, `sh padforge.sh` on Linux).
+2. Choose KartPad, drag your disc image into the window and pick a folder.
+   The first run downloads the tools it needs (a few GB) and takes a while;
+   later versions reuse them.
+
+**Android** (PadForge on Windows, Mac or Linux): install
+`KartPad-v0.6.0-android.apk` from the latest release (it updates an earlier
+KartPad in place; your saves stay). PadForge makes a game pack; copy it to your
+phone, open KartPad, tap **Play Game** and **Choose file**.
+
+**iPhone and iPad** (PadForge on a Mac with Xcode): PadForge makes a complete
+KartPad IPA. Install it with your usual sideloading tool (AltStore, SideStore
+or Sideloadly). See [iPhone/iPad setup](docs/INSTALL_IPA.md).
+
+Each KartPad version needs its own game pack: after an update, KartPad asks you
+to run PadForge again.
+
+### Source maintenance
 
 **0.4.22 moved KartPad to maintained WiiCompiled source** with pinned platform
 branches, preserving the existing game behavior and repository history. Source
@@ -87,7 +113,8 @@ known issues. Android's suggested starting point is **1x Native**. Sustained
 <details>
 <summary>Can I download an IPA or playable app?</summary>
 
-Previous builds have been retired; a new version is in progress.
+Yes: the app is on the releases page, and you add the game from your own disc
+with PadForge. See [Get KartPad](#get-kartpad).
 
 </details>
 
@@ -114,7 +141,7 @@ unfinished. See [online status](docs/ONLINE.md) and
 <details>
 <summary>Does KartPad support Retro Rewind, and what if it updates?</summary>
 
-Yes, with the separately installed **6.12.8** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#downloads) if a compatibility update is requested.
+Yes, with the separately installed **6.12.8** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#get-kartpad) if a compatibility update is requested.
 
 </details>
 

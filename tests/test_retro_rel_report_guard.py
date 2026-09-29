@@ -208,7 +208,8 @@ class RelReportGuardTests(unittest.TestCase):
         retro = SimpleNamespace(code_pul=self.root / 'code', root=self.root, payload=self.root / 'payload')
 
         def run(command):
-            if command[0] == str(SCRIPT):
+            # The builder runs Python helpers through the interpreter (Windows has no shebangs).
+            if str(SCRIPT) in command[:2]:
                 subprocess.run(command, check=True, capture_output=True)
             elif 'translate-recursive' in command:
                 standalone.parent.mkdir(parents=True)

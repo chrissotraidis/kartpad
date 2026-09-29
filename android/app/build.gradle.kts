@@ -10,6 +10,8 @@ val minizipAndroidRoot = providers.environmentVariable("MINIZIP_ANDROID_ROOT")
 val mbedtlsAndroidRoot = providers.environmentVariable("MBEDTLS_ANDROID_ROOT")
 val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orNull
 val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
+// Publishable app: the runtime without game code; the player's game pack is loaded at startup.
+val gamePackApp = providers.gradleProperty("kartpadGamePackApp").map { it.toBoolean() }.getOrElse(false)
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
 val kartpadDiagnosticRelease = providers.gradleProperty("kartpadDiagnosticRelease")
@@ -86,6 +88,7 @@ android {
         manifestPlaceholders["kartpadProfileable"] = kartpadProfileable.toString()
         manifestPlaceholders["kartpadFrameCapture"] = kartpadFrameCapture.toString()
         buildConfigField("boolean", "GAME_RUNTIME", (gameRuntimeSource != null).toString())
+        buildConfigField("boolean", "GAME_PACK_APP", gamePackApp.toString())
         buildConfigField("boolean", "DISC_IMAGE_IMPORT", (discIoJniRoot != null).toString())
 
         ndk {
@@ -99,7 +102,16 @@ android {
                     "-DMINIZIP_ANDROID_ROOT=${minizipAndroidRoot.get()}",
                     "-DMBEDTLS_ANDROID_ROOT=${mbedtlsAndroidRoot.get()}",
                 )
-                if (gameRuntimeSource != null || translatedShardManifest != null) {
+                if (gamePackApp) {
+                    require(gameRuntimeSource != null && translatedShardManifest == null) {
+                        "kartpadGamePackApp needs kartpadGameRuntimeSource and no translated manifest"
+                    }
+                    arguments += listOf(
+                        "-DKARTPAD_GAME_RUNTIME_SOURCE=$gameRuntimeSource",
+                        "-DMKW_GAME_PACK=APP",
+                        "-DKARTPAD_APP_VERSION=$kartpadVersionName",
+                    )
+                } else if (gameRuntimeSource != null || translatedShardManifest != null) {
                     require(gameRuntimeSource != null && translatedShardManifest != null) {
                         "kartpadGameRuntimeSource and kartpadTranslatedShardManifest must be set together"
                     }

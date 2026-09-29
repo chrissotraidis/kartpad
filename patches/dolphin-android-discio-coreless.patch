@@ -1,0 +1,48 @@
+--- a/Source/Core/DiscIO/Volume.cpp
++++ b/Source/Core/DiscIO/Volume.cpp
+@@ -141,9 +143,13 @@
+ {
+   auto reader = CreateBlobReader(path);
+ 
++#if defined(KARTPAD_DISCIO_STANDALONE)
++  return TryCreateDisc(reader);
++#else
+   if (Config::Get(Config::MAIN_LOAD_GAME_INTO_MEMORY))
+     return TryCreateDisc(reader, CreateScrubbingCachedBlobReader);
+ 
+   return TryCreateDisc(reader);
++#endif
+ }
+ 
+@@ -153,4 +159,11 @@
+ #endif
+ }
+ 
++#if defined(KARTPAD_DISCIO_STANDALONE)
++std::unique_ptr<VolumeWAD> CreateWAD(const std::string& path)
++{
++  (void)path;
++  return nullptr;
++}
++#else
+ static std::unique_ptr<VolumeWAD> TryCreateWAD(std::unique_ptr<BlobReader>& reader)
+@@ -175,16 +188,19 @@
+ {
+   return CreateWAD(CreateBlobReader(path));
+ }
++#endif
+ 
+ std::unique_ptr<Volume> CreateVolume(std::unique_ptr<BlobReader> reader)
+ {
+   std::unique_ptr<VolumeDisc> disc = TryCreateDisc(reader);
+   if (disc)
+     return disc;
+ 
++#if !defined(KARTPAD_DISCIO_STANDALONE)
+   std::unique_ptr<VolumeWAD> wad = TryCreateWAD(reader);
+   if (wad)
+     return wad;
++#endif
+ 
+   return nullptr;
+ }

@@ -179,8 +179,9 @@ if grep -Eq '/Users/|Mario Kart Wii\.(iso|wbfs)' "$audit_root/aab.strings"; then
   echo "ERROR: AAB contains a private path or game-data name" >&2
   exit 1
 fi
-# Parser literals belong only in the two TLS-bearing runtime libraries and their
-# optional debug-symbol copies. Prestripped JNI packaging omits symbol copies.
+# Parser literals belong only in the TLS-bearing runtime library and its
+# optional debug-symbol copy. The coreless disc-import library links no TLS
+# code, so it carries none. Prestripped JNI packaging omits symbol copies.
 python3 - "$bundle" <<'PY_AUDIT'
 import collections
 import re
@@ -190,8 +191,7 @@ import zipfile
 suffix = b"PRIVATE KEY-----"
 markers = [b"-----" + boundary + b" " + kind + suffix
            for boundary in (b"BEGIN", b"END") for kind in (b"", b"EC ", b"RSA ")]
-expected = {"base/lib/arm64-v8a/libmain.so": 2,
-            "base/lib/arm64-v8a/libkartpad_discio.so": 1}
+expected = {"base/lib/arm64-v8a/libmain.so": 2}
 for library, copies in list(expected.items()):
     name = library.rsplit("/", 1)[1]
     expected["BUNDLE-METADATA/com.android.tools.build.debugsymbols/arm64-v8a/" + name + ".sym"] = copies

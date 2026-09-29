@@ -1,6 +1,6 @@
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -23,6 +23,34 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+@@ -23,6 +23,39 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
  
  project(dolphin-emu)
  
@@ -18,13 +18,18 @@
 +
 +if(DEFINED KARTPAD_ANDROID_DISCIO_JNI_SOURCE)
 +  add_compile_definitions(KARTPAD_DISCIO_STANDALONE=1)
++  # No Dolphin core: it carries console keys. KartPad's own ES formats read the
++  # disc ticket with the player's common key (apple/ios/KartPadDiscFormats.cpp).
 +  add_library(kartpad_discio SHARED
 +    "${KARTPAD_ANDROID_DISCIO_JNI_SOURCE}"
-+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Android/jni/Input/CoreDevice.cpp"
-+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/UnitTests/StubHost.cpp"
++    "${KARTPAD_ANDROID_DISCIO_FORMATS_SOURCE}"
 +  )
-+  target_link_libraries(kartpad_discio PRIVATE discio uicommon android log)
-+  target_link_options(kartpad_discio PRIVATE "-Wl,--exclude-libs,ALL")
++  add_dependencies(kartpad_discio discio)
++  target_include_directories(kartpad_discio PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core")
++  target_link_libraries(kartpad_discio PRIVATE "$<TARGET_FILE:discio>" common
++    BZip2::BZip2 LibLZMA::LibLZMA zstd::zstd ZLIB::ZLIB pugixml fmt::fmt MINIZIP::minizip-ng
++    android log)
++  target_link_options(kartpad_discio PRIVATE "-Wl,--exclude-libs,ALL" "-Wl,-z,defs")
 +  set_target_properties(kartpad_discio PROPERTIES
 +    CXX_STANDARD 23
 +    CXX_STANDARD_REQUIRED YES
