@@ -563,13 +563,17 @@ open class KartPadLaunchActivity : Activity() {
                 return
             }
             showStatus("Adding your game pack…")
-            validator.execute {
-                val error = KartPadGamePack.import(applicationContext, source)
+            KartPadGamePack.importInBackground(this, source) { error ->
                 runOnUiThread {
                     if (isFinishing || isDestroyed) return@runOnUiThread
                     if (error != null) {
                         pendingProfile = null
-                        showStatus(error)
+                        // A dialog, because the status line is reused by the game-data check.
+                        AlertDialog.Builder(this)
+                            .setTitle("Game pack not added")
+                            .setMessage(error)
+                            .setPositiveButton("OK", null)
+                            .show()
                     } else {
                         showStatus("Game pack added.")
                         pendingProfile?.let { profile -> pendingProfile = null; selectMode(profile) }

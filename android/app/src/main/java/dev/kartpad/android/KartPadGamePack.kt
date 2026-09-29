@@ -3,6 +3,7 @@ package dev.kartpad.android
 import android.content.Context
 import android.net.Uri
 import java.io.File
+import java.util.concurrent.Executors
 
 /**
  * The player's game pack: KartPad's translated game code, built by PadForge on
@@ -15,6 +16,10 @@ object KartPadGamePack {
     private val ELF_MAGIC = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte())
     private val INFO_SYMBOL = "kartpad_game_pack_info".toByteArray()
 
+    // Lives with the app process, so a copy survives the launcher screen being
+    // rebuilt (for example when the file picker rotates the screen).
+    private val importer = Executors.newSingleThreadExecutor()
+
     val required: Boolean get() = BuildConfig.GAME_PACK_APP
 
     // One pack per app version: after an update the player is asked for a new
@@ -23,6 +28,12 @@ object KartPadGamePack {
         File(context.filesDir, "gamepack/libkartpad_game-${BuildConfig.VERSION_NAME}.so")
 
     fun isInstalled(context: Context) = file(context).isFile
+
+    /** Imports on a background thread and reports the result (an error message, or null). */
+    fun importInBackground(context: Context, source: Uri, done: (String?) -> Unit) {
+        val app = context.applicationContext
+        importer.execute { done(import(app, source)) }
+    }
 
     /** Copies the chosen file into app storage. Returns an error message, or null on success. */
     fun import(context: Context, source: Uri): String? {
@@ -46,6 +57,10 @@ object KartPadGamePack {
             return null
         } catch (error: Exception) {
             partial.delete()
+            if (error.message?.contains("ENOSPC") == true) {
+                return "There is not enough free space on this device. " +
+                    "The game pack needs about 150 MB. Free some space and try again."
+            }
             return "The game pack could not be copied: ${error.message}"
         }
     }
