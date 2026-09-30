@@ -26,7 +26,11 @@ class ExperimentalMiiWiimoteContractTests(unittest.TestCase):
         menu = source.split("private fun showPlayerIdentity()", 1)[1].split("private fun showIdentityRecords", 1)[0]
         # Android AlertDialog shows message content instead of list items when both are set.
         self.assertIn(".setItems(choices)", menu)
-        self.assertNotIn(".setMessage(", menu)
+        # Only the list dialog itself: an action may open its own confirmation
+        # dialog with a message (Restore Previous Console Identity does).
+        list_dialog = menu[:menu.index(".setItems(choices)")]
+        list_dialog = list_dialog[list_dialog.rindex("AlertDialog.Builder("):]
+        self.assertNotIn(".setMessage(", list_dialog)
 
     def test_mii_changes_are_staged_and_applied_before_runtime(self) -> None:
         manager = (REPO / "apple/shared/KartPadMiiManager.mm").read_text()
