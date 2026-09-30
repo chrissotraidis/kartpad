@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__
+from . import __version__, game_data
 from .game_pack import build_android_pack, build_ios_pack
 from .bootstrap import prepare_dependencies
 from .pipeline import BuildError, build
@@ -51,6 +51,8 @@ def parser() -> argparse.ArgumentParser:
     pack.add_argument("--output", type=Path, default=repo_root() / "artifacts/KartPad-game-pack.so")
     pack.add_argument("--work-root", type=Path, default=repo_root() / "private/builder")
     pack.add_argument("--jobs", type=int, choices=range(1, 17), default=2)
+    pack.add_argument("--game-data", type=Path,
+                      help="Also write the game data folder (files/ and sys/) the app imports")
     return result
 
 
@@ -94,6 +96,11 @@ def main(argv: list[str] | None = None) -> int:
                 work_root=args.work_root.resolve(), jobs=args.jobs)
             print(f"Built private game pack: {pack_result.pack}")
             print(f"SHA-256: {pack_result.pack_sha256}")
+            if args.game_data:
+                folder = game_data.export(
+                    game_data.extraction_root(args.work_root.resolve(), profile.id, image_sha256),
+                    args.game_data.resolve())
+                print(f"Game data folder: {folder}")
             print("Keep it private: it contains game code translated from your own disc.")
             return 0
         prepare_dependencies(repo_root(), profile, install=False)

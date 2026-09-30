@@ -71,7 +71,9 @@
             "--output",
             "{output}",
             "--jobs",
-            "{jobs}"
+            "{jobs}",
+            "--game-data",
+            "{output}.data"
           ],
           "env": {
             "PYTHONPATH": "{repo}/builder"
@@ -185,7 +187,9 @@
             "--output",
             "{output}",
             "--jobs",
-            "{jobs}"
+            "{jobs}",
+            "--game-data",
+            "{output}.data"
           ],
           "env": {
             "PYTHONPATH": "{repo}/builder"
