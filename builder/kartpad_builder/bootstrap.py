@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import platform
 import shutil
 import subprocess
 import urllib.request
@@ -117,7 +118,11 @@ def _has_command(command: str) -> bool:
 
 
 def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: str = "ios") -> list[str]:
-    missing_commands = [command for command in REQUIRED_COMMANDS[target] if not _has_command(command)]
+    commands = REQUIRED_COMMANDS[target]
+    if target == "ios-pack" and platform.system() != "Darwin":
+        # Off a Mac, PadMint's LLVM and open-source iOS headers take Xcode's place.
+        commands = tuple(command for command in commands if command != "xcrun")
+    missing_commands = [command for command in commands if not _has_command(command)]
     if missing_commands:
         raise BuildError(f"missing required commands: {', '.join(missing_commands)}")
     lock = load_lock(repo)
