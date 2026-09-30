@@ -128,6 +128,8 @@ open class KartPadLaunchActivity : Activity() {
                 }
             }
             val gameDataValid = gameDataError == null
+            val gameDataNotImported = !gameDataValid && removalError == null &&
+                KartPadGameDataStorage.notImported(filesDir)
             val valid = !forceNotInstalled && runCatching {
                 RetroRewindInstallStorage.recover(filesDir)
                 RetroRewindInstallValidator.validate(
@@ -150,10 +152,10 @@ open class KartPadLaunchActivity : Activity() {
                 original.isEnabled = true
                 retro.isEnabled = true
                 refreshModeCards()
-                if (gameDataError != null) {
+                if (gameDataNotImported) {
+                    showStatus("Import your game data to start playing.")
+                } else if (gameDataError != null) {
                     showStatus(gameDataError)
-                } else if (!gameDataValid) {
-                    hideStatus("Game data is required. Choose a mode to import it.")
                 } else if (valid) {
                     hideStatus("Original and Retro Rewind ${RetroRewindRelease.VERSION} are ready")
                 } else {
