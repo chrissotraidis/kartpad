@@ -21,7 +21,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import runtime_stage
+from . import game_data, runtime_stage
 from .bootstrap import ANDROID_PACK_GITLINKS
 from .errors import BuildError
 from .packaging import load_version
@@ -168,7 +168,7 @@ def _translated(repo, profile, image, image_sha256, work_root, jobs, gitlinks):
     profile_root = work_root / profile.id
     workspace = profile_root / "builds" / key
     # Short folder names keep extracted paths under Windows' 260-character limit.
-    extraction = profile_root / "inputs" / image_sha256[:16] / "disc"
+    extraction = game_data.extraction_root(work_root, profile.id, image_sha256)
     translation = workspace / "translation"
     progress = ProgressLog(work_root / "logs/progress.jsonl")
     with progress.stage("preflight"):
