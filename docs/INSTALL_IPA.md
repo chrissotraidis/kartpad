@@ -1,7 +1,8 @@
 # Install KartPad on iPhone and iPad
 
 > [!IMPORTANT]
-> **KartPad 0.7.2 is the current release.** On an Apple Silicon Mac with Xcode,
+> **KartPad 0.7.3 is the current release.** On an Apple Silicon Mac with Xcode,
+> or on a Windows or Linux computer (experimental, PadMint 0.2.2 or newer),
 > [PadMint](https://github.com/chrissotraidis/padmint/releases/latest) makes a
 > complete personal IPA from your own disc. See
 > [Get KartPad](../README.md#get-kartpad) for the steps.
