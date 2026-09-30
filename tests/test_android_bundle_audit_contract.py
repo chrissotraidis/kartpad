@@ -46,7 +46,9 @@ class AndroidBundleAuditContractTests(unittest.TestCase):
         self.assertIn("validate --bundle", audit)
         self.assertIn('package="dev.kartpad.android"', audit)
         self.assertIn("KARTPAD_ANDROID_EXPECTED_VERSION_NAME", audit)
-        self.assertIn("0.4.12-android.2", audit)
+        # The expected version defaults to the single version.json (15bebd18).
+        self.assertIn('"${repo_root}/version.json" version', audit)
+        self.assertIn("${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-${release_version}}", audit)
         self.assertIn("KARTPAD_ANDROID_EXPECTED_VERSION_CODE", audit)
         self.assertIn("release AAB is debuggable", audit)
         self.assertIn("AAB is signed", audit)
