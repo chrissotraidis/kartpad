@@ -77,8 +77,8 @@ neither KartPad nor PadForge includes game files or console keys.
    to an hour, depending on the computer. Later runs, including after KartPad
    updates, reuse the tools and downloads.
 
-PadForge saves `KartPad-v0.6.1-android-personal.so` (the Android game pack)
-or `KartPad-v0.6.1-ios-personal.ipa` (the complete iPhone/iPad app), plus a
+PadForge saves `KartPad-v0.7.0-android-personal.so` (the Android game pack)
+or `KartPad-v0.7.0-ios-personal.ipa` (the complete iPhone/iPad app), plus a
 `KartPad game data` folder for step 3. Keep them to yourself: they are made
 from your disc.
 
@@ -86,10 +86,10 @@ from your disc.
 
 **Android**
 
-1. Install `KartPad-v0.6.1-android.apk` from the
+1. Install `KartPad-v0.7.0-android.apk` from the
    [latest release](https://github.com/chrissotraidis/kartpad/releases/latest).
-   It updates KartPad 0.5.x and 0.6.0 in place and keeps your saves. Do not
-   uninstall first.
+   It updates earlier versions in place and keeps your saves. Do not uninstall
+   first.
 2. Copy the `.so` game pack to the phone (USB, cloud drive or similar).
 3. Open KartPad and tap the Mario Kart Wii card. When KartPad asks for your
    game pack, choose **Choose file** and pick the `.so`.
@@ -97,7 +97,7 @@ from your disc.
 
 **iPhone and iPad**
 
-Install `KartPad-v0.6.1-ios-personal.ipa` with AltStore, SideStore or
+Install `KartPad-v0.7.0-ios-personal.ipa` with AltStore, SideStore or
 Sideloadly. Install over your existing KartPad with the same tool and Apple ID
 to keep your saves. See [iPhone/iPad setup](docs/INSTALL_IPA.md).
 
@@ -120,10 +120,11 @@ If you are updating from 0.5.x, this is already done. Otherwise choose one:
 After that, tap **Play Game**. Retro Rewind is optional: choose its card and
 KartPad downloads the official pack for you.
 
-**After every KartPad update**, run PadForge again: each KartPad version needs
-its own game pack or IPA. PadForge reuses its tools and the Retro Rewind
-download, so updates are quicker than the first run. There is no Mac download
-for 0.6.1.
+**Updating KartPad.** From 0.7.0, a game pack keeps working across updates
+until an update changes how KartPad loads the game; KartPad tells you when that
+happens. On Android, just install the new APK. On iPhone and iPad, run PadForge
+again to get the new IPA: it reuses your game pack, so this takes a minute or
+two instead of a full build. There is no Mac download for 0.7.0.
 
 ### Source maintenance
 
