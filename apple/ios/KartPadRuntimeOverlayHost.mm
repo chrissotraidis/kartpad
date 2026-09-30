@@ -1769,6 +1769,10 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   self.window.rootViewController = self.root;
   [self.window makeKeyAndVisible];
   __weak KartPadFirstLaunchHost *weakSelf = self;
+  // #327: when a saved game choice skips the launcher, keep its window transparent so the
+  // chooser does not flash for a frame between the launch screen and the game. Any prompt
+  // that has to be shown (import, Retro Rewind setup, errors) restores it first.
+  BOOL skipsLauncher = NO;
   self.root.modeSelected = ^(BOOL retroRewind) {
     KartPadFirstLaunchHost *strongSelf = weakSelf;
     if (strongSelf == nil || strongSelf.finished) return;
@@ -1787,13 +1791,17 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   }
   if ([requestedProfile isEqualToString:@"retro_rewind"] ||
       [requestedProfile isEqualToString:@"base"]) {
+    skipsLauncher = gameDataReady && removalError == nil;
     [NSUserDefaults.standardUserDefaults
         removeObjectForKey:kKartPadRequestedRuntimeProfileKey];
     [NSUserDefaults.standardUserDefaults synchronize];
+    if (skipsLauncher) self.window.alpha = 0.0;
     dispatch_async(dispatch_get_main_queue(), ^{
       if (self.root.modeSelected != nil) {
         self.root.modeSelected([requestedProfile isEqualToString:@"retro_rewind"]);
       }
+      // Still running here means a prompt is needed; make the launcher visible for it.
+      if (!self.finished) self.window.alpha = 1.0;
     });
   }
   if (removalError != nil) {

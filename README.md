@@ -77,8 +77,8 @@ neither KartPad nor PadMint includes game files or console keys.
    to an hour, depending on the computer. Later runs, including after KartPad
    updates, reuse the tools and downloads.
 
-PadMint saves `KartPad-v0.7.1-android-personal.so` (the Android game pack)
-or `KartPad-v0.7.1-ios-personal.ipa` (the complete iPhone/iPad app), plus a
+PadMint saves `KartPad-v0.7.2-android-personal.so` (the Android game pack)
+or `KartPad-v0.7.2-ios-personal.ipa` (the complete iPhone/iPad app), plus a
 `KartPad game data` folder for step 3. Keep them to yourself: they are made
 from your disc.
 
@@ -86,7 +86,7 @@ from your disc.
 
 **Android**
 
-1. Install `KartPad-v0.7.1-android.apk` from the
+1. Install `KartPad-v0.7.2-android.apk` from the
    [latest release](https://github.com/chrissotraidis/kartpad/releases/latest).
    It updates earlier versions in place and keeps your saves. Do not uninstall
    first.
@@ -97,7 +97,7 @@ from your disc.
 
 **iPhone and iPad**
 
-Install `KartPad-v0.7.1-ios-personal.ipa` with AltStore, SideStore or
+Install `KartPad-v0.7.2-ios-personal.ipa` with AltStore, SideStore or
 Sideloadly. Install over your existing KartPad with the same tool and Apple ID
 to keep your saves. See [iPhone/iPad setup](docs/INSTALL_IPA.md).
 
@@ -124,7 +124,7 @@ KartPad downloads the official pack for you.
 until an update changes how KartPad loads the game; KartPad tells you when that
 happens. On Android, just install the new APK. On iPhone and iPad, run PadMint
 again to get the new IPA: it reuses your game pack, so this takes a minute or
-two instead of a full build. There is no Mac download for 0.7.1.
+two instead of a full build. There is no Mac download for 0.7.2.
 
 ### Source maintenance
 
