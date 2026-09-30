@@ -1,8 +1,10 @@
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "builder"))
 from kartpad_builder import game_pack  # noqa: E402
@@ -28,6 +30,10 @@ class Arm64NdkTests(unittest.TestCase):
         for name in ("clang", "clang++", *game_pack.LLVM_TOOLS):
             (self.llvm / "bin" / name).write_text("")
         self.shim = root / "work/ndk-linux-arm64"
+        linker_ok = mock.patch.object(game_pack.subprocess, "run",
+                                      return_value=subprocess.CompletedProcess([], 0, "LLD 21.1.8", ""))
+        linker_ok.start()
+        self.addCleanup(linker_ok.stop)
 
     def test_layout_uses_compiler_headers_and_ndk_runtime(self):
         ndk = game_pack.arm64_ndk(self.ndk, self.llvm, self.shim)
@@ -47,6 +53,13 @@ class Arm64NdkTests(unittest.TestCase):
     def test_mismatched_llvm_is_refused(self):
         (self.llvm / "lib/clang/21").rename(self.llvm / "lib/clang/22")
         with self.assertRaisesRegex(BuildError, "does not match the NDK's clang"):
+            game_pack.arm64_ndk(self.ndk, self.llvm, self.shim)
+
+    def test_missing_libxml2_says_what_to_install(self):
+        missing = subprocess.CompletedProcess([], 127, "", "ld.lld: error while loading shared libraries: "
+                                              "libxml2.so.2: cannot open shared object file")
+        with mock.patch.object(game_pack.subprocess, "run", return_value=missing), \
+                self.assertRaisesRegex(BuildError, "sudo apt install libxml2"):
             game_pack.arm64_ndk(self.ndk, self.llvm, self.shim)
 
 

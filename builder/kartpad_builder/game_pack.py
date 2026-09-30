@@ -15,6 +15,7 @@ import os
 import platform
 import re
 import shutil
+import subprocess
 import sys
 import zipfile
 from dataclasses import dataclass
@@ -91,6 +92,7 @@ def arm64_ndk(ndk: Path, llvm: Path, shim: Path) -> Path:
         raise BuildError(f"LLVM at {llvm} does not match the NDK's clang {versions or '?'}; "
                          "run PadForge again to install the matching tools")
     major = versions[0]
+    check_linker(llvm)
     prebuilt = shim / "toolchains/llvm/prebuilt/linux-x86_64"
     if shim.exists():
         shutil.rmtree(shim)
@@ -112,6 +114,24 @@ def arm64_ndk(ndk: Path, llvm: Path, shim: Path) -> Path:
         (prebuilt / "bin" / name).symlink_to(llvm / "bin" / name)
     (prebuilt / "bin/ld").symlink_to(llvm / "bin/ld.lld")
     return shim
+
+
+def check_linker(llvm: Path) -> None:
+    """LLVM's arm64 linker loads libxml2, which minimal systems (a fresh Ubuntu,
+    Termux's Ubuntu) do not have; say so before CMake fails obscurely."""
+    try:
+        result = subprocess.run([str(llvm / "bin/ld.lld"), "--version"], capture_output=True, text=True)
+    except OSError as error:
+        raise BuildError(f"LLVM's linker cannot start: {error}") from error
+    if result.returncode == 0:
+        return
+    detail = (result.stderr or result.stdout).strip().splitlines()
+    detail = detail[-1] if detail else f"exit code {result.returncode}"
+    if "libxml2" in detail:
+        raise BuildError("LLVM's linker needs the libxml2 library. Install it (Debian, Ubuntu, "
+                         "Raspberry Pi OS: sudo apt install libxml2) and run PadForge again. "
+                         f"({detail})")
+    raise BuildError(f"LLVM's linker cannot start: {detail}")
 
 
 def host_ndk(repo: Path, work_root: Path) -> Path:
