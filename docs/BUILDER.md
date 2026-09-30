@@ -84,6 +84,49 @@ To add compatibility:
    otherwise create and validate a new profile.
 5. Run `./scripts/test-kartpad-builder.sh` and a complete local build twice.
 
+## iPhone game packs on Windows and Linux (experimental)
+
+PadMint can make the iPhone/iPad game pack without a Mac. Apple's SDK may only
+be used on Apple computers, so off a Mac the pack is compiled with LLVM 21.1.8
+(clang and `ld64.lld`) against an SDK that `builder/kartpad_builder/ios_sdk.py`
+assembles from open-source parts only. PadMint downloads each part pinned by
+digest (its `tools.lock.json`; `llvm` brings the others with it):
+
+| Part | Source | License |
+| --- | --- | --- |
+| clang, ld64.lld, llvm-nm, llvm-strip, llvm-install-name-tool | LLVM 21.1.8 release for the host | Apache-2.0 WITH LLVM-exception |
+| C++ standard library headers | LLVM `libcxx-21.1.8.src`, configured as LLVM configures libc++ for Apple | Apache-2.0 WITH LLVM-exception |
+| C library headers | Apple `Libc-1752.120.2` | APSL-2.0; six Berkeley headers BSD-4-Clause-UC, three Citrus headers BSD-2-Clause |
+| Kernel type headers (`sys/`, `arm/`, `machine/`, `mach/`, `libkern/`) | Apple `xnu-12377.121.6` | APSL-2.0; `arm/endian.h`, `arm/limits.h`, `arm/types.h` BSD-4-Clause-UC |
+| pthread, malloc, setjmp and cache-control headers | Apple `libpthread-539.100.4`, `libmalloc-812.100.31`, `libplatform-375.120.2` | APSL-2.0 |
+| `Availability*.h` | Apple `AvailabilityVersions-157.2`, made by its own script | APSL-2.0 |
+| `math.h`, `fenv.h`, `TargetConditionals.h` | written for KartPad (`builder/ios-sdk/`) from the C standard and arm64 facts | GPL-3.0-or-later |
+
+Apple's headers are used as its iPhone install uses them: the names that
+install defines (`XNU_PLATFORM_iPhoneOS`, Libc's iPhone features) are
+resolved, and Libc's install-only blocks are removed. The assembled SDK's
+`SOURCES.json` lists every file with its origin, SHA-256 and license. Nothing
+from Apple's SDK or any Apple binary is used, and the assembled SDK stays in
+the build folder; it is never published.
+
+The pack is linked with a flat namespace: every name it imports is looked up
+when the app loads it. A Mac-built pack already binds the app's own exports
+that way (`-undefined dynamic_lookup`); here it also covers libSystem and
+libc++, because `ld64.lld` cannot mark a looked-up app export as thread-local.
+Generated text stubs name the app's thread-local exports, read from the
+published app. After linking, the builder checks that every import the app
+does not export is a C or C++ standard library name, then runs
+`check-game-pack-state.py` as on a Mac. The pack interface fingerprint does not
+include the compiler, so an LLVM-built pack is accepted by the same published
+app. The translator writes its data blobs in the host's assembler syntax, so
+off a Mac they are rewritten as Mach-O before compiling.
+
+Checked 30 Sep 2026: `padmint make kartpad ios` on Ubuntu 24.04 arm64 (Docker)
+made the personal IPA from the published empty 0.7.2 IPA in 13.5 minutes
+(fingerprint `35ccf81c...`). Installed in place on an iPhone 14 (iOS 26.6.2),
+it reached an active Grand Prix race with the existing saves. Windows and
+Linux x86_64 use the same code but have not been run end to end yet.
+
 ## Repeatable builds and cache safety
 
 Validated extraction is cached by profile and complete input-image hash, so

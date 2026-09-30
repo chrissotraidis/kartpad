@@ -53,6 +53,8 @@ neither KartPad nor PadMint includes game files or console keys.
 - For **iPhone and iPad**: an Apple Silicon Mac with
   [Xcode](https://apps.apple.com/app/xcode/id497799835) installed, iOS or iPadOS
   16 or newer, and a sideloading tool (AltStore, SideStore or Sideloadly).
+  Experimental: a Windows or Linux computer instead of the Mac, with no Xcode
+  (tested on Linux so far; see [docs/BUILDER.md](docs/BUILDER.md#iphone-game-packs-on-windows-and-linux-experimental)).
 - Free space: about 16 GB on the computer for PadMint's tools and build files,
   and at least 6 GB on the phone or tablet for the game data.
 
