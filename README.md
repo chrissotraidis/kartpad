@@ -181,6 +181,17 @@ with PadMint. See [Get KartPad](#get-kartpad).
 </details>
 
 <details>
+<summary>PadForge says "KartPad cannot be built for android yet"</summary>
+
+PadForge is PadMint's old name. From KartPad 0.7.1, only PadMint can read
+KartPad's build recipe. Download
+[PadMint](https://github.com/chrissotraidis/padmint/releases/latest) and run it
+instead: it moves your PadForge folder over and reuses the tools it already
+downloaded.
+
+</details>
+
+<details>
 <summary>Are Android and Apple TV supported?</summary>
 
 Android targets ARM64/Vulkan on Android 9+. Device-specific graphics corruption, freezes and slowdowns remain unresolved; a successful Pixel run does not certify other phones. Apple TV is an **experimental** tvOS 17+ preview with separate controller and hardware acceptance. See [Android setup](docs/INSTALL_ANDROID.md) and [Apple TV setup](docs/INSTALL_TVOS.md).
