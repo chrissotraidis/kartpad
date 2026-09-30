@@ -49,7 +49,7 @@ includes game files or console keys.
 | **Android** | a Windows, Mac or Linux computer | [1. PadMint](#1-make-your-copy-with-padmint), then [2. Android](#2-android) |
 | **Android** | only the phone | PadMint's [Android, phone only](https://github.com/chrissotraidis/padmint#android-phone-only-experimental) (experimental) |
 | **iPhone or iPad** | a Mac with Apple Silicon (M1 or newer) | [1. PadMint](#1-make-your-copy-with-padmint), then [3. iPhone and iPad](#3-iphone-and-ipad) |
-| **iPhone or iPad** | a Windows or Linux computer | the same steps (experimental, from KartPad 0.7.3 and PadMint 0.2.2) |
+| **iPhone or iPad** | a Windows or Linux computer | the same steps (experimental) |
 
 **You need** your own Mario Kart Wii disc image: PAL (Europe) **RMCP01**
 revision 0, as ISO, WBFS or RVZ (other regions are not supported), and:
@@ -109,8 +109,11 @@ made from your disc.
 1. Install the `.ipa` with Sideloadly, AltStore or SideStore. Updating?
    Install it over your KartPad with the same tool and Apple ID to keep your
    saves.
-2. First time only: copy the `KartPad game data` folder to the device (AirDrop
-   or Files) and choose it with **Import from Extracted Folder**.
+2. First time only: get the `KartPad game data` folder onto the device.
+   AirDrop it from a Mac, or put it in iCloud Drive, on a USB drive or in a
+   cloud drive app. In KartPad, tap **Import Game** on the Mario Kart Wii card,
+   then **Import from Extracted Folder…**, and pick the folder in the Files
+   window that opens.
 
 See [iPhone/iPad setup](docs/INSTALL_IPA.md) for more.
 

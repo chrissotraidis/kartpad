@@ -1,10 +1,10 @@
 # Install KartPad on iPhone and iPad
 
 > [!IMPORTANT]
-> **KartPad 0.7.3 is the current release.** On an Apple Silicon Mac with Xcode,
-> or on a Windows or Linux computer (experimental, PadMint 0.2.2 or newer),
-> [PadMint](https://github.com/chrissotraidis/padmint/releases/latest) makes a
-> complete personal IPA from your own disc. See
+> Use the [latest PadMint](https://github.com/chrissotraidis/padmint/releases/latest)
+> for the [latest KartPad](https://github.com/chrissotraidis/kartpad/releases/latest).
+> On an Apple Silicon Mac with Xcode, or experimentally on a Windows or Linux
+> computer, PadMint makes a complete personal IPA from your own disc. See
 > [Get KartPad](../README.md#get-kartpad) for the steps.
 
 PadMint's IPA is unsigned: sign and install it with your existing compatible
@@ -29,18 +29,23 @@ help. Never reset identities or delete saves as a workaround.
 
 1. Make your personal IPA with PadMint (see
    [Get KartPad](../README.md#get-kartpad)). It runs on an Apple Silicon Mac
-   with Xcode and accepts your own supported disc image as ISO, WBFS or RVZ.
+   with Xcode, or experimentally on Windows or Linux, and accepts your own
+   supported disc image as ISO, WBFS or RVZ. It also saves a `KartPad game
+   data` folder.
 2. Keep the IPA private. It contains code translated from your game and must
    not be shared or uploaded.
 3. Re-sign and install it with AltStore Classic plus AltServer or another
    compatible IPA-signing workflow. AltStore PAL cannot import arbitrary
    unsigned IPA files.
-4. On first launch, choose **Import Game** on the Mario Kart Wii card and select
-   your own legally obtained PAL (Europe) `RMCP01` revision 0 ISO/WBFS. An extracted
-   DATA folder also works; convert RVZ before importing. Importing an ISO/WBFS
-   needs your own 16-byte Wii common key saved as `common-key.bin` in
-   **Files → On My iPhone/iPad → KartPad**; KartPad does not include it. An
-   extracted DATA folder does not need the key.
+4. On first launch, tap **Import Game** on the Mario Kart Wii card, then
+   **Import from Extracted Folder…**, and pick the `KartPad game data` folder
+   PadMint made. Get it onto the device first: AirDrop it from a Mac, or put it
+   in iCloud Drive, on a USB drive or in a cloud drive app. Alternatively,
+   **Choose WBFS, ISO, or DATA Folder…** accepts your own legally obtained PAL
+   (Europe) `RMCP01` revision 0 ISO/WBFS or extracted DATA folder; convert RVZ
+   first. An ISO/WBFS needs your own 16-byte Wii common key saved as
+   `common-key.bin` in **Files → On My iPhone/iPad → KartPad**; KartPad does
+   not include it. A folder does not need the key.
 5. Choose **Mario Kart Wii** for the original game or **Retro Rewind** for the
    optional expanded game. KartPad can download, verify, and install the
    official version-locked Retro Rewind 6.12.8 full pack.
