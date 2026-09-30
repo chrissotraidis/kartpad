@@ -40,7 +40,7 @@
         "cmake",
         "ninja",
         "nodtool",
-        "llvm"
+        "libcxx"
       ],
       "published_app": "KartPad-v{version}-ios-unsigned.ipa",
       "output": "ipa",
