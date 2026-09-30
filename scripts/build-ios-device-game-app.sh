@@ -20,7 +20,7 @@ xcode_build="$(absolute_from_repo "${2:-build/g14-ios-device-game-app-xcode}")"
 translation_root="$(absolute_from_repo "${3:-private/g8-full-translation}")"
 product="${4:-dual}"
 # KARTPAD_IOS_GAME_PACK_APP=1 builds the publishable app: no translation is read
-# and the player's game pack (built by PadMint) supplies the game code.
+# and the player's game pack (built by PadForge) supplies the game code.
 pack_app="${KARTPAD_IOS_GAME_PACK_APP:-0}"
 case "${pack_app}" in
   0|1) ;;
