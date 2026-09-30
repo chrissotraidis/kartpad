@@ -6,8 +6,10 @@ it, and compiles one library against the published app's runtime:
 - Android (Windows, Linux or macOS): libkartpad_game.so, linked against the
   APK's lib/arm64-v8a/libmain.so and loaded from the app's storage. Tools: the
   Android NDK, CMake, Ninja, .NET 8 and nodtool (PadMint supplies them).
-- iPhone (macOS with Xcode): libkartpad_game.dylib, placed in the published
-  IPA's Frameworks folder; the player's sideloading tool signs the result.
+- iPhone: libkartpad_game.dylib, placed in the published IPA's Frameworks
+  folder; the player's sideloading tool signs the result. On a Mac it is built
+  with Xcode; on Windows and Linux with LLVM and an SDK assembled from
+  open-source parts (ios_sdk.py), which PadMint supplies with the other tools.
 """
 from __future__ import annotations
 
@@ -21,7 +23,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import game_data, pack_fingerprint, runtime_stage
+from . import game_data, ios_sdk, pack_fingerprint, runtime_stage
 from .bootstrap import ANDROID_PACK_GITLINKS
 from .errors import BuildError
 from .packaging import load_version
@@ -288,6 +290,73 @@ def _xcrun(tool: str) -> str:
     return subprocess.check_output(["xcrun", "--find", tool], text=True).strip()
 
 
+def _ios_llvm() -> Path | None:
+    """PadMint's LLVM when building off a Mac (None on a Mac: Xcode builds there)."""
+    if platform.system() == "Darwin":
+        return None
+    llvm = os.environ.get("PADMINT_LLVM_ROOT") or os.environ.get("PADFORGE_LLVM_ROOT")
+    if not llvm:
+        raise BuildError("iPhone game packs off a Mac need the LLVM that PadMint installs "
+                         "(PADMINT_LLVM_ROOT); update PadMint to its latest release and run it again")
+    return Path(llvm)
+
+
+def _names(command: list[str]) -> set[str]:
+    return set(subprocess.run(command, check=True, capture_output=True, text=True).stdout.split())
+
+
+def mach_o_blobs(translation: Path) -> None:
+    """Write the translation's data blobs as the translator writes them on a Mac.
+
+    The translator spells its blob assembly for the computer it runs on
+    (AssemblyBlobWriter.cs: ELF on Linux, COFF on Windows, Mach-O on a Mac), and
+    the pack project assembles blobs for Apple targets as written. Off a Mac
+    they are rewritten here: Mach-O's read-only section, the leading-underscore
+    symbol names (the builder already adds them as aliases) and no ELF stack note."""
+    manifest = (translation / "build_shards/shards.cmake").read_text()
+    blobs = {translation / "data_sections_init_blobs.S",
+             *(Path(path) for path in re.findall(r'"([^"]+\.S)"', manifest))}
+    for path in sorted(blobs):
+        if not path.is_file():
+            continue
+        text = path.read_text()
+        text = text.replace('.section .rodata,"a",@progbits', ".section __TEXT,__const")
+        text = text.replace('.section .rdata,"dr"', ".section __TEXT,__const")
+        text = re.sub(r'(?m)^\.section \.note\.GNU-stack,"",@progbits\n', "", text)
+        if re.search(r"(?m)^\.globl _k", text):
+            text = re.sub(r"(?m)^(\.globl k[^\n]*|k[^\n]*:)\n", "", text)
+        else:
+            text = re.sub(r"(?m)^(\.globl )?k([^\n]*)$", lambda m: f"{m.group(1) or ''}_k{m.group(2)}", text)
+        path.write_text(text)
+
+
+def app_thread_locals(llvm: Path, executable: Path) -> list[str]:
+    """The published app's thread-local exports (its __thread_vars section)."""
+    listing = subprocess.run([str(ios_sdk.llvm_tool(llvm, "llvm-nm")), "-m", "-g", "--defined-only",
+                              str(executable)], check=True, capture_output=True, text=True).stdout
+    return sorted(line.split()[-1] for line in listing.splitlines() if "(__DATA,__thread_vars)" in line)
+
+
+def check_pack_imports(llvm: Path, pack: Path, executable: Path) -> None:
+    """Every name an off-Mac pack imports is looked up by name when it loads.
+    Those the app does not export must be the C++ standard library's or C's
+    (libSystem): a missing KartPad runtime name would otherwise only show on
+    the phone."""
+    nm = str(ios_sdk.llvm_tool(llvm, "llvm-nm"))
+    imports = _names([nm, "-u", "-j", str(pack)])
+    system = sorted(imports - _names([nm, "-g", "--defined-only", "-j", str(executable)]))
+    cxx = [name for name in system if name.startswith("__Z")]
+    readable = subprocess.run([str(ios_sdk.llvm_tool(llvm, "llvm-cxxfilt"))], input="\n".join(cxx),
+                              capture_output=True, text=True, check=True).stdout.splitlines()
+    standard = re.compile(r"((typeinfo name|typeinfo|construction vtable|vtable|VTT|guard variable) for "
+                          r"|(non-)?virtual thunk to )?(std::|__cxxabiv1::|operator (new|delete))")
+    unknown = [text for text in readable if not standard.match(text)]
+    if unknown:
+        raise BuildError("the game pack needs names the published app does not export: " + ", ".join(unknown[:10]))
+    print(f"Game pack imports: {len(imports) - len(system)} from the app, {len(system)} from the "
+          "iPhone's libSystem and libc++.", flush=True)
+
+
 def build_ios_pack(
     repo: Path,
     profile: Profile,
@@ -299,8 +368,8 @@ def build_ios_pack(
     jobs: int = 2,
 ) -> PackResult:
     """The published empty IPA with the player's game pack inside (unsigned)."""
-    if platform.system() != "Darwin":
-        raise BuildError("iPhone game packs need a Mac with Xcode for now")
+    llvm = _ios_llvm()
+    sources = ios_sdk.source_roots() if llvm else None
     workspace, translation, progress = _translated(
         repo, profile, image, image_sha256, work_root, jobs, IOS_PACK_GITLINKS)
     with progress.stage("compile"):
@@ -321,10 +390,17 @@ def build_ios_pack(
         build = workspace / "ios-pack-build"
         record = workspace / "ios-pack.pack-symbols.json"
         if cached is None:
+            if llvm:
+                mach_o_blobs(translation)
+                sdk = ios_sdk.assemble(repo, workspace / ios_sdk.FOLDER, sources)
+                ios_sdk.write_stubs(sdk, app_thread_locals(llvm, executable))
+                target = [f"-DCMAKE_TOOLCHAIN_FILE={ios_sdk.toolchain(sdk, llvm)}"]
+            else:
+                target = ["-DCMAKE_SYSTEM_NAME=iOS", "-DCMAKE_SYSTEM_PROCESSOR=arm64",
+                          "-DCMAKE_OSX_SYSROOT=iphoneos", "-DCMAKE_OSX_ARCHITECTURES=arm64",
+                          "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0"]
             run(["cmake", "-S", str(runtime / "game_pack"), "-B", str(build), "-G", "Ninja",
-             "-DCMAKE_SYSTEM_NAME=iOS", "-DCMAKE_SYSTEM_PROCESSOR=arm64",
-             "-DCMAKE_OSX_SYSROOT=iphoneos", "-DCMAKE_OSX_ARCHITECTURES=arm64",
-             "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0", "-DCMAKE_BUILD_TYPE=Release",
+             *target, "-DCMAKE_BUILD_TYPE=Release",
              f"-DMKW_TRANSLATED_SHARD_MANIFEST={translation / 'build_shards/shards.cmake'}",
              f"-DMKW_GAME_PACK_RUNTIME={executable}",
              f"-DMKW_KARTPAD_RUNTIME_INCLUDE={repo / 'runtime/include'}",
@@ -332,19 +408,23 @@ def build_ios_pack(
              f"-DKARTPAD_PACK_FINGERPRINT={fingerprint}",
              "-DMKW_GAME_PACK_DEFINITIONS=" + ";".join(pack_fingerprint.definitions(repo, "ios"))])
             run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
+            if llvm:
+                check_pack_imports(llvm, build / "libkartpad_game.dylib", executable)
     built = build / "libkartpad_game.dylib"
+    tool = (lambda name: str(ios_sdk.llvm_tool(llvm, name))) if llvm else _xcrun
     with progress.stage("check"):
         checked = cached / PACK_RECORD if cached else built
         run([sys.executable, str(repo / "scripts/check-game-pack-state.py"),
-             _xcrun("llvm-nm"), str(checked), str(executable)] + ([] if cached else ["--record", str(record)]))
+             tool("llvm-nm"), str(checked), str(executable)] + ([] if cached else ["--record", str(record)]))
     with progress.stage("package"):
         pack = workspace / "libkartpad_game.dylib"
         if cached:
             shutil.copyfile(cached / PACK_FILES["ios"], pack)
         else:
             pack.write_bytes(built.read_bytes())
-            run([_xcrun("strip"), "-x", str(pack)])
-            run([_xcrun("install_name_tool"), "-id", "@rpath/libkartpad_game.dylib", str(pack)])
+            run([tool("llvm-strip" if llvm else "strip"), "-x", str(pack)])
+            run([tool("llvm-install-name-tool" if llvm else "install_name_tool"),
+                 "-id", "@rpath/libkartpad_game.dylib", str(pack)])
             keep_pack("ios", fingerprint, image_sha256, pack, record)
         output.parent.mkdir(parents=True, exist_ok=True)
         partial = output.with_name(output.name + ".partial")

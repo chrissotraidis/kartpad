@@ -28,14 +28,19 @@
   "targets": {
     "ios": {
       "hosts": {
-        "macos-arm64": "experimental"
+        "macos-arm64": "experimental",
+        "windows-arm64": "experimental",
+        "windows-x86_64": "experimental",
+        "linux-x86_64": "experimental",
+        "linux-arm64": "experimental"
       },
       "tools": [
         "git",
         "dotnet",
         "cmake",
         "ninja",
-        "nodtool"
+        "nodtool",
+        "libcxx"
       ],
       "published_app": "KartPad-v{version}-ios-unsigned.ipa",
       "output": "ipa",
@@ -244,7 +249,7 @@
         "version_args": [
           "-version"
         ],
-        "note": "Install Xcode and its iOS platform"
+        "note": "Mac only: install Xcode and its iOS platform (Windows and Linux use PadMint's LLVM)"
       }
     ]
   },
