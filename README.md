@@ -71,8 +71,9 @@ neither KartPad nor PadMint includes game files or console keys.
      and confirm. (Or, in Terminal, type `sh `, drag `PadMint.command` into
      the window and press Return.)
    - **Linux:** in the folder, run `sh padmint.sh` (needs Python 3.9+ and Git).
-3. Choose **Android** or **iPhone/iPad**, drag your disc image into the window,
-   press Enter, then press Enter again to save to Downloads (or type a folder).
+3. Drag your disc image into the window and press Enter. PadMint recognizes
+   Mario Kart Wii from it. On a Mac, then choose **Android** or
+   **iPhone/iPad**. Your copy is saved in Downloads.
 4. Wait. The first run downloads about 4 GB of tools and takes about 10 minutes
    to an hour, depending on the computer. Later runs, including after KartPad
    updates, reuse the tools and downloads.
