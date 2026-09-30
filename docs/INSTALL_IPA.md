@@ -1,7 +1,7 @@
 # Install KartPad on iPhone and iPad
 
 > [!IMPORTANT]
-> **KartPad 0.6.0 is the current release.** On an Apple Silicon Mac with Xcode,
+> **KartPad 0.6.1 is the current release.** On an Apple Silicon Mac with Xcode,
 > [PadForge](https://github.com/chrissotraidis/padforge/releases/latest) makes a
 > complete personal IPA from your own disc. See
 > [Get KartPad](../README.md#get-kartpad) for the steps.
