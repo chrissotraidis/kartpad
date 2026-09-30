@@ -90,7 +90,8 @@ PadMint can make the iPhone/iPad game pack without a Mac. Apple's SDK may only
 be used on Apple computers, so off a Mac the pack is compiled with LLVM 21.1.8
 (clang and `ld64.lld`) against an SDK that `builder/kartpad_builder/ios_sdk.py`
 assembles from open-source parts only. PadMint downloads each part pinned by
-digest (its `tools.lock.json`; `llvm` brings the others with it):
+digest (its `tools.lock.json`; `libcxx` brings the others with it, and only
+off a Mac):
 
 | Part | Source | License |
 | --- | --- | --- |
@@ -121,11 +122,12 @@ include the compiler, so an LLVM-built pack is accepted by the same published
 app. The translator writes its data blobs in the host's assembler syntax, so
 off a Mac they are rewritten as Mach-O before compiling.
 
-Checked 30 Sep 2026: `padmint make kartpad ios` on Ubuntu 24.04 arm64 (Docker)
-made the personal IPA from the published empty 0.7.2 IPA in 13.5 minutes
-(fingerprint `35ccf81c...`). Installed in place on an iPhone 14 (iOS 26.6.2),
-it reached an active Grand Prix race with the existing saves. Windows and
-Linux x86_64 use the same code but have not been run end to end yet.
+Checked 30 Sep 2026 with the published empty 0.7.2 IPA: `padmint make kartpad
+ios` on Ubuntu 24.04 arm64 (Docker, 13.5 minutes) and on Windows 11 ARM64
+with arm64 Python (29 minutes) each made a personal IPA with pack fingerprint
+`35ccf81c...`. Each, installed in place on an iPhone 14 (iOS 26.6.2), reached
+an active Grand Prix race with the existing saves. Linux x86_64 and Windows
+x86_64 use the same code but have not been run end to end.
 
 ## Repeatable builds and cache safety
 
