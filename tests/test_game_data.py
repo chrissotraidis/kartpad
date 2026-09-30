@@ -1,7 +1,10 @@
+import errno
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "builder"))
 from kartpad_builder import game_data  # noqa: E402
@@ -39,6 +42,22 @@ class GameDataTests(unittest.TestCase):
         (self.extraction / "sys").rmdir()
         with self.assertRaisesRegex(BuildError, "no sys folder"):
             game_data.export(self.extraction, self.root / "out2")
+
+    @unittest.skipIf(os.name == "nt", "symbolic links need extra rights on Windows")
+    def test_links_that_cannot_be_read_as_links_are_exported(self):
+        """Ubuntu inside Termux (proot) lists an earlier build's hard links as
+        links, but reading one as a link fails with "Invalid argument"."""
+        rel = self.extraction / "files/rel/StaticR.rel"
+        kept = self.root / "kept.rel"
+        rel.replace(kept)
+        rel.symlink_to(kept)
+
+        def unreadable(path, *args, **kwargs):
+            raise OSError(errno.EINVAL, "Invalid argument", str(path))
+
+        with mock.patch("os.readlink", unreadable):
+            folder = game_data.export(self.extraction, self.root / "out/personal.so.data")
+        self.assertEqual((folder / "files/rel/StaticR.rel").read_bytes(), b"synthetic rel")
 
 
 if __name__ == "__main__":

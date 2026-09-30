@@ -33,6 +33,17 @@ def _link_or_copy(source: str, target: str) -> None:
         shutil.copy2(source, target)
 
 
+def _copy_tree(source: Path, target: Path) -> None:
+    """Link or copy every file below source. Unlike copytree it never reads
+    links: in Ubuntu inside Termux (proot, on Android phones) hard links are
+    listed as links but cannot be read as links ("Invalid argument")."""
+    for folder, _folders, files in os.walk(source):
+        destination = target / Path(folder).relative_to(source)
+        destination.mkdir(parents=True, exist_ok=True)
+        for name in files:
+            _link_or_copy(os.path.join(folder, name), str(destination / name))
+
+
 def export(extraction: Path, destination: Path) -> Path:
     """Write destination/files and destination/sys from a validated extraction."""
     missing = [part for part in PARTS if not (extraction / part).is_dir()]
@@ -45,11 +56,11 @@ def export(extraction: Path, destination: Path) -> Path:
         shutil.rmtree(stage)
     try:
         for part in PARTS:
-            shutil.copytree(extraction / part, stage / part, copy_function=_link_or_copy)
+            _copy_tree(extraction / part, stage / part)
         for extra in EXTRAS:
             source = extraction / extra
             if source.is_dir():
-                shutil.copytree(source, stage / extra, copy_function=_link_or_copy)
+                _copy_tree(source, stage / extra)
             elif source.is_file():
                 _link_or_copy(str(source), str(stage / extra))
         stage.rename(destination)
