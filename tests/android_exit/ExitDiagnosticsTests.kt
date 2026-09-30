@@ -62,17 +62,35 @@ fun main() {
             latch.isAccessible = true
             latch.setBoolean(null, false)
         }
-        for (mode in KartPadCharacterGraphicsTest.Mode.entries) {
+        val expectedCharacterEnvironment = mapOf(
+            KartPadCharacterGraphicsTest.Mode.NORMAL to (null to null),
+            KartPadCharacterGraphicsTest.Mode.CHARACTER_FIX to (null to "1"),
+            KartPadCharacterGraphicsTest.Mode.FULL_FIX to (null to "2"),
+            KartPadCharacterGraphicsTest.Mode.INVISIBLE_FIX to ("2" to "1"),
+            KartPadCharacterGraphicsTest.Mode.INVISIBLE_FIX_ALL to ("2" to "2"),
+            KartPadCharacterGraphicsTest.Mode.CONSTANT_ONLY to ("2" to "0"),
+            KartPadCharacterGraphicsTest.Mode.ORIGINAL to ("0" to "0"),
+            KartPadCharacterGraphicsTest.Mode.COMPATIBILITY to ("1" to "0"),
+        )
+        check(expectedCharacterEnvironment.keys == KartPadCharacterGraphicsTest.Mode.entries.toSet())
+        for ((mode, expected) in expectedCharacterEnvironment) {
             newCharacterProcess()
+            // Model a previous launch's overrides: Automatic must clear both,
+            // while constant-only must explicitly disable repacking, not inherit it.
+            android.system.Os.setenv("KARTPAD_RENDERER_CONST_PNMTX", "stale", true)
+            android.system.Os.setenv("KARTPAD_RENDERER_VERTEX_REPACK", "stale", true)
             check(KartPadCharacterGraphicsTest.setMode(chooser, mode))
             check(KartPadCharacterGraphicsTest.mode(game) == mode)
             KartPadCharacterGraphicsTest.configure(game)
-            check(android.system.Os.getenv("KARTPAD_RENDERER_CONST_PNMTX") == mode.environment)
+            check(KartPadCharacterGraphicsTest.active == mode)
+            check(android.system.Os.getenv("KARTPAD_RENDERER_CONST_PNMTX") == expected.first)
+            check(android.system.Os.getenv("KARTPAD_RENDERER_VERTEX_REPACK") == expected.second)
         }
         check(KartPadCharacterGraphicsTest.setMode(chooser, KartPadCharacterGraphicsTest.Mode.ORIGINAL))
         KartPadCharacterGraphicsTest.configure(game) // Activity recreation must keep the running mode.
         check(KartPadCharacterGraphicsTest.active == KartPadCharacterGraphicsTest.Mode.COMPATIBILITY)
         check(android.system.Os.getenv("KARTPAD_RENDERER_CONST_PNMTX") == "1")
+        check(android.system.Os.getenv("KARTPAD_RENDERER_VERTEX_REPACK") == "0")
         check(KartPadCharacterGraphicsTest.setMode(chooser, KartPadCharacterGraphicsTest.Mode.COMPATIBILITY))
         android.util.AtomicFile.failSuffix = "CharacterGraphicsTest"
         check(!KartPadCharacterGraphicsTest.setMode(chooser, KartPadCharacterGraphicsTest.Mode.NORMAL))
@@ -88,6 +106,7 @@ fun main() {
             KartPadCharacterGraphicsTest.configure(game)
             check(KartPadCharacterGraphicsTest.active == KartPadCharacterGraphicsTest.Mode.NORMAL)
             check(android.system.Os.getenv("KARTPAD_RENDERER_CONST_PNMTX") == null)
+            check(android.system.Os.getenv("KARTPAD_RENDERER_VERTEX_REPACK") == null)
         }
         android.util.AtomicFile.readFailSuffix = "CharacterGraphicsTest"
         check(!KartPadCharacterGraphicsTest.setMode(chooser, KartPadCharacterGraphicsTest.Mode.NORMAL))
