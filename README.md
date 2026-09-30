@@ -40,9 +40,9 @@ The projects are independently maintained.
 
 KartPad is free. The apps on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest)
 contain no game code. You make the game part yourself with
-[PadForge](https://github.com/chrissotraidis/padforge), on your own computer,
+[PadMint](https://github.com/chrissotraidis/padmint), on your own computer,
 from your own Mario Kart Wii disc. Nothing from your disc is uploaded, and
-neither KartPad nor PadForge includes game files or console keys.
+neither KartPad nor PadMint includes game files or console keys.
 
 **What you need**
 
@@ -53,32 +53,32 @@ neither KartPad nor PadForge includes game files or console keys.
 - For **iPhone and iPad**: an Apple Silicon Mac with
   [Xcode](https://apps.apple.com/app/xcode/id497799835) installed, iOS or iPadOS
   16 or newer, and a sideloading tool (AltStore, SideStore or Sideloadly).
-- Free space: about 16 GB on the computer for PadForge's tools and build files,
+- Free space: about 16 GB on the computer for PadMint's tools and build files,
   and at least 6 GB on the phone or tablet for the game data.
 
-### 1. Make your copy with PadForge
+### 1. Make your copy with PadMint
 
-1. Download the ZIP for your computer from PadForge's
-   [latest release](https://github.com/chrissotraidis/padforge/releases/latest)
+1. Download the ZIP for your computer from PadMint's
+   [latest release](https://github.com/chrissotraidis/padmint/releases/latest)
    and unzip it.
 2. Start it:
-   - **Windows:** double-click `PadForge.cmd` (Python is included). If Windows
+   - **Windows:** double-click `PadMint.cmd` (Python is included). If Windows
      says it protected your PC, choose **More info**, then **Run anyway**.
    - **Mac:** once, run `xcode-select --install` in Terminal. Then
-     double-click `PadForge.command`. The first time, macOS says Apple could
+     double-click `PadMint.command`. The first time, macOS says Apple could
      not verify it: choose **Done**, open **System Settings → Privacy &
-     Security**, scroll down, choose **Open Anyway** next to PadForge.command
-     and confirm. (Or, in Terminal, type `sh `, drag `PadForge.command` into
+     Security**, scroll down, choose **Open Anyway** next to PadMint.command
+     and confirm. (Or, in Terminal, type `sh `, drag `PadMint.command` into
      the window and press Return.)
-   - **Linux:** in the folder, run `sh padforge.sh` (needs Python 3.9+ and Git).
+   - **Linux:** in the folder, run `sh padmint.sh` (needs Python 3.9+ and Git).
 3. Choose **Android** or **iPhone/iPad**, drag your disc image into the window,
    press Enter, then press Enter again to save to Downloads (or type a folder).
 4. Wait. The first run downloads about 4 GB of tools and takes about 10 minutes
    to an hour, depending on the computer. Later runs, including after KartPad
    updates, reuse the tools and downloads.
 
-PadForge saves `KartPad-v0.7.0-android-personal.so` (the Android game pack)
-or `KartPad-v0.7.0-ios-personal.ipa` (the complete iPhone/iPad app), plus a
+PadMint saves `KartPad-v0.7.1-android-personal.so` (the Android game pack)
+or `KartPad-v0.7.1-ios-personal.ipa` (the complete iPhone/iPad app), plus a
 `KartPad game data` folder for step 3. Keep them to yourself: they are made
 from your disc.
 
@@ -86,7 +86,7 @@ from your disc.
 
 **Android**
 
-1. Install `KartPad-v0.7.0-android.apk` from the
+1. Install `KartPad-v0.7.1-android.apk` from the
    [latest release](https://github.com/chrissotraidis/kartpad/releases/latest).
    It updates earlier versions in place and keeps your saves. Do not uninstall
    first.
@@ -97,7 +97,7 @@ from your disc.
 
 **iPhone and iPad**
 
-Install `KartPad-v0.7.0-ios-personal.ipa` with AltStore, SideStore or
+Install `KartPad-v0.7.1-ios-personal.ipa` with AltStore, SideStore or
 Sideloadly. Install over your existing KartPad with the same tool and Apple ID
 to keep your saves. See [iPhone/iPad setup](docs/INSTALL_IPA.md).
 
@@ -106,7 +106,7 @@ to keep your saves. See [iPhone/iPad setup](docs/INSTALL_IPA.md).
 KartPad also reads the tracks, art and music from your disc on the device.
 If you are updating from 0.5.x, this is already done. Otherwise choose one:
 
-- **The `KartPad game data` folder from PadForge (easiest, no key needed).**
+- **The `KartPad game data` folder from PadMint (easiest, no key needed).**
   Copy it to your device and choose it with **Import from Extracted Game Data
   Folder** (Android) or **Import from Extracted Folder** (iPhone/iPad). You can
   also make the same folder with [Dolphin](https://dolphin-emu.org/download/):
@@ -114,7 +114,7 @@ If you are updating from 0.5.x, this is already done. Otherwise choose one:
   choose **Extract Entire Disc** and use the `DATA` folder it makes.
 - **Disc image.** Choose your ISO or WBFS (Android also accepts RVZ). This needs
   your own Wii's 16-byte common key saved as `common-key.bin`, for example from
-  a BootMii NAND backup of your console. KartPad and PadForge do not include
+  a BootMii NAND backup of your console. KartPad and PadMint do not include
   it and we cannot provide it; if you do not have one, use the extracted folder.
 
 After that, tap **Play Game**. Retro Rewind is optional: choose its card and
@@ -122,9 +122,9 @@ KartPad downloads the official pack for you.
 
 **Updating KartPad.** From 0.7.0, a game pack keeps working across updates
 until an update changes how KartPad loads the game; KartPad tells you when that
-happens. On Android, just install the new APK. On iPhone and iPad, run PadForge
+happens. On Android, just install the new APK. On iPhone and iPad, run PadMint
 again to get the new IPA: it reuses your game pack, so this takes a minute or
-two instead of a full build. There is no Mac download for 0.7.0.
+two instead of a full build. There is no Mac download for 0.7.1.
 
 ### Source maintenance
 
@@ -176,7 +176,7 @@ known issues. Android's suggested starting point is **1x Native**. Sustained
 <summary>Can I download an IPA or playable app?</summary>
 
 Yes: the app is on the releases page, and you add the game from your own disc
-with PadForge. See [Get KartPad](#get-kartpad).
+with PadMint. See [Get KartPad](#get-kartpad).
 
 </details>
 

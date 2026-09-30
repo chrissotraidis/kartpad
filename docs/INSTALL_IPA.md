@@ -1,12 +1,12 @@
 # Install KartPad on iPhone and iPad
 
 > [!IMPORTANT]
-> **KartPad 0.7.0 is the current release.** On an Apple Silicon Mac with Xcode,
-> [PadForge](https://github.com/chrissotraidis/padforge/releases/latest) makes a
+> **KartPad 0.7.1 is the current release.** On an Apple Silicon Mac with Xcode,
+> [PadMint](https://github.com/chrissotraidis/padmint/releases/latest) makes a
 > complete personal IPA from your own disc. See
 > [Get KartPad](../README.md#get-kartpad) for the steps.
 
-PadForge's IPA is unsigned: sign and install it with your existing compatible
+PadMint's IPA is unsigned: sign and install it with your existing compatible
 Apple identity and update in place to keep your saves. Older version notes
 below are kept for reference.
 
@@ -26,7 +26,7 @@ Older IPAs should remain offline. This does not erase incorrect serial history
 already held by a server or clear bans; affected accounts may need service-admin
 help. Never reset identities or delete saves as a workaround.
 
-1. Make your personal IPA with PadForge (see
+1. Make your personal IPA with PadMint (see
    [Get KartPad](../README.md#get-kartpad)). It runs on an Apple Silicon Mac
    with Xcode and accepts your own supported disc image as ISO, WBFS or RVZ.
 2. Keep the IPA private. It contains code translated from your game and must

@@ -221,8 +221,8 @@ def _download(
 
 
 def _shared_path(name: str) -> Path | None:
-    """The copy in PadForge's cache for every KartPad version (PADFORGE_CACHE)."""
-    root = os.environ.get("PADFORGE_CACHE")
+    """The copy in PadMint's cache for every KartPad version (PADMINT_CACHE)."""
+    root = os.environ.get("PADMINT_CACHE") or os.environ.get("PADFORGE_CACHE")
     return Path(root) / "kartpad" / "retro-rewind-downloads" / name if root else None
 
 
@@ -240,14 +240,14 @@ def _link_or_copy(source: Path, target: Path) -> None:
 
 
 def _reuse_shared(path: Path, size: int, sha256: str) -> bool:
-    """Take the pinned download from PadForge's cache instead of downloading it
+    """Take the pinned download from PadMint's cache instead of downloading it
     again after a KartPad update. The copy must match the pinned size and hash."""
     shared = _shared_path(path.name)
     if shared is None or not shared.is_file() or shared.stat().st_size != size or sha256_file(shared) != sha256:
         return False
     path.parent.mkdir(parents=True, exist_ok=True)
     _link_or_copy(shared, path)
-    print(f"Reused {path.name} from PadForge's download cache", flush=True)
+    print(f"Reused {path.name} from PadMint's download cache", flush=True)
     return True
 
 
@@ -260,7 +260,7 @@ def _share(path: Path) -> None:
         shared.parent.mkdir(parents=True, exist_ok=True)
         _link_or_copy(path, shared)
     except OSError as error:
-        print(f"Could not keep {path.name} in PadForge's download cache: {error}", flush=True)
+        print(f"Could not keep {path.name} in PadMint's download cache: {error}", flush=True)
 
 
 def prepare_inputs(profile: Profile, work_root: Path, install: bool) -> RetroRewindInputs:

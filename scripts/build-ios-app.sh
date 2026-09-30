@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the publishable KartPad iPhone app: the runtime and app without any
-# game code. PadForge adds the player's own game pack, built from their disc
+# game code. PadMint adds the player's own game pack, built from their disc
 # (scripts/build-game-pack.sh ios, then scripts/add-game-pack-to-ipa.sh).
 #
 # Usage: scripts/build-ios-app.sh [OUTPUT_ROOT]
@@ -46,7 +46,7 @@ provenance = {
     "appVersion": version["version"],
     "appBuild": version["build"],
     "containsUserSuppliedTranslatedCode": False,
-    "gamePack": "added by PadForge from the player's own disc",
+    "gamePack": "added by PadMint from the player's own disc",
     "softwareLicense": "GPL-3.0-only",
 }
 licenses = {name: repo / name for name in ("LICENSE", "RIGHTS_AND_LICENSES.md", "THIRD_PARTY_NOTICES.md")}

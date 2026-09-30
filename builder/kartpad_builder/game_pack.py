@@ -5,7 +5,7 @@ it, and compiles one library against the published app's runtime:
 
 - Android (Windows, Linux or macOS): libkartpad_game.so, linked against the
   APK's lib/arm64-v8a/libmain.so and loaded from the app's storage. Tools: the
-  Android NDK, CMake, Ninja, .NET 8 and nodtool (PadForge supplies them).
+  Android NDK, CMake, Ninja, .NET 8 and nodtool (PadMint supplies them).
 - iPhone (macOS with Xcode): libkartpad_game.dylib, placed in the published
   IPA's Frameworks folder; the player's sideloading tool signs the result.
 """
@@ -80,7 +80,7 @@ def linux_arm64() -> bool:
 def arm64_ndk(ndk: Path, llvm: Path, shim: Path) -> Path:
     """An NDK layout for Linux arm64, where Google publishes no NDK.
 
-    PadForge installs the Linux NDK's host-independent parts (CMake scripts,
+    PadMint installs the Linux NDK's host-independent parts (CMake scripts,
     sysroot, Android runtime libraries) and LLVM's own arm64 build of the same
     clang major version. The NDK's CMake expects its x86_64 prebuilt folder on
     any Linux, so that folder is assembled here from links and two small
@@ -90,7 +90,7 @@ def arm64_ndk(ndk: Path, llvm: Path, shim: Path) -> Path:
     versions = sorted(path.name for path in clang_root.iterdir()) if clang_root.is_dir() else []
     if len(versions) != 1 or not (llvm / "lib/clang" / versions[0] / "include").is_dir():
         raise BuildError(f"LLVM at {llvm} does not match the NDK's clang {versions or '?'}; "
-                         "run PadForge again to install the matching tools")
+                         "run PadMint again to install the matching tools")
     major = versions[0]
     check_linker(llvm)
     prebuilt = shim / "toolchains/llvm/prebuilt/linux-x86_64"
@@ -129,7 +129,7 @@ def check_linker(llvm: Path) -> None:
     detail = detail[-1] if detail else f"exit code {result.returncode}"
     if "libxml2" in detail:
         raise BuildError("LLVM's linker needs the libxml2 library. Install it (Debian, Ubuntu, "
-                         "Raspberry Pi OS: sudo apt install libxml2) and run PadForge again. "
+                         "Raspberry Pi OS: sudo apt install libxml2) and run PadMint again. "
                          f"({detail})")
     raise BuildError(f"LLVM's linker cannot start: {detail}")
 
@@ -139,8 +139,9 @@ PACK_FILES = {"android": "libkartpad_game.so", "ios": "libkartpad_game.dylib"}
 
 
 def _pack_cache(platform_name: str, fingerprint: str, image_sha256: str) -> Path | None:
-    """PadForge's cache folder for one player's pack (PADFORGE_CACHE), if any."""
-    root = os.environ.get("PADFORGE_CACHE")
+    """PadMint's cache folder for one player's pack (PADMINT_CACHE), if any."""
+    # PadForge was PadMint's name before 0.2.0; older copies set PADFORGE_*.
+    root = os.environ.get("PADMINT_CACHE") or os.environ.get("PADFORGE_CACHE")
     if not root:
         return None
     return Path(root) / "kartpad/packs" / f"{platform_name}-{fingerprint[:32]}-{image_sha256[:16]}"
@@ -187,10 +188,10 @@ def host_ndk(repo: Path, work_root: Path) -> Path:
     ndk = find_ndk(repo)
     if not linux_arm64():
         return ndk
-    llvm = os.environ.get("PADFORGE_LLVM_ROOT")
+    llvm = os.environ.get("PADMINT_LLVM_ROOT") or os.environ.get("PADFORGE_LLVM_ROOT")
     if not llvm:
-        raise BuildError("Linux arm64 builds need the LLVM 21 that PadForge installs there "
-                         "(PADFORGE_LLVM_ROOT); update PadForge to its latest release and run it again")
+        raise BuildError("Linux arm64 builds need the LLVM 21 that PadMint installs there "
+                         "(PADMINT_LLVM_ROOT); update PadMint to its latest release and run it again")
     return arm64_ndk(ndk, Path(llvm), work_root / "ndk-linux-arm64")
 
 

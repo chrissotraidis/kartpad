@@ -7,14 +7,14 @@ import java.io.RandomAccessFile
 import java.util.concurrent.Executors
 
 /**
- * The player's game pack: KartPad's translated game code, built by PadForge on
+ * The player's game pack: KartPad's translated game code, built by PadMint on
  * the player's own computer from their own disc. The published app contains no
  * game code; the runtime loads this file at startup (KARTPAD_GAME_PACK) and
  * checks its pack interface fingerprint (pack ABI 3): any KartPad version whose
  * fingerprint is unchanged keeps working with the same pack.
  */
 object KartPadGamePack {
-    const val PADFORGE_URL = "https://github.com/chrissotraidis/padforge"
+    const val PADMINT_URL = "https://github.com/chrissotraidis/padmint"
     private val ELF_MAGIC = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte())
     private val INFO_SYMBOL = "kartpad_game_pack_info".toByteArray()
     // KARTPAD_GAME_PACK_FINGERPRINT_PREFIX in the runtime's game_pack.h.
@@ -62,13 +62,13 @@ object KartPadGamePack {
             input.use { stream -> partial.outputStream().use { stream.copyTo(it) } }
             if (!looksLikeGamePack(partial)) {
                 partial.delete()
-                return "That file is not a KartPad game pack. Choose the file PadForge made."
+                return "That file is not a KartPad game pack. Choose the file PadMint made."
             }
             val fingerprint = fingerprint(partial)
             if (fingerprint != BuildConfig.PACK_FINGERPRINT) {
                 partial.delete()
                 return "That game pack was made for a different version of KartPad. " +
-                    "Build a new one with PadForge for KartPad ${BuildConfig.VERSION_NAME}."
+                    "Build a new one with PadMint for KartPad ${BuildConfig.VERSION_NAME}."
             }
             if (!partial.renameTo(destination)) {
                 partial.delete()

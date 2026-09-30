@@ -15,7 +15,7 @@ from .profiles import Profile
 
 REQUIRED_COMMANDS = {
     "ios": ("cmake", "ninja", "git", "rg", "python3", "dotnet", "nodtool", "xcrun"),
-    # The game pack builds on Windows, Linux and macOS (PadForge supplies the tools).
+    # The game pack builds on Windows, Linux and macOS (PadMint supplies the tools).
     "android-pack": ("cmake", "ninja", "git", "dotnet", "nodtool"),
     "ios-pack": ("cmake", "ninja", "git", "dotnet", "nodtool", "xcrun"),
 }
