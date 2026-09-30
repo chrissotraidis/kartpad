@@ -3,18 +3,23 @@ package dev.kartpad.android
 import android.content.Context
 import android.net.Uri
 import java.io.File
+import java.io.RandomAccessFile
 import java.util.concurrent.Executors
 
 /**
  * The player's game pack: KartPad's translated game code, built by PadForge on
  * the player's own computer from their own disc. The published app contains no
  * game code; the runtime loads this file at startup (KARTPAD_GAME_PACK) and
- * checks that it was built for this app version.
+ * checks its pack interface fingerprint (pack ABI 3): any KartPad version whose
+ * fingerprint is unchanged keeps working with the same pack.
  */
 object KartPadGamePack {
     const val PADFORGE_URL = "https://github.com/chrissotraidis/padforge"
     private val ELF_MAGIC = byteArrayOf(0x7F, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte())
     private val INFO_SYMBOL = "kartpad_game_pack_info".toByteArray()
+    // KARTPAD_GAME_PACK_FINGERPRINT_PREFIX in the runtime's game_pack.h.
+    private val FINGERPRINT_PREFIX = "kartpad-pack-fingerprint:".toByteArray()
+    private const val FINGERPRINT_LENGTH = 64
 
     // Lives with the app process, so a copy survives the launcher screen being
     // rebuilt (for example when the file picker rotates the screen).
@@ -22,12 +27,23 @@ object KartPadGamePack {
 
     val required: Boolean get() = BuildConfig.GAME_PACK_APP
 
-    // One pack per app version: after an update the player is asked for a new
-    // pack instead of starting one built for the previous version.
-    fun file(context: Context) =
-        File(context.filesDir, "gamepack/libkartpad_game-${BuildConfig.VERSION_NAME}.so")
+    // One pack, kept across updates. The fingerprint recorded beside it at import
+    // decides whether this app version can load it.
+    fun file(context: Context) = File(context.filesDir, "gamepack/libkartpad_game.so")
 
-    fun isInstalled(context: Context) = file(context).isFile
+    private fun fingerprintFile(pack: File) = File(pack.path + ".fingerprint")
+
+    fun isInstalled(context: Context): Boolean {
+        val pack = file(context)
+        if (!pack.isFile) return false
+        val recorded = runCatching { fingerprintFile(pack).readText().trim() }.getOrNull()
+        return recorded == BuildConfig.PACK_FINGERPRINT
+    }
+
+    /** A pack from an earlier KartPad is present but this version cannot load it. */
+    fun hasOlderPack(context: Context): Boolean =
+        !isInstalled(context) &&
+            file(context).parentFile?.listFiles()?.any { it.isFile && it.name.endsWith(".so") } == true
 
     /** Imports on a background thread and reports the result (an error message, or null). */
     fun importInBackground(context: Context, source: Uri, done: (String?) -> Unit) {
@@ -48,12 +64,20 @@ object KartPadGamePack {
                 partial.delete()
                 return "That file is not a KartPad game pack. Choose the file PadForge made."
             }
+            val fingerprint = fingerprint(partial)
+            if (fingerprint != BuildConfig.PACK_FINGERPRINT) {
+                partial.delete()
+                return "That game pack was made for a different version of KartPad. " +
+                    "Build a new one with PadForge for KartPad ${BuildConfig.VERSION_NAME}."
+            }
             if (!partial.renameTo(destination)) {
                 partial.delete()
                 return "The game pack could not be saved."
             }
-            // Packs for other app versions can never load again.
-            destination.parentFile?.listFiles()?.forEach { if (it != destination) it.delete() }
+            fingerprintFile(destination).writeText(fingerprint + "\n")
+            // Older packs (libkartpad_game-<version>.so before pack ABI 3) can never load again.
+            val keep = setOf(destination, fingerprintFile(destination))
+            destination.parentFile?.listFiles()?.forEach { if (it !in keep) it.delete() }
             return null
         } catch (error: Exception) {
             partial.delete()
@@ -70,16 +94,38 @@ object KartPadGamePack {
         candidate.inputStream().use { if (it.read(header) != 4) return false }
         if (!header.contentEquals(ELF_MAGIC)) return false
         // The exported info symbol name sits in the dynamic string table.
+        return offsetOf(candidate, INFO_SYMBOL) >= 0
+    }
+
+    /** The pack interface fingerprint the pack was built with, or null (older packs). */
+    fun fingerprint(candidate: File): String? {
+        val at = offsetOf(candidate, FINGERPRINT_PREFIX)
+        if (at < 0) return null
+        val value = ByteArray(FINGERPRINT_LENGTH)
+        RandomAccessFile(candidate, "r").use { file ->
+            file.seek(at + FINGERPRINT_PREFIX.size)
+            if (file.read(value) != FINGERPRINT_LENGTH) return null
+        }
+        val text = String(value, Charsets.US_ASCII)
+        return text.takeIf { hex -> hex.all { it in '0'..'9' || it in 'a'..'f' } }
+    }
+
+    /** File offset of the first occurrence of needle, or -1. */
+    private fun offsetOf(candidate: File, needle: ByteArray): Long {
         val window = ByteArray(1 shl 20)
         var carry = 0
+        var windowStart = 0L
         candidate.inputStream().use { stream ->
             while (true) {
                 val read = stream.read(window, carry, window.size - carry)
-                if (read <= 0) return false
+                if (read <= 0) return -1
                 val end = carry + read
-                if (indexOf(window, end, INFO_SYMBOL) >= 0) return true
-                carry = minOf(INFO_SYMBOL.size - 1, end)
-                System.arraycopy(window, end - carry, window, 0, carry)
+                val index = indexOf(window, end, needle)
+                if (index >= 0) return windowStart + index
+                val keep = minOf(needle.size - 1, end)
+                System.arraycopy(window, end - keep, window, 0, keep)
+                windowStart += (end - keep).toLong()
+                carry = keep
             }
         }
     }

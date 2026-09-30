@@ -21,7 +21,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import game_data, runtime_stage
+from . import game_data, pack_fingerprint, runtime_stage
 from .bootstrap import ANDROID_PACK_GITLINKS
 from .errors import BuildError
 from .packaging import load_version
@@ -134,6 +134,54 @@ def check_linker(llvm: Path) -> None:
     raise BuildError(f"LLVM's linker cannot start: {detail}")
 
 
+PACK_RECORD = "pack-symbols.json"
+PACK_FILES = {"android": "libkartpad_game.so", "ios": "libkartpad_game.dylib"}
+
+
+def _pack_cache(platform_name: str, fingerprint: str, image_sha256: str) -> Path | None:
+    """PadForge's cache folder for one player's pack (PADFORGE_CACHE), if any."""
+    root = os.environ.get("PADFORGE_CACHE")
+    if not root:
+        return None
+    return Path(root) / "kartpad/packs" / f"{platform_name}-{fingerprint[:32]}-{image_sha256[:16]}"
+
+
+def reusable_pack(platform_name: str, fingerprint: str, image_sha256: str) -> Path | None:
+    """A pack built earlier from the same disc for the same pack interface.
+
+    After a KartPad update with an unchanged fingerprint the new app accepts the
+    same pack, so the compile is skipped. The caller still checks it against the
+    new app from its recorded symbols."""
+    folder = _pack_cache(platform_name, fingerprint, image_sha256)
+    if folder and (folder / PACK_FILES[platform_name]).is_file() and (folder / PACK_RECORD).is_file():
+        print(f"Reusing your game pack: this KartPad keeps the same pack interface ({fingerprint[:12]}).",
+              flush=True)
+        return folder
+    return None
+
+
+def keep_pack(platform_name: str, fingerprint: str, image_sha256: str, pack: Path, record: Path) -> None:
+    """Keep a checked pack and its symbol record for the next KartPad version (best effort)."""
+    folder = _pack_cache(platform_name, fingerprint, image_sha256)
+    if folder is None:
+        return
+    stage = folder.with_name(folder.name + f".partial.{os.getpid()}")
+    try:
+        if stage.exists():
+            shutil.rmtree(stage)
+        stage.mkdir(parents=True)
+        shutil.copyfile(pack, stage / PACK_FILES[platform_name])
+        shutil.copyfile(record, stage / PACK_RECORD)
+        if folder.exists():
+            shutil.rmtree(folder)
+        stage.rename(folder)
+    except OSError as error:
+        print(f"Could not keep the game pack for the next update: {error}", flush=True)
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage, ignore_errors=True)
+
+
 def host_ndk(repo: Path, work_root: Path) -> Path:
     """The NDK for this computer (assembled on Linux arm64, see arm64_ndk)."""
     ndk = find_ndk(repo)
@@ -197,14 +245,15 @@ def build_android_pack(
         runtime = workspace / "android-runtime"
         if not runtime.is_dir():
             runtime_stage.stage(repo, "android", runtime)
+        fingerprint = pack_fingerprint.fingerprint(repo, "android", runtime)
         app_version = load_version(repo)["version"]
         library = app_runtime(app, workspace / "app")
-        definitions = ";".join(
-            line.strip() for line in
-            (repo / "android/app/src/main/cpp/translated-definitions.txt").read_text().splitlines()
-            if line.strip())
+        cached = reusable_pack("android", fingerprint, image_sha256)
         build = workspace / "android-pack-build"
-        run(["cmake", "-S", str(runtime / "game_pack"), "-B", str(build), "-G", "Ninja",
+        record = workspace / "android-pack.pack-symbols.json"
+        if cached is None:
+            definitions = ";".join(pack_fingerprint.definitions(repo, "android"))
+            run(["cmake", "-S", str(runtime / "game_pack"), "-B", str(build), "-G", "Ninja",
              f"-DCMAKE_TOOLCHAIN_FILE={ndk / 'build/cmake/android.toolchain.cmake'}",
              "-DANDROID_ABI=arm64-v8a",
              f"-DANDROID_PLATFORM=android-{_toolchain_setting(repo, 'KARTPAD_ANDROID_MIN_SDK')}",
@@ -213,15 +262,23 @@ def build_android_pack(
              f"-DMKW_GAME_PACK_RUNTIME={library}",
              f"-DMKW_KARTPAD_RUNTIME_INCLUDE={repo / 'runtime/include'}",
              f"-DKARTPAD_APP_VERSION={app_version}",
+             f"-DKARTPAD_PACK_FINGERPRINT={fingerprint}",
              f"-DMKW_GAME_PACK_DEFINITIONS={definitions}"])
-        run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
+            run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
     built = build / "libkartpad_game.so"
     with progress.stage("check"):
+        # A reused pack is checked again, against this app, from its recorded symbols.
+        checked = cached / PACK_RECORD if cached else built
         run([sys.executable, str(repo / "scripts/check-game-pack-state.py"),
-             str(_ndk_tool(ndk, "llvm-nm")), str(built), str(library)])
+             str(_ndk_tool(ndk, "llvm-nm")), str(checked), str(library)]
+            + ([] if cached else ["--record", str(record)]))
     with progress.stage("package"):
         output.parent.mkdir(parents=True, exist_ok=True)
-        run([str(_ndk_tool(ndk, "llvm-strip")), "--strip-unneeded", "-o", str(output), str(built)])
+        if cached:
+            shutil.copyfile(cached / "libkartpad_game.so", output)
+        else:
+            run([str(_ndk_tool(ndk, "llvm-strip")), "--strip-unneeded", "-o", str(output), str(built)])
+            keep_pack("android", fingerprint, image_sha256, output, record)
     return PackResult(pack=output, pack_sha256=sha256_file(output))
 
 
@@ -249,6 +306,7 @@ def build_ios_pack(
         runtime = workspace / "ios-runtime"
         if not runtime.is_dir():
             runtime_stage.stage(repo, "ios", runtime)
+        fingerprint = pack_fingerprint.fingerprint(repo, "ios", runtime)
         executable = workspace / "app" / "KartPad"
         executable.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(app) as archive:
@@ -258,8 +316,11 @@ def build_ios_pack(
                 raise BuildError(f"not a KartPad IPA: {app}") from error
             if "Payload/KartPad.app/Frameworks/libkartpad_game.dylib" in archive.namelist():
                 raise BuildError(f"this IPA already contains a game pack: {app}")
+        cached = reusable_pack("ios", fingerprint, image_sha256)
         build = workspace / "ios-pack-build"
-        run(["cmake", "-S", str(runtime / "game_pack"), "-B", str(build), "-G", "Ninja",
+        record = workspace / "ios-pack.pack-symbols.json"
+        if cached is None:
+            run(["cmake", "-S", str(runtime / "game_pack"), "-B", str(build), "-G", "Ninja",
              "-DCMAKE_SYSTEM_NAME=iOS", "-DCMAKE_SYSTEM_PROCESSOR=arm64",
              "-DCMAKE_OSX_SYSROOT=iphoneos", "-DCMAKE_OSX_ARCHITECTURES=arm64",
              "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0", "-DCMAKE_BUILD_TYPE=Release",
@@ -267,17 +328,23 @@ def build_ios_pack(
              f"-DMKW_GAME_PACK_RUNTIME={executable}",
              f"-DMKW_KARTPAD_RUNTIME_INCLUDE={repo / 'runtime/include'}",
              f"-DKARTPAD_APP_VERSION={load_version(repo)['version']}",
-             "-DMKW_GAME_PACK_DEFINITIONS=KARTPAD_UNOBSERVED_FP_STATUS=1"])
-        run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
+             f"-DKARTPAD_PACK_FINGERPRINT={fingerprint}",
+             "-DMKW_GAME_PACK_DEFINITIONS=" + ";".join(pack_fingerprint.definitions(repo, "ios"))])
+            run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
     built = build / "libkartpad_game.dylib"
     with progress.stage("check"):
+        checked = cached / PACK_RECORD if cached else built
         run([sys.executable, str(repo / "scripts/check-game-pack-state.py"),
-             _xcrun("llvm-nm"), str(built), str(executable)])
+             _xcrun("llvm-nm"), str(checked), str(executable)] + ([] if cached else ["--record", str(record)]))
     with progress.stage("package"):
         pack = workspace / "libkartpad_game.dylib"
-        pack.write_bytes(built.read_bytes())
-        run([_xcrun("strip"), "-x", str(pack)])
-        run([_xcrun("install_name_tool"), "-id", "@rpath/libkartpad_game.dylib", str(pack)])
+        if cached:
+            shutil.copyfile(cached / PACK_FILES["ios"], pack)
+        else:
+            pack.write_bytes(built.read_bytes())
+            run([_xcrun("strip"), "-x", str(pack)])
+            run([_xcrun("install_name_tool"), "-id", "@rpath/libkartpad_game.dylib", str(pack)])
+            keep_pack("ios", fingerprint, image_sha256, pack, record)
         output.parent.mkdir(parents=True, exist_ok=True)
         partial = output.with_name(output.name + ".partial")
         with zipfile.ZipFile(app) as source, zipfile.ZipFile(

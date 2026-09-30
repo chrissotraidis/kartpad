@@ -7,11 +7,15 @@ packs (MKW_GAME_PACK_MODULE). A pack with its own copy runs but reads state the
 app never sets. The only allowed duplicates are per-target lookup caches that
 latch after the function registry is published.
 
-Usage: check-game-pack-state.py NM PACK APP_RUNTIME
+Usage: check-game-pack-state.py NM PACK APP_RUNTIME [--record FILE]
   NM           an nm that reads the pack (llvm-nm for Android, nm on a Mac)
-  PACK         the unstripped game pack
+  PACK         the unstripped game pack, or a FILE written by --record
   APP_RUNTIME  the app's runtime (libmain.so or the KartPad executable)
+  --record     also save the pack's symbols to FILE, so a pack reused with a
+               newer app (same pack interface fingerprint) is checked again
+               against that app after stripping
 """
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -49,11 +53,29 @@ def _demangler(nm):
     return None
 
 
+def pack_symbols(nm, pack):
+    """(defined data symbols, undefined symbols) of a pack or of its record."""
+    if pack.endswith(".json"):
+        record = json.loads(Path(pack).read_text())
+        return set(record["data"]), list(record["undefined"])
+    data = {name for name, kind in symbols(nm, pack, False).items() if kind in DATA_TYPES}
+    undefined = subprocess.run([nm, "-u", pack], check=True, capture_output=True, text=True).stdout.split()
+    return data, undefined
+
+
 def main():
-    if len(sys.argv) != 4:
+    args = sys.argv[1:]
+    record = None
+    if "--record" in args:
+        index = args.index("--record")
+        record = args[index + 1] if index + 1 < len(args) else None
+        del args[index:index + 2]
+    if len(args) != 3 or (record is not None and not record):
         sys.exit(__doc__)
-    nm, pack, app = sys.argv[1:]
-    pack_data = {name for name, kind in symbols(nm, pack, False).items() if kind in DATA_TYPES}
+    nm, pack, app = args
+    pack_data, undefined = pack_symbols(nm, pack)
+    if record:
+        Path(record).write_text(json.dumps({"data": sorted(pack_data), "undefined": sorted(undefined)}) + "\n")
     app_defined = set(symbols(nm, app, True)) | set(symbols(nm, app, False))
     cxxfilt = _demangler(nm)
     demangle = (lambda names: subprocess.run(
@@ -69,7 +91,6 @@ def main():
         return 1
     # C++ thread_local accessors (_ZTW...) are never exported by the app; the
     # runtime headers must declare pack-side thread-locals with __thread.
-    undefined = subprocess.run([nm, "-u", pack], check=True, capture_output=True, text=True).stdout.split()
     wrappers = sorted({name for name in undefined if name.lstrip("_").startswith("ZTW")} - app_defined)
     if wrappers:
         print("ERROR: the game pack calls thread-local accessors the app does not export:", file=sys.stderr)

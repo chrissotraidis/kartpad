@@ -40,6 +40,10 @@ KARTPAD_PREPARE_PLATFORM=android KARTPAD_PREPARE_ONLY=1 KARTPAD_PREPARE_WITHOUT_
 cp "$repo_root/runtime/include/kartpad/android/trace_scope.h" \
   "$runtime_source/aurora-main/lib/kartpad_android_trace_scope.h"
 python3 "$repo_root/scripts/stage-maintained-runtime.py" --verify android "$runtime_source"
+# The game pack interface this app accepts (pack ABI 3): computed by the same
+# function, from the same staged runtime, as every PadForge-built pack.
+pack_fingerprint="$(PYTHONPATH="$repo_root/builder" python3 -m kartpad_builder.pack_fingerprint android "$runtime_source")"
+echo "Pack interface fingerprint: $pack_fingerprint"
 if [[ -e "$stage/generated" ]]; then
   echo "ERROR: the publishable app must not see a generated graph: $stage/generated" >&2
   exit 1
@@ -61,6 +65,7 @@ export MBEDTLS_ANDROID_ROOT="$mbedtls_root"
 
 "$repo_root/android/gradlew" --project-dir "$repo_root/android" --no-daemon \
   -PkartpadGamePackApp=true \
+  -PkartpadPackFingerprint="$pack_fingerprint" \
   -PkartpadGameRuntimeSource="$runtime_source" \
   -PkartpadAndroidNativeTarget=KartPadDual \
   -PkartpadDiscIoJniRoot="$discio_jni_root" \

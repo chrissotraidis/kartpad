@@ -12,6 +12,12 @@ val gameRuntimeSource = providers.gradleProperty("kartpadGameRuntimeSource").orN
 val translatedShardManifest = providers.gradleProperty("kartpadTranslatedShardManifest").orNull
 // Publishable app: the runtime without game code; the player's game pack is loaded at startup.
 val gamePackApp = providers.gradleProperty("kartpadGamePackApp").map { it.toBoolean() }.getOrElse(false)
+// The pack interface this app accepts (scripts/build-android-app.sh computes it
+// with kartpad_builder.pack_fingerprint from the staged runtime).
+val packFingerprint = providers.gradleProperty("kartpadPackFingerprint").orNull
+require(!gamePackApp || packFingerprint?.matches(Regex("[0-9a-f]{64}")) == true) {
+    "kartpadGamePackApp needs kartpadPackFingerprint (64 lowercase hex digits)"
+}
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
 val kartpadDiagnosticRelease = providers.gradleProperty("kartpadDiagnosticRelease")
@@ -89,6 +95,7 @@ android {
         manifestPlaceholders["kartpadFrameCapture"] = kartpadFrameCapture.toString()
         buildConfigField("boolean", "GAME_RUNTIME", (gameRuntimeSource != null).toString())
         buildConfigField("boolean", "GAME_PACK_APP", gamePackApp.toString())
+        buildConfigField("String", "PACK_FINGERPRINT", "\"${packFingerprint ?: ""}\"")
         buildConfigField("boolean", "DISC_IMAGE_IMPORT", (discIoJniRoot != null).toString())
 
         ndk {
@@ -110,6 +117,7 @@ android {
                         "-DKARTPAD_GAME_RUNTIME_SOURCE=$gameRuntimeSource",
                         "-DMKW_GAME_PACK=APP",
                         "-DKARTPAD_APP_VERSION=$kartpadVersionName",
+                        "-DKARTPAD_PACK_FINGERPRINT=$packFingerprint",
                     )
                 } else if (gameRuntimeSource != null || translatedShardManifest != null) {
                     require(gameRuntimeSource != null && translatedShardManifest != null) {
