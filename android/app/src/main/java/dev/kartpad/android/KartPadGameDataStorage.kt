@@ -40,6 +40,9 @@ internal object KartPadGameDataStorage {
 
     fun validationError(filesDir: File): String? = localValidationError(installed(filesDir))
 
+    /** True on a fresh install: nothing has been imported yet, so there is nothing to diagnose. */
+    fun notImported(filesDir: File): Boolean = !installed(filesDir).exists()
+
     /** Repairs durable runtime configuration for a validated retained import. */
     fun ensureRuntimePath(filesDir: File) {
         localValidationError(installed(filesDir))?.let { throw IllegalArgumentException(it) }
