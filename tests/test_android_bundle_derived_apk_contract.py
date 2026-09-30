@@ -65,7 +65,9 @@ class AndroidBundleDerivedApkContractTests(unittest.TestCase):
         self.assertIn("assets/dexopt/baseline.profm", audit)
         self.assertIn("Require the complete,", audit)
         self.assertIn("KARTPAD_ANDROID_EXPECTED_VERSION_NAME", audit)
-        self.assertIn("0.4.12-android.2", audit)
+        # The expected version defaults to the single version.json (15bebd18).
+        self.assertIn('"${repo_root}/version.json" version', audit)
+        self.assertIn("${KARTPAD_ANDROID_EXPECTED_VERSION_NAME:-${release_version}}", audit)
         self.assertIn("KARTPAD_ANDROID_REQUIRE_RELEASE", audit)
 
 
