@@ -465,6 +465,35 @@ open class KartPadLaunchActivity : Activity() {
             startActivity(Intent(this, KartPadProblemReportActivity::class.java))
         }, layout())
         column.addView(label("KartPad ${BuildConfig.VERSION_NAME} · Build ${BuildConfig.VERSION_CODE}", 13f, true), layout(dp(12)))
+        // Only before a game starts in this process: a loaded pack stays in use
+        // until KartPad restarts, and the new one is used from the next launch.
+        if (KartPadGamePack.required && KartPadGamePack.isInstalled(this) && pausedProfile() == null) {
+            column.addView(Button(this).apply {
+                text = "Replace Game Pack…"
+                isAllCaps = false
+                setTextColor(secondaryForeground)
+                setBackgroundColor(Color.TRANSPARENT)
+                setOnClickListener {
+                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                        .setTitle("Replace Game Pack")
+                        .setMessage(
+                            "Choose a game pack PadForge made for KartPad ${BuildConfig.VERSION_NAME}. " +
+                                "It replaces the current one; your saves and game data stay as they are.",
+                        )
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("Choose file") { _, _ ->
+                            pendingProfile = null
+                            startActivityForResult(
+                                Intent(Intent.ACTION_OPEN_DOCUMENT)
+                                    .addCategory(Intent.CATEGORY_OPENABLE)
+                                    .setType("*/*"),
+                                REQUEST_GAME_PACK,
+                            )
+                        }
+                        .show()
+                }
+            }, layout(0))
+        }
         column.addView(Button(this).apply {
             text = "Export Private Diagnostics…"
             isAllCaps = false
