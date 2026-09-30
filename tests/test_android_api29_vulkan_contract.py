@@ -15,7 +15,11 @@ class AndroidApi29VulkanContractTests(unittest.TestCase):
 
         self.assertIn("android_get_device_api_level() > 29", patch)
         self.assertIn("!pipeline_workers_supported()", patch)
-        self.assertIn("Android 10's Goldfish Vulkan transport", patch)
+        self.assertIn("Goldfish Vulkan transport", patch)
+        # Only the emulator serializes; physical Android 9/10 phones keep their
+        # compile workers (runtime c1c9cff, issue #320).
+        self.assertIn('std::strcmp(hardware, "ranchu") != 0', patch)
+        self.assertIn('std::strcmp(hardware, "goldfish") != 0', patch)
         self.assertNotIn("frame_worker_requested", patch)
         assert_runtime_staging(self, 'android')
 
