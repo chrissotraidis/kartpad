@@ -220,6 +220,49 @@ def _download(
             partial.unlink()
 
 
+def _shared_path(name: str) -> Path | None:
+    """The copy in PadForge's cache for every KartPad version (PADFORGE_CACHE)."""
+    root = os.environ.get("PADFORGE_CACHE")
+    return Path(root) / "kartpad" / "retro-rewind-downloads" / name if root else None
+
+
+def _link_or_copy(source: Path, target: Path) -> None:
+    partial = target.with_name(target.name + f".partial.{os.getpid()}")
+    try:
+        try:
+            os.link(source, partial)
+        except OSError:
+            shutil.copy2(source, partial)
+        os.replace(partial, target)
+    finally:
+        if partial.exists():
+            partial.unlink()
+
+
+def _reuse_shared(path: Path, size: int, sha256: str) -> bool:
+    """Take the pinned download from PadForge's cache instead of downloading it
+    again after a KartPad update. The copy must match the pinned size and hash."""
+    shared = _shared_path(path.name)
+    if shared is None or not shared.is_file() or shared.stat().st_size != size or sha256_file(shared) != sha256:
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _link_or_copy(shared, path)
+    print(f"Reused {path.name} from PadForge's download cache", flush=True)
+    return True
+
+
+def _share(path: Path) -> None:
+    """Keep a verified download for the next KartPad version (best effort)."""
+    shared = _shared_path(path.name)
+    if shared is None or shared.exists():
+        return
+    try:
+        shared.parent.mkdir(parents=True, exist_ok=True)
+        _link_or_copy(path, shared)
+    except OSError as error:
+        print(f"Could not keep {path.name} in PadForge's download cache: {error}", flush=True)
+
+
 def prepare_inputs(profile: Profile, work_root: Path, install: bool) -> RetroRewindInputs:
     config = profile.data["retroRewind"]
     validate_config(config)
@@ -234,7 +277,9 @@ def prepare_inputs(profile: Profile, work_root: Path, install: bool) -> RetroRew
         if not archive.is_file() or archive.stat().st_size != config["archive"]["bytes"] or sha256_file(archive) != config["archive"]["sha256"]:
             if not install:
                 raise BuildError("missing pinned Retro Rewind pack; run ./scripts/build-user-ipa.sh bootstrap")
-            _download(config["archive"]["url"], archive, config["archive"]["bytes"], config["archive"]["sha256"])
+            if not _reuse_shared(archive, config["archive"]["bytes"], config["archive"]["sha256"]):
+                _download(config["archive"]["url"], archive, config["archive"]["bytes"], config["archive"]["sha256"])
+                _share(archive)
         extract_archive(archive, root, config)
 
     try:
@@ -242,7 +287,9 @@ def prepare_inputs(profile: Profile, work_root: Path, install: bool) -> RetroRew
     except (BuildError, OSError):
         if not install:
             raise BuildError("missing pinned Retro-WFC payload; run ./scripts/build-user-ipa.sh bootstrap")
-        _download(config["payload"]["url"], payload, config["payload"]["bytes"], config["payload"]["sha256"], label="Retro-WFC payload")
+        if not _reuse_shared(payload, config["payload"]["bytes"], config["payload"]["sha256"]):
+            _download(config["payload"]["url"], payload, config["payload"]["bytes"], config["payload"]["sha256"], label="Retro-WFC payload")
+            _share(payload)
         validate_rwfc_payload(payload, config["payload"])
 
     return RetroRewindInputs(
