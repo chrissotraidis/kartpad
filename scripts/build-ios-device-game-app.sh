@@ -55,7 +55,8 @@ if ! rg -F -q 'CMAKE_OSX_SYSROOT MATCHES "iphoneos|iPhoneOS"' \
 fi
 if [[ "${pack_app}" == 1 ]]; then
   translation_flags=(-DMKW_GAME_PACK=APP
-    "-DKARTPAD_APP_VERSION=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${repo_root}/version.json")")
+    "-DKARTPAD_APP_VERSION=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${repo_root}/version.json")"
+    "-DKARTPAD_PACK_FINGERPRINT=$(PYTHONPATH="${repo_root}/builder" python3 -m kartpad_builder.pack_fingerprint ios "${runtime_source}")")
   provenance_flags=()
 else
   if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
