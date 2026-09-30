@@ -305,29 +305,56 @@ def _names(command: list[str]) -> set[str]:
     return set(subprocess.run(command, check=True, capture_output=True, text=True).stdout.split())
 
 
-def link_with_system_stubs(llvm: Path, sdk: Path, build: Path, executable: Path, jobs: int) -> None:
-    """Relink an off-Mac pack so it binds libSystem and libc++ names to those
-    libraries, as a Mac build does, and check the rest against the app.
+def mach_o_blobs(translation: Path) -> None:
+    """Write the translation's data blobs as the translator writes them on a Mac.
 
-    The first link leaves every import a dynamic lookup (the pack project links
-    with -undefined dynamic_lookup). Its imports, less the app's exports, are
-    the system names: they go into the SDK's text stubs and the pack is linked
-    again. Whatever is still looked up dynamically must then be an app export."""
+    The translator spells its blob assembly for the computer it runs on
+    (AssemblyBlobWriter.cs: ELF on Linux, COFF on Windows, Mach-O on a Mac), and
+    the pack project assembles blobs for Apple targets as written. Off a Mac
+    they are rewritten here: Mach-O's read-only section, the leading-underscore
+    symbol names (the builder already adds them as aliases) and no ELF stack note."""
+    manifest = (translation / "build_shards/shards.cmake").read_text()
+    blobs = {translation / "data_sections_init_blobs.S",
+             *(Path(path) for path in re.findall(r'"([^"]+\.S)"', manifest))}
+    for path in sorted(blobs):
+        if not path.is_file():
+            continue
+        text = path.read_text()
+        text = text.replace('.section .rodata,"a",@progbits', ".section __TEXT,__const")
+        text = text.replace('.section .rdata,"dr"', ".section __TEXT,__const")
+        text = re.sub(r'(?m)^\.section \.note\.GNU-stack,"",@progbits\n', "", text)
+        if re.search(r"(?m)^\.globl _k", text):
+            text = re.sub(r"(?m)^(\.globl k[^\n]*|k[^\n]*:)\n", "", text)
+        else:
+            text = re.sub(r"(?m)^(\.globl )?k([^\n]*)$", lambda m: f"{m.group(1) or ''}_k{m.group(2)}", text)
+        path.write_text(text)
+
+
+def app_thread_locals(llvm: Path, executable: Path) -> list[str]:
+    """The published app's thread-local exports (its __thread_vars section)."""
+    listing = subprocess.run([str(ios_sdk.llvm_tool(llvm, "llvm-nm")), "-m", "-g", "--defined-only",
+                              str(executable)], check=True, capture_output=True, text=True).stdout
+    return sorted(line.split()[-1] for line in listing.splitlines() if "(__DATA,__thread_vars)" in line)
+
+
+def check_pack_imports(llvm: Path, pack: Path, executable: Path) -> None:
+    """Every name an off-Mac pack imports is looked up by name when it loads.
+    Those the app does not export must be the C++ standard library's or C's
+    (libSystem): a missing KartPad runtime name would otherwise only show on
+    the phone."""
     nm = str(ios_sdk.llvm_tool(llvm, "llvm-nm"))
-    built = build / "libkartpad_game.dylib"
-    app = _names([nm, "-g", "--defined-only", "-j", str(executable)])
-    libsystem, libcxx = ios_sdk.split_imports(_names([nm, "-u", "-j", str(built)]), app)
-    ios_sdk.write_stubs(sdk, libsystem, libcxx)
-    built.unlink()
-    run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
-    listing = subprocess.run([nm, "-m", "-u", str(built)], check=True, capture_output=True, text=True).stdout
-    lookups = {line.split()[2] for line in listing.splitlines() if "(dynamically looked up)" in line}
-    unknown = sorted(lookups - app)
+    imports = _names([nm, "-u", "-j", str(pack)])
+    system = sorted(imports - _names([nm, "-g", "--defined-only", "-j", str(executable)]))
+    cxx = [name for name in system if name.startswith("__Z")]
+    readable = subprocess.run([str(ios_sdk.llvm_tool(llvm, "llvm-cxxfilt"))], input="\n".join(cxx),
+                              capture_output=True, text=True, check=True).stdout.splitlines()
+    standard = re.compile(r"((typeinfo name|typeinfo|construction vtable|vtable|VTT|guard variable) for "
+                          r"|(non-)?virtual thunk to )?(std::|__cxxabiv1::|operator (new|delete))")
+    unknown = [text for text in readable if not standard.match(text)]
     if unknown:
-        raise BuildError("the game pack needs names neither the app nor the iPhone's system libraries "
-                         f"provide: {', '.join(unknown[:10])}")
-    print(f"Linked against the iPhone's libSystem ({len(libsystem)} names), libc++ ({len(libcxx)}) "
-          f"and the app ({len(lookups)}).", flush=True)
+        raise BuildError("the game pack needs names the published app does not export: " + ", ".join(unknown[:10]))
+    print(f"Game pack imports: {len(imports) - len(system)} from the app, {len(system)} from the "
+          "iPhone's libSystem and libc++.", flush=True)
 
 
 def build_ios_pack(
@@ -364,7 +391,9 @@ def build_ios_pack(
         record = workspace / "ios-pack.pack-symbols.json"
         if cached is None:
             if llvm:
-                sdk = ios_sdk.assemble(repo, workspace / "ios-sdk", sources)
+                mach_o_blobs(translation)
+                sdk = ios_sdk.assemble(repo, workspace / ios_sdk.FOLDER, sources)
+                ios_sdk.write_stubs(sdk, app_thread_locals(llvm, executable))
                 target = [f"-DCMAKE_TOOLCHAIN_FILE={ios_sdk.toolchain(sdk, llvm)}"]
             else:
                 target = ["-DCMAKE_SYSTEM_NAME=iOS", "-DCMAKE_SYSTEM_PROCESSOR=arm64",
@@ -380,7 +409,7 @@ def build_ios_pack(
              "-DMKW_GAME_PACK_DEFINITIONS=" + ";".join(pack_fingerprint.definitions(repo, "ios"))])
             run(["cmake", "--build", str(build), "--target", "kartpad_game", "--parallel", str(jobs)])
             if llvm:
-                link_with_system_stubs(llvm, sdk, build, executable, jobs)
+                check_pack_imports(llvm, build / "libkartpad_game.dylib", executable)
     built = build / "libkartpad_game.dylib"
     tool = (lambda name: str(ios_sdk.llvm_tool(llvm, name))) if llvm else _xcrun
     with progress.stage("check"):
