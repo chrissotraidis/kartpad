@@ -154,8 +154,18 @@ def _strip_libc_blocks(text: str) -> str:
     return re.sub(r"(?ms)^//Begin-Libc\n.*?^//End-Libc\n", "", text)
 
 
+# Apple's script copies a NamedTemporaryFile while it is still open, which
+# Windows refuses; there the file is kept until the script's with-block ends.
+_AVAILABILITY = ("import functools, runpy, sys, tempfile\n"
+                 "if sys.platform == 'win32':\n"
+                 "    keep = {'delete_on_close': False} if sys.version_info >= (3, 12) else {'delete': False}\n"
+                 "    tempfile.NamedTemporaryFile = functools.partial(tempfile.NamedTemporaryFile, **keep)\n"
+                 "sys.argv = sys.argv[1:]\n"
+                 "runpy.run_path(sys.argv[0], run_name='__main__')\n")
+
+
 def _run_availability(root: Path, *args: str) -> str:
-    result = subprocess.run([sys.executable, str(root / "availability"), *args],
+    result = subprocess.run([sys.executable, "-c", _AVAILABILITY, str(root / "availability"), *args],
                             capture_output=True, text=True)
     if result.returncode != 0:
         raise BuildError(f"Apple's availability script failed: {result.stderr.strip()}")
@@ -269,7 +279,8 @@ def assemble(repo: Path, sdk: Path, roots: dict[str, Path]) -> Path:
     for name in AVAILABILITY_HEADERS:
         _run_availability(availability, "--preprocess", str(availability / "templates" / name),
                           str(generated / name))
-        out.write(f"{include}/{name}", (generated / name).read_bytes(),
+        # Line endings as on every other host (the script writes text mode).
+        out.write(f"{include}/{name}", (generated / name).read_bytes().replace(b"\r\n", b"\n"),
                   f"availability:templates/{name} (preprocessed by Apple's availability script)", "APSL-2.0")
     shutil.rmtree(generated)
     out.write(f"{include}/sys/_symbol_aliasing.h", _symbol_aliasing(availability).encode(),
