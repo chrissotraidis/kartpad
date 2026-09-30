@@ -141,8 +141,8 @@ def host_ndk(repo: Path, work_root: Path) -> Path:
         return ndk
     llvm = os.environ.get("PADFORGE_LLVM_ROOT")
     if not llvm:
-        raise BuildError("Linux arm64 builds need PadForge's LLVM 21 (PADFORGE_LLVM_ROOT); "
-                         "build with PadForge 0.1.6 or newer")
+        raise BuildError("Linux arm64 builds need the LLVM 21 that PadForge installs there "
+                         "(PADFORGE_LLVM_ROOT); update PadForge to its latest release and run it again")
     return arm64_ndk(ndk, Path(llvm), work_root / "ndk-linux-arm64")
 
 
