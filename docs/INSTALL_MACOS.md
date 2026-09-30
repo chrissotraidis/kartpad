@@ -1,7 +1,7 @@
 # Install KartPad on Apple Silicon Mac
 
 > [!IMPORTANT]
-> **No Mac download for KartPad 0.7.2.** Earlier Mac apps are no longer
+> **No Mac download for KartPad 0.7.3.** Earlier Mac apps are no longer
 > published, and the release links on this page no longer work. Android and
 > iPhone/iPad are available through [Get KartPad](../README.md#get-kartpad).
 > The settings, save and troubleshooting guidance below still applies to
