@@ -235,7 +235,11 @@ def _file_license(data: bytes, default: str) -> str:
     if "Apple Public Source License" in head:
         return "APSL-2.0" if "Version 2.0" in head else "APSL-1.1"
     if "Redistribution and use in source and binary forms" in head:
-        return "BSD-style (see file header)"
+        if "advertising materials" in head:
+            return "BSD-4-Clause-UC"  # UC Berkeley rescinded the advertising clause in 1999
+        if "Neither the name" in head or "may be used to endorse" in head:
+            return "BSD-3-Clause"
+        return "BSD-2-Clause"
     return default
 
 
