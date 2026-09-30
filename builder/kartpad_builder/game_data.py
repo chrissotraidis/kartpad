@@ -25,7 +25,7 @@ def extraction_root(work_root: Path, profile_id: str, image_sha256: str) -> Path
 
 
 def _link_or_copy(source: str, target: str) -> None:
-    # Inside the build workspace a hard link costs no space; PadForge copies the
+    # Inside the build workspace a hard link costs no space; PadMint copies the
     # folder for the player, so their copy never shares files with this cache.
     try:
         os.link(source, target)

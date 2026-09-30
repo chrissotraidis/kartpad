@@ -23,7 +23,7 @@ PIPELINE_VERSION = 1
 
 
 class ProgressLog:
-    """Newline-delimited JSON stage events that frontends such as PadForge read.
+    """Newline-delimited JSON stage events that frontends such as PadMint read.
 
     Written to `<work-root>/logs/progress.jsonl`. Events describe stages only;
     compiler output stays in the ordinary build log.

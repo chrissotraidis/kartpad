@@ -245,12 +245,12 @@ open class KartPadLaunchActivity : Activity() {
                 (if (update) "This update changed how KartPad loads the game, so your current game pack no longer fits. "
                 else "KartPad does not include the game. ") +
                     "On a Windows, Mac or Linux computer, " +
-                    "use PadForge to build a game pack from your own Mario Kart Wii disc, " +
+                    "use PadMint to build a game pack from your own Mario Kart Wii disc, " +
                     "copy the file to this device, then choose it here. " +
                     "KartPad asks again only when an update needs a new game pack.",
             )
-            .setNegativeButton("Get PadForge") { _, _ ->
-                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(KartPadGamePack.PADFORGE_URL)))
+            .setNegativeButton("Get PadMint") { _, _ ->
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(KartPadGamePack.PADMINT_URL)))
             }
             .setNeutralButton("Cancel") { _, _ -> pendingProfile = null }
             .setPositiveButton("Choose file") { _, _ ->
@@ -482,7 +482,7 @@ open class KartPadLaunchActivity : Activity() {
                     AlertDialog.Builder(this@KartPadLaunchActivity)
                         .setTitle("Replace Game Pack")
                         .setMessage(
-                            "Choose a game pack PadForge made for this version of KartPad. " +
+                            "Choose a game pack PadMint made for this version of KartPad. " +
                                 "It replaces the current one; your saves and game data stay as they are.",
                         )
                         .setNegativeButton("Cancel", null)

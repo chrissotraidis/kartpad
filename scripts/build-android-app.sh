@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the publishable KartPad Android app: the runtime and app without any
-# game code. Players add their own game pack, built by PadForge from their disc
+# game code. Players add their own game pack, built by PadMint from their disc
 # (vendor/runtimes/android/runtime/game_pack). Nothing here reads a disc or a
 # translation.
 #
@@ -41,7 +41,7 @@ cp "$repo_root/runtime/include/kartpad/android/trace_scope.h" \
   "$runtime_source/aurora-main/lib/kartpad_android_trace_scope.h"
 python3 "$repo_root/scripts/stage-maintained-runtime.py" --verify android "$runtime_source"
 # The game pack interface this app accepts (pack ABI 3): computed by the same
-# function, from the same staged runtime, as every PadForge-built pack.
+# function, from the same staged runtime, as every PadMint-built pack.
 pack_fingerprint="$(PYTHONPATH="$repo_root/builder" python3 -m kartpad_builder.pack_fingerprint android "$runtime_source")"
 echo "Pack interface fingerprint: $pack_fingerprint"
 if [[ -e "$stage/generated" ]]; then

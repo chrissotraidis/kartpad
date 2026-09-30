@@ -1644,19 +1644,19 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   [self.root presentViewController:options animated:YES completion:nil];
 }
 
-// The published app contains no game code. PadForge builds the player's own
+// The published app contains no game code. PadMint builds the player's own
 // KartPad from their disc on a computer, with the game pack inside the app.
 - (void)showGamePackRequired {
   UIAlertController *alert =
-      [UIAlertController alertControllerWithTitle:@"Add Your Game with PadForge"
-          message:@"This copy of KartPad contains no game code. On a Mac, PadForge builds your own KartPad from your Mario Kart Wii disc. Install that copy over this one; your saves stay."
+      [UIAlertController alertControllerWithTitle:@"Add Your Game with PadMint"
+          message:@"This copy of KartPad contains no game code. On a Mac, PadMint builds your own KartPad from your Mario Kart Wii disc. Install that copy over this one; your saves stay."
           preferredStyle:UIAlertControllerStyleAlert];
-  [alert addAction:[UIAlertAction actionWithTitle:@"Get PadForge"
+  [alert addAction:[UIAlertAction actionWithTitle:@"Get PadMint"
                                             style:UIAlertActionStyleDefault
                                           handler:^(UIAlertAction *action) {
     (void)action;
     [UIApplication.sharedApplication
-        openURL:[NSURL URLWithString:@"https://github.com/chrissotraidis/padforge"]
+        openURL:[NSURL URLWithString:@"https://github.com/chrissotraidis/padmint"]
         options:@{}
         completionHandler:nil];
   }]];
@@ -1715,7 +1715,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 
 - (BOOL)run {
 #if defined(MKW_GAME_PACK_APP) && MKW_GAME_PACK_APP
-  // PadForge places the player's game pack in the app's Frameworks folder.
+  // PadMint places the player's game pack in the app's Frameworks folder.
   NSString *gamePack = [NSBundle.mainBundle.privateFrameworksPath
       stringByAppendingPathComponent:@"libkartpad_game.dylib"];
   self.gamePackReady = [NSFileManager.defaultManager fileExistsAtPath:gamePack];

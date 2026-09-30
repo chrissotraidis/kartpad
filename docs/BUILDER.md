@@ -54,7 +54,7 @@ While it runs, the Builder appends stage events (`preflight`, `extract`,
 `translate`, `dependencies`, `generate`, `compile`, `package`) as JSON lines
 to `logs/progress.jsonl` under the work root. Frontends can show the current
 stage and elapsed time from that file; compiler output stays in the normal log.
-The repository's `padforge.json` describes the Builder's inputs, targets and
+The repository's `padmint.json` describes the Builder's inputs, targets and
 status for tools that drive it.
 
 ## Compatibility profiles

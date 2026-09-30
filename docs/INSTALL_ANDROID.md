@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **KartPad 0.7.0 is the current Android release.** The APK contains no game
 > code: you make a game pack on your own Windows, Mac or Linux computer with
-> PadForge and add it in the app. Follow [Get KartPad](../README.md#get-kartpad)
+> PadMint and add it in the app. Follow [Get KartPad](../README.md#get-kartpad)
 > for the steps. Older version notes below are kept for reference; the
 > settings, save and troubleshooting guidance still applies.
 
@@ -18,7 +18,7 @@ versions in place with the same signing key, keeping saves. See the
 ### Earlier: 0.6.1
 
 **0.6.1 / build 241** adds **Help → Replace Game Pack** for swapping the pack
-you added, and PadForge now also saves a `KartPad game data` folder you can
+you added, and PadMint now also saves a `KartPad game data` folder you can
 import with no key. It updates 0.5.x and 0.6.0 in place with the same signing
 key, keeping saves. Already playing 0.6.0? You can stay on it; updating means
 making a new game pack for 0.6.1. See the
@@ -27,7 +27,7 @@ making a new game pack for 0.6.1. See the
 ### Earlier: 0.6.0
 
 **0.6.0 / build 240** makes the APK game-code-free. KartPad asks for your
-PadForge game pack the first time you play and keeps one pack per KartPad
+PadMint game pack the first time you play and keeps one pack per KartPad
 version. Importing a disc image now uses your own `common-key.bin`; an
 extracted game data folder needs no key. It updates 0.5.x in place with the same
 signing key, keeping saves. See the
@@ -47,7 +47,7 @@ The latest update also aligns the mobile settings order and labels, adds **Game 
 
 ## Download and first launch
 
-1. Make your game pack with PadForge as described in
+1. Make your game pack with PadMint as described in
    [Get KartPad](../README.md#get-kartpad). From the
    [latest release](https://github.com/chrissotraidis/kartpad/releases/latest),
    download `KartPad-v0.7.0-android.apk` and `SHA256SUMS`.
@@ -62,7 +62,7 @@ The latest update also aligns the mobile settings order and labels, adds **Game 
    installation. Revoke that install permission afterward if you enabled it.
 4. Open KartPad and tap the Mario Kart Wii card. Choose **Choose file** and pick
    your `KartPad-v0.7.0-android-personal.so` game pack. Then import your own
-   PAL **RMCP01 revision 0** game data: the `KartPad game data` folder PadForge
+   PAL **RMCP01 revision 0** game data: the `KartPad game data` folder PadMint
    saved (no key needed), or an ISO/WBFS/RVZ image plus your own
    `common-key.bin`. The exact
    profile's identity checks must pass. Keep the original image backed up;

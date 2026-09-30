@@ -18,7 +18,7 @@ class SharedDownloadTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        patch = mock.patch.dict(os.environ, {"PADFORGE_CACHE": str(self.root / "cache")})
+        patch = mock.patch.dict(os.environ, {"PADMINT_CACHE": str(self.root / "cache")})
         patch.start()
         self.addCleanup(patch.stop)
 
@@ -40,10 +40,14 @@ class SharedDownloadTests(unittest.TestCase):
         self.assertFalse(retro_rewind._reuse_shared(target, len(b"tampered"), SHA))
         self.assertFalse(target.exists())
 
-    def test_without_padforge_nothing_is_shared(self):
+    def test_without_padmint_nothing_is_shared(self):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertIsNone(retro_rewind._shared_path("pack.zip"))
             self.assertFalse(retro_rewind._reuse_shared(self.root / "x.zip", len(DATA), SHA))
+
+    def test_padmint_before_the_rename_still_shares_its_cache(self):
+        with mock.patch.dict(os.environ, {"PADFORGE_CACHE": str(self.root / "old")}, clear=True):
+            self.assertEqual(retro_rewind._shared_path("pack.zip").parents[2], self.root / "old")
 
 
 if __name__ == "__main__":
