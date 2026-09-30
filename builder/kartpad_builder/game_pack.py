@@ -14,6 +14,8 @@ from __future__ import annotations
 import os
 import platform
 import re
+import shutil
+import subprocess
 import sys
 import zipfile
 from dataclasses import dataclass
@@ -67,6 +69,83 @@ def _ndk_tool(ndk: Path, name: str) -> Path:
     return tool
 
 
+LLVM_TOOLS = ("ld.lld", "lld", "llvm-ar", "llvm-ranlib", "llvm-nm", "llvm-strip", "llvm-objcopy",
+              "llvm-readelf", "llvm-readobj", "llvm-cxxfilt")
+
+
+def linux_arm64() -> bool:
+    return platform.system() == "Linux" and platform.machine().lower() in ("aarch64", "arm64")
+
+
+def arm64_ndk(ndk: Path, llvm: Path, shim: Path) -> Path:
+    """An NDK layout for Linux arm64, where Google publishes no NDK.
+
+    PadForge installs the Linux NDK's host-independent parts (CMake scripts,
+    sysroot, Android runtime libraries) and LLVM's own arm64 build of the same
+    clang major version. The NDK's CMake expects its x86_64 prebuilt folder on
+    any Linux, so that folder is assembled here from links and two small
+    compiler wrappers with the NDK clang's defaults.
+    """
+    clang_root = ndk / "toolchains/llvm/prebuilt/linux-x86_64/lib/clang"
+    versions = sorted(path.name for path in clang_root.iterdir()) if clang_root.is_dir() else []
+    if len(versions) != 1 or not (llvm / "lib/clang" / versions[0] / "include").is_dir():
+        raise BuildError(f"LLVM at {llvm} does not match the NDK's clang {versions or '?'}; "
+                         "run PadForge again to install the matching tools")
+    major = versions[0]
+    check_linker(llvm)
+    prebuilt = shim / "toolchains/llvm/prebuilt/linux-x86_64"
+    if shim.exists():
+        shutil.rmtree(shim)
+    (prebuilt / "bin").mkdir(parents=True)
+    (prebuilt / f"lib/clang/{major}/lib").mkdir(parents=True)
+    for name in ("build", "meta", "source.properties"):
+        (shim / name).symlink_to(ndk / name)
+    (prebuilt / "sysroot").symlink_to(ndk / "toolchains/llvm/prebuilt/linux-x86_64/sysroot")
+    resources = prebuilt / f"lib/clang/{major}"
+    # Built-in headers must come from the compiler; runtime libraries from the NDK.
+    (resources / "include").symlink_to(llvm / f"lib/clang/{major}/include")
+    (resources / "lib/linux").symlink_to(clang_root / major / "lib/linux")
+    for name in ("clang", "clang++"):
+        wrapper = prebuilt / "bin" / name
+        wrapper.write_text(f'#!/bin/sh\nexec "{llvm / "bin" / name}" -resource-dir "{resources}" '
+                           '-rtlib=compiler-rt -unwindlib=libunwind -fuse-ld=lld "$@"\n')
+        wrapper.chmod(0o755)
+    for name in LLVM_TOOLS:
+        (prebuilt / "bin" / name).symlink_to(llvm / "bin" / name)
+    (prebuilt / "bin/ld").symlink_to(llvm / "bin/ld.lld")
+    return shim
+
+
+def check_linker(llvm: Path) -> None:
+    """LLVM's arm64 linker loads libxml2, which minimal systems (a fresh Ubuntu,
+    Termux's Ubuntu) do not have; say so before CMake fails obscurely."""
+    try:
+        result = subprocess.run([str(llvm / "bin/ld.lld"), "--version"], capture_output=True, text=True)
+    except OSError as error:
+        raise BuildError(f"LLVM's linker cannot start: {error}") from error
+    if result.returncode == 0:
+        return
+    detail = (result.stderr or result.stdout).strip().splitlines()
+    detail = detail[-1] if detail else f"exit code {result.returncode}"
+    if "libxml2" in detail:
+        raise BuildError("LLVM's linker needs the libxml2 library. Install it (Debian, Ubuntu, "
+                         "Raspberry Pi OS: sudo apt install libxml2) and run PadForge again. "
+                         f"({detail})")
+    raise BuildError(f"LLVM's linker cannot start: {detail}")
+
+
+def host_ndk(repo: Path, work_root: Path) -> Path:
+    """The NDK for this computer (assembled on Linux arm64, see arm64_ndk)."""
+    ndk = find_ndk(repo)
+    if not linux_arm64():
+        return ndk
+    llvm = os.environ.get("PADFORGE_LLVM_ROOT")
+    if not llvm:
+        raise BuildError("Linux arm64 builds need the LLVM 21 that PadForge installs there "
+                         "(PADFORGE_LLVM_ROOT); update PadForge to its latest release and run it again")
+    return arm64_ndk(ndk, Path(llvm), work_root / "ndk-linux-arm64")
+
+
 def app_runtime(app: Path, destination: Path) -> Path:
     """The published app's runtime library, from the APK or given directly."""
     if app.suffix == ".so":
@@ -111,7 +190,7 @@ def build_android_pack(
     work_root: Path,
     jobs: int = 2,
 ) -> PackResult:
-    ndk = find_ndk(repo)
+    ndk = host_ndk(repo, work_root)
     workspace, translation, progress = _translated(
         repo, profile, image, image_sha256, work_root, jobs, ANDROID_PACK_GITLINKS)
     with progress.stage("compile"):
