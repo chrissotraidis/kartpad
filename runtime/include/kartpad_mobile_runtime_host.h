@@ -52,3 +52,4 @@ bool KartPadMobileReadClassicInputForPlayer(
     unsigned int player, KartPadMobileClassicInputSnapshot *snapshot);
 
 }
+// Test only: a one-line header change must change the pack fingerprint.
