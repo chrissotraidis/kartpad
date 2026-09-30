@@ -50,6 +50,9 @@ neither KartPad nor PadMint includes game files or console keys.
   ISO, WBFS or RVZ. Other regions are not supported.
 - For **Android**: a Windows, Mac or Linux computer, and an ARM64 phone or
   tablet with Vulkan and Android 9 or newer.
+  No computer? Experimental: the phone can make its own game pack with
+  PadMint in Termux, if it has about 8 GB of memory and 25 GB free; see
+  [On an Android phone](https://github.com/chrissotraidis/padmint#on-an-android-phone).
 - For **iPhone and iPad**: an Apple Silicon Mac with
   [Xcode](https://apps.apple.com/app/xcode/id497799835) installed, iOS or iPadOS
   16 or newer, and a sideloading tool (AltStore, SideStore or Sideloadly).
