@@ -13,6 +13,10 @@ internal object KartPadCharacterGraphicsTest {
         CHARACTER_FIX("repack", "Experimental: fix broken characters (Snapdragon)", null, repack = "1"),
         FULL_FIX("repack_all", "Experimental: fix characters and track textures (Snapdragon, may be slower)", null, repack = "2"),
         INVISIBLE_FIX("repack_const", "Experimental: fix invisible characters (Snapdragon 8 Gen 3 / S24)", "2", repack = "1"),
+        // #104 (Adreno 750): constant matrices draw the bodies but lose their textures; these two
+        // separate the matrix change from the repack to find which one the textures depend on.
+        INVISIBLE_FIX_ALL("repack_const_all", "Test: invisible characters, repack everything (S24, slower)", "2", repack = "2"),
+        CONSTANT_ONLY("const_only", "Test: invisible characters, no repack (S24)", "2", repack = "0"),
         ORIGINAL("original", "Compare: original indexing", "0"),
         COMPATIBILITY("compatibility", "Compare: compatibility indexing", "1"),
     }
