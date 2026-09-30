@@ -70,6 +70,13 @@ The latest update also aligns the mobile settings order and labels, adds **Game 
 
 ## Download and first launch
 
+**Only have an Android phone?** Follow PadMint's
+[phone-only setup](https://github.com/chrissotraidis/padmint#android-phone-only-experimental).
+It needs about 25 GB free and 8 GB of memory; the 6 GiB below is for installing
+and playing with a pack built on a computer. In Termux, the file-selection number
+means the number beside a filename in PadMint's list, such as `1`. It does not
+mean the Mario Kart Wii disc ID `RMCP01`. Wait for the list before entering it.
+
 1. Make your game pack with PadMint as described in
    [Get KartPad](../README.md#get-kartpad). From the
    [latest release](https://github.com/chrissotraidis/kartpad/releases/latest),

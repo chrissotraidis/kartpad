@@ -57,7 +57,9 @@ revision 0, as ISO, WBFS or RVZ (other regions are not supported), and:
 - **Android:** an ARM64 phone or tablet with Vulkan and Android 9 or newer.
 - **iPhone and iPad:** iOS or iPadOS 16 or newer, and Sideloadly, AltStore or
   SideStore. Building on a Mac also needs [Xcode](https://apps.apple.com/app/xcode/id497799835).
-- About 16 GB free on the computer, and 6 GB on the phone or tablet.
+- About 16 GB free on the computer, and 6 GB on the phone or tablet. Building
+  on the Android phone itself needs about **25 GB free**, 8 GB of memory and
+  an hour or more; follow the separate phone-only instructions above.
 
 **Versions:** always use the [latest PadMint](https://github.com/chrissotraidis/padmint/releases/latest)
 and the [latest KartPad](https://github.com/chrissotraidis/kartpad/releases/latest).
@@ -74,8 +76,9 @@ PadMint always builds for the latest KartPad.
      `PadMint.command`. The first time, choose **Done**, then **System
      Settings → Privacy & Security → Open Anyway**.
    - **Linux:** run `sh padmint.sh` in the folder (needs Python 3.9+ and Git).
-2. Drag your disc image into the window and press Enter. On a Mac with Apple
-   Silicon, then choose **Android** or **iPhone/iPad**.
+2. Drag your disc image into the window and press Enter. If PadMint asks which
+   device to build for, choose **Android phone or tablet** or **iPhone or iPad**.
+   Choose where you will play, regardless of which computer you use.
 3. Keep the window open. The first build takes about 15 minutes to an hour
    (about 4 GB of tools); later builds take a few minutes.
 
