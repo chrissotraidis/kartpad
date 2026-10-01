@@ -177,4 +177,8 @@ signature. Direct encrypted-RVZ picker acceptance remains separate from this
 successful RVZ-exported folder import. Continue hosted-archive verification; do not call #304
 closed or publish a KartPad release from native fixtures alone. The provisional
 lock URL is not yet hosted. Source work is on local branch
-`codex/powervr-device-limits`, stacked on the first focused-maintenance PR.
+`codex/powervr-device-limits`, stacked on the first focused-maintenance PR and
+published as [draft PR #373](https://github.com/chrissotraidis/kartpad/pull/373).
+The first source commit is `50f83c58`; hosted archive publication/readback is the
+next integration gate. Preserve the isolated checkout, uncommitted translator
+candidate and owned test AVD until their remaining acceptance is reconciled.
