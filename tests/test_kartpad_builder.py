@@ -7,10 +7,12 @@ import plistlib
 import stat
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from unittest.mock import patch
 import zipfile
 from pathlib import Path
 
+from kartpad_builder import cli
 from kartpad_builder.packaging import PackageError, audit_app, package_unsigned_ipa
 from kartpad_builder.android_release_contract import render_android_release_contract
 from kartpad_builder.pipeline import build, cache_key, dependency_cache_key
@@ -27,6 +29,33 @@ from kartpad_builder.retro_rewind import (
 
 REPO = Path(__file__).resolve().parents[1]
 PROFILES = REPO / "builder/profiles"
+
+
+class InspectTests(unittest.TestCase):
+    def test_unextracted_rvz_does_not_claim_verified_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            image = Path(temp) / "unverified.rvz"
+            image.write_bytes(b"not a real disc image")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                result = cli.main(["inspect", str(image)])
+            self.assertEqual(result, 0)
+            report = json.loads(output.getvalue())
+            self.assertEqual(report["acceptance"], "requires extraction verification")
+            self.assertEqual(report["imageSHA256"], hashlib.sha256(image.read_bytes()).hexdigest())
+            self.assertEqual(list(Path(temp).iterdir()), [image])
+
+    def test_inspect_recognizes_a_pinned_image_hash(self) -> None:
+        profile = load_profiles(PROFILES)[0]
+        pinned_hash = profile.data["containers"]["acceptedImages"][0]["sha256"]
+        with tempfile.TemporaryDirectory() as temp:
+            image = Path(temp) / "pinned.wbfs"
+            image.write_bytes(b"hash supplied by fixture")
+            output = io.StringIO()
+            with patch.object(cli, "sha256_file", return_value=pinned_hash), redirect_stdout(output):
+                result = cli.main(["inspect", str(image)])
+            self.assertEqual(result, 0)
+            self.assertEqual(json.loads(output.getvalue())["acceptance"], "pinned image")
 
 
 class ProfileTests(unittest.TestCase):

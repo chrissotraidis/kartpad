@@ -3959,7 +3959,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   NSError *error=nil;
   NSArray *licenses=KartPadLicenseRecords(&error);
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Original Time Trial Ghosts"
-      message:@"Import comparison ghosts or export saved .rkg files. Retro Rewind custom-track ghosts use a different format association and are not supported here."
+      message:@"Import comparison ghosts or export saved .rkg files. Retro Rewind ghosts are not supported here, including Wii courses played in Retro."
       preferredStyle:UIAlertControllerStyleActionSheet];
   __weak KartPadRuntimeOverlayHost *weakSelf=self;
   NSUInteger count=0;
@@ -4018,7 +4018,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   __weak KartPadRuntimeOverlayHost *weakSelf=self;
   [sheet addAction:[UIAlertAction actionWithTitle:@"Export a Ghost…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
     NSError *error=nil;NSArray *records=KartPadOriginalGhosts(license,&error);
-    if(records.count==0){[weakSelf showIntegrationAlert:error != nil ? @"Ghost Export Unavailable" : @"No Saved Ghosts" message:error.localizedDescription ?: @"This Original license has no saved personal-best or downloaded ghosts. Choose the license used for your time trial. Retro Rewind custom-track ghosts are not listed here."];return;}
+    if(records.count==0){[weakSelf showIntegrationAlert:error != nil ? @"Ghost Export Unavailable" : @"No Saved Ghosts" message:error.localizedDescription ?: @"This Original license has no saved personal-best or downloaded ghosts. Choose the license used for your time trial. Retro Rewind ghosts are not supported here, including Wii courses played in Retro."];return;}
     UIAlertController *choose=[UIAlertController alertControllerWithTitle:@"Choose Ghost" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
     for(NSDictionary *record in records)[choose addAction:[UIAlertAction actionWithTitle:record[@"name"] style:UIAlertActionStyleDefault handler:^(UIAlertAction *selected){
       NSURL *directory=[NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString] isDirectory:YES];

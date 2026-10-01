@@ -2,9 +2,13 @@
 
 Current priorities, available builds and pending tests live only in the
 [maintenance board](MAINTENANCE-BOARD.md). Device/build facts below retain the
-scope of the reports that supplied them. New [#184](https://github.com/chrissotraidis/kartpad/issues/184)
-asks for Android shoulder-to-D-pad mapping; see the
-[feature scope](FUTURE-FEATURES.md#android-d-pad-and-shoulder-remapping).
+scope of the reports that supplied them. The
+[1 October review](FOCUSED-REVIEW-2026-10-01.md) accounts for the 67 issues open at review
+and distinguishes completed scopes, remaining failures and new features.
+Android shoulder/D-pad/trigger remapping and the L1 item preset are implemented;
+[#297](https://github.com/chrissotraidis/kartpad/issues/297) retains its exact
+controller acceptance question. The community-report sections below are dated
+historical evidence, not the current release's support matrix.
 
 ## Community reports reviewed 9 September 2026 (Japan time)
 

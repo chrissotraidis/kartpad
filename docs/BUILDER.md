@@ -1,61 +1,108 @@
-# KartPad Personal IPA Builder
+# KartPad Personal Builder
 
-KartPad uses static recompilation. The Builder translates a supported game
-executable on your own Mac, from your own disc image, before you sign the app.
-Prebuilt KartPad downloads have been retired, so the Builder is currently the
-way to get KartPad on iPhone and iPad. Mac and Android Builder targets are in
-progress; this page describes only commands that exist today.
+KartPad's public Android APK and iPhone/iPad IPA contain no game code.
+[PadMint](https://github.com/chrissotraidis/padmint) builds the game part from
+your own disc and supplies the build tools. For normal setup, follow
+[Get KartPad](../README.md#get-kartpad). This page describes the repository
+builder that PadMint runs and the separate development workflows.
 
-## Current preview
+## Current targets and inputs
 
-The Builder accepts your own PAL `RMCP01` revision 0 disc image as ISO, WBFS,
-RVZ, WIA, GCZ or CISO. The pinned development WBFS is recognized by its hash;
-any other dump is accepted provisionally and must extract to the profile's disc
-identity and exact `main.dol` and `StaticR.rel` hashes, or the build stops
-before translation. (Checked 29 Sep 2026 with ISO and RVZ converted from the
-pinned image; a different game's disc is refused.) It produces an unsigned,
-personalized IPA for local signing. The Builder and compatibility metadata are
-public; disc data, extracted files, translated code, signing material, and the
-resulting IPA remain ignored and private.
+| Target | Build computer | Private output |
+| --- | --- | --- |
+| Android game pack | Windows, macOS or Linux | `.so` game pack for the published APK, plus extracted game data |
+| iPhone/iPad personal app | Apple Silicon Mac with Xcode | Published empty IPA with your `.dylib` game pack added, plus extracted game data |
+| iPhone/iPad personal app (experimental) | Windows or Linux | Same personal IPA, using PadMint's LLVM and open-source headers; see the evidence below |
+| Mac development app | Apple Silicon Mac | Local app through the [Mac self-build workflow](INSTALL_MACOS.md#build-it-yourself); no current public Mac app |
 
-Requirements are an Apple Silicon Mac, Xcode, CMake, Ninja, Git, ripgrep,
-Python 3, .NET 8, and `nodtool` 2.0.0-alpha.9. Fetch the profile's exact pinned
-source checkouts and hash-verified physical-iOS Dawn archive once:
+Android phone-only builds through PadMint and Termux remain experimental.
+See PadMint's [phone guide](https://github.com/chrissotraidis/padmint#android-phone-only-experimental)
+for its memory, storage and setup requirements.
+
+The pack builder accepts your own PAL `RMCP01` revision 0 disc image as ISO,
+WBFS, RVZ, WIA, GCZ or CISO. The pinned development WBFS is recognized by its
+hash; another container is accepted provisionally and must extract to the
+profile's disc identity and exact `main.dol` and `StaticR.rel` hashes before
+translation. ISO and RVZ converted from the pinned image were checked on
+29 Sep 2026; a different game's disc was refused. Listing a supported extension
+or running `inspect` does not verify the extracted executables.
+
+PadMint also saves a game data folder with `files/` and `sys/`. Importing that
+folder on the device needs no common key. Android can alternatively import an
+ISO/WBFS/RVZ with your own common key after you add the game pack. The iPhone
+alternative disc importer accepts ISO/WBFS; use the exported folder for an RVZ.
+See the [Android](INSTALL_ANDROID.md) and [iPhone/iPad](INSTALL_IPA.md) guides.
+
+## Build a pack against the published app
+
+Use the latest PadMint for tool installation and normal player builds. For a
+manual build, install Python 3, Git, CMake, Ninja, .NET 8 and `nodtool`
+2.0.0-alpha.9. Android also needs the pinned Android NDK; iPhone builds on a Mac
+need Xcode. Windows/Linux iPhone builds need the LLVM and header sources that
+PadMint supplies. Run these examples from the repository root in a shell with
+the tools available; the `build-user-ipa.sh` wrapper uses Bash and Python 3.
+
+Bootstrap and verify only the selected target's pinned dependencies:
+
+```sh
+./scripts/build-user-ipa.sh bootstrap --target android-pack
+./scripts/build-user-ipa.sh doctor --target android-pack
+```
+
+Build the Android pack against the published APK, and export its game data:
+
+```sh
+./scripts/build-user-ipa.sh build-pack android /path/to/Mario-Kart-Wii.rvz \
+  --app /path/to/KartPad-v0.7.3-android.apk \
+  --output artifacts/KartPad-android-personal.so \
+  --game-data artifacts/KartPad-game-data
+```
+
+For an iPhone/iPad personal IPA, use the `ios-pack` target and the published
+empty IPA instead:
+
+```sh
+./scripts/build-user-ipa.sh bootstrap --target ios-pack
+./scripts/build-user-ipa.sh doctor --target ios-pack
+./scripts/build-user-ipa.sh build-pack ios /path/to/Mario-Kart-Wii.rvz \
+  --app /path/to/KartPad-v0.7.3-ios-unsigned.ipa \
+  --output artifacts/KartPad-ios-personal.ipa \
+  --game-data artifacts/KartPad-ios-game-data
+```
+
+The output game data folder must not already exist. Choose a new output path
+for another export. Keep the pack, personal IPA and game data private. Sign the
+personal IPA with your existing sideloading identity and update in place to
+preserve saves.
+
+Bootstrap checks out exact pinned commits and initializes required submodules.
+It fails rather than modifying an unexpected or dirty existing checkout. The
+pack builder checks for duplicated app state and TLS wrappers against the
+published app.
+Compatible app updates can reuse a cached pack when its interface fingerprint
+matches; the app asks for a new pack when that interface changes.
+
+While it runs, the pack builder appends stage events (`preflight`, `extract`,
+`translate`, `compile`, `check`, `package`) to `logs/progress.jsonl` under the
+work root. Compiler output stays in the normal log. The repository's
+`padmint.json` declares the inputs and target commands PadMint runs.
+
+## Full iPhone development build on a Mac
+
+The older `build` command builds the complete app locally instead of adding a
+pack to a published empty app. It requires an Apple Silicon Mac, Xcode and the
+[Apple build prerequisites](BUILDING.md#prerequisites):
 
 ```sh
 ./scripts/build-user-ipa.sh bootstrap
 ./scripts/build-user-ipa.sh doctor
+./scripts/build-user-ipa.sh inspect /path/to/Mario-Kart-Wii.rvz
+./scripts/build-user-ipa.sh build /path/to/Mario-Kart-Wii.rvz
 ```
 
-The bootstrap fetches only dependencies declared by the selected profile,
-checks out exact commits, initializes their submodules, disables push URLs,
-and fails rather than modifying an unexpected or dirty existing checkout.
-
-Inspect an image without extracting it:
-
-```sh
-./scripts/build-user-ipa.sh inspect /path/to/Mario-Kart-Wii.wbfs
-```
-
-Build the private unsigned IPA:
-
-```sh
-./scripts/build-user-ipa.sh build /path/to/Mario-Kart-Wii.wbfs
-```
-
-The default output is ignored at
-`artifacts/KartPad-personal-unsigned.ipa`. It contains translated code from the
-user's game executable, whose redistribution rights KartPad does not clear.
-The Builder records that game-content status separately from the GPLv3 software
-license; it does not impose a blanket redistribution ban on GPL-covered code.
-Keep the personal IPA private: do not share or upload it.
-
-While it runs, the Builder appends stage events (`preflight`, `extract`,
-`translate`, `dependencies`, `generate`, `compile`, `package`) as JSON lines
-to `logs/progress.jsonl` under the work root. Frontends can show the current
-stage and elapsed time from that file; compiler output stays in the normal log.
-The repository's `padmint.json` describes the Builder's inputs, targets and
-status for tools that drive it.
+The default output is ignored at `artifacts/KartPad-personal-unsigned.ipa`.
+It contains translated game code and remains private. This development path
+is separate from PadMint's `build-pack` workflow and the published empty IPA.
 
 ## Compatibility profiles
 
@@ -86,9 +133,8 @@ To add compatibility:
 
 ## iPhone game packs on Windows and Linux (experimental)
 
-PadMint can make the iPhone/iPad game pack without a Mac. Apple's SDK may only
-be used on Apple computers, so off a Mac the pack is compiled with LLVM 21.1.8
-(clang and `ld64.lld`) against an SDK that `builder/kartpad_builder/ios_sdk.py`
+PadMint can make the iPhone/iPad game pack without a Mac or Apple's SDK.
+Off a Mac the pack is compiled with LLVM 21.1.8 (clang and `ld64.lld`) against an SDK that `builder/kartpad_builder/ios_sdk.py`
 assembles from open-source parts only. PadMint downloads each part pinned by
 digest (its `tools.lock.json`; `libcxx` brings the others with it, and only
 off a Mac):
@@ -131,41 +177,40 @@ x86_64 use the same code but have not been run end to end.
 
 ## Repeatable builds and cache safety
 
-Validated extraction is cached by profile and complete input-image hash, so
-ordinary code changes do not extract the same disc again. Build and translation
-workspaces use a stricter key containing the input-image hash, canonical
-profile hash, Builder pipeline version, tracked source index, and current source
-diff. A code or profile change therefore cannot silently reuse an older app
-workspace. Extraction and translation stages validate their manifests before
-reuse and stage new extraction atomically. IPA ZIP entries are sorted, have fixed
-timestamps, and preserve executable permissions, so the same audited app and
-provenance produce byte-identical packages.
+Validated extraction is cached by profile and input-image hash. Build and
+translation workspaces use a stricter key containing the image hash, canonical
+profile hash, Builder pipeline version, tracked source index and current source
+diff. Extraction reuse validates the disc header and executable hashes;
+translation reuse checks function counts, the shard graph and the REL guard.
+New extraction is staged before it becomes the cached input.
 
-The IPA embeds a content-safe `KartPadBuilderProvenance.json` containing hashes
-and profile identifiers, never local source paths. Packaging rejects disc
-images, saves, provisioning profiles, signatures, and explicitly supplied
-private path prefixes.
+PadMint keeps checked packs separately by platform, pack interface fingerprint
+and disc hash. A compatible cached pack skips translation and compilation while
+retaining the pinned Retro inputs and disc extraction checks. Before packaging,
+the existing app-state/TLS symbol check runs again against the selected app.
+Cache reuse does not establish new gameplay acceptance or a faster first build;
+measure the stages for the actual build under review.
+
+The full development IPA builder uses sorted ZIP entries, fixed timestamps and
+executable permissions. It embeds content-safe `KartPadBuilderProvenance.json`
+and rejects disc images, saves, provisioning profiles, signatures and supplied
+private path prefixes. The pack workflow adds the player's library to the
+published empty IPA; the result is a separate personal artifact.
 
 ## Release boundary
 
-The following is the maintainer's publication policy, not an additional
-restriction on GPL rights. You may modify and redistribute the GPL-covered
-Builder, runtime, and integration under the GPL, including commercially and
-without separate maintainer approval. See
-[`RIGHTS_AND_LICENSES.md`](../RIGHTS_AND_LICENSES.md).
+Public releases contain only the empty Android app (`scripts/build-android-app.sh`),
+the empty iPhone app (`scripts/build-ios-app.sh`), the PadMint recipe and checksums.
+Before release, the empty apps and all public artifacts must satisfy the audits
+and device/emulator race gates in [AGENTS.md](../AGENTS.md).
 
-The maintainer may publish the exact audited community-preview IPA produced by
-`scripts/package-public-unsigned-ipa.py`. That package has versioned
-provenance, license notices, deterministic ZIP metadata, no private game data,
-and no signing material. Its translated-game-code and uncleared game-content
-rights status must be stated plainly as documented in `RIGHTS_AND_LICENSES.md`.
+Never publish a game pack, personal build, translated code, disc data, extracted
+game tree, save, console key or signing material. Keep generated inputs and
+personal outputs ignored and private. A local development or player build is
+not the published empty app.
 
-Do not publish a generated translation directory, raw app bundle, personalized
-Builder IPA, extracted game tree, save, signing certificate, or provisioning
-profile. A local Builder output is not interchangeable with the exact public
-release candidate.
-
-The private development product passes a local Mac-to-iPad-Simulator online
-race/results flow. Public-service, physical-device online, and external-client
-acceptance remain separate from Builder compatibility and are not claimed for
-this preview.
+This is the maintainer's publication policy, not an additional restriction on
+GPL-covered software. You may modify and redistribute the GPL-covered Builder,
+runtime and integration under the GPL, including commercially. The Builder
+records game-content rights separately from its software license. See
+[rights and licenses](../RIGHTS_AND_LICENSES.md).
