@@ -27,6 +27,16 @@ on:
       - 'prototypes/stabilization/test_batch_reservation.cpp'
       - 'prototypes/stabilization/phone-preflight.py'
       - 'prototypes/stabilization/test_phone_preflight.py'
+      - 'runtime/include/kartpad/ghost/**'
+      - 'runtime/tests/*ghost*'
+      - 'runtime/tests/retro*'
+      - 'android/app/src/main/cpp/kartpad_retro_ghost_jni.cpp'
+      - 'android/app/src/main/java/dev/kartpad/android/KartPadActivity.kt'
+      - 'android/app/src/main/java/dev/kartpad/android/KartPadSaveStorage.kt'
+      - 'apple/shared/KartPadMiiManager.*'
+      - 'apple/ios/KartPadRuntimeOverlayHost.mm'
+      - 'scripts/test-retro-ghost-catalog.py'
+      - 'tests/test_*ghost*.py'
       - '.github/workflows/shared-runtime-contracts.yml'
   push:
     branches: [main]
@@ -56,6 +66,16 @@ on:
       - 'prototypes/stabilization/test_batch_reservation.cpp'
       - 'prototypes/stabilization/phone-preflight.py'
       - 'prototypes/stabilization/test_phone_preflight.py'
+      - 'runtime/include/kartpad/ghost/**'
+      - 'runtime/tests/*ghost*'
+      - 'runtime/tests/retro*'
+      - 'android/app/src/main/cpp/kartpad_retro_ghost_jni.cpp'
+      - 'android/app/src/main/java/dev/kartpad/android/KartPadActivity.kt'
+      - 'android/app/src/main/java/dev/kartpad/android/KartPadSaveStorage.kt'
+      - 'apple/shared/KartPadMiiManager.*'
+      - 'apple/ios/KartPadRuntimeOverlayHost.mm'
+      - 'scripts/test-retro-ghost-catalog.py'
+      - 'tests/test_*ghost*.py'
       - '.github/workflows/shared-runtime-contracts.yml'
 permissions:
   contents: read
@@ -113,3 +133,31 @@ jobs:
           /tmp/kartpad-batch-reservation
       - name: Read-only phone handoff decisions
         run: python3 -B -m unittest discover -s prototypes/stabilization -p test_phone_preflight.py -v
+
+      - name: Original and Retro ghost storage contracts
+        run: |
+          python3 -B scripts/test-retro-ghost-catalog.py
+          for test in ghost_transfer retro_transfer; do
+            clang++ -std=c++20 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -I runtime/include "runtime/tests/${test}_tests.cpp" -o "/tmp/kartpad-${test}"
+            "/tmp/kartpad-${test}"
+          done
+  mobile-ghost-bridges:
+    runs-on: macos-14
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Production JNI encoding and Original error boundary
+        run: KARTPAD_TEST_JDK="$JAVA_HOME" python3 -B -m unittest discover -s tests -p 'test_*ghost*.py' -v
+      - name: Apple manager and existing identity contracts
+        run: |
+          for test in apple_player_identity apple_retro_ghost; do
+            clang++ -std=c++20 -Wall -Wextra -Werror -fobjc-arc -DKARTPAD_MII_MANAGER_TESTING=1 -I runtime/include -I apple/shared -framework Foundation "runtime/tests/${test}_tests.mm" apple/shared/KartPadMiiManager.mm -o "/tmp/kartpad-${test}"
+            "/tmp/kartpad-${test}"
+          done

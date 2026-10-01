@@ -14,5 +14,12 @@ int main(){
  std::vector<uint8_t>c(g.begin(),g.begin()+0x88);c[12]|=8;c.resize(0x8c+16);Write32(c,0x8c,0x59617a31);Write32(c,0x90,14);
  c.push_back(0xff);c.insert(c.end(),g.begin()+0x88,g.begin()+0x90);c.push_back(0xfc);c.insert(c.end(),g.begin()+0x90,g.begin()+0x96);Write32(c,0x88,uint32_t(c.size()-0x8c));auto end=c.size();c.resize(end+4);Write32(c,end,Crc(std::span<const uint8_t>(c).first(end)));Require(Validate(c).bytes==c.size(),"compressed ghost rejected");
  Require(Validate(Export(Import(s,c,0),0,0,true)).course==8,"compressed save roundtrip");
+ // Match the native header predicate: zero dates are accepted; year >99 or
+ // month >12 must not be advertised as replayable merely because CRC is valid.
+ for(uint32_t date:{0u,99u<<13|12u<<9,100u<<13,13u<<9}){
+  auto dated=g;Write32(dated,8,date);Write32(dated,GhostBytes-4,Crc(std::span<const uint8_t>(dated).first(GhostBytes-4)));
+  bool accepted=true;try{(void)Validate(dated);}catch(...){accepted=false;}
+  Require(accepted==(date==0u||date==(99u<<13|12u<<9)),"native ghost date bounds differ");
+ }
  std::cout<<"Ghost checksums, bounds, compressed roundtrip and unrelated save preservation passed\n";
 }

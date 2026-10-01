@@ -21,6 +21,7 @@ inline Info Validate(std::span<const uint8_t>b){
  const uint32_t race=Read32(b,4),who=Read32(b,8);
  Require(((race>>18)&127)<60&&((race>>8)&1023)<1000,"Invalid ghost time");
  Require((who>>26)<36&&((who>>20)&63)<48,"Unsupported ghost character or vehicle");
+ Require(((who>>13)&127)<=99&&((who>>9)&15)<=12,"Invalid ghost date");
  const unsigned course=(race>>2)&63;Require(course<32,"Only Original race courses are supported");
  const size_t length=(size_t(b[14])<<8)|b[15];Require(length>=8&&length<=0x2774,"Invalid input length");
  std::vector<uint8_t> input;

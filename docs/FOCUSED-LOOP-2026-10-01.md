@@ -32,7 +32,7 @@ through narrow, verified changes that improve setup, reliability and maintenance
 | Completed issue scopes | First reconciliation done | #347 and #235 closed; partial #196 remains open. Review began with 67 open issues, now 65. |
 | PowerVR / stability | Corrected and validated locally | Real device constructor regression reproduced/corrected; native boundary/production-shader checks and actual empty APK content/state checks pass. Owned-emulator race segment passes; hosted archive and fresh Dawn-cache consumer pass; hardware gate explicit. |
 | Upstream changes | Review complete; candidate preserved | All 18 later commits mapped. Narrow bltl candidate passes 658 tests, graph checks, Android native build and Original race segment; other native platforms/Retro remain gates. |
-| Controls / Retro ghosts | Queued | Existing feature contracts checked before extending input or storage. |
+| Controls / Retro ghosts | Implemented and tested locally | Shared catalog/transfer, both mobile menus and empty builds pass; compatible Android pack replacement preserves the save. Native Retro discovery/replay and iPhone gameplay remain gates. |
 | CPU / larger features | Queued | Same-device profiling and separate Wiimmfi/DSU feasibility and acceptance. |
 
 ## Run record
@@ -203,8 +203,10 @@ and a pending request bound to the config identity. Export valid RKG bytes
 unchanged. Stage one unique file for cold-launch application, preserving existing
 ghosts, leaderboard, favorites, trophies, ratings, identity and saves.
 
-The NAND filename limit is 12 characters; use a collision-checked `1234abcd.rkg`
-name, not a full SHA filename. Retained native selection supports 37 ghosts plus
+The NAND filename limit is 12 bytes, and its IPC path buffer is 64 bytes.
+The independent implementation review caught eight-digit names overflowing the
+full nonbase feather-mode path. Use a collision-checked six-digit `1234ab.rkg`
+name and require the full guest path to remain below 64 bytes. Retained native selection supports 37 ghosts plus
 an expert, while filesystem enumeration caps 100; reject crowded folders before
 adding an invisible entry and detect duplicates of the bundled expert explicitly.
 The configs are exact pinned 6.12.8 data, but retained Pulsar source `93ba8c8a`
@@ -215,8 +217,9 @@ The next pass should implement the standalone-file path separately from Original
 RKSYS transfer. Acceptance covers a Wii course in Retro, a custom course, a
 variant, four modes, compressed/uncompressed round-trip, collisions, restart
 retry, config change, full folders and pre-existing-file/save preservation.
-Original's accepted transfer stays a regression gate. This is a resolved design
-contract, not implemented or shipped Retro transfer.
+Original's accepted transfer stays a regression gate. This resolved contract now has a local implementation and tests, recorded in
+[the Retro transfer receipt](artifacts/2026-10-01/retro-ghost-transfer.md).
+It is not shipped; native list discovery/replay remains its acceptance gate.
 
 
 ## Upstream candidate: Android player acceptance
@@ -224,8 +227,9 @@ contract, not implemented or shipped Retro transfer.
 The narrow `bltl` backport source is preserved on owner-fork branch
 `codex/kartpad-bltl-lifting` at `1e55229d7f8d`; this is the same 33 source/test
 lines already covered by the 658 translator tests and real native build. The
-maintained root gitlink remains `9d563f98953c`. The local submodule now points at
-the preserved candidate; do not stage that pointer with unrelated changes.
+maintained root gitlink remains `9d563f98953c`. The identical 33-line candidate is applied over local submodule HEAD
+`9d563f98953c` to satisfy the normal builder source-pin guard; do not stage
+that working change with unrelated features.
 
 The built private pack imports through the system picker and plays a Luigi
 Circuit race segment in the corrected release-style empty app. Its app-side
