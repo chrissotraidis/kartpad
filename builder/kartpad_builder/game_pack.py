@@ -248,6 +248,8 @@ def build_android_pack(
         runtime = workspace / "android-runtime"
         if not runtime.is_dir():
             runtime_stage.stage(repo, "android", runtime)
+        else:
+            runtime_stage.stage_extras(repo, runtime)
         fingerprint = pack_fingerprint.fingerprint(repo, "android", runtime)
         app_version = load_version(repo)["version"]
         library = app_runtime(app, workspace / "app")
@@ -376,6 +378,8 @@ def build_ios_pack(
         runtime = workspace / "ios-runtime"
         if not runtime.is_dir():
             runtime_stage.stage(repo, "ios", runtime)
+        else:
+            runtime_stage.stage_extras(repo, runtime)
         fingerprint = pack_fingerprint.fingerprint(repo, "ios", runtime)
         executable = workspace / "app" / "KartPad"
         executable.parent.mkdir(parents=True, exist_ok=True)
