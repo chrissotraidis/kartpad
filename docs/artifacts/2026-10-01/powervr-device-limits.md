@@ -2,7 +2,7 @@
 
 Issue: [#304](https://github.com/chrissotraidis/kartpad/issues/304).
 Status: corrected dependency and empty Android app validated locally; actual
-PowerVR Vulkan execution and hosted-archive publication remain separate gates.
+PowerVR Vulkan execution remains a separate gate; the dependency is hosted and verified.
 
 ## Failure and correction
 
@@ -113,9 +113,14 @@ python3 prototypes/stabilization/test_dawn_powervr_device_limits.py \
 uses native internal APIs, so its compile flags come from that candidate's own
 `compile_commands.json` rather than assuming another archive's ABI configuration.
 
-The provisional lock names `dawn-android-20261001.2`. Do not promote an unavailable
-URL: verify the hosted asset anonymously and match its exact size/hash before
-merging the lock. The older proposed `20261001.1` archive lacks the device clamp
-and must not be substituted. No new public KartPad app is released by this pass.
+The lock names the hosted dependency candidate
+[`dawn-android-20261001.2`](https://github.com/chrissotraidis/wiicompiled/releases/tag/dawn-android-20261001.2).
+Anonymous downloads of the archive, manifest and checksum file return HTTP 200.
+The downloaded archive matches the exact locked size and SHA-256; all 77 payload
+hashes and the separately downloaded manifest match. The normal
+`prepare-android-dependencies.sh` consumer then downloads and validates the
+hosted archive with an empty Dawn cache. The previous locally seeded cache is
+retained separately. The older proposed `20261001.1` archive lacks the device
+clamp and must not be substituted. No new public KartPad app is released by this pass.
 Keep #304 open until the actual affected PowerVR driver reaches its launch/race
 boundary; do not request repeated reporter launches while integration can advance.

@@ -199,7 +199,7 @@
         304
       ],
       "state": "ready-local",
-      "next_action": "The 1 October review caught and corrected Dawn reifying the admitted 14-variable ImgTec Vulkan device to 16. Native device/pipeline and production-shader checks pass; the corrected archive and actual empty APK pass content/state audits. The release-style empty app imports RVZ-exported data and plays a race segment on an owned emulator. Complete hosted-archive verification before promoting the lock. Existing runtime already returns graphics startup failure with the first adapter error. Actual Moto G54 driver acceptance remains open; no repeated reporter requests.",
+      "next_action": "The 1 October review caught and corrected Dawn reifying the admitted 14-variable ImgTec Vulkan device to 16. Native device/pipeline and production-shader checks pass; the corrected archive and actual empty APK pass content/state audits. The release-style empty app imports RVZ-exported data and plays a race segment on an owned emulator. The hosted dependency candidate passes anonymous size/hash/manifest checks and the normal consumer with an empty Dawn cache. Existing runtime already returns graphics startup failure with the first adapter error. Actual Moto G54 driver acceptance remains open; no repeated reporter requests.",
       "acceptance": "A supported bounded path initializes and renders correctly on the reported PowerVR driver; unsupported limits return a clear recoverable launcher result without aborting. Adapter admission alone is not gameplay acceptance.",
       "checkpoint": "docs/artifacts/2026-10-01/powervr-device-limits.md",
       "priority_reason": "New classified repeatable startup blocker; distinct from optional debug-utils loading and the depth experiment."

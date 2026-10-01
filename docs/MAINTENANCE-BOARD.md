@@ -22,8 +22,9 @@ or diagnostic request is needed for this pass.
 - #304's previous PowerVR candidate was absent from 0.7.3 and raised a 14-variable
   device back to 16. The [corrected dependency and actual empty APK](artifacts/2026-10-01/powervr-device-limits.md)
   pass native limit/shader and content/state checks. The release-style empty app
-  plays a race segment on an owned emulator. Complete hosted-archive verification
-  before promoting the lock; handset acceptance remains open.
+  plays a race segment on an owned emulator. The hosted archive and normal
+  consumer with an empty Dawn cache pass exact hash checks; handset acceptance
+  remains open.
 - RVZ extraction is verified locally against the matching ISO: all 2,043 file
   hashes match; wrong region/revision are rejected. This is extraction/folder
   evidence, not new picker, race or all-platform player-build acceptance.

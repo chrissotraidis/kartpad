@@ -30,7 +30,7 @@ through narrow, verified changes that improve setup, reliability and maintenance
 | Build cache / timings | Verified locally | Compatible cache skips translation; disc validation and app-state/TLS check remain enforced. Cached Android/iOS output libraries unchanged. |
 | Documentation | Reviewed | Current builder/mobile/Mac routes, upstream ledger and superseded maintenance next actions reconciled. |
 | Completed issue scopes | First reconciliation done | #347 and #235 closed; partial #196 remains open. Review began with 67 open issues, now 65. |
-| PowerVR / stability | Corrected and validated locally | Real device constructor regression reproduced/corrected; native boundary/production-shader checks and actual empty APK content/state checks pass. Owned-emulator race segment passes; hosted-archive integration pending; hardware gate explicit. |
+| PowerVR / stability | Corrected and validated locally | Real device constructor regression reproduced/corrected; native boundary/production-shader checks and actual empty APK content/state checks pass. Owned-emulator race segment passes; hosted archive and fresh Dawn-cache consumer pass; hardware gate explicit. |
 | Upstream changes | Review complete; candidate local | All 18 later commits mapped. Narrow bltl candidate passes 658 translator tests and real graph checks; Android native build passed; other platforms/game acceptance pending. |
 | Controls / Retro ghosts | Queued | Existing feature contracts checked before extending input or storage. |
 | CPU / larger features | Queued | Same-device profiling and separate Wiimmfi/DSU feasibility and acceptance. |
@@ -174,11 +174,12 @@ correct delivery; distinct short presses after neutral restart work. No input
 code was changed. Full app data was backed up before comparing the published APK
 in place, and the published APK was verified unchanged apart from its local test
 signature. Direct encrypted-RVZ picker acceptance remains separate from this
-successful RVZ-exported folder import. Continue hosted-archive verification; do not call #304
-closed or publish a KartPad release from native fixtures alone. The provisional
-lock URL is not yet hosted. Source work is on local branch
+successful RVZ-exported folder import. The dependency candidate is now hosted; anonymous archive/manifest/checksum
+downloads and all 77 payload hashes match. A normal consumer with an empty Dawn
+cache downloads and validates the dependency. Continue actual-driver acceptance; do not call #304
+closed or publish a KartPad release from native fixtures alone. The lock URL is hosted and verified. Source work is on local branch
 `codex/powervr-device-limits`, stacked on the first focused-maintenance PR and
 published as [draft PR #373](https://github.com/chrissotraidis/kartpad/pull/373).
-The first source commit is `50f83c58`; hosted archive publication/readback is the
-next integration gate. Preserve the isolated checkout, uncommitted translator
+The first source commit is `50f83c58`; hosted archive publication/readback and the empty Dawn-cache consumer pass.
+Actual affected-driver acceptance remains separate. Preserve the isolated checkout, uncommitted translator
 candidate and owned test AVD until their remaining acceptance is reconciled.
