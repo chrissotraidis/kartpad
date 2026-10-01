@@ -212,12 +212,17 @@ def app_runtime(app: Path, destination: Path) -> Path:
     return library
 
 
-def _translated(repo, profile, image, image_sha256, work_root, jobs, gitlinks):
-    """Extract and translate the disc (cached); returns (workspace, translation, progress)."""
+def _workspace(repo, profile, image_sha256, work_root, gitlinks):
     fingerprint = source_fingerprint(repo, gitlinks)
     key = cache_key(profile, image_sha256, fingerprint)
-    profile_root = work_root / profile.id
-    workspace = profile_root / "builds" / key
+    return work_root / profile.id / "builds" / key
+
+
+def _translated(repo, profile, image, image_sha256, work_root, jobs, gitlinks,
+                *, workspace=None, translate_game=True):
+    """Validate disc data; translate only when a compatible pack is not cached."""
+    if workspace is None:
+        workspace = _workspace(repo, profile, image_sha256, work_root, gitlinks)
     # Short folder names keep extracted paths under Windows' 260-character limit.
     extraction = game_data.extraction_root(work_root, profile.id, image_sha256)
     translation = workspace / "translation"
@@ -226,8 +231,9 @@ def _translated(repo, profile, image, image_sha256, work_root, jobs, gitlinks):
         retro = prepare_inputs(profile, repo / "private/builder", install=False)
     with progress.stage("extract"):
         extract(profile, image, extraction)
-    with progress.stage("translate"):
-        translate(profile, repo, extraction, translation, jobs, retro)
+    if translate_game:
+        with progress.stage("translate"):
+            translate(profile, repo, extraction, translation, jobs, retro)
     return workspace, translation, progress
 
 
@@ -242,18 +248,20 @@ def build_android_pack(
     jobs: int = 2,
 ) -> PackResult:
     ndk = host_ndk(repo, work_root)
+    workspace = _workspace(repo, profile, image_sha256, work_root, ANDROID_PACK_GITLINKS)
+    runtime = workspace / "android-runtime"
+    if not runtime.is_dir():
+        runtime_stage.stage(repo, "android", runtime)
+    else:
+        runtime_stage.stage_extras(repo, runtime)
+    fingerprint = pack_fingerprint.fingerprint(repo, "android", runtime)
+    cached = reusable_pack("android", fingerprint, image_sha256)
     workspace, translation, progress = _translated(
-        repo, profile, image, image_sha256, work_root, jobs, ANDROID_PACK_GITLINKS)
+        repo, profile, image, image_sha256, work_root, jobs, ANDROID_PACK_GITLINKS,
+        workspace=workspace, translate_game=cached is None)
     with progress.stage("compile"):
-        runtime = workspace / "android-runtime"
-        if not runtime.is_dir():
-            runtime_stage.stage(repo, "android", runtime)
-        else:
-            runtime_stage.stage_extras(repo, runtime)
-        fingerprint = pack_fingerprint.fingerprint(repo, "android", runtime)
         app_version = load_version(repo)["version"]
         library = app_runtime(app, workspace / "app")
-        cached = reusable_pack("android", fingerprint, image_sha256)
         build = workspace / "android-pack-build"
         record = workspace / "android-pack.pack-symbols.json"
         if cached is None:
@@ -372,15 +380,18 @@ def build_ios_pack(
     """The published empty IPA with the player's game pack inside (unsigned)."""
     llvm = _ios_llvm()
     sources = ios_sdk.source_roots() if llvm else None
+    workspace = _workspace(repo, profile, image_sha256, work_root, IOS_PACK_GITLINKS)
+    runtime = workspace / "ios-runtime"
+    if not runtime.is_dir():
+        runtime_stage.stage(repo, "ios", runtime)
+    else:
+        runtime_stage.stage_extras(repo, runtime)
+    fingerprint = pack_fingerprint.fingerprint(repo, "ios", runtime)
+    cached = reusable_pack("ios", fingerprint, image_sha256)
     workspace, translation, progress = _translated(
-        repo, profile, image, image_sha256, work_root, jobs, IOS_PACK_GITLINKS)
+        repo, profile, image, image_sha256, work_root, jobs, IOS_PACK_GITLINKS,
+        workspace=workspace, translate_game=cached is None)
     with progress.stage("compile"):
-        runtime = workspace / "ios-runtime"
-        if not runtime.is_dir():
-            runtime_stage.stage(repo, "ios", runtime)
-        else:
-            runtime_stage.stage_extras(repo, runtime)
-        fingerprint = pack_fingerprint.fingerprint(repo, "ios", runtime)
         executable = workspace / "app" / "KartPad"
         executable.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(app) as archive:
@@ -390,7 +401,6 @@ def build_ios_pack(
                 raise BuildError(f"not a KartPad IPA: {app}") from error
             if "Payload/KartPad.app/Frameworks/libkartpad_game.dylib" in archive.namelist():
                 raise BuildError(f"this IPA already contains a game pack: {app}")
-        cached = reusable_pack("ios", fingerprint, image_sha256)
         build = workspace / "ios-pack-build"
         record = workspace / "ios-pack.pack-symbols.json"
         if cached is None:

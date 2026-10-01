@@ -10,6 +10,11 @@ row to a vendor, GPU family, Android version or Apple platform. A Samsung S24
 Ultra row is not evidence for an S25 Ultra, and a Pixel dashboard result is not
 evidence for a Helio G85 race.
 
+The [1 October PowerVR pass](artifacts/2026-10-01/powervr-device-limits.md)
+validates native device/pipeline policy and an audited empty APK locally. Its
+controlled Null fixtures do not change the historical Moto G54 row into a device
+pass; actual PowerVR Vulkan launch/race acceptance remains open.
+
 ## Status vocabulary
 
 - `verified-pass`: the named path passed its acceptance test on the named

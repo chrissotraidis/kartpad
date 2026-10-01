@@ -29,35 +29,34 @@
         128,
         131,
         207,
-        215,
         216,
         236
       ],
       "state": "ready-local",
-      "next_action": "v0.5.0/code135 is published with bounded shader replay, startup and framebuffer fixes. Owner thumbnail acceptance does not close unclassified handset launch, cup-end or race exits. Classify retained exact-session evidence; do not repeat superseded code126 packaging or install work. #216 A9+ fresh code135 download now installs and Original loads; missing character bodies and lag remain, Retro untested, older TabA separate; #235 same-reporter #313 reaches races on 0.5.0, with slowdown tracked separately. #215 reporter now confirms working startup on Xiaomi 25057RN09G; installed build and fixing change are unspecified. No repeat launch/log request.",
+      "next_action": "Use the 1 October focused review and current 0.7.3 source to classify retained exact-session import/start, cup-end and race exits. #216 A9+ now loads both Original and Retro; missing bodies, lag and the older Tab A remain separate. #235 is closed from the same reporter reaching races; performance remains #313. #215 is already closed after the reporter disabled Renderer Validation and resumed racing; do not repeat startup requests or keep it in the active crash queue. Similar exits require separate evidence.",
       "acceptance": "Each classified failure passes its affected import/start, cup-awards or race boundary on the exact target. Similar exits are not assumed to share a cause.",
       "dependency": {
         "owner": "KartPad engineering",
         "needs": "Internal analysis of retained exact-build crash and ongoing owner-session evidence; no reporter input required for the Pixel subcase."
       },
-      "checkpoint": "docs/artifacts/2026-09-20/post-release-issues-and-enhancements.md",
+      "checkpoint": "docs/FOCUSED-REVIEW-2026-10-01.md",
       "priority_reason": "Unclassified crashes remain actionable; published fixes require per-failure evidence, not another broad release loop."
     },
     {
       "id": "ios27-startup",
-      "priority": 1,
+      "priority": 3,
       "issues": [
         196
       ],
       "state": "ready-local",
-      "next_action": "New supplied iPhone17ProMax/iOS27.2 build60 crash reaches FatalMissingGuestTarget through InvokeIndirectCpu; transcript destructor abort is secondary during exit. Analyze exact dispatch/translation evidence. Diagnostic-off mitigation did not resolve this case; no repeated crash or resend request.",
+      "next_action": "The #196 reporter confirms Original works without stutters and Retro races smoothly by the second lap on 0.5.3. The old build60 startup investigation is superseded. Retain first-lap Retro warmup and endless online searching as separate open scopes; review current warmup/network code and existing evidence. The owner already requested one report after extended searching; do not repeat the request or assume a cause.",
       "dependency": {
         "owner": "KartPad engineering",
-        "needs": "Internal diagnosis from retained evidence; reporter outreach is on hold."
+        "needs": "Internal review of remaining warmup and matchmaking scopes using retained evidence; the existing specific online-report request remains pending."
       },
-      "acceptance": "The same corrected candidate preserves existing data and passes both Original and Retro launch, race and relaunch on the matching iPhone 17 Pro Max/iOS 27 target. Package/reporter/release acceptance remain separate.",
-      "checkpoint": "docs/artifacts/2026-09-21/open-issue-inventory.md",
-      "priority_reason": "A game that cannot launch cannot meet offline or online acceptance."
+      "acceptance": "Preserve working launch and saves. Measure first-lap warmup separately from later laps; online acceptance needs matching, race, results and reconnect on the affected connection, not just launch.",
+      "checkpoint": "docs/FOCUSED-REVIEW-2026-10-01.md",
+      "priority_reason": "Startup is confirmed working; remaining warmup and online symptoms follow unresolved launch blockers."
     },
     {
       "id": "android-online",
@@ -200,9 +199,9 @@
         304
       ],
       "state": "ready-local",
-      "next_action": "Review the upstream instance-stage vulkan_relax_max_inter_stage_shader_variables mechanism against the exact Dawn baseline; verify adapter/device/pipeline limits remain honest and audit GX/helper shader interfaces. Add graceful unsupported-startup handling as a separate gate. Moto G54 code121 evidence and matched symbols are sufficient; no more logs, build distribution or repeated launches requested.",
+      "next_action": "The 1 October review caught and corrected Dawn reifying the admitted 14-variable ImgTec Vulkan device to 16. Native device/pipeline and production-shader checks pass; the corrected archive and actual empty APK pass content/state audits. The release-style empty app imports RVZ-exported data and plays a race segment on an owned emulator. The hosted dependency candidate passes anonymous size/hash/manifest checks and the normal consumer with an empty Dawn cache. Existing runtime already returns graphics startup failure with the first adapter error. Actual Moto G54 driver acceptance remains open; no repeated reporter requests.",
       "acceptance": "A supported bounded path initializes and renders correctly on the reported PowerVR driver; unsupported limits return a clear recoverable launcher result without aborting. Adapter admission alone is not gameplay acceptance.",
-      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
+      "checkpoint": "docs/artifacts/2026-10-01/powervr-device-limits.md",
       "priority_reason": "New classified repeatable startup blocker; distinct from optional debug-utils loading and the depth experiment."
     },
     {
@@ -236,7 +235,7 @@
         295
       ],
       "state": "ready-local",
-      "next_action": "Reporter confirmed Original ghost export works on September20. Investigate Retro ghost storage and course mapping, including original Wii courses played in Retro; preserve accepted Original behavior and do not request another Original discovery test.",
+      "next_action": "Reporter confirmed Original ghost export works on September20. Pinned 6.12.8 configs and retained Pulsar source identify the shared CRC/variant/mode NAND collection, including Wii courses in Retro. Implement explicit destination selection and one unique staged RKG without touching either RKSYS profile or leaderboard. Respect the 12-character filename and native list-capacity limits, bind pending imports to config identity, and verify actual native discovery/replay. Preserve Original transfer; no repeat reporter request. See the focused-loop design contract.",
       "acceptance": "Retro ghosts are discovered for the correct profile/license/course and round-trip without replacing personal bests or losing save data; Original export remains working.",
       "checkpoint": "docs/artifacts/2026-09-21/open-issue-inventory.md"
     },

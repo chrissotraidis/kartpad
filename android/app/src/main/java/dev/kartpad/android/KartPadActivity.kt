@@ -1370,7 +1370,7 @@ class KartPadActivity : SDLActivity() {
                         if (unreadable > 0) showParityBoundary("Ghost Export Unavailable",
                             "This license lists $unreadable saved ghosts, but they could not be exported. " +
                                 (firstError ?: "The ghost data could not be read.") + " Your save has not been changed.")
-                        else showParityBoundary("No Saved Ghosts", "This Original license has no saved personal-best or downloaded ghosts. Choose the license used for your time trial. Retro Rewind custom-track ghosts are not listed here.")
+                        else showParityBoundary("No Saved Ghosts", "This Original license has no saved personal-best or downloaded ghosts. Choose the license used for your time trial. Retro Rewind ghosts are not supported here, including Wii courses played in Retro.")
                         return@setItems
                     }
                     AlertDialog.Builder(this).setTitle("Choose Ghost")
@@ -1383,7 +1383,7 @@ class KartPadActivity : SDLActivity() {
                         }.setNegativeButton("Cancel", null).show()
                 } else {
                     AlertDialog.Builder(this).setTitle("Import Original Comparison Ghost")
-                        .setMessage("The course is read from the .rkg file. This replaces its downloaded comparison ghost after restart, with a save backup. Personal-best records stay unchanged. Retro Rewind custom-track ghosts are not supported here.")
+                        .setMessage("The course is read from the .rkg file. This replaces its downloaded comparison ghost after restart, with a save backup. Personal-best records stay unchanged. Retro Rewind ghosts are not supported here, including Wii courses played in Retro.")
                         .setPositiveButton("Choose .rkg") { _, _ ->
                             startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                                 addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"

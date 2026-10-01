@@ -117,6 +117,7 @@ class RuntimeRetryTests(unittest.TestCase):
 
                 with mock.patch.object(game_pack, "host_ndk"), \
                      mock.patch.object(game_pack, "_ios_llvm", return_value=None), \
+                     mock.patch.object(game_pack, "_workspace", return_value=workspace), \
                      mock.patch.object(game_pack, "_translated", return_value=(workspace, workspace / "translation", game_pack.ProgressLog(workspace / "progress.jsonl"))), \
                      mock.patch.object(runtime_stage, "_sse2neon", return_value=self.cached), \
                      mock.patch.object(game_pack.pack_fingerprint, "fingerprint", side_effect=fingerprint):

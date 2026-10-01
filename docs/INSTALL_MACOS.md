@@ -2,12 +2,17 @@
 
 > [!IMPORTANT]
 > **No Mac download for KartPad 0.7.3.** Earlier Mac apps are no longer
-> published, and the release links on this page no longer work. Android and
-> iPhone/iPad are available through [Get KartPad](../README.md#get-kartpad).
+> published. Android and iPhone/iPad are available through [Get KartPad](../README.md#get-kartpad).
 > The settings, save and troubleshooting guidance below still applies to
 > installed Mac apps.
 
-KartPad 0.5.0 (build 59) is an ad-hoc-signed native arm64 app for Apple Silicon Macs
+## Historical Mac installation (0.5.0)
+
+The steps in this section describe an existing local copy of the retired app;
+there is no download to obtain here. For a new local development build, see
+[Build it yourself](#build-it-yourself).
+
+KartPad 0.5.0 (build 59) was an ad-hoc-signed native arm64 app for Apple Silicon Macs
 running macOS 14 or newer. It contains the Original Mario Kart Wii and Retro
 Rewind executable profiles but no disc image, extracted game assets, Retro
 Rewind pack, saves, account data, or Apple signing identity.
@@ -17,8 +22,8 @@ reported in [#94](https://github.com/chrissotraidis/kartpad/issues/94). It prese
 identities, friend codes and saves; existing incorrect server-side history or
 bans may need service-admin review. Do not reset identities to work around them.
 
-1. Download `KartPad-v0.5.0-macos-arm64.zip` and `SHA256SUMS.txt` from the
-   corrected Mac release (retired).
+1. If you already have the retired `KartPad-v0.5.0-macos-arm64.zip` and its
+   matching `SHA256SUMS.txt`, verify that existing copy before using it.
 2. Run `shasum -a 256 KartPad-v0.5.0-macos-arm64.zip` and compare the
    result with the ZIP row in `SHA256SUMS.txt`. The shared source archive is optional
    for normal installation. Then extract the ZIP and move
@@ -38,8 +43,8 @@ bans may need service-admin review. Do not reset identities to work around them.
 
 If **Unsupported Retro Rewind Data** appears, use the exact pack version shown
 in the alert. A newer pack needs a KartPad build that explicitly supports it;
-check the release notes (retired)
-before updating the app. KartPad does not automatically update Retro Rewind.
+check the notes for your installed build before changing the content. KartPad
+does not automatically update Retro Rewind.
 Keep your existing data and saves; a rejected folder selection does not modify
 the folder.
 
@@ -80,6 +85,12 @@ pairing path; a similarly named informational menu is not support for it.
 
 ## Build it yourself
 
+This is a developer workflow, separate from PadMint's mobile game packs.
+It currently accepts the exact pinned development WBFS by full-image SHA-256;
+it does not have the pack builder's provisional ISO/RVZ acceptance. A different
+dump is rejected even if its filename says RMCP01. See the
+[Apple source-build guide](BUILDING.md#mac-self-build) for the pinned-input checks.
+
 Install the [Apple build prerequisites](BUILDING.md#prerequisites), then run:
 
 ```sh
@@ -90,7 +101,10 @@ open build/KartPad.app
 The workflow fetches and verifies pinned public dependencies and the exact
 Retro Rewind inputs, translates both executable profiles from the supported
 user-owned image, builds the dual app, configures both private data roots, and
-audits the result. Generated inputs and the resulting personalized app remain
+audits the result. It also launches the local app to set `dvd_root` and
+`retro_rewind_root` in your existing KartPad configuration. Back up that
+configuration and important saves before running it if you already use the Mac
+app. Generated inputs and the resulting personalized app remain
 ignored local files because KartPad does not clear redistribution rights in
 the game-derived material. This publication policy does not restrict your
 rights to modify or redistribute GPL-covered software under the GPL; see

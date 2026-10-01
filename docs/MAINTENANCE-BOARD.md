@@ -1,5 +1,34 @@
 # Maintenance work and test board
 
+## 1 October focused execution
+
+The [67-issue review](FOCUSED-REVIEW-2026-10-01.md) and
+[active goal loop](FOCUSED-LOOP-2026-10-01.md) supersede the next actions in the
+dated snapshots below. Baseline is main `978a9f1c`, published KartPad 0.7.3 and
+PadMint 0.2.8. Engineering is progressing locally; no generic reporter retest
+or diagnostic request is needed for this pass.
+
+- #347 was closed as completed: its interface fingerprint shipped in 0.7.0
+  with recorded race/cache/mismatch gates. A compatible pack still needs the
+  existing app-state check.
+- #196's reporter confirms both modes now launch; retain Retro warmup and online
+  searching separately from the original startup crash. #235's Honor X7c reaches
+  races; #235 was closed, with remaining performance tracked in #313.
+- #216's Tab A9+ reporter confirms both Original and Retro launch. Missing bodies,
+  lag and the older Tab A report remain separate. #102's Fold reporter confirms
+  the manual all-draw workaround; this does not prove every Automatic selection.
+- #327's latest iPhone16 result is launch-only flicker, with other gameplay working.
+  #370 stays open with a live but black M2 iPad surface after the safety screen.
+- #304's previous PowerVR candidate was absent from 0.7.3 and raised a 14-variable
+  device back to 16. The [corrected dependency and actual empty APK](artifacts/2026-10-01/powervr-device-limits.md)
+  pass native limit/shader and content/state checks. The release-style empty app
+  plays a race segment on an owned emulator. The hosted archive and normal
+  consumer with an empty Dawn cache pass exact hash checks; handset acceptance
+  remains open.
+- RVZ extraction is verified locally against the matching ISO: all 2,043 file
+  hashes match; wrong region/revision are rejected. This is extraction/folder
+  evidence, not new picker, race or all-platform player-build acceptance.
+
 Scoped intake update: 22 September 2026; 63 open issues. The older family and release snapshots below retain their dates. Start at the
 [support-agent hub](SUPPORT-AGENTS.md). The [priority source](maintenance-priorities.json)
 owns ordering, readiness, exact next actions and acceptance; this board records
@@ -128,12 +157,12 @@ the next actions below supersede those dated assignments.
 
 | Priority / card | Issues / authors | Current decision and next actor |
 | --- | --- | --- |
-| 0 / `retro-save-loss` | #169 / 1 | `source-corrected-awaiting-reporter`: Android pack activation now preserves both Retro WFC save branches; see [source finding and fixture](artifacts/2026-09-12/issue169-retro-save-preservation.md) and the [public update](https://github.com/chrissotraidis/kartpad/issues/169#issuecomment-5644596717). The original build-21 report still needs its exact exit-versus-pack-replacement boundary and current-candidate data-preserving acceptance. Do not deliberately lose more data. |
+| 0 / `retro-save-loss` | #169 / 1 | `source-corrected-awaiting-reporter`: Android pack activation now preserves both Retro WFC save branches; see source finding and fixture (local record unavailable in this checkout) and the [public update](https://github.com/chrissotraidis/kartpad/issues/169#issuecomment-5644596717). The original build-21 report still needs its exact exit-versus-pack-replacement boundary and current-candidate data-preserving acceptance. Do not deliberately lose more data. |
 | 1 / `android-exits` | #143, #200, #205, #208, #235–236, #128, #131, #207, #215, #216 / 11 open cases | `awaiting-reporter`: one matching exit classification per distinct launch/cup/race subcase. Closed #209/#210/#224–232 remain historical duplicates under #208; #236 is canonical for closed #237. #235 and #236 remain separate Honor X7c and OPPO CPH2669 device subcases. Similar wording does not establish a common runtime defect. |
 | 1 / `ios27-startup` | #196 / 1 | `released-awaiting-device`: public v0.4.17-ios.1 (retired) is the corrected unsigned IPA, SHA-256 `d322484192dde92139ed8aac66c9abd7764b91f97895840995ef17f0ff49f9ff`. Anonymous audit and owner iPhone 14 / iOS 26.6.2 in-place data preservation passed. The matching iPhone 17 Pro Max/iOS 27 Original+Retro launch/race/relaunch gate remains open; see [platform handoff](artifacts/2026-09-13/platform-candidate-handoff.md). |
 | 2 / `android-online` | #206 / 1 | `awaiting-reporter`: await #206's already requested Wi-Fi endurance confirmation beyond the prior four/five-race window. #123 is closed upstream and remains historical evidence only; closure is not technical online acceptance. |
-| 3 / `adreno-geometry` | #102, #104, #120, #137, #166, #193, #211 / 7 | `awaiting-owner`: release operator and affected-device tester establish compatible signing/delivery for the retained dynamic/literal/dynamic character-draw comparison. Closed #233 is preserved as an SM-S928B/Retro subcase under #211, not a separate active case. The host has no release keystore; see [Android signing preflight](artifacts/2026-09-12/android-release-signing-preflight.md). No GPU-wide cause or correction is established. |
-| 4 / `warmed-performance` | #198, #167, #103, #169, #195, #204, #207, #135 / 8 | `awaiting-owner`: #198 tester is willing. The prepared profiler needs compatible signing or an approved data-preserving route **and** private delivery before capture. The host has only a debug keystore; see [Android signing preflight](artifacts/2026-09-12/android-release-signing-preflight.md). Retained Debug-signed APK is not a public-app in-place upgrade. |
+| 3 / `adreno-geometry` | #102, #104, #120, #137, #166, #193, #211 / 7 | `awaiting-owner`: release operator and affected-device tester establish compatible signing/delivery for the retained dynamic/literal/dynamic character-draw comparison. Closed #233 is preserved as an SM-S928B/Retro subcase under #211, not a separate active case. The host has no release keystore; see Android signing preflight (local record unavailable in this checkout). No GPU-wide cause or correction is established. |
+| 4 / `warmed-performance` | #198, #167, #103, #169, #195, #204, #207, #135 / 8 | `awaiting-owner`: #198 tester is willing. The prepared profiler needs compatible signing or an approved data-preserving route **and** private delivery before capture. The host has only a debug keystore; see Android signing preflight (local record unavailable in this checkout). Retained Debug-signed APK is not a public-app in-place upgrade. |
 
 ## Release-candidate sequence
 
@@ -141,7 +170,7 @@ The current delivery order is: (1) revalidate and hand off the clean #196
 iOS candidate for compatible signing and matching iPhone 17 Pro Max/iOS 27
 acceptance; (2) prepare merged PR #219 for a signer-compatible Thor/Odin test;
 (3) prepare merged PR #157 for the same-scene two-player Mac comparison. See
-the [reconciliation artifact](artifacts/2026-09-13/release-candidate-reconciliation.md).
+the reconciliation artifact (local record unavailable in this checkout).
 PR #112 remains a separate conflicting integration lane. The older preparation
 sentence is superseded by the code80 handoff below; package publication does not
 claim a verified affected-device gameplay fix.
@@ -176,7 +205,7 @@ when creating/updating a handoff. A request is not evidence that a test started.
 
 | Request / evidence | Disposition and next gate |
 | --- | --- |
-| [#196 published build audit](https://github.com/chrissotraidis/kartpad/issues/196#issuecomment-5642179928), [corrected simulator runtime](artifacts/2026-09-12/issue196-simulator-candidate-runtime.md) and [build-integrity correction](artifacts/2026-09-12/issue196-rel-report-build-integrity.md) | Public v0.4.16-ios.2/build 36 still contains the reported aggregate-shard load. The new clean `0.4.16/build38.96.2` candidate now passes the isolated simulator lifecycle for Original and Retro 6.12.8 with data preserved and no translated crash markers. Regenerate a signed candidate; matching iOS 27 hardware acceptance remains unperformed. |
+| [#196 published build audit](https://github.com/chrissotraidis/kartpad/issues/196#issuecomment-5642179928), corrected simulator runtime (local record unavailable in this checkout) and [build-integrity correction](artifacts/2026-09-12/issue196-rel-report-build-integrity.md) | Public v0.4.16-ios.2/build 36 still contains the reported aggregate-shard load. The new clean `0.4.16/build38.96.2` candidate now passes the isolated simulator lifecycle for Original and Retro 6.12.8 with data preserved and no translated crash markers. Regenerate a signed candidate; matching iOS 27 hardware acceptance remains unperformed. |
 | [#123 closed upstream](https://github.com/chrissotraidis/kartpad/issues/123) and [last maintainer response](https://github.com/chrissotraidis/kartpad/issues/123#issuecomment-5644306282) | GitHub records `CLOSED` / `COMPLETED` at 2026-09-12T07:41:52Z. The final comment separates a music workaround for menu lag from reported online-race frame drops. This is a support-state reconciliation, not a technical fix or race/results/reconnect acceptance; do not assign more #123 work unless it is reopened with new evidence. |
 | [#206 cellular/Wi-Fi comparison](https://github.com/chrissotraidis/kartpad/issues/206#issuecomment-5642749400) | `awaiting-reporter`: [acknowledgement posted](https://github.com/chrissotraidis/kartpad/issues/206#issuecomment-5642834780). On Samsung SM-S921W / Android 14 / build 65, mobile data worked once while Wi-Fi reportedly works normally. This is sufficient to isolate a network-dependent subcase; it does not prove a NAT, carrier or guest-runtime cause. Keep it separate from #123. Await the already requested confirmation that Wi-Fi passes beyond the prior four/five-race window before claiming a stable workaround; do not repeat the acknowledgement, known build/device questions or generic log request. |
 | [#211 / closed #233 renderer evidence](https://github.com/chrissotraidis/kartpad/issues/211#issuecomment-5649620538) | `needs-one-detail`: Galaxy S24 family character corruption remains in the renderer lane. Closed #233 is retained as the SM-S928B/build-65/Retro subcase under #211; do not count it separately or infer a GPU-wide cause. |
@@ -191,7 +220,7 @@ when creating/updating a handoff. A request is not evidence that a test started.
 | [#236 OPPO A40 launch evidence](https://github.com/chrissotraidis/kartpad/issues/236#issuecomment-5648868168) | `awaiting-reporter`: OPPO CPH2669 / Android 14 / build 65 confirms a repeatable Original/base black screen followed by Android home, with corroborating #237 now closed as a duplicate. Await one matching redacted exit result if available; no reinstall or data clear. |
 | [#215 Android-home confirmation](https://github.com/chrissotraidis/kartpad/issues/215#issuecomment-5648868060) | `awaiting-reporter`: Xiaomi 25057RN09G / Android 15 / build 65 now has the decisive return boundary: Android home after the black screen for both Original and Retro. This is actionable native/OS-exit evidence; no release is promised before reproduction and compatible-device testing. |
 | [#236 Android-home confirmation](https://github.com/chrissotraidis/kartpad/issues/236#issuecomment-5648868168) | `awaiting-reporter`: OPPO CPH2669 / Android 14 / build 65 now has the decisive return boundary: Android home after the Original black screen. This remains a separate device case. |
-| [Closed duplicate cleanup](../build/maintenance/reviews/2026-09-13-issue-cleanup.md) | `reconciled`: #209/#210/#224–232 are closed under #208; #237 is closed under #236; #233 is closed under #211. Originals retain the evidence and remain the only active memberships. |
+| Closed duplicate cleanup (local record unavailable in this checkout) | `reconciled`: #209/#210/#224–232 are closed under #208; #237 is closed under #236; #233 is closed under #211. Originals retain the evidence and remain the only active memberships. |
 
 For #215/#216, use the existing requests; do not ask for another reinstall, data
 clear, ROM or save. The reports establish repeated symptoms, not a classified
