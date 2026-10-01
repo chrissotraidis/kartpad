@@ -252,6 +252,8 @@ def build_android_pack(
     runtime = workspace / "android-runtime"
     if not runtime.is_dir():
         runtime_stage.stage(repo, "android", runtime)
+    else:
+        runtime_stage.stage_extras(repo, runtime)
     fingerprint = pack_fingerprint.fingerprint(repo, "android", runtime)
     cached = reusable_pack("android", fingerprint, image_sha256)
     workspace, translation, progress = _translated(
@@ -382,6 +384,8 @@ def build_ios_pack(
     runtime = workspace / "ios-runtime"
     if not runtime.is_dir():
         runtime_stage.stage(repo, "ios", runtime)
+    else:
+        runtime_stage.stage_extras(repo, runtime)
     fingerprint = pack_fingerprint.fingerprint(repo, "ios", runtime)
     cached = reusable_pack("ios", fingerprint, image_sha256)
     workspace, translation, progress = _translated(

@@ -27,6 +27,7 @@ on:
       - 'tests/test_build_provenance.py'
       - 'tests/test_source_submodule_inputs.py'
       - 'builder/**'
+      - 'tests/test_runtime_stage_retry.py'
       - 'tests/test_retro_rel_report_guard.py'
       - 'tests/fixtures/rel_report/**'
       - '.github/workflows/rel-report-guard.yml'
@@ -58,6 +59,7 @@ on:
       - 'tests/test_build_provenance.py'
       - 'tests/test_source_submodule_inputs.py'
       - 'builder/**'
+      - 'tests/test_runtime_stage_retry.py'
       - 'tests/test_retro_rel_report_guard.py'
       - 'tests/fixtures/rel_report/**'
       - '.github/workflows/rel-report-guard.yml'
@@ -86,6 +88,7 @@ jobs:
         run: |
           python3 -B -m unittest discover -s tests -p 'test_source_submodule_inputs.py' -v
           python3 -B -m unittest discover -s tests -p 'test_maintained_runtime_staging.py' -v
+          python3 -B -m unittest discover -s tests -p 'test_runtime_stage_retry.py' -v
           python3 -B -m unittest discover -s tests -p 'test_maintained_translator_staging.py' -v
           python3 -B -m unittest discover -s tests -p 'test_build_provenance.py' -v
           python3 -B -m unittest discover -s tests -p 'test_coordinated_*.py' -v
