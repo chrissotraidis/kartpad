@@ -251,7 +251,7 @@ published game pack or an upstream PR.
 The first two reviewed passes are merged into main: #372 (`be68ed1f`) and #373
 (`ae83d0fe`). The actual-driver gate remains open; merging the bounded Dawn
 policy does not close #304. Retro comparison transfer is draft #375, targeting
-main with runtime source `10be3756` and documentation source `1d00651f`,
+main with runtime source `bf31f33a` (including the Original format correction),
 with Linux and macOS hosted contracts passing.
 
 Actual Retro installer/ghost execution found two issues invisible to host-only
@@ -266,9 +266,14 @@ pass. A metadata-only Retro expert control imports and replays all three laps
 correctly; the imported retail staff replay diverges, so cross-mod compatibility
 remains unresolved. A normal matching iOS player pack and game-data export also
 pass. Original native import/readback/discovery/export also pass, but its
-downloaded replay stalls while the built-in replay moves normally. Custom
-variants/modes, downloaded replay, a normal race and iPhone gameplay remain
-acceptance gates; see the
+downloaded replay initially stalled while the built-in replay moved normally.
+The downloaded loader requires expanded input tables; the narrow correction now
+passes native replay movement with exact save/export preservation. A confirmed
+cold Solo race also renders the course and accepts acceleration for a short
+segment. Longer observation shows a blank scene behind the live HUD in both
+replay-to-race and direct Solo paths; its cause and baseline remain unresolved.
+Both saves remain unchanged after these controls. Custom variants/modes, broader
+replay and sustained rendering acceptance, and iPhone gameplay remain gates; see the
 [updated receipt](artifacts/2026-10-01/retro-ghost-transfer.md).
 
 The [Wii ES scalar review](artifacts/2026-10-01/es-key-scalar-policy.md) reproduces

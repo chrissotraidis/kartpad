@@ -121,15 +121,15 @@ native stage/application acceptance is recorded below.
 
 The first two focused PRs are merged: #372 at `be68ed1f`, and #373 at `ae83d0fe`.
 The feature is retained as draft [PR #375](https://github.com/chrissotraidis/kartpad/pull/375),
-targeting main. Current source `1d00651f` has passing Linux boundary, macOS
-mobile-bridge and maintenance-receipt hosted checks.
+targeting main. Runtime source `bf31f33a`, including the Original format fix, has
+passing Linux boundary, macOS mobile-bridge and maintenance-receipt hosted checks.
 
 ## Corrected build receipts
 
 Build source `10be3756` contains early Android application storage setup, a single
 cold-launch JNI config reload, atomic exclusive publication and the permanent
 actual-config-parser regression. Linux boundary, macOS mobile-bridge and
-maintenance-receipt hosted checks all pass on that commit and current receipt
+maintenance-receipt hosted checks all pass on that commit and historical receipt
 source `1d00651f`, which changes documentation only. The following corrected
 artifacts and native checks use runtime code built from `10be3756`.
 
@@ -237,9 +237,9 @@ present in both app and pack. The exported data contains 2,043 files totaling
 DOL/REL identities match the profile. Public pins stay unchanged. Private
 packaging and signing preparation do not establish installation or gameplay.
 
-## Original native transfer regression
+## Original native transfer regression before format correction
 
-On the same corrected Android app and pack, the real SAF picker imports the
+On the startup-corrected Android app and pack, the real SAF picker imports the
 retail Luigi Circuit staff ghost into Original license 1. Cold launch replaces
 only the downloaded comparison slot and its presence/checksum metadata. The
 entire resulting save is byte-identical to production `Import` applied to the
@@ -256,19 +256,95 @@ exactly matching production `Export`. Unlike standalone Retro transfer,
 Original comparison import intentionally normalizes staff type 37 to downloaded
 type 7 and recomputes its CRC (`dac24284`); source-file identity is not expected.
 
-Replay acceptance fails: the imported downloaded entry remains stationary at
-the start line for over 60 seconds with responsive pause controls, while the
-same built-in staff replay moves normally. No cause or fix is established yet.
+Before the format correction, replay acceptance fails: the imported downloaded
+entry remains stationary at the start line for over 60 seconds with responsive
+pause controls, while the same built-in staff replay moves normally. The format
+mismatch and its correction are recorded below.
 File transfer, save preservation, native discovery and export pass; this does
 not establish downloaded replay correctness. The narrower translator patch has
 no matching instruction sites in the retained Original DOL/REL executable
 sections, so it supplies no direct explanation for this failure.
 
+## Original downloaded replay format correction
+
+Commit `bf31f33a` corrects a native boundary exposed by the control above.
+Original staff replay decompresses its `.rkg` before setting the race ghost;
+Original downloaded replay copies the saved slot directly and consumes the
+input table at offset `0x88`. The earlier importer left the compressed
+container there. Its apparent stream counts were `0 / 1872 / 22881`, giving
+an empty acceleration stream. Import now uses the existing bounded validation
+and Yaz decoder to store the expanded native slot, clears compression, retains
+recorded inputs and metadata, assigns comparison type 7 and computes the full
+slot checksum. Retro standalone transfer continues to preserve source bytes.
+The regression fails before the change and passes under ASAN/UBSAN afterward.
+Real staff inputs produce native counts `59 / 1030 / 4` without changing their
+expanded bytes; Retro's exact-byte mode/variant checks still pass.
+
+Both corrected empty apps pass repository and PadMint 0.2.8 content audits.
+Android APK SHA-256 is
+`7f11e645ac0d3e614d9882bbe7f73caa1103aa0d126feff6735069423f6b0fb1`;
+its matching normal-CLI private pack passes all 208 native steps and the state
+check, SHA-256
+`9bc3246c7e25ce5fcdd91a5e269eb8eb86f5c7e807a3088c08ba81e75e64af08`.
+Interface fingerprint is
+`a623451d48192e9518d048a7c0baf69bdf22903e116e30c213b53d90870fd381`.
+In-place installation preserves all 402 quiesced backup files byte-for-byte
+before activation. The app correctly rejects the prior incompatible pack;
+the real SAF picker accepts the newly matching pack with exact readback hash.
+
+Repeating the real compressed-staff import yields a save exactly matching
+production `Import`, SHA-256
+`2361b5be3bd1005813370d9314cd6c315f7651c65cdb8df45dcc4203f118467d`.
+Replacing the earlier downloaded slot changes 2,127 expected bytes with zero
+unexpected changes. Real SAF export is now a native uncompressed 10,240-byte
+RKG, SHA-256
+`5fa99ef00a532521cb9a78b29c3381e3be4f9f1be60ad8152e999a76c068534a`,
+CRC `870c707e`, exactly matching production `Export`. The selected downloaded
+entry now accelerates and drives through Luigi Circuit in native Watch Replay.
+This resolves the reproduced stationary-start failure; the observation is a
+replay segment, not measured completion time or arbitrary-ghost acceptance.
+
+The corrected publishable empty iOS IPA SHA-256 is
+`afffc5cc4558cd026f54a75695a8f9771913c5b254ed742c8cc235e6b3700bc0`.
+Its matching private personal IPA is
+`b7d63f548493f0c6fa100a37beadfa63b563b7ada3b206534f60971c89c8e100`,
+with game dylib
+`799b8219ec1d5509282ba55a8cf5b18f266e1d959f6a8661eab8cc8463f6aee0`
+and interface
+`1ad96f44c101b5772da0dfe2c944715cc4184b24ba45b846cc473c6eb7315a37`.
+All 208 native steps complete and 2,043 exported files match validated data.
+Our incremental validation recipe initially omitted the normal publishing
+script's mandatory `strip -x`. The unchanged state guard rejected local
+compiler exception metadata. Applying that existing step to a preserved app
+copy and rerunning the normal CLI reuses native objects (`no work to do`) and
+passes validation/package/export. No state guard was changed or bypassed.
+Separate private signing passes deep/strict verification and preserves code
+sections and retained entitlements. No iPhone installation was performed:
+KartPad and a historical test runner were active, so device ownership remains
+an external gate. Old artifacts, symbols and backups remain preserved.
+
+## Corrected Original race control
+
+A confirmed cold launch of `dev.kartpad.android`, followed by direct Solo Time
+Trial rather than Watch Replay, renders Mario, Luigi Circuit and the countdown.
+Immediate acceleration moves Mario away from the start line with the course
+still visible at `00:06.984`. This passes a short race/input regression on the
+corrected candidate, not a full race or sustained rendering gate.
+
+A separate longer observation develops a white scene while the timer and
+minimap continue updating. It appears after replay's Start Race and also during
+a longer direct Solo observation, so it cannot yet be attributed specifically
+to replay transfer. Source review finds no import or renderer-reset call in the
+bounded transition handlers. A matched baseline and first-white-frame capture
+are needed before changing renderer behavior. Both saves remain byte-identical
+after quiescing the app: Original `2361b5be…18467d`, Retro `6d58f798…e9c419`.
+
 ## Remaining acceptance
 
 Issue #295 remains open and PR #375 remains draft. Native custom-course and
-nonbase-variant import/export, the other three modes, and arbitrary/cross-mod replay correctness
-remain open. Original transfer/readback passes; downloaded replay fails and a
-normal race still requires native regression on the corrected candidate. iPhone picker/native acceptance
-and physical-device gameplay remain separate gates. These receipts do not
-announce an app release or shipped menus.
+nonbase-variant import/export, the other three modes, and arbitrary/cross-mod
+replay correctness remain open. Original transfer/readback/export, downloaded
+replay movement and the short cold Solo race segment pass after correction.
+Longer Original rendering stability, iPhone picker/native acceptance and
+physical-device gameplay remain separate gates. These receipts do not announce
+an app release or shipped menus.
