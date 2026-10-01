@@ -1,0 +1,47 @@
+--- a/src/dawn/native/vulkan/PhysicalDeviceVk.cpp
++++ b/src/dawn/native/vulkan/PhysicalDeviceVk.cpp
+@@ -845,8 +845,15 @@
+     // multisampling. Vulkan does not provide a reliable way of enforcing this so must potentially
+     // use another vec4f slot to emulate this behavior. So on any WebGPU Vulkan backend
+     // `maxVertexOutputComponents` must be no less than 72 = (16 * 4 + 8).
+-    if (vkLimits.maxVertexOutputComponents < baseLimits.v1.maxInterStageShaderVariables * 4 + 8 ||
+-        vkLimits.maxFragmentInputComponents < baseLimits.v1.maxInterStageShaderVariables * 4 + 8) {
++    // KartPad #304: accept ImgTec's Vulkan floor of 64 components (14 variables),
++    // retaining both reserved vec4 slots. Other vendors retain the original minimum.
++    // Report the actual supported limit below; do not advertise 16 on a 14-variable GPU.
++    const uint32_t interStageVariablesBase =
++        gpu_info::IsImgTec(GetVendorId())
++            ? std::min(baseLimits.v1.maxInterStageShaderVariables, 14u)
++            : baseLimits.v1.maxInterStageShaderVariables;
++    if (vkLimits.maxVertexOutputComponents < interStageVariablesBase * 4 + 8 ||
++        vkLimits.maxFragmentInputComponents < interStageVariablesBase * 4 + 8) {
+         return DAWN_INTERNAL_ERROR("Insufficient Vulkan limits for maxInterStageShaderVariables");
+     }
+     // Reserve 1 for position and 1 for emulated fragment pixel center.
+--- a/src/dawn/native/Device.cpp
++++ b/src/dawn/native/Device.cpp
+@@ -43,6 +43,7 @@
+ #include "dawn/native/ValidationUtils_autogen.h"
+ #include "dawn/platform/DawnPlatform.h"
+ #include "partition_alloc/pointers/raw_ptr.h"
++#include "src/dawn/common/GPUInfo.h"
+ #include "src/dawn/common/Ref.h"
+ #include "src/dawn/common/Sha3.h"
+ #include "src/dawn/common/StringViewUtils.h"
+@@ -332,6 +333,16 @@
+         GetDefaultLimits(&mLimits, effectiveFeatureLevel);
+     }
+ 
++    // KartPad #304: the relaxed ImgTec Vulkan adapter can support 14 variables.
++    // Reification must not promote its device back to the WebGPU default of 16.
++    const auto* physicalDevice = GetPhysicalDevice();
++    if (physicalDevice->GetBackendType() == wgpu::BackendType::Vulkan &&
++        gpu_info::IsImgTec(physicalDevice->GetVendorId())) {
++        mLimits.v1.maxInterStageShaderVariables =
++            std::min(mLimits.v1.maxInterStageShaderVariables,
++                     adapter->GetLimits().v1.maxInterStageShaderVariables);
++    }
++
+     // If immediates are not enabled (e.g. blocklisted), report a maxImmediateSize of 0.
+     // TODO(crbug.com/366291600): Remove when immediates are implemented on all backends and
+     // not be blocklisted.

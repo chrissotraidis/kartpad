@@ -13,7 +13,7 @@ import tarfile
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-IDENTITY = 'b0fd045b0a694eb07ac3fcf0d741f8697b935856'
+IDENTITY = '5b8cc623f665a44645e77fa0a2a730c749333de4'
 
 
 def sha(data):
@@ -72,6 +72,11 @@ def main():
         files['build-recipe/' + path.relative_to(ROOT).as_posix()] = path.read_bytes()
     for name in ('prototypes/stabilization/pin-dawn-version.py',
                  'prototypes/stabilization/verify-dawn-dependencies.py',
+                 'prototypes/stabilization/test_dawn_interstage.py',
+                 'prototypes/stabilization/dawn_interstage_shader.cpp',
+                 'prototypes/stabilization/test_dawn_interstage_shader.py',
+                 'prototypes/stabilization/dawn_powervr_device_limits.cpp',
+                 'prototypes/stabilization/test_dawn_powervr_device_limits.py',
                  'prototypes/stabilization/build-dawn-android.sh', 'cmake/dawn-kartpad-ci.cmake'):
         files['build-recipe/' + name] = (ROOT / name).read_bytes()
     for name, data in files.items():
@@ -84,6 +89,8 @@ def main():
         'upstreamSourceURL': 'https://github.com/google/dawn/archive/13abc3bc8ea2d3c2050f9e77a12d012108ceee24.tar.gz',
         'androidABI': 'arm64-v8a', 'androidAPI': 28, 'ndk': '29.0.14206865',
         'sourceDependencies': dependency_records,
+        'patches': {name: sha(data) for name, data in sorted(files.items())
+                    if name.startswith('build-recipe/') and name.endswith('.patch')},
         'originalLibrarySHA256': sha(library),
         'packaging': 'Remove debug sections only; relocate Android liblog to logical log. Original symbols retained privately.',
         'buildRecipe': 'prototypes/stabilization/build-dawn-android.sh',

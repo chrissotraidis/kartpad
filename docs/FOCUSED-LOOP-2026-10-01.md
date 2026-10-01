@@ -30,7 +30,7 @@ through narrow, verified changes that improve setup, reliability and maintenance
 | Build cache / timings | Verified locally | Compatible cache skips translation; disc validation and app-state/TLS check remain enforced. Cached Android/iOS output libraries unchanged. |
 | Documentation | Reviewed | Current builder/mobile/Mac routes, upstream ledger and superseded maintenance next actions reconciled. |
 | Completed issue scopes | First reconciliation done | #347 and #235 closed; partial #196 remains open. Review began with 67 open issues, now 65. |
-| PowerVR / stability | Queued | Existing dependency work reviewed, actual package integration verified, hardware gate explicit. |
+| PowerVR / stability | Corrected and validated locally | Real device constructor regression reproduced/corrected; native boundary/production-shader checks and actual empty APK content/state checks pass. Owned-emulator race segment passes; hosted-archive integration pending; hardware gate explicit. |
 | Upstream changes | Review complete; candidate local | All 18 later commits mapped. Narrow bltl candidate passes 658 translator tests and real graph checks; Android native build passed; other platforms/game acceptance pending. |
 | Controls / Retro ghosts | Queued | Existing feature contracts checked before extending input or storage. |
 | CPU / larger features | Queued | Same-device profiling and separate Wiimmfi/DSU feasibility and acceptance. |
@@ -141,3 +141,40 @@ remain preserved.
 Continue the PowerVR artifact/package gate, bounded missing upstream fixes,
 Retro storage/course mapping and measured same-device performance. Preserve
 explicit native, hardware and service gates; do not spin on reporter retests.
+
+## Pass 2: PowerVR device policy
+
+The [PowerVR record](artifacts/2026-10-01/powervr-device-limits.md) separates
+adapter admission, constructed-device limits, actual shader/pipeline validation,
+package integration and physical-driver acceptance. The prior local candidate
+was not safe to promote: Dawn raised its 14-variable adapter limit to 16 on
+device creation. A scoped Vulkan/ImgTec clamp fixes that reproduced defect.
+
+The corrected native library passes all 1,425 build steps, 264,196 capability
+component pairs and 11 native device cases. The actual largest renderer shader
+passes at a reported limit of 14. Baseline failure and corrected logs are retained
+privately. Two dependency packages are identical; source identity and payload
+hashes agree. The current empty APK links the corrected library and passes
+repository/PadMint content audits and the existing compatible-pack state check.
+Apple artifacts and all runtime/translator pins are unchanged.
+
+The player check uses a newly created test emulator, leaving the existing
+emulator app and data intact. Its default 6 GiB partition correctly rejected
+a folder import for insufficient space while retaining the imported pack. The
+low-space AVD is preserved before using a fresh 16 GiB data image. Normal pack
+and folder imports succeed; all 2,043 app-side data hashes match the RVZ export.
+The release-style empty APK passes both audits and pack-state validation, creates
+its own license and runs a Luigi Circuit race segment through 3:13, with visible
+acceleration, steering orientation change and pause. The test emulator uses host
+Apple M3 Max graphics, so affected PowerVR driver acceptance remains open.
+
+The initial apparent title input failure was a test-state mistake: the opening
+movie sits above the title, and a long A press can latch gas lock. HLE logs show
+correct delivery; distinct short presses after neutral restart work. No input
+code was changed. Full app data was backed up before comparing the published APK
+in place, and the published APK was verified unchanged apart from its local test
+signature. Direct encrypted-RVZ picker acceptance remains separate from this
+successful RVZ-exported folder import. Continue hosted-archive verification; do not call #304
+closed or publish a KartPad release from native fixtures alone. The provisional
+lock URL is not yet hosted. Source work is on local branch
+`codex/powervr-device-limits`, stacked on the first focused-maintenance PR.
