@@ -19,8 +19,12 @@ or diagnostic request is needed for this pass.
   the manual all-draw workaround; this does not prove every Automatic selection.
 - #327's latest iPhone16 result is launch-only flicker, with other gameplay working.
   #370 stays open with a live but black M2 iPad surface after the safety screen.
-- #304's locally tested PowerVR correction was absent from the 0.7.3 dependency.
-  Complete package integration before asking for a handset result.
+- #304's previous PowerVR candidate was absent from 0.7.3 and raised a 14-variable
+  device back to 16. The [corrected dependency and actual empty APK](artifacts/2026-10-01/powervr-device-limits.md)
+  pass native limit/shader and content/state checks. The release-style empty app
+  plays a race segment on an owned emulator. The hosted archive and normal
+  consumer with an empty Dawn cache pass exact hash checks; handset acceptance
+  remains open.
 - RVZ extraction is verified locally against the matching ISO: all 2,043 file
   hashes match; wrong region/revision are rejected. This is extraction/folder
   evidence, not new picker, race or all-platform player-build acceptance.

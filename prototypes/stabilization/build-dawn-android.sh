@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# A local dependency experiment. Does not change the production dependency lock.
+# Maintained Android Dawn recipe. Builds locally; never publishes or changes the lock.
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo_root"
 seed="${1:?Supply the populated pinned Dawn source tree}"
@@ -33,9 +33,12 @@ PY
 python3 prototypes/stabilization/verify-dawn-dependencies.py "$output/source" > "$output/dependencies.json"
 patch --batch -p1 -d "$output/source" < prototypes/stabilization/dependencies/dawn-optional-debug-utils.patch
 patch --batch -p1 -d "$output/source" < prototypes/stabilization/dependencies/dawn-swiftshader-dynamic-state.patch
+patch --batch -p1 -d "$output/source" < prototypes/stabilization/dependencies/dawn-imgtec-interstage-floor.patch
 python3 prototypes/stabilization/pin-dawn-version.py "$output/source" \
   prototypes/stabilization/dependencies/dawn-optional-debug-utils.patch \
-  prototypes/stabilization/dependencies/dawn-swiftshader-dynamic-state.patch > "$output/version.txt"
+  prototypes/stabilization/dependencies/dawn-swiftshader-dynamic-state.patch \
+  prototypes/stabilization/dependencies/dawn-imgtec-interstage-floor.patch > "$output/version.txt"
+python3 prototypes/stabilization/test_dawn_interstage.py "$seed" "$output/source"
 sdk="${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}"
 path_flags="-O3 -DNDEBUG -ffile-prefix-map=$repo_root=KartPad -fmacro-prefix-map=$repo_root=KartPad"
 cmake -S "$output/source" -B "$output/build" -G Ninja \
@@ -46,7 +49,7 @@ cmake -S "$output/source" -B "$output/build" -G Ninja \
   -DDAWN_ENABLE_OPENGLES=OFF -DDAWN_ENABLE_VULKAN=ON -DDAWN_ENABLE_NULL=ON \
   -DDAWN_BUILD_TESTS=OFF -DDAWN_BUILD_MONOLITHIC_LIBRARY=STATIC \
   -DDAWN_FETCH_DEPENDENCIES=OFF -DWITH_PROTOC="$protoc"
-cmake --build "$output/build" --parallel "${KARTPAD_PROTOTYPE_JOBS:-8}"
+cmake --build "$output/build" --parallel "${KARTPAD_PROTOTYPE_JOBS:-2}"
 cmake --install "$output/build" --prefix "$output/install"
 shasum -a 256 "$output/install/lib/libwebgpu_dawn.a" > "$output/library.sha256"
-echo "Local Android Dawn prototype: $output/install"
+echo "Local Android Dawn candidate: $output/install"

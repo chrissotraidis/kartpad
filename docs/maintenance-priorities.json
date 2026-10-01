@@ -199,9 +199,9 @@
         304
       ],
       "state": "ready-local",
-      "next_action": "Review the upstream instance-stage vulkan_relax_max_inter_stage_shader_variables mechanism against the exact Dawn baseline; verify adapter/device/pipeline limits remain honest and audit GX/helper shader interfaces. Add graceful unsupported-startup handling as a separate gate. Moto G54 code121 evidence and matched symbols are sufficient; no more logs, build distribution or repeated launches requested.",
+      "next_action": "The 1 October review caught and corrected Dawn reifying the admitted 14-variable ImgTec Vulkan device to 16. Native device/pipeline and production-shader checks pass; the corrected archive and actual empty APK pass content/state audits. The release-style empty app imports RVZ-exported data and plays a race segment on an owned emulator. The hosted dependency candidate passes anonymous size/hash/manifest checks and the normal consumer with an empty Dawn cache. Existing runtime already returns graphics startup failure with the first adapter error. Actual Moto G54 driver acceptance remains open; no repeated reporter requests.",
       "acceptance": "A supported bounded path initializes and renders correctly on the reported PowerVR driver; unsupported limits return a clear recoverable launcher result without aborting. Adapter admission alone is not gameplay acceptance.",
-      "checkpoint": "docs/artifacts/2026-09-19/cross-platform-stabilization.md",
+      "checkpoint": "docs/artifacts/2026-10-01/powervr-device-limits.md",
       "priority_reason": "New classified repeatable startup blocker; distinct from optional debug-utils loading and the depth experiment."
     },
     {
@@ -235,7 +235,7 @@
         295
       ],
       "state": "ready-local",
-      "next_action": "Reporter confirmed Original ghost export works on September20. Investigate Retro ghost storage and course mapping, including original Wii courses played in Retro; preserve accepted Original behavior and do not request another Original discovery test.",
+      "next_action": "Reporter confirmed Original ghost export works on September20. Pinned 6.12.8 configs and retained Pulsar source identify the shared CRC/variant/mode NAND collection, including Wii courses in Retro. Implement explicit destination selection and one unique staged RKG without touching either RKSYS profile or leaderboard. Respect the 12-character filename and native list-capacity limits, bind pending imports to config identity, and verify actual native discovery/replay. Preserve Original transfer; no repeat reporter request. See the focused-loop design contract.",
       "acceptance": "Retro ghosts are discovered for the correct profile/license/course and round-trip without replacing personal bests or losing save data; Original export remains working.",
       "checkpoint": "docs/artifacts/2026-09-21/open-issue-inventory.md"
     },

@@ -2,6 +2,7 @@
 """Exercise the actual Dawn version generator under unrelated parent repositories."""
 import argparse
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -44,6 +45,21 @@ with tempfile.TemporaryDirectory(prefix='kartpad-dawn-identity-') as directory:
     changed_second = Path(directory)/'changed-second.patch'
     changed_second.write_bytes(second.read_bytes()+b'\nchanged additional dependency\n')
     assert pin.pin(archive, patch, changed_second) != combined
+    third = root/'prototypes/stabilization/dependencies/dawn-imgtec-interstage-floor.patch'
+    maintained = pin.pin(archive, patch, second, third)
+    assert maintained != combined
+    assert maintained == pin.pin(archive, patch, second, third)
+    assert maintained == (source/'KARTPAD_DAWN_VERSION').read_text().strip()
+    packaging_spec = importlib.util.spec_from_file_location('package_dawn', root/'prototypes/stabilization/package-dawn-android.py')
+    packaging = importlib.util.module_from_spec(packaging_spec)
+    packaging_spec.loader.exec_module(packaging)
+    assert packaging.IDENTITY == maintained, 'Packager identity omits or differs from maintained patches'
+    lock = json.loads((root/'dependencies.lock.json').read_text())
+    locked = next(item for item in lock['dependencies'] if item['name'] == 'Dawn prebuilt')
+    assert locked['androidDawnVersionIdentity'] == maintained, 'Android lock omits maintained patches'
+    changed_third = Path(directory)/'changed-third.patch'
+    changed_third.write_bytes(third.read_bytes()+b'\nchanged ImgTec dependency\n')
+    assert pin.pin(archive, patch, second, changed_third) != maintained
     changed = Path(directory)/'changed.patch'
     changed.write_bytes(patch.read_bytes()+b'\nchanged dependency\n')
     assert pin.pin(archive,changed) != identity
