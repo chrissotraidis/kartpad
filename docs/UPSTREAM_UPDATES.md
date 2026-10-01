@@ -157,13 +157,26 @@ code (one failed test). After the lifting hunk, all seven focused coverage tests
 and all 658 default translator tests passed on .NET 8. The regression checks LR
 assignment precedes the conditional branch, with the correct destination and
 fallthrough. Logs are retained locally in ignored
-`work/bltl-lifting-20261001/{baseline,focused,full}.log`. The candidate remains
-uncommitted; KartPad's gitlink and lock pin are unchanged. Real RVZ translations passed the pinned graph: 29,637 generated, 29,065 base
+`work/bltl-lifting-20261001/{baseline,focused,full}.log`. The identical candidate source is now preserved on the owner fork at
+[`1e55229d7f8d`](https://github.com/chrissotraidis/wiicompiled/commit/1e55229d7f8def89f34ec3ea433809f9e98cb1d0);
+KartPad's gitlink and lock pin are unchanged. Real RVZ translations passed the pinned graph: 29,637 generated, 29,065 base
 and 4,102 Retro functions. One Android cache-miss build then passed all 208
 compile/link steps, app-state checking and private pack packaging against the
 published 0.7.3 APK, with four jobs. Total time was 854.82 seconds; native build
 was 751.319 seconds. This is one host build, not a performance comparison.
-Other native platforms and gameplay acceptance remain open.
+The resulting native pack (SHA-256
+`45759bf7f03f0f3c0dae7d9eed92161bf14ea3c4ba9498d9a3dd8b5cb2d635e6`)
+imports through the real system picker into the corrected release-style empty
+APK and plays a Luigi Circuit race segment on the owned ARM64 emulator, with
+acceleration, changed steering orientation and pause. The replaced pack matches
+its built hash and retains the same interface fingerprint. The test license save
+is byte-identical immediately after replacement. After gameplay, only byte
+`0x5688` and its four-byte save CRC differ; all ghost data and the remaining save
+bytes are unchanged, and the checksum is valid. This played segment is not a
+completed race, Retro or service acceptance, or a weak-phone performance result.
+The native build predates the candidate commit and used the same 33 source/test
+lines atop `9d563f98953c`. Other native platforms and Retro acceptance remain
+open before promoting the pin.
 
 For each shared change, record the KartPad source pin, upstream equivalent or
 gap, affected consumer, focused regression and acceptance result. Prepare new

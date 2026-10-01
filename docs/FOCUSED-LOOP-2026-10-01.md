@@ -31,7 +31,7 @@ through narrow, verified changes that improve setup, reliability and maintenance
 | Documentation | Reviewed | Current builder/mobile/Mac routes, upstream ledger and superseded maintenance next actions reconciled. |
 | Completed issue scopes | First reconciliation done | #347 and #235 closed; partial #196 remains open. Review began with 67 open issues, now 65. |
 | PowerVR / stability | Corrected and validated locally | Real device constructor regression reproduced/corrected; native boundary/production-shader checks and actual empty APK content/state checks pass. Owned-emulator race segment passes; hosted archive and fresh Dawn-cache consumer pass; hardware gate explicit. |
-| Upstream changes | Review complete; candidate local | All 18 later commits mapped. Narrow bltl candidate passes 658 translator tests and real graph checks; Android native build passed; other platforms/game acceptance pending. |
+| Upstream changes | Review complete; candidate preserved | All 18 later commits mapped. Narrow bltl candidate passes 658 tests, graph checks, Android native build and Original race segment; other native platforms/Retro remain gates. |
 | Controls / Retro ghosts | Queued | Existing feature contracts checked before extending input or storage. |
 | CPU / larger features | Queued | Same-device profiling and separate Wiimmfi/DSU feasibility and acceptance. |
 
@@ -181,5 +181,60 @@ closed or publish a KartPad release from native fixtures alone. The lock URL is 
 `codex/powervr-device-limits`, stacked on the first focused-maintenance PR and
 published as [draft PR #373](https://github.com/chrissotraidis/kartpad/pull/373).
 The first source commit is `50f83c58`; hosted archive publication/readback and the empty Dawn-cache consumer pass.
-Actual affected-driver acceptance remains separate. Preserve the isolated checkout, uncommitted translator
+Actual affected-driver acceptance remains separate. Preserve the isolated checkout, separately committed translator
 candidate and owned test AVD until their remaining acceptance is reconciled.
+
+
+## Next bounded feature: Retro comparison ghosts
+
+The pinned 6.12.8 `ConfigRT.pul`/`ConfigCT.pul` data and retained Pulsar source
+resolve the storage contract. Retro uses the shared NAND collection
+`shared2/Pulsar/RetroRewind6/Ghosts/<track CRC>/<variant when nonzero>/<mode>`;
+its modes are `150`, `200`, `150F` and `200F`. This collection has no license
+component and sits outside the title-save redirects. Both Retro license-bearing
+RKSYS profiles must remain unchanged by comparison import.
+
+Wii courses played in Retro are numeric expanded entries too: Wii Luigi Circuit
+is RT index 88 / PulsarId `0x158`, folder `95ab4053`, reused race slot 0. The retail
+RKG course field cannot identify that catalog destination. Build a bounded
+registry from the installed pinned RT/CT configs and BMG labels; exclude battle
+and padding records. Import needs explicit course, variant and mode selection,
+and a pending request bound to the config identity. Export valid RKG bytes
+unchanged. Stage one unique file for cold-launch application, preserving existing
+ghosts, leaderboard, favorites, trophies, ratings, identity and saves.
+
+The NAND filename limit is 12 characters; use a collision-checked `1234abcd.rkg`
+name, not a full SHA filename. Retained native selection supports 37 ghosts plus
+an expert, while filesystem enumeration caps 100; reject crowded folders before
+adding an invisible entry and detect duplicates of the bundled expert explicitly.
+The configs are exact pinned 6.12.8 data, but retained Pulsar source `93ba8c8a`
+is architecture evidence whose exact correspondence with shipped `Code.pul`
+remains unproven. Actual list discovery and replay must validate the implementation.
+
+The next pass should implement the standalone-file path separately from Original
+RKSYS transfer. Acceptance covers a Wii course in Retro, a custom course, a
+variant, four modes, compressed/uncompressed round-trip, collisions, restart
+retry, config change, full folders and pre-existing-file/save preservation.
+Original's accepted transfer stays a regression gate. This is a resolved design
+contract, not implemented or shipped Retro transfer.
+
+
+## Upstream candidate: Android player acceptance
+
+The narrow `bltl` backport source is preserved on owner-fork branch
+`codex/kartpad-bltl-lifting` at `1e55229d7f8d`; this is the same 33 source/test
+lines already covered by the 658 translator tests and real native build. The
+maintained root gitlink remains `9d563f98953c`. The local submodule now points at
+the preserved candidate; do not stage that pointer with unrelated changes.
+
+The built private pack imports through the system picker and plays a Luigi
+Circuit race segment in the corrected release-style empty app. Its app-side
+hash matches the built library and its interface fingerprint is unchanged.
+Replacement leaves the new test-license save byte-identical. Following gameplay,
+only byte `0x5688` and the four-byte save CRC differ; the rest of the save,
+including all ghost slots and license identity, is unchanged, and CRC is valid.
+The cancellation sequence retains the old pack, fingerprint and save. No config
+or preference files were present in the selected snapshot, so this does not prove
+preservation of populated settings. Other native platforms, Retro and service
+acceptance remain gates before pin promotion; the preserved candidate is not a
+published game pack or an upstream PR.
