@@ -104,7 +104,33 @@ under `private/focused-loop/` and `work/bltl-lifting-20261001/`. No release or
 private input was published. The primary dirty checkout and other worktrees
 remain preserved.
 
-Next: integrate this reviewed builder/documentation batch into its focused PR,
-then review the existing PowerVR dependency candidate's exact package consumers
-before a release claim. Continue bounded upstream and control/ghost work after
-that integration; retain explicit native, hardware and service gates.
+## Integration and next checks
+
+- Builder/documentation changes are committed on `codex/focused-maintenance-loop`
+  and published as [draft PR #372](https://github.com/chrissotraidis/kartpad/pull/372).
+  Hosted receipts and regression checks both passed on `6b79eae7`.
+- The actual Android CLI `doctor` and `build-pack` route passed against the
+  published APK, reused the compatible pack and exported game data. Its pack is
+  unchanged and all 2,043 exported file hashes match the RVZ extraction.
+- The retained PowerVR candidate remains in its original isolated checkout.
+  Its proposed lock points to `dawn-android-20261001.1`, which was not hosted when
+  checked. Do not promote that lock or call #304 fixed until the verified archive
+  is available and its identity is checked in the actual app package. Moto G54
+  acceptance remains separate.
+- Controller review confirms the shared mappings and L1 preset are implemented.
+  A proposed physical-channel A fallback was withheld: installed Apple SDK
+  documentation says `physicalInputProfile` is equivalent to the typed profile,
+  so a split fake profile can manufacture a failure. #324 needs real Joy-Con
+  routing evidence before rewiring input.
+- Android and iPhone ghost messages now say that **all** Retro ghosts are outside
+  the current transfer tool, including Wii courses played in Retro. The original
+  “custom-track” wording contradicted #295's retained acceptance. Storage and
+  import/export behavior are unchanged; Retro transfer remains open.
+- One native Android cache-miss build with the local `bltl` candidate is running
+  with four jobs and a separate private cache. Graph gates passed; retain its
+  final compile/check/package result before promotion. No new game pack or
+  source pin is included in PR #372.
+
+Continue the PowerVR artifact/package gate, bounded missing upstream fixes,
+Retro storage/course mapping and measured same-device performance. Preserve
+explicit native, hardware and service gates; do not spin on reporter retests.
