@@ -31,7 +31,7 @@ through narrow, verified changes that improve setup, reliability and maintenance
 | Documentation | Reviewed | Current builder/mobile/Mac routes, upstream ledger and superseded maintenance next actions reconciled. |
 | Completed issue scopes | First reconciliation done | #347 and #235 closed; partial #196 remains open. Review began with 67 open issues, now 65. |
 | PowerVR / stability | Queued | Existing dependency work reviewed, actual package integration verified, hardware gate explicit. |
-| Upstream changes | Review complete; candidate local | All 18 later commits mapped. Narrow bltl candidate passes 658 translator tests and real graph checks; native/game acceptance pending. |
+| Upstream changes | Review complete; candidate local | All 18 later commits mapped. Narrow bltl candidate passes 658 translator tests and real graph checks; Android native build passed; other platforms/game acceptance pending. |
 | Controls / Retro ghosts | Queued | Existing feature contracts checked before extending input or storage. |
 | CPU / larger features | Queued | Same-device profiling and separate Wiimmfi/DSU feasibility and acceptance. |
 
@@ -86,7 +86,8 @@ The translator and runtime gitlinks and dependency lock remain unchanged.
   no skips. Two real translation runs passed the pinned graph: 29,637 generated,
   29,065 base and 4,102 Retro functions. That candidate is uncommitted on local
   submodule branch `codex/kartpad-bltl-lifting`; root pins are unchanged. Preserve
-  it until native-build and gameplay acceptance determine whether to promote it.
+  it until the remaining native-platform and gameplay acceptance determines
+  whether to promote it.
 - Closed #347 from its shipped interface-fingerprint and recorded acceptance
   evidence, and #235 from the same reporter reaching races. No comments or new
   reporter requests were posted. #313 retains Honor performance. #196 retains
@@ -126,10 +127,16 @@ remain preserved.
   the current transfer tool, including Wii courses played in Retro. The original
   “custom-track” wording contradicted #295's retained acceptance. Storage and
   import/export behavior are unchanged; Retro transfer remains open.
-- One native Android cache-miss build with the local `bltl` candidate is running
-  with four jobs and a separate private cache. Graph gates passed; retain its
-  final compile/check/package result before promotion. No new game pack or
-  source pin is included in PR #372.
+- The native Android cache-miss build with the local `bltl` candidate passed:
+  real RVZ translation/graph validation, all 208 compile/link steps, app-state
+  checking and private pack packaging, with four jobs and a separate private
+  cache. It used source `6b79eae7` plus the two uncommitted upstream hunks; a
+  source-only patch backup is retained in ignored `work/bltl-lifting-20261001/`.
+  Native compile/link took 751.319 seconds; total was 854.82 seconds. This direct
+  builder call is one host result, not a performance comparison or gameplay
+  acceptance. The independent CLI doctor/cache/export route also passed. No new
+  game pack or source pin is included in PR #372. Other native platforms and
+  gameplay remain gates before promotion.
 
 Continue the PowerVR artifact/package gate, bounded missing upstream fixes,
 Retro storage/course mapping and measured same-device performance. Preserve

@@ -158,8 +158,12 @@ and all 658 default translator tests passed on .NET 8. The regression checks LR
 assignment precedes the conditional branch, with the correct destination and
 fallthrough. Logs are retained locally in ignored
 `work/bltl-lifting-20261001/{baseline,focused,full}.log`. The candidate remains
-uncommitted; KartPad's gitlink and lock pin are unchanged. Two real RVZ translations passed the pinned graph: 29,637 generated, 29,065 base
-and 4,102 Retro functions. Native-build and gameplay acceptance remain open.
+uncommitted; KartPad's gitlink and lock pin are unchanged. Real RVZ translations passed the pinned graph: 29,637 generated, 29,065 base
+and 4,102 Retro functions. One Android cache-miss build then passed all 208
+compile/link steps, app-state checking and private pack packaging against the
+published 0.7.3 APK, with four jobs. Total time was 854.82 seconds; native build
+was 751.319 seconds. This is one host build, not a performance comparison.
+Other native platforms and gameplay acceptance remain open.
 
 For each shared change, record the KartPad source pin, upstream equivalent or
 gap, affected consumer, focused regression and acceptance result. Prepare new
