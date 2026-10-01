@@ -200,3 +200,14 @@ CPU frame times under the same scene and settings. Let the profile select a
 small optimization, then repeat that comparison and reject regressions. Local
 source/build proof does not establish affected-user, physical-gameplay or online
 acceptance, and does not justify repeated requests for reporter testing.
+
+### Imported Wii ES scalar follow-up
+
+The four maintained `wii_es_crypto.h` files still reject noncanonical nonzero
+private scalars accepted by the identity loader. A narrow ignored copy carrying
+upstream #265's modulo policy passes actual-header Crypto++ certificate,
+signature, tampered-message and zero-residue checks on macOS ARM64 and the owned
+Android emulator. [Exact pins and evidence](artifacts/2026-10-01/es-key-scalar-policy.md)
+separate this synthetic native proof from authentic imported identities, service
+login and release acceptance. No runtime pin or identity data is changed by
+this review; no duplicate upstream contribution is proposed.

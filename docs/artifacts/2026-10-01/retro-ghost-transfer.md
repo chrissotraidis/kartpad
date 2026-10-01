@@ -126,3 +126,41 @@ transfer and production JNI tests pass; fresh app/pack/native acceptance follows
 The first two focused PRs are merged: #372 at `be68ed1f`, and #373 at `ae83d0fe`.
 The feature is retained as draft [PR #375](https://github.com/chrissotraidis/kartpad/pull/375),
 now targeting main, with its initial Linux and macOS hosted contracts passing.
+
+## Corrected build receipts
+
+Source `10be3756` contains early Android application storage setup, a single
+cold-launch JNI config reload, atomic exclusive publication and the permanent
+actual-config-parser regression. Linux boundary, macOS mobile-bridge and
+maintenance-receipt hosted checks all pass on that commit.
+
+- Empty Android debug APK SHA-256:
+  `17234c28be8fd9feb8e42e70ed5bf653d3375b11dabab58fcf6ea6afc8f8d59f`.
+- Empty unsigned iPhone IPA SHA-256:
+  `b2e613a5d66d6fb68deaccd554b1ad8db63bc7987d5937d51d2c309957aa5354`.
+- Both actual builds pass repository and PadMint 0.2.8 content audits with zero
+  game functions. The iPhone result is a build, not physical UI/gameplay proof.
+- The matching normal Android CLI build passes all 208 compile/link steps,
+  state checking and packaging. Private pack SHA-256:
+  `95e73526636267288fd61f2ced4982fd112111f2c66099f3bf529cc23abfab97`;
+  133,639,008 bytes; interface fingerprint
+  `003613b0048272855a7862a6c87054d1f2895e65f899be9b9d6a845d75ce7adc`.
+- Real system-picker replacement accepts those bytes and preserves the existing
+  Original save. Fresh code and its changed header fingerprint were rebuilt;
+  no compatibility guard was bypassed.
+
+For the targeted immediate-install regression, preserve the owned installed
+Retro directory under a separate test backup, save/config snapshots privately,
+and remove only its config-root line. Seed the retained official ZIP into the
+normal verified archive cache. The actual worker revalidates and installs 6.12.8;
+this second run proves cached installation, not another network download.
+The preceding run already covered the actual network download. Same-process
+post-install launch and the corrected ghost transfer remain the next native
+checks. The primary checkout remains byte-for-byte unchanged by status inventory.
+
+The corrected targeted post-install launch keeps the worker's process ID `9937`
+and reaches the Retro title. Native diagnostics load the real app config with
+both `dvd_root=GameData` and `retro_rewind_root=RetroRewind/RetroRewind6`, activate
+the canonical Retro overlay and its save redirect. No force-stop or process
+replacement intervenes between installation and game start. This passes the
+reproduced startup boundary; it is not a full Retro race or service result.

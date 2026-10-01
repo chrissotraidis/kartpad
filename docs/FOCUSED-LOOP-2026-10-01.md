@@ -242,3 +242,27 @@ or preference files were present in the selected snapshot, so this does not prov
 preservation of populated settings. Other native platforms, Retro and service
 acceptance remain gates before pin promotion; the preserved candidate is not a
 published game pack or an upstream PR.
+
+## Integration and native feature findings
+
+The first two reviewed passes are merged into main: #372 (`be68ed1f`) and #373
+(`ae83d0fe`). The actual-driver gate remains open; merging the bounded Dawn
+policy does not close #304. Retro comparison transfer is draft #375, targeting
+main at source `10be3756`, with Linux and macOS hosted contracts passing.
+
+Actual Retro installer/ghost execution found two issues invisible to host-only
+checks. An installer-loaded native library cached config before Activity set
+app paths; early Application initialization and one cold reload now pass
+same-process post-install title startup. Android SELinux denies hard links, so
+staged publication now uses atomic exclusive rename on each mobile platform.
+Updated empty builds and content audits, normal matching Android pack build,
+real picker replacement, permanent config and transfer tests pass. Native ghost
+list/replay, round-trip and iPhone gameplay remain acceptance gates; see the
+[updated receipt](artifacts/2026-10-01/retro-ghost-transfer.md).
+
+The [Wii ES scalar review](artifacts/2026-10-01/es-key-scalar-policy.md) reproduces
+another missing upstream policy at all four runtime pins. The narrow existing
+upstream modulo fix passes actual-header certificate/signature/zero/tamper
+regressions on macOS ARM64 and the owned Android emulator using synthetic keys.
+It has not advanced a maintained pin. Preserve that candidate for a separate
+runtime pass; authentic identity/service/platform acceptance remains distinct.
