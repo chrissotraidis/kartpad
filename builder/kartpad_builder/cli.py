@@ -19,7 +19,7 @@ def repo_root() -> Path:
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
         prog="kartpad-builder",
-        description="Create a private unsigned KartPad IPA from a supported user-owned disc image.",
+        description="Build private KartPad game packs and personal IPAs from supported user-owned disc images.",
     )
     result.add_argument("--version", action="version", version=__version__)
     result.add_argument("--profiles-dir", type=Path, default=repo_root() / "builder/profiles")
@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
         if suffix not in profile.data["containers"]["extensions"]:
             raise ProfileError(f"unsupported disc-image extension for {profile.id}: .{suffix}")
         if args.command == "inspect":
-            acceptance = "pinned image" if profile.accepts(image_sha256) else "verified after extraction"
+            acceptance = "pinned image" if profile.accepts(image_sha256) else "requires extraction verification"
             print(json.dumps({"imageSHA256": image_sha256, "profileId": profile.id,
                               "displayName": profile.display_name, "acceptance": acceptance}, indent=2))
             return 0

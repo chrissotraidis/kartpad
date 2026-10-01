@@ -29,35 +29,34 @@
         128,
         131,
         207,
-        215,
         216,
         236
       ],
       "state": "ready-local",
-      "next_action": "v0.5.0/code135 is published with bounded shader replay, startup and framebuffer fixes. Owner thumbnail acceptance does not close unclassified handset launch, cup-end or race exits. Classify retained exact-session evidence; do not repeat superseded code126 packaging or install work. #216 A9+ fresh code135 download now installs and Original loads; missing character bodies and lag remain, Retro untested, older TabA separate; #235 same-reporter #313 reaches races on 0.5.0, with slowdown tracked separately. #215 reporter now confirms working startup on Xiaomi 25057RN09G; installed build and fixing change are unspecified. No repeat launch/log request.",
+      "next_action": "Use the 1 October focused review and current 0.7.3 source to classify retained exact-session import/start, cup-end and race exits. #216 A9+ now loads both Original and Retro; missing bodies, lag and the older Tab A remain separate. #235 is closed from the same reporter reaching races; performance remains #313. #215 is already closed after the reporter disabled Renderer Validation and resumed racing; do not repeat startup requests or keep it in the active crash queue. Similar exits require separate evidence.",
       "acceptance": "Each classified failure passes its affected import/start, cup-awards or race boundary on the exact target. Similar exits are not assumed to share a cause.",
       "dependency": {
         "owner": "KartPad engineering",
         "needs": "Internal analysis of retained exact-build crash and ongoing owner-session evidence; no reporter input required for the Pixel subcase."
       },
-      "checkpoint": "docs/artifacts/2026-09-20/post-release-issues-and-enhancements.md",
+      "checkpoint": "docs/FOCUSED-REVIEW-2026-10-01.md",
       "priority_reason": "Unclassified crashes remain actionable; published fixes require per-failure evidence, not another broad release loop."
     },
     {
       "id": "ios27-startup",
-      "priority": 1,
+      "priority": 3,
       "issues": [
         196
       ],
       "state": "ready-local",
-      "next_action": "New supplied iPhone17ProMax/iOS27.2 build60 crash reaches FatalMissingGuestTarget through InvokeIndirectCpu; transcript destructor abort is secondary during exit. Analyze exact dispatch/translation evidence. Diagnostic-off mitigation did not resolve this case; no repeated crash or resend request.",
+      "next_action": "The #196 reporter confirms Original works without stutters and Retro races smoothly by the second lap on 0.5.3. The old build60 startup investigation is superseded. Retain first-lap Retro warmup and endless online searching as separate open scopes; review current warmup/network code and existing evidence. The owner already requested one report after extended searching; do not repeat the request or assume a cause.",
       "dependency": {
         "owner": "KartPad engineering",
-        "needs": "Internal diagnosis from retained evidence; reporter outreach is on hold."
+        "needs": "Internal review of remaining warmup and matchmaking scopes using retained evidence; the existing specific online-report request remains pending."
       },
-      "acceptance": "The same corrected candidate preserves existing data and passes both Original and Retro launch, race and relaunch on the matching iPhone 17 Pro Max/iOS 27 target. Package/reporter/release acceptance remain separate.",
-      "checkpoint": "docs/artifacts/2026-09-21/open-issue-inventory.md",
-      "priority_reason": "A game that cannot launch cannot meet offline or online acceptance."
+      "acceptance": "Preserve working launch and saves. Measure first-lap warmup separately from later laps; online acceptance needs matching, race, results and reconnect on the affected connection, not just launch.",
+      "checkpoint": "docs/FOCUSED-REVIEW-2026-10-01.md",
+      "priority_reason": "Startup is confirmed working; remaining warmup and online symptoms follow unresolved launch blockers."
     },
     {
       "id": "android-online",
