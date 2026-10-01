@@ -3,6 +3,18 @@
 
 #include "kartpad/android/controller_mapping.hpp"
 #include "kartpad/android/runtime_settings.hpp"
+#include "runtime_config.h"
+
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeReloadRuntimeConfig(
+    JNIEnv* env, jobject) {
+  try {
+    RuntimeConfigFile::Reload();
+  } catch (const std::exception& error) {
+    const auto exception = env->FindClass("java/lang/IllegalStateException");
+    if (exception) env->ThrowNew(exception, error.what());
+  }
+}
 
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeEnableActivityRecreation(

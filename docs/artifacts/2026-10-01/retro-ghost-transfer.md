@@ -21,8 +21,8 @@ favorite, trophy, rating nor identity is a transfer destination.
 
 The catalog identity detects changed picker selection. Pending imports also
 retain the exact RT/CT bytes and compare them before cold-launch application;
-the identity is not an authentication hash. A complete staged file is linked
-into place without overwriting an existing entry. A completed link followed by
+the identity is not an authentication hash. A complete staged file is renamed
+into place without overwriting an existing entry. A completed publication followed by
 interrupted request cleanup is retryable. Failed requests remain cancellable.
 Exports preserve the complete validated input bytes, including bounded trailing
 compressed padding. Seven of the retained 373 expert files have such padding.
@@ -46,7 +46,7 @@ alongside its existing checksum, length and bounded Yaz/input checks.
   Hash-verified private pinned configs pass all 1,364 full-path selections.
 - Filesystem tests cover all four modes, nonbase variants, compressed and
   uncompressed exact round-trip, unchanged save/leaderboard stand-ins,
-  duplicates, filename collisions, completed-link retry, corrupt/stale requests,
+  duplicates, filename collisions, completed-publication retry, corrupt/stale requests,
   expert exclusion, capacity and symlink guards.
 - All 373 retained Retro experts and 64 Original staff ghosts pass the stricter
   bounded RKG validator under ASAN/UBSAN. Their bodies remain private.
@@ -102,3 +102,27 @@ Public translator/runtime pins stay unchanged. The preserved `bltl` source
 candidate remains committed on the owner fork at `1e55229d7f8d`; for the normal
 builder's source-pin guard, its identical 33 lines are applied over local
 translator HEAD `9d563f98953c`. Do not stage that working change with this feature.
+
+## Native findings under review
+
+The official Android installer downloads and validates 6.12.8 successfully on the
+owned API 36 emulator. Its immediate first game launch reproduces a pre-existing
+initialization fault: the extraction worker loads `libmain` before Activity
+exports app-storage paths, caching an empty config. Native diagnostics report
+an overlay rooted at `/system/bin/RetroRewind6` and no DVD root despite the
+correct app config. Force-stop and cold launch reaches a stable Retro title.
+An early Application context-path export and one guarded cold config reload are
+implemented locally; the actual-header early/late initialization probe passes.
+Immediate post-install app acceptance remains a separate gate.
+
+The real Retro ghost picker reaches the explicit Wii Luigi Circuit / 150cc
+selection and validates the chosen staff RKG. Publication fails safely because
+Android SELinux denies `{ link }` on app data. No pending import or comparison
+file is created, and Original plus Retro save hashes remain unchanged. Replace
+the hard link with atomic exclusive rename: `renameat2(RENAME_NOREPLACE)` on
+Android/Linux and `renamex_np(RENAME_EXCL)` on Apple. The updated ASAN/UBSAN
+transfer and production JNI tests pass; fresh app/pack/native acceptance follows.
+
+The first two focused PRs are merged: #372 at `be68ed1f`, and #373 at `ae83d0fe`.
+The feature is retained as draft [PR #375](https://github.com/chrissotraidis/kartpad/pull/375),
+now targeting main, with its initial Linux and macOS hosted contracts passing.

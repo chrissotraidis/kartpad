@@ -19,6 +19,7 @@
     <uses-feature android:name="android.hardware.vulkan.version" android:required="false" android:version="0x00401000" />
 
     <application
+        android:name=".KartPadApplication"
         android:appCategory="game"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"

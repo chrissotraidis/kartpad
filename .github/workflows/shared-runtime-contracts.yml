@@ -16,6 +16,11 @@ on:
       - 'scripts/test-android-keyboard-expiry.py'
       - 'scripts/test-android-aram-window.py'
       - 'scripts/test-android-event-service.py'
+      - 'scripts/test-android-cold-config.py'
+      - 'runtime/tests/android_cold_config_tests.cpp'
+      - 'android/app/src/main/java/dev/kartpad/android/KartPadApplication.kt'
+      - 'android/app/src/main/cpp/kartpad_runtime_settings_jni.cpp'
+      - 'android/app/src/main/AndroidManifest.xml'
       - 'scripts/test-network-send-error.py'
       - 'scripts/test-ios-vsync.py'
       - 'scripts/test-shared-runtime-parity.py'
@@ -55,6 +60,11 @@ on:
       - 'scripts/test-android-keyboard-expiry.py'
       - 'scripts/test-android-aram-window.py'
       - 'scripts/test-android-event-service.py'
+      - 'scripts/test-android-cold-config.py'
+      - 'runtime/tests/android_cold_config_tests.cpp'
+      - 'android/app/src/main/java/dev/kartpad/android/KartPadApplication.kt'
+      - 'android/app/src/main/cpp/kartpad_runtime_settings_jni.cpp'
+      - 'android/app/src/main/AndroidManifest.xml'
       - 'scripts/test-network-send-error.py'
       - 'scripts/test-ios-vsync.py'
       - 'scripts/test-shared-runtime-parity.py'
@@ -119,6 +129,8 @@ jobs:
         run: python3 -B scripts/test-android-aram-window.py
       - name: Android scheduler event service
         run: python3 -B scripts/test-android-event-service.py
+      - name: Android cold-launch config cache
+        run: python3 -B scripts/test-android-cold-config.py
       - name: Preserve send errors across diagnostics
         run: python3 -B scripts/test-network-send-error.py
       - name: Shared runtime source parity

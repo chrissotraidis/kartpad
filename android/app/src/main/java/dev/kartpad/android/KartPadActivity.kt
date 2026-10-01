@@ -86,6 +86,9 @@ class KartPadActivity : SDLActivity() {
         // SDL catches library/startup failures and does not start the guest.
         // Resume never runs this hook, so pending edits apply only at cold launch.
         if (BuildConfig.GAME_RUNTIME && !identityStartupChecked) {
+            // The installer may have loaded libmain before updating Config.toml.
+            // Reload once before guest startup; resume retains its live settings.
+            nativeReloadRuntimeConfig()
             KartPadIdentityStorage.applyConsoleRecovery(filesDir)?.let { error ->
                 throw IllegalStateException(error)
             }
@@ -2474,6 +2477,7 @@ class KartPadActivity : SDLActivity() {
 
     private external fun nativeGhostTransfer(save: ByteArray, ghost: ByteArray?, license: Int, slot: Int, downloaded: Boolean): ByteArray?
     private external fun nativeRetroGhostCatalog(root: String): String
+    private external fun nativeReloadRuntimeConfig()
     private external fun nativeRetroGhostFiles(root: String, track: Int, variant: Int, mode: Int, identity: String): Array<String>
     private external fun nativeRetroGhostTransfer(root: String, track: Int, variant: Int, mode: Int, identity: String, filename: String?, ghost: ByteArray?): ByteArray?
     private external fun nativeRetroGhostPending(root: String, apply: Boolean)

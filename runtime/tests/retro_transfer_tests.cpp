@@ -107,7 +107,7 @@ int main() {
   storage.Stage(ghost, 0x100, 0, 0, catalog.identity); request = ReadFile(pending);
   std::snprintf(name, sizeof(name), "%06x.rkg", Read32(request, 16) & 0xffffffu);
   Require(ReadFile(folder / name).empty(), "collision name reused");
-  // Simulate a completed link followed by process death before request cleanup.
+  // Simulate a completed publication followed by process death before request cleanup.
   Write(folder / name, ghost);
   Require(storage.Apply() && !storage.HasPending(), "completed import not retryable");
 

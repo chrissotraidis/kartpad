@@ -9,6 +9,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#if defined(__linux__)
+#include <sys/syscall.h>
+#endif
 
 namespace kartpad::ghost::retro {
 namespace fs = std::filesystem;
@@ -63,7 +66,7 @@ class TransferStorage {
     return bytes;
   }
 
-  // Build a complete temporary file, then link it into place without replacing
+  // Build a complete temporary file, then rename it without replacing
   // any existing entry. A crash exposes either the complete file or no file.
   void WriteNew(const fs::path& target, std::span<const uint8_t> bytes) const {
     auto temporary = (root_ / ".PendingRetroGhost-XXXXXX").string();
@@ -78,7 +81,15 @@ class TransferStorage {
         done += static_cast<size_t>(count);
       }
       Require(::fsync(file.value) == 0, "Retro ghost file could not be synchronized");
-      Require(::link(temporary.c_str(), target.c_str()) == 0,
+#if defined(__APPLE__)
+      const int published = ::renamex_np(temporary.c_str(), target.c_str(), RENAME_EXCL);
+#elif defined(__linux__)
+      // Android app SELinux policy denies hard links. The kernel's exclusive
+      // rename still publishes a complete file atomically without overwriting.
+      const int published = static_cast<int>(::syscall(SYS_renameat2, AT_FDCWD,
+          temporary.c_str(), AT_FDCWD, target.c_str(), 1u /* RENAME_NOREPLACE */));
+#endif
+      Require(published == 0,
           "Retro ghost destination already exists or is unavailable");
       // Synchronize the new directory entry before finalizing the request.
       FileDescriptor directory{::open(target.parent_path().c_str(), O_RDONLY | O_CLOEXEC)};
