@@ -626,7 +626,7 @@ BOOL KartPadInstalledGameDataIsValid() {
 NSError *KartPadPerformGameDataImport(NSURL *url,
                                       KartPadDiscExtractionProgress progress) {
   BOOL securityScoped = [url startAccessingSecurityScopedResource];
-  NSError *workError = nil;
+  __block NSError *workError = nil;
   NSString *supportRoot = KartPadSupportRoot();
   NSString *staging = [supportRoot stringByAppendingPathComponent:
       [NSString stringWithFormat:@"GameData.import-%@", NSUUID.UUID.UUIDString]];
@@ -637,19 +637,25 @@ NSError *KartPadPerformGameDataImport(NSURL *url,
                           error:&workError];
   if (workError == nil) {
     KartPadRecoverInterruptedImport(supportRoot);
-    if (KartPadURLIsSupportedDiscImage(url)) {
-      [KartPadDiscExtractor extractImageAtPath:url.path toDirectory:staging
-                                      progress:progress error:&workError];
-    } else {
-      NSString *sourceRoot = KartPadResolvedExtractedRoot(url);
-      NSString *validationError = KartPadValidateExtractedRoot(sourceRoot, &workError);
-      if (validationError != nil && workError == nil) {
-        workError = KartPadGameDataError(1, validationError);
+    NSError *coordinationError = nil;
+    NSFileCoordinator *coordinator = [[NSFileCoordinator alloc] initWithFilePresenter:nil];
+    [coordinator coordinateReadingItemAtURL:url options:0 error:&coordinationError
+        byAccessor:^(NSURL *readingURL) {
+      if (KartPadURLIsSupportedDiscImage(readingURL)) {
+        [KartPadDiscExtractor extractImageAtPath:readingURL.path toDirectory:staging
+                                        progress:progress error:&workError];
+      } else {
+        NSString *sourceRoot = KartPadResolvedExtractedRoot(readingURL);
+        NSString *validationError = KartPadValidateExtractedRoot(sourceRoot, &workError);
+        if (validationError != nil && workError == nil) {
+          workError = KartPadGameDataError(1, validationError);
+        }
+        if (workError == nil) {
+          [files copyItemAtPath:sourceRoot toPath:staging error:&workError];
+        }
       }
-      if (workError == nil) {
-        [files copyItemAtPath:sourceRoot toPath:staging error:&workError];
-      }
-    }
+    }];
+    if (workError == nil) workError = coordinationError;
   }
   if (securityScoped) {
     [url stopAccessingSecurityScopedResource];
@@ -1604,10 +1610,11 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 - (void)presentGameDataPicker {
-  self.choosingGameDataCopy = YES;
+  // Open folders in place; the importer copies validated data into private staging.
+  self.choosingGameDataCopy = NO;
   UIDocumentPickerViewController *picker =
       [[UIDocumentPickerViewController alloc]
-          initForOpeningContentTypes:KartPadGameDataContentTypes() asCopy:YES];
+          initForOpeningContentTypes:KartPadGameDataContentTypes() asCopy:NO];
   picker.delegate = self;
   picker.allowsMultipleSelection = NO;
   [self.root presentViewController:picker animated:YES completion:nil];
@@ -3772,7 +3779,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   }
   UIDocumentPickerViewController *picker =
       [[UIDocumentPickerViewController alloc]
-          initForOpeningContentTypes:KartPadGameDataContentTypes() asCopy:YES];
+          initForOpeningContentTypes:KartPadGameDataContentTypes() asCopy:NO];
   picker.delegate = self;
   picker.allowsMultipleSelection = NO;
   [controller presentViewController:picker animated:YES completion:nil];
@@ -3871,7 +3878,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
     return;
   }
   if (url != nil) {
-    [self importExtractedGameDataFromURL:url deleteAfterwards:YES];
+    [self importExtractedGameDataFromURL:url deleteAfterwards:NO];
   }
 }
 
@@ -3890,7 +3897,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 - (void)gameOverlayRequestsGameDataFolderImport:(SunPadGameOverlay *)overlay {
   (void)overlay;
   UIViewController *presenter=KartPadVisibleViewController(_window);if(!presenter)return;
-  UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeFolder] asCopy:YES];picker.delegate=self;picker.allowsMultipleSelection=NO;
+  UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeFolder] asCopy:NO];picker.delegate=self;picker.allowsMultipleSelection=NO;
   [presenter presentViewController:picker animated:YES completion:nil];
 }
 
