@@ -31,11 +31,27 @@ class IOSGameDataPickerContractTests(unittest.TestCase):
             ),
             2,
         )
-        # Two game-data pickers plus the separate experimental .mii importer
-        # all request private copies from potentially remote file providers.
-        self.assertGreaterEqual(source.count("asCopy:YES"), 3)
+        # Both entry points must allow directories to be opened, and must not
+        # delete a provider's original after copying into KartPad's private store.
+        self.assertEqual(source.count(
+            "initForOpeningContentTypes:KartPadGameDataContentTypes() asCopy:NO"), 2)
+        self.assertIn("initForOpeningContentTypes:@[UTTypeFolder] asCopy:NO", source)
+        self.assertNotIn("self.choosingGameDataCopy = YES", source)
+        self.assertIn("[self importExtractedGameDataFromURL:url deleteAfterwards:NO]", source)
+        self.assertNotIn("[self importExtractedGameDataFromURL:url deleteAfterwards:YES]", source)
         self.assertIn("choosingGameDataCopy", source)
         self.assertIn("deleteAfterwards:deleteAfterwards", source)
+
+    def test_provider_read_is_coordinated_before_releasing_access(self) -> None:
+        source = (REPO / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()
+        body = source.split("NSError *KartPadPerformGameDataImport(", 1)[1]
+        body = body.split("\n}\n", 1)[0]
+        self.assertIn("coordinateReadingItemAtURL:url", body)
+        self.assertIn("extractImageAtPath:readingURL.path", body)
+        self.assertIn("KartPadResolvedExtractedRoot(readingURL)", body)
+        self.assertLess(body.index("copyItemAtPath:sourceRoot"),
+                        body.index("stopAccessingSecurityScopedResource"))
+        self.assertIn("workError = coordinationError", body)
 
     def test_documents_scan_checks_disc_extension_before_directory_metadata(self) -> None:
         source = (REPO / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()
