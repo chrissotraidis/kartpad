@@ -36,6 +36,14 @@ public final class KartPadControllerKeysTestMain {
         // The phone's own Back keeps working.
         expect(!routes(KEYCODE_BACK, KEYBOARD, -1, true, KEYBOARD, false), "navigation back");
         expect(!routes(KEYCODE_BACK, KEYBOARD, 2, true, KEYBOARD, false), "built-in back key");
+
+        // Escape from a controller never opens the quit prompt; a keyboard's still does.
+        expect(dropsKey(KEYCODE_ESCAPE, SOURCE_GAMEPAD | KEYBOARD, 1), "gamepad escape");
+        expect(dropsKey(KEYCODE_ESCAPE, SOURCE_JOYSTICK | KEYBOARD, 0), "joystick escape");
+        expect(!dropsKey(KEYCODE_ESCAPE, KEYBOARD, KEYBOARD_TYPE_ALPHABETIC), "keyboard escape");
+        expect(!dropsKey(KEYCODE_ESCAPE, SOURCE_GAMEPAD | KEYBOARD, KEYBOARD_TYPE_ALPHABETIC),
+                "keyboard with gamepad keys");
+        expect(!dropsKey(KEYCODE_BUTTON_A, SOURCE_GAMEPAD, 1), "other keys untouched");
         System.out.println("KartPad controller key routing passed.");
     }
 
