@@ -33,6 +33,9 @@ from .retro_rewind import prepare_inputs
 
 HOST_TAGS = {"Darwin": "darwin-x86_64", "Linux": "linux-x86_64", "Windows": "windows-x86_64"}
 IOS_PACK_GITLINKS = ("vendor/runtimes/ios", "vendor/wiicompiled")
+# Release flags as the NDK sets them, plus -g0 to undo the NDK's default -g.
+ANDROID_NO_DEBUG_INFO = ("-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -g0",
+                         "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -g0")
 
 
 @dataclass(frozen=True)
@@ -271,6 +274,9 @@ def build_android_pack(
              "-DANDROID_ABI=arm64-v8a",
              f"-DANDROID_PLATFORM=android-{_toolchain_setting(repo, 'KARTPAD_ANDROID_MIN_SDK')}",
              "-DANDROID_STL=c++_shared", "-DCMAKE_BUILD_TYPE=Release",
+             # The NDK adds -g, but the pack is stripped below, so the debug info is
+             # thrown away. Skipping it roughly halves compile time; code is unchanged.
+             *ANDROID_NO_DEBUG_INFO,
              f"-DMKW_TRANSLATED_SHARD_MANIFEST={translation / 'build_shards/shards.cmake'}",
              f"-DMKW_GAME_PACK_RUNTIME={library}",
              f"-DMKW_KARTPAD_RUNTIME_INCLUDE={repo / 'runtime/include'}",

@@ -35,7 +35,9 @@ if [[ "$platform" == android ]]; then
   ndk="$sdk_root/ndk/$KARTPAD_ANDROID_NDK"
   [[ -f "$ndk/build/cmake/android.toolchain.cmake" ]] || { echo "ERROR: Android NDK $KARTPAD_ANDROID_NDK not found under $sdk_root" >&2; exit 1; }
   toolchain=(-DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake"
-    -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM="android-$KARTPAD_ANDROID_MIN_SDK" -DANDROID_STL=c++_shared)
+    -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM="android-$KARTPAD_ANDROID_MIN_SDK" -DANDROID_STL=c++_shared
+    # The pack is stripped, so skip the NDK's default -g (about half the compile time).
+    "-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -g0" "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -g0")
   built="libkartpad_game.so"
 else
   definitions="KARTPAD_UNOBSERVED_FP_STATUS=1"
