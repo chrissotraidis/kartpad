@@ -10,7 +10,7 @@ package dev.kartpad.android;
  * gamepad (MapGamepadToClassic) and turns a controller's Back into B, the
  * button Android itself falls back to Back for.
  */
-final class KartPadControllerKeys {
+public final class KartPadControllerKeys {
     static final int KEYCODE_BACK = 4;
     static final int KEYCODE_BUTTON_A = 96;
     static final int KEYCODE_BUTTON_B = 97;
@@ -96,5 +96,20 @@ final class KartPadControllerKeys {
         boolean controller = (deviceSources & SOURCE_GAMEPAD) == SOURCE_GAMEPAD ||
                 (deviceSources & SOURCE_JOYSTICK) == SOURCE_JOYSTICK;
         return keyCode == KEYCODE_ESCAPE && controller && keyboardType != KEYBOARD_TYPE_ALPHABETIC;
+    }
+
+    /**
+     * The name to give SDL for a gamepad its blocklist would skip for " Keyboard"
+     * in the name, or null to leave the device as SDL found it. Only devices that
+     * report gamepad and joystick sources with at least one stick qualify.
+     */
+    public static String sdlGamepadName(String name, int deviceSources, int joystickAxes) {
+        if (name == null || !name.contains(" Keyboard") || joystickAxes < 2 ||
+                (deviceSources & SOURCE_GAMEPAD) != SOURCE_GAMEPAD ||
+                (deviceSources & SOURCE_JOYSTICK) != SOURCE_JOYSTICK) {
+            return null;
+        }
+        String cleaned = name.replace(" Keyboard", "").trim();
+        return cleaned.isEmpty() ? null : cleaned;
     }
 }

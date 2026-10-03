@@ -40,6 +40,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.math.ceil
 import kotlin.math.roundToInt
+import org.libsdl.app.KartPadJoystickHandler
 import org.libsdl.app.SDLActivity
 import org.libsdl.app.SDLSurface
 
@@ -127,6 +128,7 @@ class KartPadActivity : SDLActivity() {
             configureDebugRkgInput()
             configureDebugStateTrace()
         }
+        KartPadJoystickHandler.install()
         super.onCreate(savedInstanceState)
         KartPadExitDiagnostics.mark(this, runtimeProfile)
         if (mBrokenLibraries) return
