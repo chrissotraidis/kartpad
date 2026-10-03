@@ -17,6 +17,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.InputDevice
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -55,6 +56,8 @@ class KartPadActivity : SDLActivity() {
     private var touchSettingsDialog: AlertDialog? = null
     private var resetTouchLayoutDialog: AlertDialog? = null
     private var kartPadMenu: PopupWindow? = null
+    private var routedControllerButtons = 0
+    private val loggedRoutedControllers = mutableSetOf<Int>()
     private var menuSafeInsetTop = 0
     private var menuSafeInsetEnd = 0
     private var menuSafeInsetBottom = 0
@@ -342,6 +345,31 @@ class KartPadActivity : SDLActivity() {
         Log.i(TAG, "A0 SDLActivity shell created")
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val device = event.device
+        val external = device != null && !device.isVirtual &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && device.isExternal
+        if (!KartPadControllerKeys.routes(
+                event.keyCode, event.source, event.deviceId, device != null,
+                device?.sources ?: 0, external,
+            )
+        ) {
+            return super.dispatchKeyEvent(event)
+        }
+        val mask = KartPadControllerKeys.classicMask(event.keyCode)
+        routedControllerButtons = when (event.action) {
+            KeyEvent.ACTION_DOWN -> routedControllerButtons or mask
+            KeyEvent.ACTION_UP -> routedControllerButtons and mask.inv()
+            else -> routedControllerButtons
+        }
+        if (::kartPadOverlay.isInitialized) kartPadOverlay.setControllerKeyButtons(routedControllerButtons)
+        if (loggedRoutedControllers.add(event.deviceId)) {
+            Log.i(TAG, "Routing controller keys SDL does not read: device=${device?.name ?: "virtual"} " +
+                "sources=0x${Integer.toHexString(device?.sources ?: event.source)}")
+        }
+        return true
+    }
+
     override fun onResume() {
         super.onResume()
         if (mBrokenLibraries) return
@@ -356,6 +384,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     override fun onPause() {
+        routedControllerButtons = 0
         KartPadRuntimeHealth.stop()
         kartPadMenu?.dismiss()
         if (::editorBar.isInitialized && editorBar.visibility == View.VISIBLE) {

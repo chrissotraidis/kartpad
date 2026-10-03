@@ -45,9 +45,11 @@
         <activity
             android:name=".KartPadActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
+            android:enableOnBackInvokedCallback="false"
             android:exported="${kartpadFrameCapture}"
             android:launchMode="singleTask"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="sensorLandscape"
+            tools:targetApi="34" />
         <activity
             android:name=".KartPadProblemReportActivity"
             android:exported="false"
