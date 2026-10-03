@@ -166,7 +166,7 @@ does not check for or install online updates.
 
 ## Updating safely
 
-KartPad checks GitHub for a newer release at most once a day when the game
+KartPad checks GitHub for a newer release at most once an hour when the game
 chooser opens. It sends nothing about you or your game. When one is out,
 **Update available** appears next to **Help**: it opens the APK download or the
 release notes, which say whether the update also needs a new game pack.
