@@ -10,7 +10,7 @@ package dev.kartpad.android;
  * gamepad (MapGamepadToClassic) and turns a controller's Back into B, the
  * button Android itself falls back to Back for.
  */
-final class KartPadControllerKeys {
+public final class KartPadControllerKeys {
     static final int KEYCODE_BACK = 4;
     static final int KEYCODE_BUTTON_A = 96;
     static final int KEYCODE_BUTTON_B = 97;
@@ -22,6 +22,8 @@ final class KartPadControllerKeys {
     static final int KEYCODE_BUTTON_R2 = 105;
     static final int KEYCODE_BUTTON_START = 108;
     static final int KEYCODE_BUTTON_SELECT = 109;
+    static final int KEYCODE_ESCAPE = 111;
+    static final int KEYBOARD_TYPE_ALPHABETIC = 2;
 
     static final int SOURCE_CLASS_JOYSTICK = 0x00000010;
     static final int SOURCE_DPAD = 0x00000201;
@@ -84,5 +86,30 @@ final class KartPadControllerKeys {
                     externalDevice;
         }
         return true;
+    }
+
+    /**
+     * Escape from a controller opens the runtime's quit prompt; some controllers
+     * send it alongside a face button. Drop it unless the device is a real keyboard.
+     */
+    static boolean dropsKey(int keyCode, int deviceSources, int keyboardType) {
+        boolean controller = (deviceSources & SOURCE_GAMEPAD) == SOURCE_GAMEPAD ||
+                (deviceSources & SOURCE_JOYSTICK) == SOURCE_JOYSTICK;
+        return keyCode == KEYCODE_ESCAPE && controller && keyboardType != KEYBOARD_TYPE_ALPHABETIC;
+    }
+
+    /**
+     * The name to give SDL for a gamepad its blocklist would skip for " Keyboard"
+     * in the name, or null to leave the device as SDL found it. Only devices that
+     * report gamepad and joystick sources with at least one stick qualify.
+     */
+    public static String sdlGamepadName(String name, int deviceSources, int joystickAxes) {
+        if (name == null || !name.contains(" Keyboard") || joystickAxes < 2 ||
+                (deviceSources & SOURCE_GAMEPAD) != SOURCE_GAMEPAD ||
+                (deviceSources & SOURCE_JOYSTICK) != SOURCE_JOYSTICK) {
+            return null;
+        }
+        String cleaned = name.replace(" Keyboard", "").trim();
+        return cleaned.isEmpty() ? null : cleaned;
     }
 }
