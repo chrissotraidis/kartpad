@@ -76,11 +76,13 @@ PadMint always builds for the latest KartPad.
      `PadMint.command`. The first time, choose **Done**, then **System
      Settings → Privacy & Security → Open Anyway**.
    - **Linux:** run `sh padmint.sh` in the folder (needs Python 3.9+ and Git).
-2. Drag your disc image into the window and press Enter. If PadMint asks which
-   device to build for, choose **Android phone or tablet** or **iPhone or iPad**.
-   Choose where you will play, regardless of which computer you use.
-3. Keep the window open. The first build takes about 15 minutes to an hour
-   (about 4 GB of tools); later builds take a few minutes.
+2. PadMint opens in your web browser (English, Spanish or Portuguese). Choose
+   **KartPad**, click **Choose file…** and pick your disc image, then under
+   **Make it for** choose **Android phone or tablet** or **iPhone or iPad**:
+   where you will play, whichever computer you use. Click **Make my copy**.
+3. Keep the page and the PadMint window open. The page shows each step; the
+   first build takes about 15 minutes to an hour (about 4 GB of tools), later
+   builds a few minutes. When it finishes, the page lists what to do next.
 
 PadMint saves these in your Downloads folder. Keep them to yourself: they are
 made from your disc.
