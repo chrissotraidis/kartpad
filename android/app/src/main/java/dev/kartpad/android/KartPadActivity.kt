@@ -991,7 +991,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun playerEmptyLabel(player: Int): String = if (player == 0) {
-        "Automatic when one controller is connected"
+        "Automatic"
     } else {
         "No controller"
     }
