@@ -349,11 +349,17 @@ class KartPadActivity : SDLActivity() {
         val device = event.device
         val external = device != null && !device.isVirtual &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && device.isExternal
-        if (!KartPadControllerKeys.routes(
+        val routed = KartPadControllerKeys.routes(
                 event.keyCode, event.source, event.deviceId, device != null,
                 device?.sources ?: 0, external,
             )
-        ) {
+        KartPadControllerLog.record(
+            event, KartPadControllerKeys.sdlReadsDevice(event.deviceId, device != null, device?.sources ?: 0), routed,
+        )
+        if (device != null && KartPadControllerKeys.dropsKey(event.keyCode, device.sources, device.keyboardType)) {
+            return true
+        }
+        if (!routed) {
             return super.dispatchKeyEvent(event)
         }
         val mask = KartPadControllerKeys.classicMask(event.keyCode)
@@ -1799,6 +1805,7 @@ class KartPadActivity : SDLActivity() {
             appendLine("Retro version state: ${context.opt("retro_version_state")}")
             appendLine("KartPad source revision: ${provenance?.optString("source_revision") ?: "unknown"}")
             appendLine("Source dirty: ${provenance?.opt("source_dirty") ?: "unknown"}")
+            appendLine(KartPadControllerLog.summary())
             append("Source revision does not identify upstream dependencies or prove binary identity.")
         }
         startActivity(Intent(this, KartPadProblemReportActivity::class.java).apply {

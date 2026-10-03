@@ -22,6 +22,8 @@ final class KartPadControllerKeys {
     static final int KEYCODE_BUTTON_R2 = 105;
     static final int KEYCODE_BUTTON_START = 108;
     static final int KEYCODE_BUTTON_SELECT = 109;
+    static final int KEYCODE_ESCAPE = 111;
+    static final int KEYBOARD_TYPE_ALPHABETIC = 2;
 
     static final int SOURCE_CLASS_JOYSTICK = 0x00000010;
     static final int SOURCE_DPAD = 0x00000201;
@@ -84,5 +86,15 @@ final class KartPadControllerKeys {
                     externalDevice;
         }
         return true;
+    }
+
+    /**
+     * Escape from a controller opens the runtime's quit prompt; some controllers
+     * send it alongside a face button. Drop it unless the device is a real keyboard.
+     */
+    static boolean dropsKey(int keyCode, int deviceSources, int keyboardType) {
+        boolean controller = (deviceSources & SOURCE_GAMEPAD) == SOURCE_GAMEPAD ||
+                (deviceSources & SOURCE_JOYSTICK) == SOURCE_JOYSTICK;
+        return keyCode == KEYCODE_ESCAPE && controller && keyboardType != KEYBOARD_TYPE_ALPHABETIC;
     }
 }
