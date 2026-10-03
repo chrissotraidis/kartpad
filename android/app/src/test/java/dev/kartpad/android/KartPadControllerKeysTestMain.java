@@ -44,6 +44,15 @@ public final class KartPadControllerKeysTestMain {
         expect(!dropsKey(KEYCODE_ESCAPE, SOURCE_GAMEPAD | KEYBOARD, KEYBOARD_TYPE_ALPHABETIC),
                 "keyboard with gamepad keys");
         expect(!dropsKey(KEYCODE_BUTTON_A, SOURCE_GAMEPAD, 1), "other keys untouched");
+
+        // Gamepads SDL would skip for " Keyboard" in the name (#378) get a name it accepts.
+        int ipega = 0x1002713;
+        expect("PG-SW038".equals(sdlGamepadName("PG-SW038 Keyboard", ipega, 6)), "ipega gamepad renamed");
+        expect(sdlGamepadName("Xbox Wireless Controller", ipega, 6) == null, "other names untouched");
+        expect(sdlGamepadName("Logitech K380 Keyboard", KEYBOARD, 0) == null, "real keyboard untouched");
+        expect(sdlGamepadName("PG-SW038 Keyboard", SOURCE_GAMEPAD | KEYBOARD, 6) == null, "needs joystick source");
+        expect(sdlGamepadName("PG-SW038 Keyboard", ipega, 1) == null, "needs a stick");
+        expect(sdlGamepadName(" Keyboard", ipega, 6) == null, "never an empty name");
         System.out.println("KartPad controller key routing passed.");
     }
 
