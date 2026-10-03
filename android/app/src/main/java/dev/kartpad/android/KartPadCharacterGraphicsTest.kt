@@ -8,7 +8,7 @@ import java.io.File
 /** Experimental character indexing comparison. Configure only before native startup. */
 internal object KartPadCharacterGraphicsTest {
     enum class Mode(val stored: String, val label: String, val environment: String?, val repack: String = "0") {
-        // Empty repack = let the renderer decide (on for Adreno 8xx, off elsewhere).
+        // Empty repack = let the renderer decide (characters on Adreno 8xx, every draw on PowerVR, off elsewhere).
         NORMAL("normal", "Automatic (recommended)", null, repack = ""),
         CHARACTER_FIX("repack", "Experimental: fix broken characters (Snapdragon)", null, repack = "1"),
         FULL_FIX("repack_all", "Experimental: fix characters and track textures (Snapdragon, may be slower)", null, repack = "2"),
