@@ -141,7 +141,9 @@ See [iPhone/iPad setup](docs/INSTALL_IPA.md) for more.
 - **iPhone and iPad:** run PadMint again for the new `.ipa`. It reuses your
   earlier work, so it takes a few minutes.
 
-There is no Mac download at the moment.
+There is no ready-made Mac download. On an Apple Silicon Mac you can build the
+Mac app yourself from your own disc (experimental): see
+[Install on Mac](docs/INSTALL_MACOS.md).
 
 ### Source maintenance
 
