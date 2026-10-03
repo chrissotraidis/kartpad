@@ -200,3 +200,30 @@ CPU frame times under the same scene and settings. Let the profile select a
 small optimization, then repeat that comparison and reject regressions. Local
 source/build proof does not establish affected-user, physical-gameplay or online
 acceptance, and does not justify repeated requests for reporter testing.
+
+## 3 October 2026 sync candidate
+
+Branch `codex/wiicompiled-sync-20261003` merges upstream `main` at
+[`9d182f831618`](https://github.com/patchzyy/Wiicompiled/commit/9d182f831618235b0cf74ab891b8c3440b658e30)
+(19 commits after `83463764b8ac`, including v0.2.33) into the translator and
+the Android and iOS runtimes. macOS and tvOS keep their pins because neither is
+published. The merge commits are on the owner fork as
+`codex/upstream-sync-20261003-{translator,android,ios}`.
+
+Taken from upstream: `bltl` lifting (#254), Wii certificate scalar reduction
+(#265), split PSQ fallbacks with their out-of-line `ppc_quantized.cpp` (#278),
+and the forced 16:9 API (#256), mapped onto KartPad's existing 16:9 mode.
+Kept as KartPad: platform TLS (Secure Transport, Android's mbed TLS) instead of
+upstream's fetched mbed TLS and CA bundle (#144); KartPad's controller
+assignment, input sampling, aspect modes, graphics-startup message, renderer
+batching and diagnostics where #244/#251 carried earlier forms of the same
+fixes; and the race-copy policy that already answers the stutter behind the
+black-kart revert (`e409d9f`). Launcher, Linux prebuilt and version files are
+carried but unused.
+
+Checked: all 658 translator tests; the Android empty app builds and exports the
+PSQ fallbacks a pack binds to. The pack fingerprint changes (Android
+`906e158ade87…`), so **releasing this needs every player to make a new game
+pack once**. Still open before merging: an iOS build, a real pack built from a
+disc image and raced on the emulator and the iPhone, and a same-machine frame
+time comparison against 0.7.3 (#339).
