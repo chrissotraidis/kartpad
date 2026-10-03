@@ -1,7 +1,7 @@
 # Install KartPad on Android
 
 > [!IMPORTANT]
-> **KartPad 0.7.6 is the current Android release.** The APK contains no game
+> **KartPad 0.7.7 is the current Android release.** The APK contains no game
 > code: you make a game pack with PadMint on your own Windows, Mac or Linux
 > computer, or on the phone itself (experimental), and add it in the app.
 > Follow [Get KartPad](../README.md#get-kartpad)
@@ -9,6 +9,14 @@
 > settings, save and troubleshooting guidance still applies.
 
 ## Current update
+
+**0.7.7 / build 250** keeps your game pack: install the APK over your current
+KartPad and play. Controllers that name themselves as a keyboard, such as
+ipega models in gamepad mode, now work as full controllers: the sticks, D-pad
+and all buttons reach the game, and B no longer opens the quit prompt. See the
+[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.7).
+
+### Earlier: 0.7.6
 
 **0.7.6 / build 249** keeps your game pack: install the APK over your current
 KartPad and play. An Escape key sent by a controller no longer opens the quit
@@ -106,7 +114,7 @@ mean the Mario Kart Wii disc ID `RMCP01`. Wait for the list before entering it.
 1. Make your game pack with PadMint as described in
    [Get KartPad](../README.md#get-kartpad). From the
    [latest release](https://github.com/chrissotraidis/kartpad/releases/latest),
-   download `KartPad-v0.7.6-android.apk` and `SHA256SUMS`.
+   download `KartPad-v0.7.7-android.apk` and `SHA256SUMS`.
 2. Use an ARM64 phone/tablet with Vulkan and Android 9/API 28 or newer. The
    tested physical device is Pixel 9 Pro XL; the oldest OS/vendor GPU combinations
    and all other phones are not certified. Allow at least 6 GiB free for setup,
@@ -117,7 +125,7 @@ mean the Mario Kart Wii disc ID `RMCP01`. Wait for the list before entering it.
    file manager to install this app. No USB debugging is required for normal
    installation. Revoke that install permission afterward if you enabled it.
 4. Open KartPad and tap the Mario Kart Wii card. Choose **Choose file** and pick
-   your `KartPad-v0.7.6-android-personal.so` game pack. Then import your own
+   your `KartPad-v0.7.7-android-personal.so` game pack. Then import your own
    PAL **RMCP01 revision 0** game data: the `KartPad game data` folder PadMint
    saved (no key needed), or an ISO/WBFS/RVZ image plus your own
    `common-key.bin`. The exact
