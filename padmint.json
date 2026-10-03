@@ -42,7 +42,7 @@
         "nodtool",
         "libcxx"
       ],
-      "published_app": "KartPad-v{version}-ios-unsigned.ipa",
+      "published_app": "KartPad-v{version}-ios-for-padmint.ipa",
       "output": "ipa",
       "check": "none",
       "steps": [

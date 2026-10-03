@@ -1,5 +1,11 @@
 # Install KartPad on iPhone and iPad
 
+> [!NOTE]
+> **From KartPad 0.7.9 the iPhone/iPad IPA is ready to play.** Install `KartPad-v…-ios.ipa`
+> from the [latest release](https://github.com/chrissotraidis/kartpad/releases/latest) with Sideloadly,
+> AltStore or SideStore and import your own game data on first launch. Steps:
+> [Get KartPad](../README.md#iphone-and-ipad). The PadMint steps below remain optional.
+
 > [!IMPORTANT]
 > Use the [latest PadMint](https://github.com/chrissotraidis/padmint/releases/latest)
 > for the [latest KartPad](https://github.com/chrissotraidis/kartpad/releases/latest).

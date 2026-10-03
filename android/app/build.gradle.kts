@@ -18,6 +18,10 @@ val packFingerprint = providers.gradleProperty("kartpadPackFingerprint").orNull
 require(!gamePackApp || packFingerprint?.matches(Regex("[0-9a-f]{64}")) == true) {
     "kartpadGamePackApp needs kartpadPackFingerprint (64 lowercase hex digits)"
 }
+// Ready-to-play app: a folder with arm64-v8a/libkartpad_game.so, the game pack built
+// in. Android installs it with the app's other native libraries; nothing to import.
+val bundledGamePack = providers.gradleProperty("kartpadBundledGamePack").orNull
+require(bundledGamePack == null || gamePackApp) { "kartpadBundledGamePack needs kartpadGamePackApp" }
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
 val kartpadDiagnosticRelease = providers.gradleProperty("kartpadDiagnosticRelease")
@@ -96,6 +100,7 @@ android {
         buildConfigField("boolean", "GAME_RUNTIME", (gameRuntimeSource != null).toString())
         buildConfigField("boolean", "GAME_PACK_APP", gamePackApp.toString())
         buildConfigField("String", "PACK_FINGERPRINT", "\"${packFingerprint ?: ""}\"")
+        buildConfigField("boolean", "BUNDLED_GAME_PACK", (bundledGamePack != null).toString())
         buildConfigField("boolean", "DISC_IMAGE_IMPORT", (discIoJniRoot != null).toString())
 
         ndk {
@@ -177,6 +182,11 @@ android {
             jniLibs.srcDir(file(discIoJniRoot))
         }
     }
+    if (bundledGamePack != null) {
+        sourceSets.named("main") {
+            jniLibs.srcDir(file(bundledGamePack))
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -184,7 +194,10 @@ android {
     }
     packaging {
         jniLibs {
-            useLegacyPackaging = false
+            // A built-in game pack is loaded by path from the app's library folder,
+            // so Android must unpack the libraries there at install.
+            useLegacyPackaging = bundledGamePack != null
+            if (bundledGamePack != null) keepDebugSymbols += "**/libkartpad_game.so"
         }
     }
     lint {

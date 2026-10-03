@@ -1,11 +1,16 @@
 # Install KartPad on Android
 
+> [!NOTE]
+> **From KartPad 0.7.9 the Android APK is ready to play.** Install `KartPad-v…-android.apk`
+> from the [latest release](https://github.com/chrissotraidis/kartpad/releases/latest) and import your
+> own game data on first launch; no game pack is needed. Steps: [Get KartPad](../README.md#android).
+> The PadMint steps below remain for players who build their own copy.
+
 > [!IMPORTANT]
-> **KartPad 0.7.8 is the current Android release.** The APK contains no game
-> code: you make a game pack with PadMint on your own Windows, Mac or Linux
-> computer, or on the phone itself (experimental), and add it in the app.
-> Follow [Get KartPad](../README.md#get-kartpad)
-> for the steps. Older version notes below are kept for reference; the
+> **Building your own copy instead (0.7.0 to 0.7.8 required it):** you make a
+> game pack with PadMint on your own Windows, Mac or Linux computer, or on the
+> phone itself (experimental), and add it in the app. Older version notes
+> below are kept for reference; the
 > settings, save and troubleshooting guidance still applies.
 
 ## Current update
