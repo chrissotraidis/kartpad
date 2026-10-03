@@ -108,12 +108,16 @@ and relationship to the covered work matter (GPLv3 section 2). This is not an
 exemption from GPL obligations for runtime code included in generated output
 or for a combined application where the GPL applies.
 
-Previously published Apple and Android artifacts contained ahead-of-time
-translated game logic. Those downloads have been retired and are no longer
-published. KartPad now publishes source only: each user builds their own app
-from their own disc on their own computer, and that personal build stays
-private. Neither the source nor the apps include disc images, extracted
-courses, textures, audio, saves, console keys, or private signing material.
+From 29 September to 3 October 2026, KartPad published only apps without game
+code, and players built the game part with PadMint. On 4 October 2026 the
+maintainer decided to publish ready-to-play builds again, starting with
+v0.7.9: the Android APK, the iPhone/iPad IPA and the Mac app contain KartPad's
+ahead-of-time translated game logic (the game pack). The decision rests on how
+community static recompilations are handled today, not on a rights clearance.
+PadMint remains an optional route for players who prefer to build their own
+copy from their own disc. Neither the source nor the apps include disc images,
+extracted courses, textures, audio, saves, console keys, or private signing
+material.
 Users supply their own legally obtained supported PAL `RMCP01` revision 0
 game data (and, for in-app disc import on iPhone/iPad, their own Wii common
 key). The Retro Rewind asset pack is also omitted; the optional

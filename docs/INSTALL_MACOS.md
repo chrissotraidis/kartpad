@@ -1,9 +1,13 @@
 # Install KartPad on Apple Silicon Mac
 
+> [!NOTE]
+> **From KartPad 0.7.9 there is a ready-to-play Mac download again:**
+> `KartPad-v…-macos-arm64.zip` on the [latest release](https://github.com/chrissotraidis/kartpad/releases/latest).
+> Steps: [Get KartPad](../README.md#mac).
+
 > [!IMPORTANT]
-> **No Mac download for KartPad 0.7.8.** Earlier Mac apps are no longer
-> published. Android and iPhone/iPad are available through [Get KartPad](../README.md#get-kartpad).
-> The settings, save and troubleshooting guidance below still applies to
+> KartPad 0.6.0 to 0.7.8 had no Mac download. The settings, save and
+> troubleshooting guidance below still applies to
 > installed Mac apps.
 
 ## Historical Mac installation (0.5.0)

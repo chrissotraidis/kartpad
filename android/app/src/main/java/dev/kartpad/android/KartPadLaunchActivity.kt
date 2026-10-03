@@ -68,6 +68,7 @@ open class KartPadLaunchActivity : Activity() {
                 intent.getBooleanExtra(EXTRA_SKIP_PREFERRED_GAME, false) || pausedProfile() != null,
         )
         KartPadExitDiagnostics.mark(this, pausedProfile() ?: "chooser")
+        KartPadGamePack.removeImportedPack(this)
         rebuildContent()
         if (pausedProfile() == null) checkForUpdate()
     }
@@ -503,7 +504,8 @@ open class KartPadLaunchActivity : Activity() {
         column.addView(label("KartPad ${BuildConfig.VERSION_NAME} · Build ${BuildConfig.VERSION_CODE}", 13f, true), layout(dp(12)))
         // Only before a game starts in this process: a loaded pack stays in use
         // until KartPad restarts, and the new one is used from the next launch.
-        if (KartPadGamePack.required && KartPadGamePack.isInstalled(this) && pausedProfile() == null) {
+        if (KartPadGamePack.required && !KartPadGamePack.bundled && KartPadGamePack.isInstalled(this) &&
+            pausedProfile() == null) {
             column.addView(Button(this).apply {
                 text = "Replace Game Pack…"
                 isAllCaps = false

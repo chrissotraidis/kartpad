@@ -104,6 +104,11 @@ if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libkartpad_discio.so; then
   expected_native_members="$(printf '%s\n' "$expected_native_members" \
     lib/arm64-v8a/libkartpad_discio.so | sort)"
 fi
+# The ready-to-play app (KARTPAD_ANDROID_ALLOW_GAME_PACK=1) also carries the game pack:
+# KartPad's translated game code. Every other check still applies to it.
+if [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" == 1 ]]; then
+  expected_native_members="$(printf '%s\n' "$expected_native_members" lib/arm64-v8a/libkartpad_game.so | sort)"
+fi
 [[ "$native_members" == "$expected_native_members" ]] || {
   echo "ERROR: APK native-library set differs from the A0 allowlist" >&2
   exit 1
@@ -156,6 +161,7 @@ audit_libraries=(libSDL3.so libc++_shared.so libmain.so)
 if [[ "$has_discio" == 1 ]]; then
   audit_libraries+=(libkartpad_discio.so)
 fi
+[[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || audit_libraries+=(libkartpad_game.so)
 for library in "${audit_libraries[@]}"; do
   unzip -p "$apk" "lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |

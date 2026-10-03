@@ -100,6 +100,11 @@ expected_native_members="$(printf '%s\n' \
   base/lib/arm64-v8a/libc++_shared.so \
   base/lib/arm64-v8a/libkartpad_discio.so \
   base/lib/arm64-v8a/libmain.so | sort)"
+# The ready-to-play app (KARTPAD_ANDROID_ALLOW_GAME_PACK=1) also carries the game pack:
+# KartPad's translated game code. Every other check still applies to it.
+if [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" == 1 ]]; then
+  expected_native_members="$(printf '%s\n' "$expected_native_members" base/lib/arm64-v8a/libkartpad_game.so | sort)"
+fi
 [[ "$native_members" == "$expected_native_members" ]] || {
   echo "ERROR: AAB native-library set differs from the product allowlist" >&2
   exit 1
@@ -132,7 +137,9 @@ fi
 
 audit_root="$repo_root/.android-bootstrap/audit-aab"
 mkdir -p "$audit_root"
-for library in libSDL3.so libc++_shared.so libkartpad_discio.so libmain.so; do
+aab_libraries=(libSDL3.so libc++_shared.so libkartpad_discio.so libmain.so)
+[[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || aab_libraries+=(libkartpad_game.so)
+for library in "${aab_libraries[@]}"; do
   unzip -p "$bundle" "base/lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |
       awk '$1 == "LOAD" && $NF != "0x4000" { bad = 1 } END { exit bad ? 0 : 1 }'; then
