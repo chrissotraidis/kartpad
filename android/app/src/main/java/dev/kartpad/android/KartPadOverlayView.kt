@@ -76,6 +76,7 @@ class KartPadOverlayView(context: Context) : View(context) {
     private var debugVirtualKeyHapticCount = 0
     private var lastPublishedButtons = 0
     private var accessibilityButtons = 0
+    private var controllerKeyButtons = 0
     private val accessibilityPulseGenerations = mutableMapOf<String, Int>()
     private var accessibilityFocusId = View.NO_ID
     private var accessibilityHoverId = View.NO_ID
@@ -245,6 +246,7 @@ class KartPadOverlayView(context: Context) : View(context) {
         rightX = 0f
         rightY = 0f
         accessibilityButtons = 0
+        controllerKeyButtons = 0
         accessibilityPulseGenerations.clear()
         gasLocked = false
         leftStickAnchor = null
@@ -1207,8 +1209,15 @@ class KartPadOverlayView(context: Context) : View(context) {
         }
     }
 
+    /** Buttons from a controller SDL does not read (see KartPadControllerKeys). */
+    fun setControllerKeyButtons(buttons: Int) {
+        if (controllerKeyButtons == buttons) return
+        controllerKeyButtons = buttons
+        publishState(connected = !hiddenForController || buttons != 0)
+    }
+
     private fun publishState(connected: Boolean) {
-        var buttons = (if (gasLocked) BUTTON_A else 0) or accessibilityButtons
+        var buttons = (if (gasLocked) BUTTON_A else 0) or accessibilityButtons or controllerKeyButtons
         pointerOwners.values.forEach { owner ->
             buttons = buttons or (controls.firstOrNull { it.id == owner }?.mask ?: 0)
         }
