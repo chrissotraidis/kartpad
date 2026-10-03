@@ -1,5 +1,70 @@
 # KartPad status
 
+## Current status: 3 October 2026
+
+**Latest release: [KartPad 0.7.8](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.8) (build 251).**
+Android gets an APK; iPhone and iPad get an unsigned IPA that PadMint turns into
+the player's own app. Game packs made for 0.7.0 or later keep working (pack
+interface fingerprint `85d2a9c9`), so 0.7.x updates are app-only.
+
+| Platform | How players get it | State |
+| --- | --- | --- |
+| Android | APK from Releases plus a game pack from PadMint | Main platform; most open reports |
+| iPhone / iPad | PadMint builds the app (Mac with Xcode, or experimental on Windows/Linux) | Stable on tested devices |
+| Apple Silicon Mac | Built from source (`scripts/self-build-macos.sh`) or PadMint's `macos` recipe target; not offered in PadMint's player UI and no ready-made download | Experimental |
+| Apple TV | Experimental source build | Experimental |
+
+### Shipped on 3 October
+
+| Version | What changed | Checked |
+| --- | --- | --- |
+| 0.7.5 | In-app **Update available** notice (#383); key-only controllers use the normal layout; game packs compile about 37% faster (#388) | Notice confirmed with real releases; compile time measured |
+| 0.7.6 | Controller Escape filter; Report a Problem lists controllers and keys | The report found the real #378 cause |
+| 0.7.7 | Gamepads named "… Keyboard" (ipega) handed to SDL as gamepads (#393) | Emulator with a matching virtual controller |
+| 0.7.8 | A connected controller can no longer end up with no player; Player 1 **Automatic** really is automatic; diagnostic log lists each controller's player and mapping (#395) | Bug reproduced and fixed on the emulator |
+
+Merged after 0.7.8, for the next app-only release: the update check runs hourly
+instead of daily (#397, a 0.7.5 player saw no notice for 0.7.6). Ready for review:
+PowerVR phones get the full vertex repack by default (#398).
+
+### What remains
+
+- **Android 3D drawing on some GPUs.** Adreno 6xx/7xx (#104, #301) and PowerVR
+  (#304) draw characters and tracks wrong while 2D menus are fine. The shared
+  cause is vertex data unpacked inside shaders, which these drivers get wrong;
+  repacking the data on the CPU fixes it on Adreno 8xx. Next step: choose the
+  working path automatically and log which one each phone uses, instead of
+  asking players to try options.
+- **Startup on specific devices:** Moto G75 (#332), iPad on iPadOS 18 goes black
+  after the safety screen (#370), iPhone 16 flickers while a game opens (#390).
+- **Controllers:** ipega on Android (#378, fix in 0.7.8 awaiting the reporter),
+  a single Joy-Con on iPhone connects but its presses don't arrive (#324), Wii
+  Remote with Classic Controller Pro on Mac (#306), Mac two-player rendering (#127).
+- **Game flow and data:** crash after the last race of a cup (#131, not yet
+  reproduced), Ayn Thor screen area (#202), restoring Mii, identity and rating
+  from a backup (#234).
+- **Performance (#339, patchzyy's focused pass).** Done: compile-time breakdown
+  and the `-g0` change (compile CPU 2,232 s to 1,404 s). Not done: an average and
+  worst-case frame-time baseline on one device, a CPU profile of a race, the
+  incremental-rebuild measurement and any runtime speed change. The emulator on
+  a shared Mac is too noisy for frame times; the Pixel 9 Pro XL and iPhone 14 are
+  the baseline devices.
+- **WiiCompiled.** Main is built on upstream `8346376`, 20 commits behind
+  upstream `main`. Draft #384 moves to `9d182f8` (one commit behind: upstream's
+  macOS packaging), passes the Android emulator race and iOS build, and still
+  needs an iPhone 14 race. It changes the pack interface, so it ships as
+  **0.8.0** with the speed work, and players rebuild their game pack once.
+  Nothing has been contributed upstream yet; the first candidate is the
+  controller assignment fix, which upstream's `input.cpp` shares.
+
+### Next versions
+
+- **0.7.9** (app-only): hourly update check (#397) and the PowerVR default (#398).
+- **0.8.0** (one game pack rebuild): WiiCompiled sync (#384) plus the first
+  runtime speed work from #339.
+
+## Earlier checkpoints
+
 **29 September 2026:** prebuilt downloads have been retired and all earlier
 releases are no longer available. KartPad publishes source only; users build
 their own app with the [Personal IPA Builder](BUILDER.md) (iPhone/iPad on an
