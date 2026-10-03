@@ -40,6 +40,7 @@ open class KartPadLaunchActivity : Activity() {
     private lateinit var preferredLaunch: KartPadPreferredLaunch
     private var darkMode = true
     private lateinit var preferenceButton: Button
+    private var updateLink: Button? = null
     private val primaryTextColor get() = if (darkMode) Color.rgb(247, 247, 247) else Color.rgb(12, 17, 26)
     private val secondaryForeground get() = if (darkMode) Color.rgb(170, 170, 170) else Color.rgb(94, 94, 94)
     private val racingRed get() = if (darkMode) Color.rgb(255, 51, 66) else Color.rgb(204, 9, 31)
@@ -68,6 +69,7 @@ open class KartPadLaunchActivity : Activity() {
         )
         KartPadExitDiagnostics.mark(this, pausedProfile() ?: "chooser")
         rebuildContent()
+        if (pausedProfile() == null) checkForUpdate()
     }
 
     override fun onResume() {
@@ -287,15 +289,40 @@ open class KartPadLaunchActivity : Activity() {
     }
 
     private fun openGuide(path: String) {
+        openWeb("https://github.com/chrissotraidis/kartpad/blob/main/docs/$path")
+    }
+
+    private fun openWeb(url: String) {
         runCatching {
-            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(
-                "https://github.com/chrissotraidis/kartpad/blob/main/docs/$path",
-            )))
+            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)))
         }.onFailure {
             AlertDialog.Builder(this).setTitle("Could Not Open GitHub")
                 .setMessage("Please try again when a browser is available. Setup and troubleshooting guides are in the chrissotraidis/kartpad repository on GitHub.")
                 .setPositiveButton("OK", null).show()
         }
+    }
+
+    private fun checkForUpdate() {
+        val context = applicationContext
+        Thread {
+            KartPadUpdateCheck.refresh(context)
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed && KartPadUpdateCheck.known(context) != null) {
+                    updateLink?.visibility = View.VISIBLE
+                }
+            }
+        }.apply { isDaemon = true; name = "KartPadUpdateCheck" }.start()
+    }
+
+    private fun showUpdate() {
+        val update = KartPadUpdateCheck.known(this) ?: return
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("KartPad ${update.version} is out")
+            .setMessage("You have ${BuildConfig.VERSION_NAME}. Install the new APK over this one without uninstalling, so your saves and game data stay. The release notes say whether you also need a new game pack.")
+            .setNeutralButton("Release Notes") { _, _ -> openWeb(update.pageUrl) }
+            .setNegativeButton("Not Now", null)
+        update.apkUrl?.let { apk -> dialog.setPositiveButton("Download APK") { _, _ -> openWeb(apk) } }
+        dialog.show()
     }
 
     private fun refreshModeCards() {
@@ -369,6 +396,10 @@ open class KartPadLaunchActivity : Activity() {
             }
         }
         header.addView(theme, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(16) })
+        updateLink = link("Update available") { showUpdate() }.apply {
+            visibility = if (KartPadUpdateCheck.known(this@KartPadLaunchActivity) != null) View.VISIBLE else View.GONE
+        }
+        header.addView(updateLink)
         header.addView(link("Help") { showSetupHelp() })
         column.addView(header, layout(dp(if (compact) 16 else 28)))
         original = ModeButton(this, "Mario Kart Wii", compact, false, darkMode).apply {
