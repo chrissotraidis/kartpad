@@ -7,7 +7,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Looks for a newer KartPad release on GitHub at most once a day. It sends no
+ * Looks for a newer KartPad release on GitHub at most once an hour. It sends no
  * information about the player or their game, and any failure stays silent:
  * the notice simply does not appear.
  */
@@ -18,7 +18,9 @@ internal object KartPadUpdateCheck {
     private const val VERSION = "update_version"
     private const val PAGE = "update_page"
     private const val APK = "update_apk"
-    private const val INTERVAL_MILLIS = 24L * 60 * 60 * 1000
+    // Hourly, so a release shows up the next time the chooser opens (#377); a
+    // daily check could hide one for a whole day, including after a failed attempt.
+    private const val INTERVAL_MILLIS = 60L * 60 * 1000
     private const val TIMEOUT_MILLIS = 10_000
     private const val MAXIMUM_BYTES = 512 * 1024
 
@@ -33,7 +35,7 @@ internal object KartPadUpdateCheck {
         return Update(version, page, preferences.getString(APK, null))
     }
 
-    /** Refreshes the stored release once a day. Blocks; call it off the main thread. */
+    /** Refreshes the stored release once an hour. Blocks; call it off the main thread. */
     fun refresh(context: Context, now: Long = System.currentTimeMillis()) {
         val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
         val last = preferences.getLong(CHECKED_AT, 0L)
