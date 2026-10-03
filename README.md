@@ -93,6 +93,17 @@ made from your disc.
 | `KartPad-v…-ios-personal.ipa` | the complete iPhone/iPad app |
 | `KartPad game data` folder | the game's tracks, music and menus |
 
+**Which file do I install?** The release page and PadMint each give you files
+with similar names:
+
+| File | Where it comes from | What to do with it |
+|---|---|---|
+| `KartPad-v…-android.apk` | the [release page](https://github.com/chrissotraidis/kartpad/releases/latest) | **Install it on Android.** It is the app; it has no game code |
+| `KartPad-v…-android-personal.so` | PadMint | Add it inside the Android app when it asks for your game pack |
+| `KartPad-v…-ios-personal.ipa` | PadMint | **Install this one on iPhone/iPad.** It is the app with your game inside |
+| `KartPad-v…-ios-unsigned.ipa` | the release page | Don't install it by itself: it has no game code, so it can't play. PadMint downloads it and adds your game to it |
+| `KartPad-v…-padmint.json`, `SHA256SUMS` | the release page | Used by PadMint. You don't need to open them |
+
 ### 2. Android
 
 1. Install the `KartPad-v…-android.apk` from the
