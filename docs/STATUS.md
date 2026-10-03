@@ -43,12 +43,20 @@ PowerVR phones get the full vertex repack by default (#398).
 - **Game flow and data:** crash after the last race of a cup (#131, not yet
   reproduced), Ayn Thor screen area (#202), restoring Mii, identity and rating
   from a backup (#234).
-- **Performance (#339, patchzyy's focused pass).** Done: compile-time breakdown
-  and the `-g0` change (compile CPU 2,232 s to 1,404 s). Not done: an average and
-  worst-case frame-time baseline on one device, a CPU profile of a race, the
-  incremental-rebuild measurement and any runtime speed change. The emulator on
-  a shared Mac is too noisy for frame times; the Pixel 9 Pro XL and iPhone 14 are
-  the baseline devices.
+- **Performance (#339, patchzyy's focused pass).** Runtime: September profiling
+  on the Pixel 9 Pro XL ([ledger](artifacts/2026-09-23/android-copy-stream-loop.md))
+  led to candidate 203 (skip unobserved FP status capture, game-thread
+  Performance Hint), which cut game-thread CPU per frame in a 12-player Cookie
+  Land battle from 14.70–14.79 ms to 12.65 ms and shipped in 0.5.1; a
+  game-thread context slot (205) was measured and rejected. Compile: breakdown
+  and the `-g0` change (compile CPU 2,232 s to 1,404 s) shipped in 0.7.5. A
+  3 October emulator profile of a 12-racer race matches the Pixel profiles:
+  PowerPC float-rounding emulation is the largest game-code cost, then
+  indirect-call dispatch and CPU-context lookup. Not done: a baseline on the
+  current build, the incremental-rebuild measurement, and the next candidate
+  (the translator passing the CPU context to float helpers instead of looking
+  it up, which needs a game pack rebuild). Frame times are measured on the
+  Pixel; the shared Mac's emulator is too noisy for them.
 - **WiiCompiled.** Main is built on upstream `8346376`, 20 commits behind
   upstream `main`. Draft #384 moves to `9d182f8` (one commit behind: upstream's
   macOS packaging), passes the Android emulator race and iOS build, and still
