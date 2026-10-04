@@ -2310,6 +2310,24 @@ class KartPadActivity : SDLActivity() {
                 Os.unsetenv("KARTPAD_RKG_KEYBOARD_STEER_V2")
                 Os.unsetenv("KARTPAD_FULL_SYNTHETIC_STICK_V2")
             }
+            // Cup harness (#131): finish every race after N frames so a whole Grand Prix,
+            // including the trophy ceremony, runs unattended on an emulator.
+            // File contents: a frame count, optionally followed by "first" to finish in 1st.
+            val finishSpec = File(filesDir, DEBUG_RKG_FORCE_FINISH_RELATIVE_PATH)
+                .takeIf { it.isFile }?.readText()?.trim()?.split(Regex("\\s+")).orEmpty()
+            val finishFrames = finishSpec.firstOrNull()?.toIntOrNull()
+            if (finishFrames != null && finishFrames > 0) {
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_V2", "1", true)
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_FRAME_V2", finishFrames.toString(), true)
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_EACH_RACE_V2", "1", true)
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_FIRST_V2", if ("first" in finishSpec) "1" else "0", true)
+                Os.unsetenv("KARTPAD_RKG_FORCE_METADATA_V2")
+            } else {
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_V2")
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_FRAME_V2")
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_EACH_RACE_V2")
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_FIRST_V2")
+            }
             Log.i(TAG, "Debug app-private RKG input enabled; keyboard steer=$keyboardSteer")
         } else {
             Os.unsetenv("KARTPAD_RKG_INPUT_V2")
@@ -2460,6 +2478,8 @@ class KartPadActivity : SDLActivity() {
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
         private const val DEBUG_RKG_KEYBOARD_STEER_RELATIVE_PATH =
             "KartPad/Diagnostics/TestInput.keyboard-steer"
+        private const val DEBUG_RKG_FORCE_FINISH_RELATIVE_PATH =
+            "KartPad/Diagnostics/TestInput.finish-frames"
         private const val DEBUG_STATE_TRACE_MARKER_RELATIVE_PATH =
             "KartPad/Diagnostics/StateTrace.enable"
         private const val DEBUG_STATE_TRACE_RELATIVE_PATH =

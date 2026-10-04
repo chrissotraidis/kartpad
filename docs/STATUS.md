@@ -37,7 +37,7 @@ time. PadMint stays an option for building your own copy.
   - Single Joy-Con on iPhone (#324): its presses don't arrive.
   - Mac: Wii Remote with Classic Controller Pro (#306) and two-player rendering (#127).
 - **Game flow and data:**
-  - Crash after the last race of a cup (#131): not reproduced. Crash logs name the file being loaded.
+  - Crash after the last race of a cup (#131): doesn't happen on 0.7.10 in automated full cups on the emulator, through both endings and at 3x ([record](artifacts/2026-10-04/android/131-cup-ceremony-harness.md)). Needs a retest by an affected player.
   - Ayn Thor screen area (#202).
   - Restoring Mii, identity and rating from a backup (#234).
 - **Performance (#339, patchzyy's focused pass).**
