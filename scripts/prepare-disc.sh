@@ -77,7 +77,7 @@ fi
 
 mkdir -p "$(dirname "${output}")"
 stage="${output}.partial.$RANDOM.$RANDOM"
-[[ "${stage}" == "${repo_root}/private/"* ]]
+[[ "${stage}" == "${repo_root}/private/"* ]] || { echo "prepare-disc.sh: check failed (line 80)" >&2; exit 1; }
 cleanup() {
   if [[ -d "${stage}" && "${stage}" == "${repo_root}/private/"* ]]; then
     rm -rf -- "${stage}"
