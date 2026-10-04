@@ -1775,6 +1775,19 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   self.window.windowLevel = UIWindowLevelAlert + 1.0;
   self.window.rootViewController = self.root;
   [self.window makeKeyAndVisible];
+  // The game runtime has no dialog of its own on iPhone/iPad, so a fatal error (for
+  // example incomplete game data, #370) only closed the game. The runtime leaves its
+  // message in Logs/last_fatal.txt; show it once here and remove it.
+  NSString *lastFatal = nil;
+  {
+    NSURL *support = [NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory
+                                                          inDomains:NSUserDomainMask].firstObject;
+    NSURL *file = [support URLByAppendingPathComponent:@"KartPad/Logs/last_fatal.txt"];
+    NSString *text = [NSString stringWithContentsOfURL:file encoding:NSUTF8StringEncoding error:nil];
+    [NSFileManager.defaultManager removeItemAtURL:file error:nil];
+    text = [text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    if (text.length > 0) lastFatal = text.length > 1500 ? [text substringToIndex:1500] : text;
+  }
   __weak KartPadFirstLaunchHost *weakSelf = self;
   // #327: when a saved game choice skips the launcher, keep its window transparent so the
   // chooser does not flash for a frame between the launch screen and the game. Any prompt
@@ -1795,6 +1808,19 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   if (gameDataReady && [NSProcessInfo.processInfo.environment[@"KARTPAD_UI_PREVIEW"] isEqualToString:@"report"]) requestedProfile=@"base";
   if (requestedProfile.length == 0 && gameDataReady) {
     requestedProfile = [NSUserDefaults.standardUserDefaults stringForKey:kKartPadPreferredGameKey];
+  }
+  if (lastFatal != nil) {
+    // Show the reason instead of starting the game straight into the same error.
+    requestedProfile = nil;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      KartPadFirstLaunchHost *strongSelf = weakSelf;
+      if (strongSelf == nil || strongSelf.finished) return;
+      UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"The game stopped"
+                                                                     message:lastFatal
+                                                              preferredStyle:UIAlertControllerStyleAlert];
+      [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+      [strongSelf.root presentViewController:alert animated:YES completion:nil];
+    });
   }
   if ([requestedProfile isEqualToString:@"retro_rewind"] ||
       [requestedProfile isEqualToString:@"base"]) {
@@ -4208,6 +4234,46 @@ extern "C" void KartPadMobileRuntimeHostInstall(void *sdlWindow) {
 extern "C" void KartPadMobileRuntimeHostUninstall() {
   [gRuntimeOverlayHost uninstall];
   gRuntimeOverlayHost = nil;
+}
+
+// #370: after a fatal error the game runtime returns, but SDL keeps the app open on a
+// black screen. Show the runtime's message now. The game can't restart in this
+// process, so the only action closes KartPad; the next launch opens the chooser.
+extern "C" void KartPadMobileRuntimeStopped() {
+  if (!NSThread.isMainThread) return;
+  NSURL *support = [NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory
+                                                        inDomains:NSUserDomainMask].firstObject;
+  NSURL *file = [support URLByAppendingPathComponent:@"KartPad/Logs/last_fatal.txt"];
+  NSString *text = [NSString stringWithContentsOfURL:file encoding:NSUTF8StringEncoding error:nil];
+  [NSFileManager.defaultManager removeItemAtURL:file error:nil];
+  text = [text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+  if (text.length == 0) text = @"The game closed because of an error.";
+  if (text.length > 1500) text = [text substringToIndex:1500];
+  UIWindowScene *scene = nil;
+  for (UIScene *candidate in UIApplication.sharedApplication.connectedScenes) {
+    if ([candidate isKindOfClass:UIWindowScene.class]) {
+      scene = (UIWindowScene *)candidate;
+      break;
+    }
+  }
+  if (scene == nil) return;
+  static UIWindow *stoppedWindow;
+  stoppedWindow = [[UIWindow alloc] initWithWindowScene:scene];
+  stoppedWindow.windowLevel = UIWindowLevelAlert + 1.0;
+  UIViewController *root = [[UIViewController alloc] init];
+  root.view.backgroundColor = UIColor.blackColor;
+  stoppedWindow.rootViewController = root;
+  [stoppedWindow makeKeyAndVisible];
+  NSString *message = [text stringByAppendingString:@"\n\nClose KartPad and open it again to return to the game chooser."];
+  UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"The game stopped"
+                                                                 message:message
+                                                          preferredStyle:UIAlertControllerStyleAlert];
+  [alert addAction:[UIAlertAction actionWithTitle:@"Close KartPad"
+                                            style:UIAlertActionStyleDefault
+                                          handler:^(UIAlertAction *action) { exit(0); }]];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [root presentViewController:alert animated:YES completion:nil];
+  });
 }
 
 extern "C" bool KartPadMobileReadRuntimeSettings(
