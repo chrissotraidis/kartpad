@@ -21,6 +21,7 @@ The projects are independently maintained.
   <img alt="iPhone and iPad" src="https://img.shields.io/badge/platform-iPhone%20%2F%20iPad-0A84FF">
   <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.12.8-FF375F">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
+  <a href="https://github.com/chrissotraidis/padmint"><img alt="Build KartPad with PadMint (optional)" src="https://img.shields.io/badge/PadMint-optional%20build-3EB489"></a>
   <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the KartPad Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
 </p>
 
@@ -344,6 +345,16 @@ For a bug report, include the exact app/build, device, OS, game, settings and
 reproduction steps. Review diagnostics before sharing; never attach game data,
 saves, account identifiers or signing material. Choose the relevant tracker in the
 [reporting guide](docs/REPORTING.md).
+
+## Community and support
+
+[Join the Discord](https://discord.gg/xwHfUD2bxW) for help and news. It is one
+community for KartPad and its sibling projects, such as BlueWake, MeleePad and
+SunPad: ask about setup, installing, and building with PadMint, share how it
+runs on your device, and hear about new releases first.
+
+Found a bug? [Open an issue](https://github.com/chrissotraidis/kartpad/issues)
+with your device, its OS version, and the steps that led to it.
 
 ## Credits and license
 
