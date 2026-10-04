@@ -2,11 +2,10 @@
 
 ## Current status: 4 October 2026
 
-**Latest release: [KartPad 0.7.9](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.9) (build 252).**
+**Latest release: [KartPad 0.7.10](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.10) (build 253).**
 Downloads are ready to play again: the Android APK, the iPhone/iPad IPA and the
 Mac app include the game code, and players add their own game data the first
-time. PadMint stays an option for building your own copy. **0.7.10 (build 253)**
-is in PR #407.
+time. PadMint stays an option for building your own copy.
 
 | Platform | How players get it | State |
 | --- | --- | --- |
@@ -52,7 +51,7 @@ is in PR #407.
 
 ### Next versions
 
-- **0.7.10** (app-only, PR #407): the fixes above.
+- **0.7.10** (released 4 October): the fixes above. Waiting on reporter confirmation for #316, #370 and #402, and a PowerVR log for #304.
 - **0.8.0** (pack interface change): WiiCompiled sync (#384) plus the first runtime speed work from #339.
 
 ## Earlier checkpoints
