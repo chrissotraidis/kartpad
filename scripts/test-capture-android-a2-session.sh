@@ -18,7 +18,7 @@ if [[ "${1:-}" == devices ]]; then
   echo 'PRIVATE-SERIAL device usb:1-1 product:sample model:Sample_Device'
   exit 0
 fi
-[[ "${1:-}" == -s && "${2:-}" == PRIVATE-SERIAL ]]
+[[ "${1:-}" == -s && "${2:-}" == PRIVATE-SERIAL ]] || { echo "test-capture-android-a2-session.sh: check failed (line 21)" >&2; exit 1; }
 shift 2
 if [[ "${1:-}" == logcat ]]; then
   if [[ "$scenario" == logcat-error ]]; then
@@ -41,7 +41,7 @@ Standard gamepads resumed
 LOG
   exit 0
 fi
-[[ "${1:-}" == shell ]]
+[[ "${1:-}" == shell ]] || { echo "test-capture-android-a2-session.sh: check failed (line 44)" >&2; exit 1; }
 shift
 case "$*" in
   'getprop ro.kernel.qemu') echo 0 ;;
@@ -79,21 +79,21 @@ run_capture() {
 }
 
 start_output="$(run_capture pass start)"
-[[ "$(<"$marker")" == '09-04 12:34:56.000' ]]
-[[ "$start_output" != *'PRIVATE-SERIAL'* ]]
+[[ "$(<"$marker")" == '09-04 12:34:56.000' ]] || { echo "test-capture-android-a2-session.sh: check failed (line 82)" >&2; exit 1; }
+[[ "$start_output" != *'PRIVATE-SERIAL'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 83)" >&2; exit 1; }
 
 summary_output="$(run_capture pass summarize)"
-[[ "$summary_output" == *'"automated_signal_matrix_passed": true'* ]]
-[[ "$summary_output" != *'PRIVATE_GAME_TEXT'* ]]
-[[ "$summary_output" != *'PRIVATE-SERIAL'* ]]
+[[ "$summary_output" == *'"automated_signal_matrix_passed": true'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 86)" >&2; exit 1; }
+[[ "$summary_output" != *'PRIVATE_GAME_TEXT'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 87)" >&2; exit 1; }
+[[ "$summary_output" != *'PRIVATE-SERIAL'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 88)" >&2; exit 1; }
 
 set +e
 failure_output="$(run_capture logcat-error summarize)"
 failure_status=$?
 set -e
-[[ "$failure_status" == 1 ]]
-[[ "$failure_output" == *'UID-scoped logcat capture failed'* ]]
-[[ "$failure_output" != *'automated_signal_matrix_passed'* ]]
-[[ "$failure_output" != *'PRIVATE-SERIAL'* ]]
+[[ "$failure_status" == 1 ]] || { echo "test-capture-android-a2-session.sh: check failed (line 94)" >&2; exit 1; }
+[[ "$failure_output" == *'UID-scoped logcat capture failed'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 95)" >&2; exit 1; }
+[[ "$failure_output" != *'automated_signal_matrix_passed'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 96)" >&2; exit 1; }
+[[ "$failure_output" != *'PRIVATE-SERIAL'* ]] || { echo "test-capture-android-a2-session.sh: check failed (line 97)" >&2; exit 1; }
 
 echo 'Android A2 UID-scoped capture contract passed (start, summarize, redaction).'

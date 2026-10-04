@@ -28,12 +28,12 @@ if [[ "${KARTPAD_ANDROID_REQUIRE_RELEASE:-0}" == 1 &&
       "$badging" == *"application-debuggable"* ]]; then
   echo "ERROR: release APK is debuggable" >&2; exit 1
 fi
-[[ "$badging" == *"package: name='dev.kartpad.android'"* ]]
+[[ "$badging" == *"package: name='dev.kartpad.android'"* ]] || { echo "audit-android-package.sh: check failed (line 31)" >&2; exit 1; }
 [[ "$badging" == *"versionName='$expected_version_name'"* ]] || {
   echo "ERROR: APK version name is not $expected_version_name" >&2
   exit 1
 }
-[[ "$badging" == *"compileSdkVersion='36'"* ]]
+[[ "$badging" == *"compileSdkVersion='36'"* ]] || { echo "audit-android-package.sh: check failed (line 36)" >&2; exit 1; }
 expected_min_sdk="${KARTPAD_ANDROID_EXPECTED_MIN_SDK:-28}"
 case "$expected_min_sdk" in
   28|29) ;;
@@ -42,8 +42,8 @@ esac
 [[ "$badging" == *"minSdkVersion:'$expected_min_sdk'"* ]] || {
   echo "ERROR: APK minimum SDK does not match $expected_min_sdk" >&2; exit 1;
 }
-[[ "$badging" == *"targetSdkVersion:'36'"* ]]
-[[ "$badging" == *"native-code: 'arm64-v8a'"* ]]
+[[ "$badging" == *"targetSdkVersion:'36'"* ]] || { echo "audit-android-package.sh: check failed (line 45)" >&2; exit 1; }
+[[ "$badging" == *"native-code: 'arm64-v8a'"* ]] || { echo "audit-android-package.sh: check failed (line 46)" >&2; exit 1; }
 permissions="$("$aapt2" dump permissions "$apk")"
 permission_names="$(printf '%s\n' "$permissions" |
   sed -n "s/^uses-permission: name='\([^']*\)'.*$/\1/p" | sort)"
@@ -180,7 +180,7 @@ expected_needed="$(printf '%s\n' \
   echo "ERROR: libmain.so dependency set differs from the allowlist" >&2
   exit 1
 }
-[[ "$dynamic" == *"GNU_RELRO"* ]]
+[[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-package.sh: check failed (line 183)" >&2; exit 1; }
 if ! printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
   echo "ERROR: libmain.so does not have a non-executable stack" >&2
   exit 1
@@ -196,7 +196,7 @@ if [[ "$has_discio" == 1 ]]; then
     echo "ERROR: libkartpad_discio.so dependency set differs from the allowlist" >&2
     exit 1
   }
-  [[ "$discio_dynamic" == *"GNU_RELRO"* ]]
+  [[ "$discio_dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-package.sh: check failed (line 199)" >&2; exit 1; }
   if ! printf '%s\n' "$discio_dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
     echo "ERROR: libkartpad_discio.so does not have a non-executable stack" >&2
     exit 1
