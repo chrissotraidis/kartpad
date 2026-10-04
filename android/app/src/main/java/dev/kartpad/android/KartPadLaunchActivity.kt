@@ -21,6 +21,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.ImageButton
 import android.graphics.drawable.RippleDrawable
+import java.io.File
 import java.util.concurrent.Executors
 
 /** Production owner for choosing the immutable runtime profile before SDL starts. */
@@ -69,8 +70,29 @@ open class KartPadLaunchActivity : Activity() {
         )
         KartPadExitDiagnostics.mark(this, pausedProfile() ?: "chooser")
         KartPadGamePack.removeImportedPack(this)
+        // A fatal game error is shown once here; don't start the game straight into it again.
+        if (savedInstanceState == null && showLastFatal()) preferredLaunch.consumed = true
         rebuildContent()
         if (pausedProfile() == null) checkForUpdate()
+    }
+
+    /**
+     * The game runtime has no dialog of its own on Android, so a fatal error
+     * (for example incomplete game data) only closed the game. The runtime
+     * leaves its message in Logs/last_fatal.txt; show it once and remove it.
+     */
+    private fun showLastFatal(): Boolean {
+        val file = File(filesDir, "KartPad/Logs/last_fatal.txt")
+        if (!file.isFile) return false
+        val message = runCatching { file.readText().take(1500).trim() }.getOrDefault("")
+        file.delete()
+        if (message.isEmpty()) return false
+        AlertDialog.Builder(this)
+            .setTitle("The game stopped")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
+        return true
     }
 
     override fun onResume() {

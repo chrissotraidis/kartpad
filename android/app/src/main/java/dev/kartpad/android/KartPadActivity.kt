@@ -18,6 +18,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -58,6 +59,10 @@ class KartPadActivity : SDLActivity() {
     private var resetTouchLayoutDialog: AlertDialog? = null
     private var kartPadMenu: PopupWindow? = null
     private var routedControllerButtons = 0
+    // #402: with a controller connected and "hide touch controls" on, the ⋯ button
+    // fades out too; any touch or mouse click brings it back for a few seconds.
+    private var menuHiddenForController = false
+    private val rehideMenu = Runnable { if (menuHiddenForController) setMenuShown(false) }
     private val loggedRoutedControllers = mutableSetOf<Int>()
     private var menuSafeInsetTop = 0
     private var menuSafeInsetEnd = 0
@@ -484,7 +489,29 @@ class KartPadActivity : SDLActivity() {
         kartPadOverlay.setHiddenForController(
             controllerCount > 0 && KartPadTouchSettings.hideOnController(this),
         )
+        menuHiddenForController = controllerCount > 0 && KartPadTouchSettings.hideOnController(this)
+        if (::menuButton.isInitialized) {
+            menuButton.removeCallbacks(rehideMenu)
+            setMenuShown(!menuHiddenForController)
+        }
         Log.i(TAG, "A4 controller handoff count=$controllerCount")
+    }
+
+    private fun setMenuShown(shown: Boolean) {
+        menuButton.animate().cancel()
+        menuButton.animate().alpha(if (shown) 1f else 0f).setDuration(200L).start()
+        menuButton.isEnabled = shown
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (menuHiddenForController && event.actionMasked == MotionEvent.ACTION_DOWN &&
+            ::menuButton.isInitialized
+        ) {
+            setMenuShown(true)
+            menuButton.removeCallbacks(rehideMenu)
+            menuButton.postDelayed(rehideMenu, 5_000L)
+        }
+        return super.dispatchTouchEvent(event)
     }
 
     private fun addMenuButton() {

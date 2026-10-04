@@ -35,6 +35,8 @@ class AndroidControllerRouting(unittest.TestCase):
     def test_explicit_port_choice_and_ownership(self):
         text = (RUNTIME / 'aurora-main/lib/input.cpp').read_text()
         self.compile_run(r'''
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <map>

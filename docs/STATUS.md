@@ -1,75 +1,59 @@
 # KartPad status
 
-## Current status: 3 October 2026
+## Current status: 4 October 2026
 
-**Latest release: [KartPad 0.7.8](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.8) (build 251).**
-Android gets an APK; iPhone and iPad get an unsigned IPA that PadMint turns into
-the player's own app. Game packs made for 0.7.0 or later keep working (pack
-interface fingerprint `85d2a9c9`), so 0.7.x updates are app-only.
+**Latest release: [KartPad 0.7.9](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.9) (build 252).**
+Downloads are ready to play again: the Android APK, the iPhone/iPad IPA and the
+Mac app include the game code, and players add their own game data the first
+time. PadMint stays an option for building your own copy. **0.7.10 (build 253)**
+is in PR #407.
 
 | Platform | How players get it | State |
 | --- | --- | --- |
-| Android | APK from Releases plus a game pack from PadMint | Main platform; most open reports |
-| iPhone / iPad | PadMint builds the app (Mac with Xcode, or experimental on Windows/Linux) | Stable on tested devices |
-| Apple Silicon Mac | Built from source (`scripts/self-build-macos.sh`) or PadMint's `macos` recipe target; not offered in PadMint's player UI and no ready-made download | Experimental |
+| Android | Ready-to-play APK from Releases | Main platform; most open reports |
+| iPhone / iPad | Ready-to-play IPA from Releases, signed by the player's sideloading tool | Stable on tested devices |
+| Apple Silicon Mac | Ready-to-play ZIP from Releases, or `scripts/self-build-macos.sh` | Experimental |
 | Apple TV | Experimental source build | Experimental |
 
-### Shipped on 3 October
+### 0.7.9 and 0.7.10
 
 | Version | What changed | Checked |
 | --- | --- | --- |
-| 0.7.5 | In-app **Update available** notice (#383); key-only controllers use the normal layout; game packs compile about 37% faster (#388) | Notice confirmed with real releases; compile time measured |
-| 0.7.6 | Controller Escape filter; Report a Problem lists controllers and keys | The report found the real #378 cause |
-| 0.7.7 | Gamepads named "… Keyboard" (ipega) handed to SDL as gamepads (#393) | Emulator with a matching virtual controller |
-| 0.7.8 | A connected controller can no longer end up with no player; Player 1 **Automatic** really is automatic; diagnostic log lists each controller's player and mapping (#395) | Bug reproduced and fixed on the emulator |
-
-Merged after 0.7.8, for the next app-only release: the update check runs hourly
-instead of daily (#397, a 0.7.5 player saw no notice for 0.7.6). Ready for review:
-PowerVR phones get the full vertex repack by default (#398).
+| 0.7.9 | Ready-to-play downloads (#403); hourly update check (#397) | Android 16 emulators (update and fresh install), iOS Simulator, Mac race |
+| 0.7.10 | Startup checks every game file and names missing ones (#370); fatal errors show a message instead of a black screen on iPhone/iPad; Automatic uses the full repack on Snapdragon 8xx (#316); PowerVR logs whether shaders exceed the GPU's inter-stage limit (#304); the ⋯ button hides with a controller (#402) | Emulator (data check, missing file, ⋯ hiding); iPad Pro (fatal message, normal launch) |
 
 ### What remains
 
-- **Android 3D drawing on some GPUs.** Adreno 6xx/7xx (#104, #301) and PowerVR
-  (#304) draw characters and tracks wrong while 2D menus are fine. The shared
-  cause is vertex data unpacked inside shaders, which these drivers get wrong;
-  repacking the data on the CPU fixes it on Adreno 8xx. Next step: choose the
-  working path automatically and log which one each phone uses, instead of
-  asking players to try options.
-- **Startup on specific devices:** Moto G75 (#332), iPad on iPadOS 18 goes black
-  after the safety screen (#370), iPhone 16 flickers while a game opens (#390).
-- **Controllers:** ipega on Android (#378, fix in 0.7.8 awaiting the reporter),
-  a single Joy-Con on iPhone connects but its presses don't arrive (#324), Wii
-  Remote with Classic Controller Pro on Mac (#306), Mac two-player rendering (#127).
-- **Game flow and data:** crash after the last race of a cup (#131, not yet
-  reproduced), Ayn Thor screen area (#202), restoring Mii, identity and rating
-  from a backup (#234).
-- **Performance (#339, patchzyy's focused pass).** Runtime: September profiling
-  on the Pixel 9 Pro XL ([ledger](artifacts/2026-09-23/android-copy-stream-loop.md))
-  led to candidate 203 (skip unobserved FP status capture, game-thread
-  Performance Hint), which cut game-thread CPU per frame in a 12-player Cookie
-  Land battle from 14.70–14.79 ms to 12.65 ms and shipped in 0.5.1; a
-  game-thread context slot (205) was measured and rejected. Compile: breakdown
-  and the `-g0` change (compile CPU 2,232 s to 1,404 s) shipped in 0.7.5. A
-  3 October emulator profile of a 12-racer race matches the Pixel profiles:
-  PowerPC float-rounding emulation is the largest game-code cost, then
-  indirect-call dispatch and CPU-context lookup. Not done: a baseline on the
-  current build, the incremental-rebuild measurement, and the next candidate
-  (the translator passing the CPU context to float helpers instead of looking
-  it up, which needs a game pack rebuild). Frame times are measured on the
-  Pixel; the shared Mac's emulator is too noisy for them.
-- **WiiCompiled.** Main is built on upstream `8346376`, 20 commits behind
-  upstream `main`. Draft #384 moves to `9d182f8` (one commit behind: upstream's
-  macOS packaging), passes the Android emulator race and iOS build, and still
-  needs an iPhone 14 race. It changes the pack interface, so it ships as
-  **0.8.0** with the speed work, and players rebuild their game pack once.
-  Nothing has been contributed upstream yet; the first candidate is the
-  controller assignment fix, which upstream's `input.cpp` shares.
+- **Android 3D drawing on some GPUs.**
+  - Adreno 8xx: 0.7.10 makes the full repack the default. It needs confirmation from the OnePlus 15 reporter (#316).
+  - Adreno 6xx/7xx (#104, #301): the in-app character test options are the only route; nothing new in 0.7.10.
+  - PowerVR (#304): 0.7.10 logs `KartPad inter-stage over limit` if shaders pass more values than the GPU's limit (14 on the Moto G54). One report from a PowerVR phone confirms or rules out that cause before any fix.
+- **Startup:**
+  - iPad black screen (#370): explained as an incomplete game data copy; 0.7.10 now says so.
+  - Moto G75 (#332): no diagnostic yet.
+  - iPhone 16 flicker while a game opens (#390): the reporter's video shows the game drawing only one frame in nine while the safety screen fades. It doesn't happen on the iPad Pro; the cause is not found yet.
+- **Online over mobile data (#405):** finding a room fails on carrier NAT; Wi-Fi or a VPN works. KartPad can't fix this without a relay server.
+- **Controllers:**
+  - ipega (#378): fix in 0.7.8, awaiting the reporter.
+  - Single Joy-Con on iPhone (#324): its presses don't arrive.
+  - Mac: Wii Remote with Classic Controller Pro (#306) and two-player rendering (#127).
+- **Game flow and data:**
+  - Crash after the last race of a cup (#131): not reproduced. Crash logs name the file being loaded.
+  - Ayn Thor screen area (#202).
+  - Restoring Mii, identity and rating from a backup (#234).
+- **Performance (#339, patchzyy's focused pass).**
+  - Runtime: September profiling on the Pixel 9 Pro XL ([ledger](artifacts/2026-09-23/android-copy-stream-loop.md)) led to candidate 203 (skip unobserved FP status capture, game-thread Performance Hint). It cut game-thread CPU per frame in a 12-player Cookie Land battle from 14.70–14.79 ms to 12.65 ms and shipped in 0.5.1. Candidate 205 (a game-thread context slot) was measured and rejected.
+  - Compile: the breakdown and the `-g0` change (compile CPU 2,232 s to 1,404 s) shipped in 0.7.5.
+  - Still to do: a baseline on the current build, the incremental-rebuild measurement, and the next candidate (the translator passing the CPU context to float helpers instead of looking it up, which needs a game pack rebuild).
+- **WiiCompiled.**
+  - Main is built on upstream `8346376`, 20 commits behind upstream `main`.
+  - Draft #384 moves to `9d182f8`. It changes the pack interface, so it ships as **0.8.0** with the speed work.
+  - Nothing has been contributed upstream yet. The first candidate is the controller assignment fix, which upstream's `input.cpp` shares.
 
 ### Next versions
 
-- **0.7.9** (app-only): hourly update check (#397) and the PowerVR default (#398).
-- **0.8.0** (one game pack rebuild): WiiCompiled sync (#384) plus the first
-  runtime speed work from #339.
+- **0.7.10** (app-only, PR #407): the fixes above.
+- **0.8.0** (pack interface change): WiiCompiled sync (#384) plus the first runtime speed work from #339.
 
 ## Earlier checkpoints
 
