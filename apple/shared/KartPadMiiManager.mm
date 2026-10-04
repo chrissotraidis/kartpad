@@ -727,12 +727,79 @@ BOOL KartPadApplyPendingMiiDatabase(NSError **error) {
 }
 
 BOOL KartPadHasPendingMiiChanges(void) {
-  return KartPadHasPendingSaveRestore() || [NSFileManager.defaultManager fileExistsAtPath:PendingGhostPath()] || [NSFileManager.defaultManager fileExistsAtPath:PendingPath()] ||
+  return KartPadHasPendingSaveRestore() || KartPadHasPendingRetroGhost() || [NSFileManager.defaultManager fileExistsAtPath:PendingGhostPath()] || [NSFileManager.defaultManager fileExistsAtPath:PendingPath()] ||
       [NSFileManager.defaultManager fileExistsAtPath:PendingIdentityPath()] ||
       [NSFileManager.defaultManager fileExistsAtPath:PendingLicensePath()];
 }
 
 #include "kartpad/ghost/rkg.h"
+#include "kartpad/ghost/retro_transfer.h"
+
+namespace {
+kartpad::ghost::retro::TransferStorage RetroGhostStorage() {
+  return kartpad::ghost::retro::TransferStorage(SupportRoot().UTF8String);
+}
+void ValidateRetroSelection(NSDictionary *selection) {
+  kartpad::ghost::Require([selection isKindOfClass:NSDictionary.class] &&
+      [selection[@"identity"] isKindOfClass:NSString.class] &&
+      [selection[@"track"] isKindOfClass:NSNumber.class] &&
+      [selection[@"variant"] isKindOfClass:NSNumber.class] &&
+      [selection[@"mode"] isKindOfClass:NSNumber.class], "Choose the Retro ghost destination again");
+}
+}
+
+NSDictionary<NSString *, id> *KartPadRetroGhostCatalog(NSError **error) {
+  try {
+    const auto catalog = RetroGhostStorage().LoadCatalog();
+    NSMutableArray *tracks = [NSMutableArray array];
+    for (const auto& track : catalog.tracks) {
+      NSMutableArray *variants = [NSMutableArray array];
+      for (const auto& variant : track.variants)
+        [variants addObject:@{@"index": @(variant.index), @"label": [NSString stringWithUTF8String:variant.label.c_str()]}];
+      [tracks addObject:@{@"id": @(track.pulsarId), @"label": [NSString stringWithUTF8String:track.label.c_str()], @"variants": variants}];
+    }
+    return @{@"identity": [NSString stringWithUTF8String:catalog.identity.c_str()], @"tracks": tracks};
+  } catch (const std::exception& e) { if (error) *error = ManagerError(60, e.what()); return nil; }
+}
+
+NSArray<NSDictionary<NSString *, id> *> *KartPadRetroGhostFiles(NSDictionary *selection, NSError **error) {
+  try {
+    ValidateRetroSelection(selection);
+    const auto records = RetroGhostStorage().Exportable([selection[@"track"] unsignedIntValue],
+        [selection[@"variant"] unsignedIntValue], [selection[@"mode"] unsignedIntValue],
+        [selection[@"identity"] UTF8String]);
+    NSMutableArray *result = [NSMutableArray array];
+    for (const auto& record : records)
+      [result addObject:@{@"filename": ([NSString stringWithUTF8String:record.filename.c_str()] ?: @"Saved ghost"),
+          @"data": [NSData dataWithBytes:record.bytes.data() length:record.bytes.size()]}];
+    return result;
+  } catch (const std::exception& e) { if (error) *error = ManagerError(61, e.what()); return nil; }
+}
+
+BOOL KartPadStageRetroGhost(NSData *ghost, NSDictionary *selection, NSError **error) {
+  if (KartPadHasPendingMiiChanges()) { if (error) *error = ManagerError(62, "Apply or cancel the pending data change first."); return NO; }
+  try {
+    ValidateRetroSelection(selection);
+    RetroGhostStorage().Stage(std::span<const uint8_t>((const uint8_t*)ghost.bytes, ghost.length),
+        [selection[@"track"] unsignedIntValue], [selection[@"variant"] unsignedIntValue],
+        [selection[@"mode"] unsignedIntValue], [selection[@"identity"] UTF8String]);
+    return YES;
+  } catch (const std::exception& e) { if (error) *error = ManagerError(63, e.what()); return NO; }
+}
+
+BOOL KartPadHasPendingRetroGhost(void) {
+  return [NSFileManager.defaultManager fileExistsAtPath:[SupportRoot() stringByAppendingPathComponent:@"PendingRetroGhost.bin"]];
+}
+BOOL KartPadCancelPendingRetroGhost(NSError **error) {
+  if (!KartPadHasPendingRetroGhost()) return YES;
+  try { RetroGhostStorage().Cancel(); return YES; }
+  catch (const std::exception& e) { if (error) *error = ManagerError(64, e.what()); return NO; }
+}
+BOOL KartPadApplyPendingRetroGhost(NSError **error) {
+  if (!KartPadHasPendingRetroGhost()) return YES;
+  try { RetroGhostStorage().Apply(); return YES; }
+  catch (const std::exception& e) { if (error) *error = ManagerError(65, e.what()); return NO; }
+}
 
 NSArray<NSDictionary<NSString *, id> *> *KartPadOriginalGhosts(NSUInteger license, NSError **error) {
   NSData *save = [NSData dataWithContentsOfFile:SaveLocation(@"original")[@"path"] options:0 error:error];

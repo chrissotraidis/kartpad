@@ -2918,6 +2918,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   BOOL _choosingGhostImport;
   NSString *_saveImportProfile;
   NSUInteger _ghostLicense;
+  NSDictionary *_retroGhostSelection;
 }
 
 - (instancetype)initWithSDLWindow:(SDL_Window *)window {
@@ -3845,14 +3846,17 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   }
   if (_choosingGhostImport) {
     _choosingGhostImport=NO;
+    NSDictionary *retroSelection=_retroGhostSelection;_retroGhostSelection=nil;
     if(url==nil)return;
     NSNumber *size=nil;[url getResourceValue:&size forKey:NSURLFileSizeKey error:nil];
     NSError *error=nil;NSData *data=nil;
     if(size && size.unsignedLongLongValue<=0x2800)data=[NSData dataWithContentsOfURL:url options:0 error:&error];
-    BOOL ok=data && KartPadStageOriginalGhost(data,_ghostLicense,&error);
+    BOOL ok=data && (retroSelection ? KartPadStageRetroGhost(data,retroSelection,&error)
+                                  : KartPadStageOriginalGhost(data,_ghostLicense,&error));
     [NSFileManager.defaultManager removeItemAtURL:url error:nil];
     [self showIntegrationAlert:ok ? @"Ghost Import Scheduled" : @"Ghost Import Failed"
-        message:ok ? @"Fully quit and reopen KartPad now to apply the comparison ghost. Your save will be backed up; personal-best records stay unchanged." : (error.localizedDescription ?: @"The selected file is unavailable, too large, or invalid.")];
+        message:ok ? (retroSelection ? @"Fully quit and reopen KartPad to add the Retro comparison ghost. Existing ghosts, leaderboard records and both Retro saves are unchanged."
+                                   : @"Fully quit and reopen KartPad now to apply the comparison ghost. Your save will be backed up; personal-best records stay unchanged.") : (error.localizedDescription ?: @"The selected file is unavailable, too large, or invalid.")];
     return;
   }
   if (_choosingMiiImport) {
@@ -3886,6 +3890,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   (void)controller;
   _choosingMiiImport = NO;
   _choosingGhostImport = NO;
+  _retroGhostSelection = nil;
   _saveImportProfile = nil;
 }
 
@@ -3963,6 +3968,78 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 - (void)showGhostManager {
+  UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Time Trial Ghosts" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+  __weak KartPadRuntimeOverlayHost *weakSelf=self;
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Original Mario Kart Wii…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){[weakSelf showOriginalGhostManager];}]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Retro Rewind…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){[weakSelf showRetroGhostManager];}]];
+  if(KartPadHasPendingRetroGhost())[sheet addAction:[UIAlertAction actionWithTitle:@"Cancel Pending Retro Ghost Import" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+    NSError *error=nil;if(!KartPadCancelPendingRetroGhost(&error))[weakSelf showIntegrationAlert:@"Cancel Failed" message:error.localizedDescription];
+  }]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentOverlayAlert:sheet];
+}
+
+- (void)showRetroGhostManager {
+  NSError *error=nil;NSDictionary *catalog=KartPadRetroGhostCatalog(&error);
+  if(!catalog){[self showIntegrationAlert:@"Retro Ghosts Unavailable" message:error.localizedDescription ?: @"Install the supported Retro Rewind version first."];return;}
+  NSArray *tracks=[catalog[@"tracks"] sortedArrayUsingComparator:^NSComparisonResult(NSDictionary *a,NSDictionary *b){return [a[@"label"] localizedCaseInsensitiveCompare:b[@"label"]];}];
+  UIAlertController *choose=[UIAlertController alertControllerWithTitle:@"Choose Retro Track" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+  __weak KartPadRuntimeOverlayHost *weakSelf=self;
+  for(NSDictionary *track in tracks)[choose addAction:[UIAlertAction actionWithTitle:track[@"label"] style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+    NSArray *variants=track[@"variants"];
+    if(variants.count==1){[weakSelf showRetroGhostModes:@{@"identity":catalog[@"identity"],@"track":track[@"id"],@"variant":variants[0][@"index"],@"label":variants[0][@"label"]}];return;}
+    UIAlertController *variantSheet=[UIAlertController alertControllerWithTitle:@"Choose Track Variant" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    for(NSDictionary *variant in variants)[variantSheet addAction:[UIAlertAction actionWithTitle:variant[@"label"] style:UIAlertActionStyleDefault handler:^(UIAlertAction *selected){
+      [weakSelf showRetroGhostModes:@{@"identity":catalog[@"identity"],@"track":track[@"id"],@"variant":variant[@"index"],@"label":variant[@"label"]}];
+    }]];
+    [variantSheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];[weakSelf presentOverlayAlert:variantSheet];
+  }]];
+  [choose addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];[self presentOverlayAlert:choose];
+}
+
+- (void)showRetroGhostModes:(NSDictionary *)destination {
+  NSArray *modes=@[@"150cc",@"200cc",@"150cc Feather",@"200cc Feather"];
+  UIAlertController *choose=[UIAlertController alertControllerWithTitle:@"Choose Time Trial Mode" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+  __weak KartPadRuntimeOverlayHost *weakSelf=self;
+  for(NSUInteger mode=0;mode<modes.count;++mode){NSUInteger selectedMode=mode;
+    [choose addAction:[UIAlertAction actionWithTitle:modes[mode] style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+      NSMutableDictionary *selection=[destination mutableCopy];selection[@"mode"]=@(selectedMode);selection[@"modeLabel"]=modes[selectedMode];
+      [weakSelf showRetroGhostActions:selection];
+    }]];
+  }
+  [choose addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];[self presentOverlayAlert:choose];
+}
+
+- (void)showRetroGhostActions:(NSDictionary *)selection {
+  UIAlertController *sheet=[UIAlertController alertControllerWithTitle:selection[@"label"] message:selection[@"modeLabel"] preferredStyle:UIAlertControllerStyleActionSheet];
+  __weak KartPadRuntimeOverlayHost *weakSelf=self;
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Export a Ghost…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+    NSError *error=nil;NSArray *records=KartPadRetroGhostFiles(selection,&error);
+    if(records.count==0){[weakSelf showIntegrationAlert:error ? @"Ghost Export Failed" : @"No Saved Ghosts" message:error.localizedDescription ?: @"No valid ghost files are saved for this Retro track, variant and mode."];return;}
+    UIAlertController *choose=[UIAlertController alertControllerWithTitle:@"Choose Ghost" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    for(NSDictionary *record in records)[choose addAction:[UIAlertAction actionWithTitle:record[@"filename"] style:UIAlertActionStyleDefault handler:^(UIAlertAction *selected){
+      NSURL *directory=[NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString] isDirectory:YES];NSError *writeError=nil;
+      [NSFileManager.defaultManager createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:&writeError];
+      NSURL *file=[directory URLByAppendingPathComponent:@"KartPad-Retro-ghost.rkg"];
+      if(![record[@"data"] writeToURL:file options:NSDataWritingAtomic error:&writeError]){[weakSelf showIntegrationAlert:@"Ghost Export Failed" message:writeError.localizedDescription];return;}
+      [weakSelf presentGhostPicker:[[UIDocumentPickerViewController alloc] initForExportingURLs:@[file] asCopy:YES] importing:NO];
+    }]];
+    [choose addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];[weakSelf presentOverlayAlert:choose];
+  }]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Import Comparison Ghost…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+    NSString *message=[NSString stringWithFormat:@"Destination: %@ • %@. The .rkg course field cannot identify a Retro track. Restart adds a new comparison file. Existing ghosts, records and both saves stay unchanged.",selection[@"label"],selection[@"modeLabel"]];
+    UIAlertController *confirm=[UIAlertController alertControllerWithTitle:@"Import Retro Comparison Ghost" message:message preferredStyle:UIAlertControllerStyleAlert];
+    [confirm addAction:[UIAlertAction actionWithTitle:@"Choose .rkg" style:UIAlertActionStyleDefault handler:^(UIAlertAction *selected){
+      KartPadRuntimeOverlayHost *strongSelf=weakSelf;if(!strongSelf)return;
+      strongSelf->_retroGhostSelection=[selection copy];
+      [strongSelf presentGhostPicker:[[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeData] asCopy:YES] importing:YES];
+    }]];
+    [confirm addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];[weakSelf presentOverlayAlert:confirm];
+  }]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];[self presentOverlayAlert:sheet];
+}
+
+- (void)showOriginalGhostManager {
   NSError *error=nil;
   NSArray *licenses=KartPadLicenseRecords(&error);
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Original Time Trial Ghosts"
@@ -4020,6 +4097,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 - (void)showGhostActionsForLicense:(NSUInteger)license {
+  _retroGhostSelection=nil;
   _ghostLicense=license;
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Original Ghosts" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
   __weak KartPadRuntimeOverlayHost *weakSelf=self;
@@ -4171,6 +4249,9 @@ extern "C" bool KartPadMobileEnsureGameDataAvailable() {
     NSLog(@"[KartPad] pending Mii changes were not applied: %@",
           miiError.localizedDescription);
   }
+  NSError *retroGhostError=nil;
+  if(!KartPadApplyPendingRetroGhost(&retroGhostError))
+    NSLog(@"[KartPad] pending Retro ghost retained: %@",retroGhostError.localizedDescription);
   if (!NSThread.isMainThread) {
     __block BOOL available = NO;
     dispatch_sync(dispatch_get_main_queue(), ^{

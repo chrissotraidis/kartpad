@@ -34,6 +34,15 @@ BOOL KartPadStageOriginalGhost(NSData *ghost, NSUInteger license, NSError **erro
 BOOL KartPadHasPendingGhost(void);
 BOOL KartPadCancelPendingGhost(NSError **error);
 
+// Retro standalone comparison collection; selection binds track/variant/mode
+// to the installed catalog and never writes a license save or leaderboard.
+NSDictionary<NSString *, id> * _Nullable KartPadRetroGhostCatalog(NSError **error);
+NSArray<NSDictionary<NSString *, id> *> * _Nullable KartPadRetroGhostFiles(NSDictionary *selection, NSError **error);
+BOOL KartPadStageRetroGhost(NSData *ghost, NSDictionary *selection, NSError **error);
+BOOL KartPadHasPendingRetroGhost(void);
+BOOL KartPadCancelPendingRetroGhost(NSError **error);
+BOOL KartPadApplyPendingRetroGhost(NSError **error);
+
 FOUNDATION_EXPORT NSData * _Nullable KartPadReadSave(NSString *profile, NSError **error);
 FOUNDATION_EXPORT BOOL KartPadStageSaveRestore(NSString *profile, NSData *data, NSError **error);
 FOUNDATION_EXPORT BOOL KartPadCancelSaveRestore(NSError **error);
