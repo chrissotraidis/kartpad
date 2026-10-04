@@ -189,8 +189,8 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   done
 fi
 
-[[ -f "${mod_output}/resolved_dispatch_profile.json" ]]
-[[ -f "${shards}/shards.cmake" ]]
+[[ -f "${mod_output}/resolved_dispatch_profile.json" ]] || { echo "translate-retro-rewind.sh: check failed (line 192)" >&2; exit 1; }
+[[ -f "${shards}/shards.cmake" ]] || { echo "translate-retro-rewind.sh: check failed (line 193)" >&2; exit 1; }
 rg -q '^set\(MKW_RETRO_REWIND_FUNCTION_COUNT [1-9][0-9]*\)$' \
   "${shards}/shards.cmake"
 rg -q '^set\(MKW_HAVE_RETRO_REWIND_SHARDS ON\)$' "${shards}/shards.cmake"

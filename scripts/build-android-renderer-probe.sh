@@ -11,5 +11,5 @@ export KARTPAD_PROBE_DAWN_ROOT="$repo_root/.android-bootstrap/dependencies/dawn-
 # This diagnostic build verifies the pinned archive, then uses those installed inputs.
 archive="$repo_root/.android-bootstrap/dependencies/dawn-android-aarch64.tar.gz"
 [[ -f "$archive" ]] || { echo 'Run scripts/prepare-android-dependencies.sh first.' >&2; exit 66; }
-[[ "$(shasum -a 256 "$archive" | cut -d ' ' -f 1)" == 27d910dee1201fd1e5b6ac567f0ba2306ebf2135e9f40b6929976c365d38b09b ]]
+[[ "$(shasum -a 256 "$archive" | cut -d ' ' -f 1)" == 27d910dee1201fd1e5b6ac567f0ba2306ebf2135e9f40b6929976c365d38b09b ]] || { echo "build-android-renderer-probe.sh: check failed (line 14)" >&2; exit 1; }
 "$repo_root/android/gradlew" --project-dir "$repo_root/tools/renderer-probe/android" --no-daemon assembleRelease

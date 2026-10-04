@@ -38,12 +38,12 @@ fi
 if [[ "$manifest" == *'android:debuggable="true"'* ]]; then
   echo "ERROR: release AAB is debuggable" >&2; exit 1
 fi
-[[ "$manifest" == *'package="dev.kartpad.android"'* ]]
+[[ "$manifest" == *'package="dev.kartpad.android"'* ]] || { echo "audit-android-bundle.sh: check failed (line 41)" >&2; exit 1; }
 [[ "$manifest" == *"android:versionName=\"$expected_version_name\""* ]] || {
   echo "ERROR: AAB version name is not $expected_version_name" >&2
   exit 1
 }
-[[ "$manifest" == *'android:compileSdkVersion="36"'* ]]
+[[ "$manifest" == *'android:compileSdkVersion="36"'* ]] || { echo "audit-android-bundle.sh: check failed (line 46)" >&2; exit 1; }
 expected_min_sdk="${KARTPAD_ANDROID_EXPECTED_MIN_SDK:-28}"
 case "$expected_min_sdk" in
   28|29) ;;
@@ -158,7 +158,7 @@ expected_needed="$(printf '%s\n' \
   echo "ERROR: AAB libmain.so dependency set differs from the allowlist" >&2
   exit 1
 }
-[[ "$dynamic" == *"GNU_RELRO"* ]]
+[[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-bundle.sh: check failed (line 161)" >&2; exit 1; }
 printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$' || {
   echo "ERROR: AAB libmain.so does not have a non-executable stack" >&2
   exit 1

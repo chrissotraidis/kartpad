@@ -48,7 +48,7 @@ fi
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards "${shards}"
 
 
-[[ -f "${functions}/func_8055531C.cpp" && -f "${shards}/shards.cmake" ]]
+[[ -f "${functions}/func_8055531C.cpp" && -f "${shards}/shards.cmake" ]] || { echo "translate-base.sh: check failed (line 51)" >&2; exit 1; }
 function_count="$(find "${functions}" -name 'func_*.cpp' -type f | wc -l | tr -d ' ')"
 [[ "${function_count}" == 29637 ]] || {
   echo "ERROR: expected 29637 translated functions, found ${function_count}" >&2
