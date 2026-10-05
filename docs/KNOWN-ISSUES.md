@@ -13,10 +13,14 @@ the [archive](archive/known-issues-through-2026-09.md).
   on Android 0.7.11, **Import Game Data Zip…**); it needs no key. Steps:
   [Android](INSTALL_ANDROID.md#2-make-your-game-data-folder),
   [iPhone/iPad](INSTALL_IPA.md#2-make-your-game-data-folder).
-- **"Ready to play", then a black screen or a crash right after starting.**
-  Usually the game data copy didn't finish (for example a folder half
-  downloaded from a cloud drive). 0.7.10 checks every file and names the
-  missing ones; copy the folder again and reimport. [#370](https://github.com/chrissotraidis/kartpad/issues/370)
+- **"Ready to play", then "The game stopped because the game data is
+  incomplete" (often naming a movie such as `thp/title/title_SD_50.thp`).**
+  The game data copy didn't finish, for example a folder only partly
+  downloaded from iCloud Drive or another cloud drive. Make sure the whole
+  folder is downloaded (in Files or Finder: **Download Now**), copy it again
+  and reimport. From the next release, KartPad checks every file when you
+  import and on the game chooser, so this shows up there with the file's name
+  instead of after you press Play. [#370](https://github.com/chrissotraidis/kartpad/issues/370)
 - **Android, fixed in 0.7.13: "The game stopped because DVD data is
   unavailable" the first time you play Retro Rewind right after downloading
   it.** Starting it again worked. Before 0.7.13, the download left the game

@@ -239,6 +239,34 @@ audio session ducks other apps' music while KartPad plays, so Spotify keeps
 playing but quieter. F3 Mac: already there as **Game → Game Settings… →
 Audio** (master, music, effects, menu sounds, voices, mute; applies live).
 
+## Track G: the full game-file check at import (5 October)
+
+A player's iPad showed "Ready to play", then "The game stopped because the
+game data is incomplete: 1 of 2032 game files are missing or cut short, for
+example /thp/title/title_SD_50.thp". The game checks every file in the disc's
+own table at start (#370), but the importers on Android, iPhone/iPad and the
+Mac only checked six key files and two hashes. The movie isn't at the end of
+the disc (it sits at 3.8 GB with smaller files after it), so a truncated disc
+image doesn't explain it; a folder copy where one large file never arrived
+does, most often an iCloud Drive folder that isn't fully downloaded.
+
+- **G1 (done, `codex/game-data-full-check`):** the importers and the game
+  chooser run the same rule as the game (every `sys/fst.bin` file present at
+  its full size), so an incomplete copy is refused at import, or shown as
+  "Setup needed" with the file's name, instead of failing after Play. The
+  message says to download the whole folder (Files/Finder **Download Now**)
+  and import again. One shared header for iPhone/iPad and Mac
+  (`apple/shared/KartPadGameFiles.h`), one Kotlin function on Android.
+- **Checked:** Mac harness on a real extraction (complete: passes in under
+  half a second; `title_SD_50.thp` emptied: "1 of 2032 … title_SD_50.thp";
+  a second file removed: "2 of 2032"). Android emulator: complete data still
+  "Ready to play"; with `title_SD_50.thp` emptied the chooser says "Setup
+  needed" with the message, and Game Data & Saves shows it too. iPad Pro: the
+  new build installed in place, real data still "Ready to play". Mac: the
+  shell file compiles with the release build's flags.
+- Ships in 0.7.14 with the sound levels (Track F). **Stop:** no automatic
+  iCloud downloading or per-file repair.
+
 ## Track E: support, every pass
 
 Check issues updated since the last pass. Reply to anyone waiting, link
@@ -255,6 +283,7 @@ release on it in place, keeping its data.
 3. C1 to C4, then **0.8.0**; D3 if a speed change qualifies.
 4. B2: parked for Adreno (see above); PowerVR when its 0.7.13 log arrives.
 5. F1 to F3 (sound levels) in a 0.7.x release, then a second pass on feedback.
+6. G1 (full game-file check) ships with F in 0.7.14.
 
 The loop is finished when 0.7.11 and 0.8.0 are released with these gates met,
 B is either acting on evidence or parked with its written state, every D
