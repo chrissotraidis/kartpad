@@ -5,6 +5,11 @@ a build test. The objective is stable gameplay and supported online play across
 Android, iPhone, iPad and macOS. Track Original and Retro Rewind separately.
 Every request must advance a specific decision toward an affected-player result.
 
+**From 5 October** the [current goal loop](CURRENT-LOOP.md) sets the work
+order. No hourly coordinator is running; `maintenance-priorities.json` is the
+1 October queue and isn't updated. Current player-facing state is in
+[STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md).
+
 ## Read these records
 
 | Record | What it owns |

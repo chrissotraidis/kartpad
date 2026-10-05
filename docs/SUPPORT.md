@@ -10,7 +10,7 @@ handoff is required.
 Maintainers and automated support agents: start at the [support-agent hub](SUPPORT-AGENTS.md)
 for priorities, replies, diagnostics and build-test handoffs.
 
-Use the [platform downloads](../README.md#downloads) and include the
+Use the [platform downloads](../README.md#get-kartpad) and include the
 exact app version/build in a report. Update over the existing installation;
 do not uninstall or clear storage to troubleshoot. Follow the platform's
 backup instructions before changing saves or signing identities.
@@ -39,8 +39,7 @@ still needs a verified translation profile before a playable candidate exists.
 
 KartPad stores saves in Android's **internal app-private storage**, so its save
 folder is not exposed through a normal file manager under `Android/data`.
-The current Android release (retired)
-includes transfers for Original, Retro Rewind and Retro Rewind (Separate Save).
+KartPad transfers saves for Original, Retro Rewind and Retro Rewind (Separate Save).
 Root access is not needed:
 
 1. Copy the PC's raw Mario Kart Wii `rksys.dat` to Downloads on the phone.
@@ -120,11 +119,8 @@ Android's save-picker instructions do not imply the same UI exists on Apple.
 
 ## Display and performance
 
-**Mac VSync:** public 0.4.17/build 39 has no VSync switch. The experimental,
-restart-required option is merged in [PR #255](https://github.com/chrissotraidis/kartpad/pull/255)
-and has passed local build/package and native settings checks, but is not in a
-new public Mac download. Physical tearing and pacing acceptance for
-[#250](https://github.com/chrissotraidis/kartpad/issues/250) remain open.
+**Mac VSync:** the Mac app's graphics settings have an experimental
+**VSync** option; quit and reopen KartPad to apply it.
 
 **Original 4:3** and **Widescreen 16:9 (Experimental)** fit the selected aspect
 inside the display; black bars can be expected. **Fill Screen (Experimental)**
@@ -165,95 +161,39 @@ See [#100](https://github.com/chrissotraidis/kartpad/issues/100) and the
 
 ## Collect a useful report
 
-The Android 0.4.12-android.2 diagnostic beta (retired)
-adds optional **Renderer Validation** on the chooser, off by default. When
-requested for a graphics report, compare the same scene/settings with it off
-and on, then turn it off for normal play. It enables actual game-renderer
-validation and bounds protection and may slow gameplay; it is not a fix.
-Older diagnostic builds include bounded `process-exits.json` OS metadata on
-Android 11+. A missing record does not establish no crash, and a manual stop
-can produce a user-requested exit. See the [beta test steps](releases/v0.4.12-android.2.md).
+Say what happened, what you expected, how to make it happen again, and your
+KartPad version, device and OS. Screenshots or a short video help with
+graphics problems.
 
-**Android private reporting candidate:** describe the problem in **Report a
-Problem…**, choose the visible destination, then tap **Open GitHub Draft**.
-No local file or missing-log explanation is required to open the browser.
-Attach reviewed logs or screenshots on GitHub. Returning to the app keeps your
-draft. If no browser can open it, the screen shows an error and keeps the draft.
-These labels describe the private candidate, not a newly published release;
-older builds use **Report on GitHub…** and may ask for a log choice first.
+**Android:** in the game, open **⋯ → Report a Problem…** and fill in the three
+boxes.
 
-**Android:** **••• → Report a Problem… → Share Report…** produces a short
-version/device/profile summary and your answers. It does **not** automatically
-include runtime logs. Choose **Export Private Logs…** in that report screen,
-or **Export Private Diagnostics…** on the Original/Retro Rewind chooser, to
-save logs locally. Exporting neither uploads a file nor selects an attachment.
+- **Open GitHub Draft** opens a filled-in issue in your browser.
+- **Save Diagnostic Log…** asks which game session had the problem and saves its
+  log. After a crash, reopen KartPad first; the newest session may not be the
+  one that crashed, so pick the right time.
+- **Share Report…** shares the summary without logs.
 
-**The session chooser is a source change awaiting a tested release.** In builds
-with **Choose the game session**, select the run that failed before saving the
-ZIP. The displayed timestamp is the console's last modification time, not a
-verified session start time. After a crash and relaunch, the newest run may not
-be the failed one. The selection remains fixed while the save picker is open.
+If the game won't start at all, use **Help → Export Private Diagnostics…** on
+the game chooser instead. It saves a ZIP with the chosen session's log, any
+crash traces Android kept, and a README. Open it yourself and attach the
+`console.log` or the relevant part, not the whole ZIP.
 
-That export includes only the selected session's `console.log` and available
-`crash_*.txt`, plus a README and export-time context. It excludes other sessions,
-root-level `android-health.log`, OS exit history, and memory dumps. Long logs
-retain their header and recent tail with an explicit omission marker. Read the
-session's own startup information for its version; the installed/export-time
-app version may differ. Missing session metadata is unknown.
+**iPhone/iPad:** open **••• → Report a Problem…**, describe it, then choose
+**Save or Share Report…** to save the report file, or **Review & Continue to
+GitHub…** to open a draft. If the app crashed, reopen it first; the report
+includes the previous session's log.
 
-Older builds have no session chooser and can include several runs, health
-history and OS exit records. Open the ZIP locally and select the relevant
-`Logs/<session>/` text yourself. If a runtime must be stopped before exporting,
-close it after the failure; do not clear logs or app storage. A manual close
-can create an OS exit record and does not establish a crash.
+**Mac:** **Help → Save Diagnostics Report…** saves the settings and the recent
+log of this and the previous session.
 
-For **renderer validation**, review the chosen `console.log` for warnings or
-errors (`validation`, `error`, `warning`, `Dawn`, `WebGPU`). Share startup/version
-information and nearby failure context. No logged error is required to report
-visible corruption. For performance, include matching `KartPadPerf`/CPU/GPU
-lines where available; their timestamps use elapsed time since boot and missing
-metrics are not zero. Older exports may additionally contain health samples.
+**Apple TV:** use [`collect-tvos-diagnostics.sh`](../scripts/collect-tvos-diagnostics.sh)
+and the [testing guide](TVOS-TESTING.md).
 
-Open the ZIP locally and review it before choosing a relevant text attachment.
-Do not upload the whole private archive. Remove usernames, private paths,
-IP/MAC addresses, console/account IDs, friend codes, tokens and other personal
-data from excerpts. No USB debugging or root is needed.
+For graphics problems on Android, **Renderer Validation** on the chooser adds
+extra checks to the log. It slows the game and isn't a fix; turn it off again
+after one test.
 
-**iPhone/iPad:** After reproducing the problem, open **••• → Report a
-Problem…** and describe what happened. If the app crashed, reopen it first.
-
-**iPhone 17 Pro Max / iOS 27 startup report:** the [#196 retest](https://github.com/chrissotraidis/kartpad/issues/196#issuecomment-5651820707)
-still fails on 0.4.17/build 39: Retro crashes roughly two seconds after its
-KartPad screen and Original still fails. The earlier iPhone 14 test does not
-resolve this device-specific result. The next evidence is the promised new crash
-analytics labelled by mode; preserve the installation and data.
-
-In the **private reporting candidate**, choose **Continue to GitHub…**.
-**Preparing Report…** remains visible while diagnostics are collected. On the
-review screen, either review the text and choose **Choose Project — I’ll Attach
-the Log**, or use **Continue Without a Log**. Select KartPad or WiiCompiled to
-open its draft in the embedded Safari view. No explanation is required to
-continue without a log. Cancelling destination selection or closing the browser
-returns to the review. A loading failure offers retry, copy link, or return.
-
-**Save or Share Log…** saves or shares the reviewed file; attach it manually on
-GitHub. **Share Report…** remains available from the initial prompt. The report
-includes device/settings details and current/previous session logs; it has no
-Android-style session picker yet.
-
-Older builds use **Report on GitHub** and an external browser. Reports are in
-**Files → On My iPhone/iPad → KartPad → Diagnostics**. Newer builds name the
-file **Latest-KartPad-Diagnostic.log**; older builds use
-**Latest-SunPad-Diagnostic.log**. Opening a draft does not upload either file.
-These candidate changes have not been announced as a public release.
-
-**Mac:** **Help → Save Diagnostics Report…** creates a bounded report with
-settings and current/previous session tails. Review it before attaching.
-
-**Apple TV:** follow [`collect-tvos-diagnostics.sh`](../scripts/collect-tvos-diagnostics.sh)
-and the [testing guide](TVOS-TESTING.md), then share reviewed, relevant excerpts.
-
-For any platform, a report should say what happened, what you expected, how
-to repeat it, and the exact version and hardware. Game images, extracted game
-files, saves, complete app containers/NAND, signing material, and identities
-do not belong in a public issue.
+Review any log before attaching it. Remove usernames, paths, IP addresses,
+friend codes and account IDs you don't want public. Never attach disc images,
+game files, saves, NAND backups, keys or signing material.

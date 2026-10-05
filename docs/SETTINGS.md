@@ -1,6 +1,6 @@
 # Mobile settings
 
-Android 0.5.0 (135) and iOS/iPadOS 0.5.0 (59) share this menu order. Open **•••** while a game is running.
+Android and iPhone/iPad share this menu order (KartPad 0.7.10). Open **•••** (top right) while a game is running.
 
 | Menu | Options, in order |
 | --- | --- |

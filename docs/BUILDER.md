@@ -1,10 +1,12 @@
 # KartPad Personal Builder
 
-KartPad's public Android APK and iPhone/iPad IPA contain no game code.
-[PadMint](https://github.com/chrissotraidis/padmint) builds the game part from
-your own disc and supplies the build tools. For normal setup, follow
-[Get KartPad](../README.md#get-kartpad). This page describes the repository
-builder that PadMint runs and the separate development workflows.
+From 0.7.9, KartPad's releases are ready to play: the Android APK, the
+iPhone/iPad IPA and the Mac app include the game code, and most players should
+follow [Get KartPad](../README.md#get-kartpad). Building your own copy stays
+optional. [PadMint](https://github.com/chrissotraidis/padmint) builds the game
+part from your own disc against the release's no-game-code app
+(`KartPad-v…-ios-for-padmint.ipa` on iPhone/iPad). This page describes the
+repository builder that PadMint runs and the separate development workflows.
 
 ## Current targets and inputs
 
@@ -13,7 +15,7 @@ builder that PadMint runs and the separate development workflows.
 | Android game pack | Windows, macOS or Linux | `.so` game pack for the published APK, plus extracted game data |
 | iPhone/iPad personal app | Apple Silicon Mac with Xcode | Published empty IPA with your `.dylib` game pack added, plus extracted game data |
 | iPhone/iPad personal app (experimental) | Windows or Linux | Same personal IPA, using PadMint's LLVM and open-source headers; see the evidence below |
-| Mac development app | Apple Silicon Mac | Local app through the [Mac self-build workflow](INSTALL_MACOS.md#build-it-yourself); no current public Mac app |
+| Mac development app | Apple Silicon Mac | Local app through the [Mac self-build workflow](INSTALL_MACOS.md#build-it-yourself); the release also has a ready-to-play Mac app |
 
 Android phone-only builds through PadMint and Termux remain experimental.
 See PadMint's [phone guide](https://github.com/chrissotraidis/padmint#android-phone-only-experimental)
@@ -53,7 +55,7 @@ Build the Android pack against the published APK, and export its game data:
 
 ```sh
 ./scripts/build-user-ipa.sh build-pack android /path/to/Mario-Kart-Wii.rvz \
-  --app /path/to/KartPad-v0.7.3-android.apk \
+  --app /path/to/KartPad-v…-android.apk \
   --output artifacts/KartPad-android-personal.so \
   --game-data artifacts/KartPad-game-data
 ```

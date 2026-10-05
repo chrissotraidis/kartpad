@@ -1,5 +1,12 @@
 # Maintenance work and test board
 
+## Current work (from 5 October)
+
+The [current goal loop](CURRENT-LOOP.md) sets the order of work for 0.7.11 and
+0.8.0. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept
+current with each release. Everything below on this board is a dated snapshot:
+useful evidence, not current next actions.
+
 ## 1 October focused execution
 
 The [67-issue review](FOCUSED-REVIEW-2026-10-01.md) and

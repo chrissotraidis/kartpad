@@ -1,273 +1,132 @@
 # Install KartPad on Android
 
-> [!NOTE]
-> **From KartPad 0.7.9 the Android APK is ready to play.** Install `KartPad-v…-android.apk`
-> from the [latest release](https://github.com/chrissotraidis/kartpad/releases/latest) and import your
-> own game data on first launch; no game pack is needed. Steps: [Get KartPad](../README.md#android).
-> The PadMint steps below remain for players who build their own copy.
+KartPad's Android download is ready to play. You install the APK, then add
+your own Mario Kart Wii game data the first time you open it. You don't need
+PadMint or a game pack. What changed in each version is on the
+[releases page](https://github.com/chrissotraidis/kartpad/releases).
 
-> [!IMPORTANT]
-> **Building your own copy instead (0.7.0 to 0.7.8 required it):** you make a
-> game pack with PadMint on your own Windows, Mac or Linux computer, or on the
-> phone itself (experimental), and add it in the app. Older version notes
-> below are kept for reference; the
-> settings, save and troubleshooting guidance still applies.
+## What you need
 
-## Current update
+- An ARM64 phone or tablet with Vulkan and Android 9 or newer, with about
+  6 GB free.
+- Your own Mario Kart Wii: PAL (Europe) **RMCP01**, revision 0. Other regions
+  don't work yet.
+- A computer with [Dolphin](https://dolphin-emu.org) to extract the game data
+  (the easiest way), or your disc image plus your own Wii common key.
 
-**0.7.8 / build 251** keeps your game pack: install the APK over your current
-KartPad and play. A connected controller can no longer end up with no player
-(and so no input) after changing **Controller Player Setup**, and Player 1's
-**Automatic** choice now really picks the first connected controller. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.8).
+## 1. Install the app
 
-### Earlier: 0.7.7
+Download `KartPad-v…-android.apk` from the
+[latest release](https://github.com/chrissotraidis/kartpad/releases/latest) on
+the phone and open it. If Android asks, allow your browser or file manager to
+install apps. If you already have KartPad, install over it; **don't uninstall
+first**, or you lose your saves.
 
-**0.7.7 / build 250** keeps your game pack: install the APK over your current
-KartPad and play. Controllers that name themselves as a keyboard, such as
-ipega models in gamepad mode, now work as full controllers: the sticks, D-pad
-and all buttons reach the game, and B no longer opens the quit prompt. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.7).
+To check the download, compare it with `SHA256SUMS` from the same release
+(`shasum -a 256` on Mac, `sha256sum` on Linux, `Get-FileHash` in PowerShell).
 
-### Earlier: 0.7.6
+## 2. Make your game data folder
 
-**0.7.6 / build 249** keeps your game pack: install the APK over your current
-KartPad and play. An Escape key sent by a controller no longer opens the quit
-prompt, and **Report a Problem** now lists your connected controllers and the
-keys they send, which helps fix controllers that still don't work. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.6).
+In Dolphin on your computer:
 
-### Earlier: 0.7.5
+1. Right-click Mario Kart Wii in the game list and choose **Properties**.
+2. Open the **Filesystem** tab, right-click the disc at the top, and choose
+   **Extract Entire Disc**. Pick an empty folder.
+3. Dolphin makes three folders: `DATA`, `UPDATE` and `CHANNEL`. KartPad
+   only needs `DATA`. You can also give KartPad the folder that holds all
+   three; it finds `DATA` inside.
 
-**0.7.5 / build 248** keeps your game pack: install the APK over your current
-KartPad and play. Controllers that Android reports only as keys now work with
-the usual button layout, and a controller's Back button acts as B instead of
-leaving the race. KartPad also shows **Update available** next to **Help** when
-a newer release is out, and PadMint makes Android game packs about a third
-faster. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.5).
+If you used PadMint, it already made this folder for you, named
+`KartPad game data`.
 
-### Earlier: 0.7.4
+## 3. Copy it to the phone
 
-**0.7.4 / build 247** keeps your game pack: install the APK over your current
-KartPad and play. It includes a renderer fix for phones with PowerVR graphics
-(not yet confirmed on a PowerVR phone), and PadMint reuses a compatible game
-pack without translating your disc again. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.4).
+The game data is about 2,000 files. All of them have to arrive, so pick a way
+that copies the whole folder:
 
-### Earlier: 0.7.3
+- **USB cable (most reliable).** Connect the phone, choose **File transfer**
+  on the phone, and copy the folder into **Download**. On a Mac, use
+  [OpenMTP](https://openmtp.ganeshrvel.com).
+- **A zip file.** Zip the folder on the computer, send the one file any way you
+  like (Google Drive, Quick Share, a cable), then open it in **Files by Google**
+  and choose **Extract**.
+- **Google Drive with loose files** is the risky way: KartPad can't pick a
+  folder inside Google Drive, and a partly downloaded folder is missing files.
+  Download it to the phone as a zip instead.
 
-**0.7.3 / build 246** keeps your game pack: install the APK over your current
-KartPad and play. Nothing changes in the app. This release is for PadMint:
-making the game pack on an Android phone (Termux) now also works on later
-runs, and PadMint can make the iPhone app on Windows and Linux. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.3).
+KartPad 0.7.10 and newer check every game file when the game starts. If some
+are missing, KartPad tells you which ones, and you copy the folder again.
 
-### Earlier: 0.7.2
+## 4. Import and play
 
-**0.7.2 / build 245** keeps your game pack: install the APK over your current
-KartPad and play. It stops the game running too fast after you come back from
-another app, and Automatic uses the character fix on newer Adreno phones. See
-the [release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.2).
+1. Open KartPad and tap **Import Game** on the Mario Kart Wii card.
+2. Tap **Import from Extracted Game Data Folder…**, pick the folder, then tap
+   **Use this folder** and **Allow**.
+3. When it says **Game Data Imported**, tap **Done**, then **Play Game**.
 
-### Earlier: 0.7.1
+For **Retro Rewind**, tap **Set Up Game** on its card. KartPad downloads and
+installs the official Retro Rewind 6.12.8 pack (about 1.7 GB).
 
-**0.7.1 / build 243** keeps your 0.7.0 game pack: install the APK over your
-current KartPad and play. PadForge is now called PadMint, and the app's
-buttons and links say so. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.1).
+### Using a disc image instead
 
-### Earlier: 0.7.0
+**Import or Reimport Wii Disc Image…** reads an ISO, WBFS or RVZ directly, but
+it needs your own Wii's 16-byte common key saved as `common-key.bin` (for
+example from a BootMii NAND backup). KartPad doesn't include it and we can't
+provide it. If KartPad asks you for a key and you don't have one, use the
+extracted folder above instead.
 
-**0.7.0 / build 242** keeps your game pack working across KartPad updates.
-Updating to 0.7.0 needs one last new game pack; after that, a new APK asks for
-one only when an update changes how KartPad loads the game. It updates earlier
-versions in place with the same signing key, keeping saves. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.0).
+## Updating
 
-### Earlier: 0.6.1
+KartPad checks for a new release at most once an hour when the game chooser
+opens. It sends nothing about you. When one is out, **Update available**
+appears next to **Help** and opens the APK download.
 
-**0.6.1 / build 241** adds **Help → Replace Game Pack** for swapping the pack
-you added, and PadMint now also saves a `KartPad game data` folder you can
-import with no key. It updates 0.5.x and 0.6.0 in place with the same signing
-key, keeping saves. Already playing 0.6.0? You can stay on it; updating means
-making a new game pack for 0.6.1. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.6.1).
+Install each new APK over the old one. Your saves, game data and Retro Rewind
+stay. **Never uninstall or clear storage to update.** Android only accepts an
+update signed by the same key, so a copy you built yourself can't update the
+public app (or the other way around) without uninstalling. Back up your saves
+first if you ever have to.
 
-### Earlier: 0.6.0
+## Controls and settings
 
-**0.6.0 / build 240** makes the APK game-code-free. KartPad asks for your
-PadMint game pack the first time you play and keeps one pack per KartPad
-version. Importing a disc image now uses your own `common-key.bin`; an
-extracted game data folder needs no key. It updates 0.5.x in place with the same
-signing key, keeping saves. See the
-[release](https://github.com/chrissotraidis/kartpad/releases/tag/v0.6.0).
+Open **⋯** (top right) during a game for Controls, Display, Game Data & Saves,
+Multiplayer and **Report a Problem…**. The full menu is in
+[mobile settings](SETTINGS.md).
 
-### Earlier: 0.5.0
+- **Touch controls** can be moved, resized and hidden in
+  **Controls → Touch Control Settings…**. The movement stick follows where you
+  first put your thumb.
+- **Controllers:** pair them in Android's Bluetooth settings. Touch controls
+  hide while one is connected; with **Hide on controller** on, the ⋯ button
+  hides too and comes back when you touch the screen. Buttons can be remapped
+  in **Controller Button Mapping…**, and players assigned in
+  **Controller Player Setup…**. See [controls and multiplayer](MULTIPLAYER.md).
+- **Render resolution:** start at **Display → Render Resolution → 1×** and
+  raise it if your phone keeps up.
+- **Character graphics:** if characters or tracks look broken, open **Help →
+  Character Graphics Test…** on the game chooser. **Automatic** is right for
+  most phones; the other options are workarounds for specific Snapdragon GPUs.
+- **On launch:** on the chooser, choose whether KartPad asks every time or
+  opens Original or Retro Rewind directly.
 
-**0.5.0 / code 135** (retired)
-adds a persistent Auto-accelerate opt-out, fixes controller assignment, and
-corrects generated vehicle thumbnails, framebuffer copies and graphics-startup
-failures. The owner confirmed the thumbnail repair on the tested Pixel. This
-is not a general Android FPS or compatibility guarantee. See the
-[release notes](releases/v0.5.0.md). Update in place using the same signing
-identity; do not uninstall or clear app data.
+The first time you see a course or menu, KartPad prepares its graphics, which
+can cause short pauses. They get rarer the more you play. KartPad doesn't
+promise a steady 60 FPS on every phone; the Pixel 9 Pro XL is the tested
+device.
 
-The latest update also aligns the mobile settings order and labels, adds **Game Data & Saves → Time Trial Ghosts** for Original `.rkg` transfers, expands controller remapping, and provides Small/Medium/Large FPS counters. The iPhone report form now scrolls correctly. See [mobile settings](SETTINGS.md) for supported workflows and platform differences.
+## Saves
 
-## Download and first launch
-
-**Only have an Android phone?** Follow PadMint's
-[phone-only setup](https://github.com/chrissotraidis/padmint#android-phone-only-experimental).
-It needs about 25 GB free and 8 GB of memory; the 6 GiB below is for installing
-and playing with a pack built on a computer. In Termux, the file-selection number
-means the number beside a filename in PadMint's list, such as `1`. It does not
-mean the Mario Kart Wii disc ID `RMCP01`. Wait for the list before entering it.
-
-1. Make your game pack with PadMint as described in
-   [Get KartPad](../README.md#get-kartpad). From the
-   [latest release](https://github.com/chrissotraidis/kartpad/releases/latest),
-   download `KartPad-v0.7.8-android.apk` and `SHA256SUMS`.
-2. Use an ARM64 phone/tablet with Vulkan and Android 9/API 28 or newer. The
-   tested physical device is Pixel 9 Pro XL; the oldest OS/vendor GPU combinations
-   and all other phones are not certified. Allow at least 6 GiB free for setup,
-   plus space for the source image and optional Retro Rewind installation.
-3. Verify the APK against `SHA256SUMS` (`shasum -a 256 FILE.apk` on macOS,
-   `sha256sum FILE.apk` on Linux, or `Get-FileHash FILE.apk -Algorithm SHA256`
-   in PowerShell). Open it on the phone and, if requested, allow that browser or
-   file manager to install this app. No USB debugging is required for normal
-   installation. Revoke that install permission afterward if you enabled it.
-4. Open KartPad and tap the Mario Kart Wii card. Choose **Choose file** and pick
-   your `KartPad-v0.7.8-android-personal.so` game pack. Then import your own
-   PAL **RMCP01 revision 0** game data: the `KartPad game data` folder PadMint
-   saved (no key needed), or an ISO/WBFS/RVZ image plus your own
-   `common-key.bin`. The exact
-   profile's identity checks must pass. Keep the original image backed up;
-   neither the APK nor this repository supplies it or the key.
-5. Choose Retro Rewind to download, verify and install the separately hosted
-   official **6.12.8** pack. Use matching current content; if KartPad reports a
-   newer incompatible profile, wait for a matching KartPad update. Never bypass
-   the checks or replace executable files manually.
-
-The next Android source build also accepts RVZ through the same system picker;
-the public 0.5.0 APK still accepts ISO/WBFS. RVZ import decompresses the selected
-image into KartPad's existing private game-data layout. It saves space for the
-source image, not the installed extracted data, and still requires free space
-for extraction and the existing RMCP01 revision-0 validation. No intermediate
-full ISO is created.
-
-## Preferred Game
-
-Code 83 adds **Preferred Game…** to the game selector and paused
-KartPad menu. **Ask Every Time** is the default; you can choose Original or
-Retro Rewind for the next fresh launch. Changing it leaves the current game
-paused and does not start a game immediately. Earlier code 80 does not include this preference.
-
-The chooser still validates game data before starting. Missing or incompatible
-content leaves you at the selector, and an explicit next-launch game choice
-takes precedence. **Return to KartPad Menu** and **Restart to Selector** remain
-ways to reach the menu without automatically launching again. This preference
-does not check for or install online updates.
-
-## Updating safely
-
-KartPad checks GitHub for a newer release at most once an hour when the game
-chooser opens. It sends nothing about you or your game. When one is out,
-**Update available** appears next to **Help**: it opens the APK download or the
-release notes, which say whether the update also needs a new game pack.
-
-Install future public APKs over the existing public app. Keep the same signing
-identity and use a forward version code. Export the **Original Mario Kart Wii**
-save through **Game Data & Saves → Manage Saves…** before updating, and keep
-your owned image separately. Version `0.4.10-android.1` does not back up Retro
-Rewind saves; it always targets Original. Version `0.4.12-android.1` adds a
-profile selector for Original, Retro Rewind and Retro Rewind (Separate Save).
-Export each initialized profile separately. Save exports do not include Miis,
-console identity, preferences or downloaded content. See
-[save transfer and its limits](SUPPORT.md#android-save-transfer).
-Never uninstall or clear storage as an update step.
-
-**Private preview users:** earlier hardware previews use a different local
-debug certificate. Android will reject the public release as an in-place update
-over those previews. Do not uninstall to force it through: preserve the working
-preview and its app data, and plan a deliberate backed-up migration separately.
-The first public package was code 21; the testing preview was code 28. The
-current public package is code 93.
-Changing a package signature is not a save migration.
-Self-built APKs similarly cannot update public builds unless the signer matches.
-
-Earlier previews also lack the issue #94 console-serial correction. Do not use
-those builds online. The fix writes the full numeric serial expected by the
-game; it does not reset your identity or saves. Incorrect CSNums already stored
-in a server account's history may require server-admin cleanup. Do not delete
-licenses, regenerate identities or clear app data to work around a server ban.
-
-## Controls and performance
-
-The three-dot menu contains Controls, Display, Game Data & Saves, Multiplayer,
-and local reporting tools. Touch controls are movable, resizable and hideable;
-the floating movement stick follows your initial thumb position within its
-pickup area. Existing custom layouts are preserved.
-
-Version 0.4.17 adds **Display → FPS Counter Size… → Small / Medium /
-Large**. This changes the counter text only; the separate **Show FPS Counter**
-toggle controls visibility. It also keeps the touch editor's **Back** and
-**Show/Hide** actions on screen in narrow landscape layouts. Small is the default; the size choice is saved across restarts.
-
-Version 0.4.17 also adds **R** and **D-pad Up** under Controller Button Mapping.
-Assigning Right Shoulder to D-pad Up swaps its former R assignment to avoid
-triggering both actions. Existing valid custom mappings are retained; the
-affected Thor/Odin controller still needs its own trial.
-
-The maintainer accepted Original Grand Prix gameplay using Razer Kishi, with
-touch controls hiding automatically when connected. The default mapping is
-A/B/X/Y directly, left stick to steer, Start to pause, left shoulder to Z,
-left trigger to L, and right shoulder/right trigger to R. Check your exact
-controller model; reconnect, rumble, multiple pads and every Kishi generation
-are separate acceptance cases.
-
-Start with **Display → Render Resolution → 1x Native**. Increase resolution if
-performance permits. Original 4:3 is the conservative aspect setting; widescreen
-and Fill Screen remain experimental. Pixel play at 3x was accepted, but the
-initial pipeline-compilation queue can cause pronounced hitches, and warm or
-track-dependent slowdown remains. This release does not promise sustained 60 FPS.
-Retro WFC login and worldwide lobby entry were accepted on the exact tested
-device. Complete results, reconnect and network-transition coverage remain open;
-frame drops and stutter remain known performance issues.
-
-## Save location and PC transfer
-
-Saves live in internal app-private storage, so they are not visible in a normal
-file manager under `Android/data`. Use **••• → Game Data & Saves → Manage Saves…**
-to export or restore a `rksys.dat` through the system picker. The testing update
-asks you to choose the matching profile first. Follow
-the [transfer steps and profile limitations](SUPPORT.md#android-save-transfer);
-root access is not needed.
+Saves live in KartPad's private storage, so a file manager can't see them. Use
+**⋯ → Game Data & Saves → Manage Saves…** to export a backup or restore a
+`rksys.dat` from a PC or Dolphin. Original and Retro Rewind have separate
+saves. See [save transfer](SUPPORT.md#android-save-transfer).
 
 ## Report a problem
 
-Include the Android app version, phone model, OS/API, game/profile and track,
-render resolution/aspect, controller model, how long it ran, and whether it was
-a cold or repeat launch. Enable **Show FPS Counter** and describe when it dips.
-Use **Export Private Diagnostics…** on the launch chooser to save logs locally
-after reproducing it. The [support guide](SUPPORT.md#collect-a-useful-report)
-explains which excerpts to share and how this differs from **Report a Problem…**.
-Runtime, renderer-phase and bounded battery/thermal diagnostics are retained
-locally; the app does not upload those reports automatically. Shell profiling
-is enabled in the first release; the later testing builds disable shell profiling.
-Public game packages are non-debuggable.
-
-In **0.4.14**, Report a Problem asks you to select a readable text
-log and confirm that you reviewed it, or explain why logs cannot be included.
-Exporting diagnostics does not select or approve an attachment. If you open
-GitHub, attach the reviewed file manually to the issue draft. Opening a share
-sheet does not send anything until you choose a destination and complete it.
-
-Review diagnostics before sharing; do not attach raw private archives, game
-images, extracted assets, saves, account/device identifiers or signing keys to
-public issues. [Open an issue](https://github.com/chrissotraidis/kartpad/issues)
-with the minimal sanitized report. A clean compile or emulator FPS is not proof
-of physical performance.
+In the game, open **⋯ → Report a Problem…**. On the game chooser, **Help →
+Export Private Diagnostics…** saves the logs from a session that crashed.
+Review a log before attaching it; never attach game files, saves or keys.
+The [reporting guide](REPORTING.md) says what to include and where to file it.
 
 For source builds, see [android/README.md](../android/README.md). See
-[rights and licenses](../RIGHTS_AND_LICENSES.md) for the community-release boundary.
+[rights and licenses](../RIGHTS_AND_LICENSES.md) for what the release contains.

@@ -1,23 +1,17 @@
 # Install the experimental KartPad Apple TV build
 
 > [!IMPORTANT]
-> **Downloads retired.** Prebuilt KartPad Apple TV builds are no longer published, and
-> the release links on this page no longer work. A build-it-yourself version is
-> in progress. Today the [Personal IPA Builder](BUILDER.md) builds an
-> iPhone/iPad app on an Apple Silicon Mac from your own disc image. The settings,
-> save and troubleshooting guidance below still applies to installed apps.
+> **Apple TV is an experimental developer build with no download.** The last
+> published Apple TV build (0.4.11) was withdrawn. Developers can build it from
+> source with the [tvOS guide](TVOS.md); the steps and guidance below apply to
+> such builds.
 
-KartPad `v0.4.11-tvos.1` includes an unsigned ARM64 tvOS IPA for hardware bring-up. It
-carries forward the cache-root storage correction and adds a generic compiler
-baseline with RCpc instructions disabled and audited out of the final binary.
-It also includes the issue #94 numeric console-serial correction. Older tvOS
-builds should remain offline. Existing incorrect server-side identity history
-requires service-admin review; updating does not reset accounts or remove bans.
-Treat it as an experimental build, not supported Apple TV functionality.
+The tvOS build is an unsigned ARM64 app for hardware bring-up, built with RCpc
+instructions disabled and the issue #94 console-serial correction. Builds older
+than 0.4.11 should stay offline. Treat it as experimental, not supported Apple
+TV functionality.
 
-1. Download `KartPad-v0.4.11-tvos.1-unsigned.ipa` and `SHA256SUMS` from
-   the 0.4.11 Apple TV release (retired)
-   and verify the checksum.
+1. Build the unsigned tvOS app from source as described in [TVOS.md](TVOS.md).
 2. Re-sign the IPA with your own Apple development identity and bundle
    identifier, then install it on a paired Apple TV through Xcode or a
    compatible tvOS signing workflow.
