@@ -513,7 +513,9 @@ open class KartPadLaunchActivity : Activity() {
             column.addView(label(body, 16f, true), layout(dp(24)))
         }
         section("1. Import Mario Kart Wii",
-            "Use your own PAL (Europe) ISO, WBFS or RVZ: RMCP01, revision 0. An extracted DATA folder also works. Disc images are extracted into private storage.")
+            "Use your own PAL (Europe) Mario Kart Wii (RMCP01). Easiest: in Dolphin on a computer, right-click the game, " +
+                "choose Properties, Filesystem, then right-click the disc and choose Extract Entire Disc. Copy that folder " +
+                "(or a zip of it) to this phone and tap Import Game. A disc image also works if you have your own Wii's common key.")
         section("2. Add Retro Rewind, if you want it",
             "Import Mario Kart Wii first, then choose Retro Rewind. KartPad can download and install the official ${RetroRewindRelease.VERSION} pack. You do not need to import a second disc.")
         section("Stuck on a step?",

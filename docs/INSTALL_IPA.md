@@ -66,7 +66,7 @@ installs the official Retro Rewind 6.12.8 pack (about 1.7 GB).
 
 ### Using a disc image instead
 
-**Choose WBFS, ISO, or DATA Folder…** also reads an ISO or WBFS (convert RVZ
+**Disc Image (Needs Wii Key) or Other Folder…** also reads an ISO or WBFS (convert RVZ
 first), but a disc image needs your own Wii's 16-byte common key saved as
 `common-key.bin` in **Files → On My iPhone/iPad → KartPad**. KartPad doesn't
 include it and we can't provide it. Without a key, use the extracted folder.

@@ -9,8 +9,9 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 - **KartPad asks for a "Wii common key".** That only happens with
   **Import or Reimport Wii Disc Image…**. Use **Import from Extracted Game Data
-  Folder…** with a folder from Dolphin's **Extract Entire Disc** instead; it
-  needs no key. Steps: [Android](INSTALL_ANDROID.md#2-make-your-game-data-folder),
+  Folder…** with a folder from Dolphin's **Extract Entire Disc** instead (or,
+  on Android 0.7.11, **Import Game Data Zip…**); it needs no key. Steps:
+  [Android](INSTALL_ANDROID.md#2-make-your-game-data-folder),
   [iPhone/iPad](INSTALL_IPA.md#2-make-your-game-data-folder).
 - **"Ready to play", then a black screen or a crash right after starting.**
   Usually the game data copy didn't finish (for example a folder half

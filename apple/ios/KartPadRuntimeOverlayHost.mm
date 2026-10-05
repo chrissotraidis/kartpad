@@ -1625,9 +1625,17 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   self.choosingGameDataCopy = NO;
   UIAlertController *options =
       [UIAlertController alertControllerWithTitle:@"Game Data Required"
-          message:@"First, import your own Mario Kart Wii game: PAL (Europe), RMCP01 revision 0.\n\nChoose an ISO, WBFS, or extracted DATA folder. RVZ files must be converted first. Retro Rewind is added after this step."
+          message:@"Import your own Mario Kart Wii once: PAL (Europe), RMCP01.\n\nEasiest: the folder Dolphin's Extract Entire Disc makes. Copy it to this device (AirDrop, a zip you unzip in Files, or iCloud Drive once it has fully downloaded) and import it.\n\nA disc image (ISO or WBFS) needs your own Wii's common key. Retro Rewind is added after this step."
           preferredStyle:UIAlertControllerStyleAlert];
-  [options addAction:[UIAlertAction actionWithTitle:@"Choose WBFS, ISO, or DATA Folder…"
+  [options addAction:[UIAlertAction actionWithTitle:@"Import from Extracted Folder…"
+                                               style:UIAlertActionStyleDefault
+                                             handler:^(UIAlertAction *action) {
+    (void)action;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                 (int64_t)(0.35 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{ [self chooseDocumentsRoot]; });
+  }]];
+  [options addAction:[UIAlertAction actionWithTitle:@"Disc Image (Needs Wii Key) or Other Folder…"
                                                style:UIAlertActionStyleDefault
                                              handler:^(UIAlertAction *action) {
     (void)action;
@@ -1636,14 +1644,6 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
                    dispatch_get_main_queue(), ^{
       [self presentGameDataPicker];
     });
-  }]];
-  [options addAction:[UIAlertAction actionWithTitle:@"Import from Extracted Folder…"
-                                               style:UIAlertActionStyleDefault
-                                             handler:^(UIAlertAction *action) {
-    (void)action;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                 (int64_t)(0.35 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{ [self chooseDocumentsRoot]; });
   }]];
   [options addAction:[UIAlertAction actionWithTitle:@"Back"
                                                style:UIAlertActionStyleCancel
@@ -2500,6 +2500,16 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
           }
           [dataItems addObject:dataElement];
         }
+      }
+      // Offer the extracted folder (no key needed) before the disc image (needs a Wii key).
+      NSUInteger discIndex = NSNotFound, folderIndex = NSNotFound;
+      for (NSUInteger i = 0; i < dataItems.count; ++i) {
+        NSString *title = dataItems[i].title;
+        if ([title isEqualToString:@"Import or Reimport Wii Disc Image…"]) discIndex = i;
+        if ([title isEqualToString:@"Import from Extracted Folder…"]) folderIndex = i;
+      }
+      if (discIndex != NSNotFound && folderIndex != NSNotFound && folderIndex > discIndex) {
+        [dataItems exchangeObjectAtIndex:discIndex withObjectAtIndex:folderIndex];
       }
       UIAction *miiManager =
           [UIAction actionWithTitle:@"Player Identity…"

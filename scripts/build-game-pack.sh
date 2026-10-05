@@ -50,6 +50,8 @@ fi
 stage="$work/$(date +%Y%m%d-%H%M%S)"
 KARTPAD_PREPARE_PLATFORM="$platform" KARTPAD_PREPARE_ONLY=1 KARTPAD_PREPARE_WITHOUT_TRANSLATION=1 \
   "$repo_root/scripts/prepare-ios-game-runtime.sh" none "$stage/runtime" "$stage/runtime-build" dual
+# The pack project refuses to configure without the app's pack interface fingerprint.
+fingerprint="$(PYTHONPATH="$repo_root/builder" python3 -m kartpad_builder.pack_fingerprint "$platform" "$stage/runtime")"
 
 cmake -S "$stage/runtime/game_pack" -B "$stage/build" -G Ninja "${toolchain[@]}" \
   -DCMAKE_BUILD_TYPE=Release \
@@ -57,6 +59,7 @@ cmake -S "$stage/runtime/game_pack" -B "$stage/build" -G Ninja "${toolchain[@]}"
   -DMKW_GAME_PACK_RUNTIME="$runtime_lib" \
   -DMKW_KARTPAD_RUNTIME_INCLUDE="$repo_root/runtime/include" \
   -DKARTPAD_APP_VERSION="$version" \
+  -DKARTPAD_PACK_FINGERPRINT="$fingerprint" \
   -DMKW_GAME_PACK_DEFINITIONS="$definitions"
 cmake --build "$stage/build" --target kartpad_game --parallel "$jobs"
 if [[ "$platform" == android ]]; then
