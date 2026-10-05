@@ -1,17 +1,19 @@
 # Install KartPad on Mac
 
-KartPad's Mac download is ready to play on Apple Silicon Macs (M1 or newer)
-with macOS 14 or newer. You add your own Mario Kart Wii game data the first
-time you open it. The Mac version is experimental: it's tested less than
-Android and iPhone/iPad.
+On Apple Silicon Macs (M1 or newer) with macOS 14 or newer,
+[PadMint](https://github.com/chrissotraidis/padmint) builds KartPad from your
+own disc. You add your own Mario Kart Wii game data the first time you open it.
+(0.7.9 to 0.7.13 also had a ready-to-play Mac download; it won't get updates.)
+The Mac version is experimental: it's tested less than Android and
+iPhone/iPad.
 
 ## Install
 
-1. Download `KartPad-v…-macos-arm64.zip` from the
-   [latest release](https://github.com/chrissotraidis/kartpad/releases/latest),
-   unzip it and move **KartPad** to Applications. To update, quit KartPad and
-   replace the app; your settings and saves stay.
-2. The first time, macOS says it can't check the app. Choose **Done**, then
+1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
+   your disc image and **Mac**, and move the **KartPad** app it makes to
+   Applications. To update, build the new version with PadMint, quit KartPad
+   and replace the app; your settings and saves stay.
+2. If macOS says it can't check the app, choose **Done**, then
    open **System Settings → Privacy & Security** and choose **Open Anyway**.
    The app isn't notarized by Apple, which is why macOS asks. Don't turn off
    Gatekeeper.

@@ -1,8 +1,10 @@
 # Install KartPad on iPhone and iPad
 
-KartPad's iPhone/iPad download is ready to play. You sideload the IPA, then
-add your own Mario Kart Wii game data the first time you open it. PadMint is
-optional. What changed in each version is on the
+On iPhone and iPad, [PadMint](https://github.com/chrissotraidis/padmint) builds
+KartPad on your computer from your own disc. You sideload the IPA it makes,
+then add your own Mario Kart Wii game data the first time you open it. (0.7.9
+to 0.7.13 also had a ready-to-play IPA; it won't get updates.) What changed in
+each version is on the
 [releases page](https://github.com/chrissotraidis/kartpad/releases).
 
 ## What you need
@@ -19,12 +21,12 @@ optional. What changed in each version is on the
 
 ## 1. Install the app
 
-Download `KartPad-v…-ios.ipa` from the
-[latest release](https://github.com/chrissotraidis/kartpad/releases/latest)
-and install it with your sideloading tool. To update later, install the new IPA
-over your current KartPad **with the same tool and the same Apple ID**; that
-keeps your saves and game data. A free Apple ID's signature lasts 7 days, so
-refresh it in your tool before it runs out.
+In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
+your disc image and **iPhone/iPad**, and install the IPA it makes with your
+sideloading tool. To update later, build the new version with PadMint and
+install it over your current KartPad **with the same tool and the same Apple
+ID**; that keeps your saves and game data. A free Apple ID's signature lasts 7
+days, so refresh it in your tool before it runs out.
 
 KartPad doesn't check for updates itself on iPhone and iPad. Watch the
 [releases page](https://github.com/chrissotraidis/kartpad/releases) or the

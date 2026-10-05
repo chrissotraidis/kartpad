@@ -2,21 +2,21 @@
 
 ## Current status: 5 October 2026
 
-**Latest release: [KartPad 0.7.13](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.13) (build 256).**
-Downloads are ready to play: the Android APK, the iPhone/iPad IPA and the Mac
-app include the game code, and players add their own game data the first time.
-PadMint stays an option for building your own copy. Work in progress follows
+**Latest release: [KartPad 0.7.14](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.14) (build 258).**
+Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
+build KartPad with PadMint from 0.7.14 (the release carries the PadMint inputs).
+Players add their own game data the first time. Work in progress follows
 the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 [known issues](KNOWN-ISSUES.md).
 
 | Platform | How players get it | State |
 | --- | --- | --- |
-| Android | Ready-to-play APK from Releases | Main platform; most open reports |
-| iPhone / iPad | Ready-to-play IPA from Releases, signed by the player's sideloading tool | Stable on tested devices |
-| Apple Silicon Mac | Ready-to-play ZIP from Releases, or `scripts/self-build-macos.sh` | Experimental |
+| Android | Ready-to-play APK from Releases; updates itself from 0.7.14 | Main platform; most open reports |
+| iPhone / iPad | Built with PadMint, signed by the player's sideloading tool | Stable on tested devices |
+| Apple Silicon Mac | Built with PadMint, or `scripts/self-build-macos.sh` | Experimental |
 | Apple TV | Experimental source build | Experimental |
 
-### 0.7.9 to 0.7.13
+### 0.7.9 to 0.7.14
 
 | Version | What changed | Checked |
 | --- | --- | --- |
@@ -25,6 +25,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | 0.7.11 | Game data screens put the extracted folder first and say plainly that a disc image needs your Wii's key; Android imports a zip of the game data; Getting Started explains the Dolphin steps | Emulator: truncated zip refused with a clear message; the release APK reaches a race after a fresh zip import and as an update over 0.7.10 (0.7.3 → 0.7.10 → 0.7.11, data kept); Dolphin's parent folder imports. iPad Pro: release IPA installed in place. Mac: game runs at 60 FPS |
 | 0.7.12 | Android draw self-check: once per session one character draw is drawn two ways off screen and the log says `match`, `mismatch` or `inconclusive`; Report a Problem shows the result at the top. Same pack interface as 0.7.11 | Emulator: `match` on normal runs, `mismatch` with a deliberately broken copy (also in the exported log), `match` with the CPU repack on; release APK reaches a race over 0.7.11 (data kept) and after a fresh folder import. iPad Pro: release IPA installed in place and launched. Mac: game runs at 60 FPS. Not yet run on a physical Android phone |
 | 0.7.13 | The self-check draws a third copy with the other bone-matrix lookup (`result=indexing` when only that copy draws); Retro Rewind starts on the first Play after downloading it (it used to say "No DVD root is configured"). Same pack interface | Emulator: `indexing` with both layout copies deliberately emptied, `match` on normal runs; Retro Rewind download then Play reaches the game. iPad Pro: installed in place and launched. All files checked by anonymous download against `SHA256SUMS` |
+| 0.7.14 | Android updates itself (#377): download, check against `SHA256SUMS` and the signing key, Android confirms. Every game file is checked at import and on the chooser, so an incomplete copy names the missing file before Play (all platforms). Android music and game-sound sliders (#411). Android APK plus PadMint inputs only; no ready-to-play IPA or Mac zip. Same pack interface | Emulator: a 0.7.12-labelled build updated itself to the published 0.7.13 twice (permission page, download, verify, install), save unchanged, game data intact; cancel keeps the old version; full file check on complete and broken data. 344 repo tests |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
