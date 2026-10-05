@@ -20,6 +20,13 @@ Java_dev_kartpad_android_KartPadActivity_nativeEnableActivityRecreation(
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeApplySoundLevels(
+    JNIEnv*, jobject, jfloat music, jfloat sounds) {
+  std::printf("[KartPadSound] fixture music=%.2f sounds=%.2f\n", static_cast<double>(music),
+              static_cast<double>(sounds));
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeApplyDisplaySettings(
     JNIEnv*, jobject, jboolean show_fps, jint fps_size, jint aspect_mode,
     jfloat resolution_scale) {

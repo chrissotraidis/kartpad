@@ -624,6 +624,9 @@ class KartPadActivity : SDLActivity() {
                 MenuRow("Display", R.drawable.ic_kartpad_display, submenu = true) {
                     showDisplayMenu()
                 },
+                MenuRow("Sound…", R.drawable.ic_kartpad_speaker) {
+                    closeKartPadMenu(::showSoundSettings)
+                },
                 MenuRow("Game Data & Saves", R.drawable.ic_kartpad_folder, submenu = true) {
                     showGameDataMenu()
                 },
@@ -831,6 +834,74 @@ class KartPadActivity : SDLActivity() {
             }
             .setNegativeButton("Back") { _, _ -> showDisplayMenu() }
             .show()
+    }
+
+    /** Music and game-sound levels (#411). Off by default: everything plays at full volume. */
+    private fun showSoundSettings() {
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(4), dp(18), dp(4))
+        }
+        val custom = Switch(this).apply {
+            text = "Adjust music and game sounds"
+            setTextColor(Color.WHITE)
+            isChecked = KartPadSoundSettings.enabled(this@KartPadActivity)
+            contentDescription = "Adjust music and game sounds separately"
+        }
+        val hint = settingsLabel(
+            "When this is off, everything plays at full volume. Turn it on to lower or mute the music, the game sounds, or both.",
+        ).apply { textSize = 14f }
+        val musicLabel = settingsLabel("")
+        val music = SeekBar(this).apply {
+            max = 100
+            progress = KartPadSoundSettings.musicPercent(this@KartPadActivity)
+            contentDescription = "Music volume"
+        }
+        val soundsLabel = settingsLabel("")
+        val sounds = SeekBar(this).apply {
+            max = 100
+            progress = KartPadSoundSettings.soundsPercent(this@KartPadActivity)
+            contentDescription = "Game sounds volume: effects, voices and menus"
+        }
+        fun refresh() {
+            musicLabel.text = if (music.progress == 0) "Music: off" else "Music: ${music.progress}%"
+            soundsLabel.text = if (sounds.progress == 0) "Game sounds: off" else "Game sounds: ${sounds.progress}%"
+            for (view in listOf(musicLabel, music, soundsLabel, sounds)) {
+                view.isEnabled = custom.isChecked
+                view.alpha = if (custom.isChecked) 1f else 0.4f
+            }
+        }
+        fun changed() {
+            KartPadSoundSettings.set(this, custom.isChecked, music.progress, sounds.progress)
+            applySoundLevels(persist = false)
+            refresh()
+        }
+        custom.setOnCheckedChangeListener { _, _ -> changed() }
+        music.setOnSeekBarChangeListener(simpleSeekListener { changed() })
+        sounds.setOnSeekBarChangeListener(simpleSeekListener { changed() })
+        refresh()
+        content.addView(custom)
+        content.addView(hint)
+        content.addView(musicLabel)
+        content.addView(music)
+        content.addView(soundsLabel)
+        content.addView(sounds)
+        AlertDialog.Builder(this)
+            .setTitle("Sound")
+            .setView(ScrollView(this).apply { addView(content) })
+            .setNegativeButton("Done", null)
+            // Saved once, when the dialog closes; the runtime applies the saved levels at every start.
+            .setOnDismissListener { applySoundLevels(persist = true) }
+            .show()
+    }
+
+    private fun applySoundLevels(persist: Boolean) {
+        val (music, sounds) = KartPadSoundSettings.effective(this)
+        nativeApplySoundLevels(music, sounds)
+        if (persist) {
+            runCatching { KartPadSoundSettings.persist(filesDir, music, sounds) }
+                .onFailure { Log.w("KartPadSound", "Sound levels were not saved", it) }
+        }
     }
 
     private fun confirmSwitchGameVersion() {
@@ -2443,6 +2514,8 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeApplyDisplaySettings(
         showFps: Boolean, fpsSize: Int, aspectMode: Int, resolutionScale: Float,
     )
+
+    private external fun nativeApplySoundLevels(music: Float, sounds: Float)
 
     private external fun nativeTestDiagnosticCrash()
     private external fun nativeEnableActivityRecreation()
