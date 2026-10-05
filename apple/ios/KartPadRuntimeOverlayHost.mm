@@ -10,6 +10,7 @@
 #import "KartPadRetroRewindInstaller.h"
 #import "KartPadDiagnosticContext.h"
 #import "KartPadMiiManager.h"
+#import "KartPadGameFiles.h"
 #import "SunPadDiagnostics.h"
 #import "KartPadSystemDiagnostics.h"
 #import "SunPadGameOverlay.h"
@@ -459,7 +460,9 @@ NSString *KartPadValidateExtractedRoot(NSString *root, NSError **error) {
       @"16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d"]) {
     return @"This game data is modified (for example Wiimmfi-patched or pre-patched). Please use a clean RMCP01 dump.";
   }
-  return nil;
+  return KartPadIncompleteGameFilesError(root,
+      @"If it's in iCloud Drive, open Files, touch and hold the folder, tap Download Now and wait "
+      @"for it to finish. Then import it again.");
 }
 
 BOOL KartPadEnsureRelativeRuntimePath(NSString *key, NSString *value,

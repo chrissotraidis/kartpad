@@ -277,7 +277,9 @@ class KartPadGameDataActivity : Activity() {
         status.text = when {
             pending -> "Removal is scheduled for the next game restart."
             error == null -> "Game data is installed and checked."
-            else -> "No game data yet. Import the folder Dolphin made, or a zip of it."
+            KartPadGameDataStorage.notImported(filesDir) ->
+                "No game data yet. Import the folder Dolphin made, or a zip of it."
+            else -> error
         }
         removeButton.isEnabled = error == null && !pending
     }
