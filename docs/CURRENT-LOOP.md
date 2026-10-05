@@ -85,7 +85,7 @@ app release), and each of #104, #301 and #304 either has a report analyzed or
 one posted request. **Stop:** two passes with no new evidence, then park with
 the written state. No settings experiments for players.
 
-**B1 status (5 October):** built for 0.7.12 (runtime `747c224`), same pack
+**B1 status (5 October):** released in 0.7.12 (runtime `747c224`), same pack
 interface as 0.7.11. Once per session, 20 s after the first character draw,
 one skinned draw of 64 or more vertices is kept whole and drawn twice off
 screen (the layout the game used and the other one), then compared. The log
@@ -97,6 +97,9 @@ a normal run gives `match`, a forced break
 with the CPU repack forced on it gives `match` the other way round. It checks
 only the vertex path; a `match` on an affected phone means the cause is
 elsewhere (B2). Nothing is drawn on screen differently.
+Self-check logs were requested on #104, #301 and #304 on 5 October; B2 starts
+when one arrives. Not yet run on a physical Android phone (the Pixel 9 Pro XL
+has 0.7.12 installed in place but was locked).
 
 ## Track C: 0.8.0, the WiiCompiled update and measured speed (#339)
 
