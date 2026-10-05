@@ -33,6 +33,9 @@ iPad (#310, closed).
 
 ### What remains
 
+Things decided for later are in the [to-do list](TODO.md), starting with
+updates on iPhone, iPad and Mac (only Android updates itself).
+
 - **Setup.** 0.7.11 addresses the 4 October Discord confusion: the extracted
   folder comes first, the key requirement is stated up front, and Android takes
   a zip so cloud transfers can't silently drop files.
