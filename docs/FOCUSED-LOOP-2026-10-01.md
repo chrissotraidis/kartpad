@@ -32,8 +32,8 @@ through narrow, verified changes that improve setup, reliability and maintenance
 | Documentation | Reviewed | Current builder/mobile/Mac routes, upstream ledger and superseded maintenance next actions reconciled. |
 | Completed issue scopes | First reconciliation done | #347 and #235 closed; partial #196 remains open. Review began with 67 open issues, now 65. |
 | PowerVR / stability | Corrected and validated locally | Real device constructor regression reproduced/corrected; native boundary/production-shader checks and actual empty APK content/state checks pass. Owned-emulator race segment passes; hosted archive and fresh Dawn-cache consumer pass; hardware gate explicit. |
-| Upstream changes | Review complete; candidate preserved | All 18 later commits mapped. Narrow bltl candidate passes 658 tests, graph checks, Android native build and Original race segment; other native platforms/Retro remain gates. |
-| Controls / Retro ghosts | Queued | Existing feature contracts checked before extending input or storage. |
+| Upstream changes | Review complete; candidate preserved | All 18 later commits mapped. Narrow bltl candidate passes 658 tests, graph checks, Android/iOS native builds and Original race segment. Android Retro controlled replay passes; other platforms and arbitrary replay remain gates. |
+| Controls / Retro ghosts | Implemented and tested locally | Shared catalog/transfer, both mobile menus and empty builds pass; compatible Android pack replacement preserves the save. Native Android Wii-course import/discovery/export and controlled replay pass. Custom variants/modes, arbitrary replay and iPhone gameplay remain gates. |
 | CPU / larger features | Queued | Same-device profiling and separate Wiimmfi/DSU feasibility and acceptance. |
 
 ## Run record
@@ -109,16 +109,17 @@ remain preserved.
 ## Integration and next checks
 
 - Builder/documentation changes are committed on `codex/focused-maintenance-loop`
-  and published as [draft PR #372](https://github.com/chrissotraidis/kartpad/pull/372).
-  Hosted receipts and regression checks both passed on `6b79eae7`.
+  and merged as [PR #372](https://github.com/chrissotraidis/kartpad/pull/372).
+  Early hosted checks passed on `6b79eae7`; final reviewed head `570e3996`
+  merged as `be68ed1f`.
 - The actual Android CLI `doctor` and `build-pack` route passed against the
   published APK, reused the compatible pack and exported game data. Its pack is
   unchanged and all 2,043 exported file hashes match the RVZ extraction.
 - The retained PowerVR candidate remains in its original isolated checkout.
-  Its proposed lock points to `dawn-android-20261001.1`, which was not hosted when
-  checked. Do not promote that lock or call #304 fixed until the verified archive
-  is available and its identity is checked in the actual app package. Moto G54
-  acceptance remains separate.
+  Its initial unhosted `.1` lock was superseded by verified
+  `dawn-android-20261001.2`. Anonymous archive readback, all 77 payload hashes,
+  the empty-cache consumer and actual app checks pass. PR #373 is merged;
+  Moto G54 acceptance remains separate and #304 remains open.
 - Controller review confirms the shared mappings and L1 preset are implemented.
   A proposed physical-channel A fallback was withheld: installed Apple SDK
   documentation says `physicalInputProfile` is equivalent to the typed profile,
@@ -139,8 +140,8 @@ remain preserved.
   game pack or source pin is included in PR #372. Other native platforms and
   gameplay remain gates before promotion.
 
-Continue the PowerVR artifact/package gate, bounded missing upstream fixes,
-Retro storage/course mapping and measured same-device performance. Preserve
+Continue actual PowerVR driver acceptance, bounded missing upstream fixes,
+Retro variant/mode/replay acceptance and measured same-device performance. Preserve
 explicit native, hardware and service gates; do not spin on reporter retests.
 
 ## Pass 2: PowerVR device policy
@@ -179,8 +180,9 @@ successful RVZ-exported folder import. The dependency candidate is now hosted; a
 downloads and all 77 payload hashes match. A normal consumer with an empty Dawn
 cache downloads and validates the dependency. Continue actual-driver acceptance; do not call #304
 closed or publish a KartPad release from native fixtures alone. The lock URL is hosted and verified. Source work is on local branch
-`codex/powervr-device-limits`, stacked on the first focused-maintenance PR and
-published as [draft PR #373](https://github.com/chrissotraidis/kartpad/pull/373).
+`codex/powervr-device-limits`, initially stacked on the first pass and now
+merged as [PR #373](https://github.com/chrissotraidis/kartpad/pull/373)
+(`ae83d0fe`, reviewed head `8e33dde8`).
 The first source commit is `50f83c58`; hosted archive publication/readback and the empty Dawn-cache consumer pass.
 Actual affected-driver acceptance remains separate. Preserve the isolated checkout, separately committed translator
 candidate and owned test AVD until their remaining acceptance is reconciled.
@@ -204,20 +206,24 @@ and a pending request bound to the config identity. Export valid RKG bytes
 unchanged. Stage one unique file for cold-launch application, preserving existing
 ghosts, leaderboard, favorites, trophies, ratings, identity and saves.
 
-The NAND filename limit is 12 characters; use a collision-checked `1234abcd.rkg`
-name, not a full SHA filename. Retained native selection supports 37 ghosts plus
+The NAND filename limit is 12 bytes, and its IPC path buffer is 64 bytes.
+The independent implementation review caught eight-digit names overflowing the
+full nonbase feather-mode path. Use a collision-checked six-digit `1234ab.rkg`
+name and require the full guest path to remain below 64 bytes. Retained native selection supports 37 ghosts plus
 an expert, while filesystem enumeration caps 100; reject crowded folders before
 adding an invisible entry and detect duplicates of the bundled expert explicitly.
 The configs are exact pinned 6.12.8 data, but retained Pulsar source `93ba8c8a`
 is architecture evidence whose exact correspondence with shipped `Code.pul`
 remains unproven. Actual list discovery and replay must validate the implementation.
 
-The next pass should implement the standalone-file path separately from Original
-RKSYS transfer. Acceptance covers a Wii course in Retro, a custom course, a
+The standalone-file path is implemented separately from Original RKSYS transfer.
+The acceptance plan covers a Wii course in Retro, a custom course, a
 variant, four modes, compressed/uncompressed round-trip, collisions, restart
 retry, config change, full folders and pre-existing-file/save preservation.
-Original's accepted transfer stays a regression gate. This is a resolved design
-contract, not implemented or shipped Retro transfer.
+Original's accepted transfer stays a regression gate. This resolved contract now has a local implementation and tests, recorded in
+[the Retro transfer receipt](artifacts/2026-10-01/retro-ghost-transfer.md).
+It is not shipped. Native Android Wii-course discovery/export and controlled
+replay pass; custom variants/modes, arbitrary replay and iPhone gameplay remain gates.
 
 
 ## Upstream candidate: Android player acceptance
@@ -225,8 +231,9 @@ contract, not implemented or shipped Retro transfer.
 The narrow `bltl` backport source is preserved on owner-fork branch
 `codex/kartpad-bltl-lifting` at `1e55229d7f8d`; this is the same 33 source/test
 lines already covered by the 658 translator tests and real native build. The
-maintained root gitlink remains `9d563f98953c`. The local submodule now points at
-the preserved candidate; do not stage that pointer with unrelated changes.
+maintained root gitlink remains `9d563f98953c`. The identical 33-line candidate is applied over local submodule HEAD
+`9d563f98953c` to satisfy the normal builder source-pin guard; do not stage
+that working change with unrelated features.
 
 The built private pack imports through the system picker and plays a Luigi
 Circuit race segment in the corrected release-style empty app. Its app-side
@@ -239,3 +246,40 @@ or preference files were present in the selected snapshot, so this does not prov
 preservation of populated settings. Other native platforms, Retro and service
 acceptance remain gates before pin promotion; the preserved candidate is not a
 published game pack or an upstream PR.
+
+## Integration and native feature findings
+
+The first two reviewed passes are merged into main: #372 (`be68ed1f`) and #373
+(`ae83d0fe`). The actual-driver gate remains open; merging the bounded Dawn
+policy does not close #304. Retro comparison transfer is draft #375, targeting
+main with runtime source `bf31f33a` (including the Original format correction),
+with Linux and macOS hosted contracts passing.
+
+Actual Retro installer/ghost execution found two issues invisible to host-only
+checks. An installer-loaded native library cached config before Activity set
+app paths; early Application initialization and one cold reload now pass
+same-process post-install title startup. Android SELinux denies hard links, so
+staged publication now uses atomic exclusive rename on each mobile platform.
+Updated empty builds and content audits, normal matching Android pack build,
+real picker replacement, permanent config and transfer tests pass. Native Wii
+Luigi Circuit import, cold application, discovery and byte-identical SAF export
+pass. A metadata-only Retro expert control imports and replays all three laps
+correctly; the imported retail staff replay diverges, so cross-mod compatibility
+remains unresolved. A normal matching iOS player pack and game-data export also
+pass. Original native import/readback/discovery/export also pass, but its
+downloaded replay initially stalled while the built-in replay moved normally.
+The downloaded loader requires expanded input tables; the narrow correction now
+passes native replay movement with exact save/export preservation. A confirmed
+cold Solo race also renders the course and accepts acceleration for a short
+segment. Longer observation shows a blank scene behind the live HUD in both
+replay-to-race and direct Solo paths; its cause and baseline remain unresolved.
+Both saves remain unchanged after these controls. Custom variants/modes, broader
+replay and sustained rendering acceptance, and iPhone gameplay remain gates; see the
+[updated receipt](artifacts/2026-10-01/retro-ghost-transfer.md).
+
+The [Wii ES scalar review](artifacts/2026-10-01/es-key-scalar-policy.md) reproduces
+another missing upstream policy at all four runtime pins. The narrow existing
+upstream modulo fix passes actual-header certificate/signature/zero/tamper
+regressions on macOS ARM64 and the owned Android emulator using synthetic keys.
+It has not advanced a maintained pin. Preserve that candidate for a separate
+runtime pass; authentic identity/service/platform acceptance remains distinct.

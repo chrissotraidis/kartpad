@@ -30,7 +30,9 @@ internal object KartPadSaveStorage {
         return File(filesDir, "KartPad/PendingSaves/$name")
     }
 
-    fun hasPending(filesDir: File): Boolean = hasPendingGhost(filesDir) || KartPadRatingStorage.hasPending(filesDir) || profiles.any { hasPending(filesDir, it) }
+    fun hasPendingRetroGhost(filesDir: File): Boolean = File(filesDir, "KartPad/PendingRetroGhost.bin").isFile
+
+    fun hasPending(filesDir: File): Boolean = hasPendingGhost(filesDir) || hasPendingRetroGhost(filesDir) || KartPadRatingStorage.hasPending(filesDir) || profiles.any { hasPending(filesDir, it) }
 
     fun hasPending(filesDir: File, profile: String): Boolean = pending(filesDir, profile).isFile
 
@@ -41,7 +43,7 @@ internal object KartPadSaveStorage {
     }
 
     fun writePending(filesDir: File, data: ByteArray, profile: String = "original") {
-        require(!hasPendingGhost(filesDir)) { "Apply or cancel the pending ghost import first." }
+        require(!hasPendingGhost(filesDir) && !hasPendingRetroGhost(filesDir)) { "Apply or cancel the pending ghost import first." }
         require(!KartPadIdentityStorage.hasPending(filesDir)) { "Apply pending identity edits before restoring a save." }
         require(!hasPending(filesDir, profile)) { "Restart to apply this profile's pending restore first." }
         require(!KartPadRatingStorage.hasPending(filesDir)) { "Restart to apply the pending rating restore first." }
