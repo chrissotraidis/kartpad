@@ -2,7 +2,7 @@
 
 ## Current status: 5 October 2026
 
-**Latest release: [KartPad 0.7.10](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.10) (build 253).**
+**Latest release: [KartPad 0.7.11](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.11) (build 254).**
 Downloads are ready to play: the Android APK, the iPhone/iPad IPA and the Mac
 app include the game code, and players add their own game data the first time.
 PadMint stays an option for building your own copy. Work in progress follows
@@ -22,7 +22,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | --- | --- | --- |
 | 0.7.9 | Ready-to-play downloads (#403); hourly update check (#397) | Android 16 emulators (update and fresh install), iOS Simulator, Mac race |
 | 0.7.10 | Startup checks every game file and names missing ones (#370); fatal errors show a message instead of a black screen on iPhone/iPad; Automatic uses the full repack on Snapdragon 8xx (#316); PowerVR logs whether shaders exceed the GPU's inter-stage limit (#304); the ⋯ button hides with a controller (#402) | Emulator (data check, missing file, ⋯ hiding, update and fresh-import races); iPad Pro (fatal message, final IPA); Mac (game runs) |
-| 0.7.11 | Game data screens put the extracted folder first and say plainly that a disc image needs your Wii's key; Android imports a zip of the game data; Getting Started explains the Dolphin steps | Fresh emulator: new screen, truncated zip refused with a clear message, zip import reaches a race, Dolphin's parent folder imports |
+| 0.7.11 | Game data screens put the extracted folder first and say plainly that a disc image needs your Wii's key; Android imports a zip of the game data; Getting Started explains the Dolphin steps | Emulator: truncated zip refused with a clear message; the release APK reaches a race after a fresh zip import and as an update over 0.7.10 (0.7.3 → 0.7.10 → 0.7.11, data kept); Dolphin's parent folder imports. iPad Pro: release IPA installed in place. Mac: game runs at 60 FPS |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
@@ -71,8 +71,8 @@ iPad (#310, closed).
 
 ### Next versions
 
-- **0.7.11** (app-only): clearer game data screens and zip import on Android.
-  The draw self-check (Track B) follows in a later app release.
+- **0.7.11** (released 5 October): clearer game data screens and zip import on
+  Android. The draw self-check (Track B) follows in a later app release.
 - **0.8.0** (pack interface change): WiiCompiled sync plus measured speed work
   from #339.
 
