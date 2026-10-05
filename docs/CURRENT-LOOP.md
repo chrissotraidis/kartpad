@@ -116,6 +116,15 @@ Automatic uses the constant lookup for skinned draws on that GPU; the white
 bodies (missing textures) seen with that lookup in 0.7.3 are the step after.
 If it reports `match` or nothing draws in any copy, record it and stop.
 
+**B2, three reports in (5 October):** the same pattern on three GPUs, all from
+0.7.12 logs. Galaxy S24 Ultra (Adreno 750, #104) and Moto G85 (Adreno 619,
+#301): skinned draws of 81 to 120 vertices come out empty with both vertex
+layouts on every attempt. Moto G54 (PowerVR BXM-8-256, #304): an 81-vertex
+piece covers 26,151 pixels with both layouts (36 to 689 on the emulator), so it
+"explodes" either way and only the colors differ (`result=mismatch`). The
+vertex layout isn't the cause on any of them; the bone-matrix lookup is the
+common suspect. 0.7.13's `drawn_constant` copy was requested on all three.
+
 ## Track C: 0.8.0, the WiiCompiled update and measured speed (#339)
 
 patchzyy asked for a focused performance and compile-time pass. KartPad's
@@ -180,6 +189,34 @@ imports extracted folders the way KartPad does.
 **Stop:** a candidate that doesn't reproduce upstream is dropped, with the
 reason recorded in [UPSTREAM_UPDATES.md](UPSTREAM_UPDATES.md).
 
+## Track F: music and game-sound levels (#411)
+
+Chris asked for this on 5 October. In the ••• menu (Android and iPhone/iPad)
+and the Mac menu bar, a **Sound** item with one toggle, off by default. Off
+means everything plays at full volume, as today. On shows two levels, Music
+and Game sounds (effects, voices and menus), so a player can mute just the
+music, mute the whole game, or keep only the game sounds.
+
+- The runtime already has this: per-category live levels from upstream
+  (`MusicAttenuation::Set*Volume`, applied to the game's own sound players, so
+  a change takes effect mid-race) and `[audio]` keys in `Config.toml` that it
+  applies at every start. KartPad only adds the menus.
+- No pack-interface change: Android declares the four setters in its JNI file
+  and saves the levels from Kotlin; the Apple shells call the same functions.
+  So it can ship in a 0.7.x release.
+- **F1 Android**, **F2 iPhone/iPad**, **F3 Mac**, one pass each, each checked
+  on its device (levels change live, survive a restart, toggle off restores
+  full volume). A second pass after players try it.
+
+**F status (5 October):** F1 Android built: ••• → **Sound…**, a toggle (off)
+and Music / Game sounds sliders. On the emulator the sliders call the runtime
+live (`[KartPadSound] music=0.00 sounds=0.48` in the session log) and closing
+the dialog saved `[audio]` in Config.toml; same pack interface (85d2a9c9).
+The emulator has no audio output, so hearing it is the remaining check (Pixel
+or iPad). F2 iPhone/iPad is written (a Sound sheet from the ••• menu) and
+waits for a device run. F3 Mac: already there as **Game → Game Settings… →
+Audio** (master, music, effects, menu sounds, voices, mute; applies live).
+
 ## Track E: support, every pass
 
 Check issues updated since the last pass. Reply to anyone waiting, link
@@ -195,6 +232,7 @@ release on it in place, keeping its data.
    Chris.
 3. C1 to C4, then **0.8.0**; D3 if a speed change qualifies.
 4. B2 as reports arrive.
+5. F1 to F3 (sound levels) in a 0.7.x release, then a second pass on feedback.
 
 The loop is finished when 0.7.11 and 0.8.0 are released with these gates met,
 B is either acting on evidence or parked with its written state, every D
