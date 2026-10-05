@@ -196,13 +196,16 @@ promises.
   two alternating runs each) is the same within noise, and process CPU is the
   same within 1%. The emulator's run-to-run swing (about 15%) is too large to
   judge a speed candidate.
-- **C3 next:** the float helpers (`Ppc*StateInline`, 57,958 call sites in
-  the translation) read the CPU context from a thread-local that, in the
-  Android pack, is an `extern __thread` owned by the app, so each read goes
-  through the TLS descriptor. Translated functions already hold `ctx`.
-  Candidate: pass `ctx` to those helpers where it's in scope (state-free
-  functions keep the thread-local). Measure on the Pixel 9 Pro XL in a fixed
-  scene; keep it only if it beats the noise.
+- **C3, first candidate dropped before building:** the float helpers
+  (`Ppc*StateInline`, 57,958 call sites) read the CPU context from a
+  thread-local, so passing `ctx` looked like it would save a TLS lookup per
+  operation. The compiled 0.8.0 Android pack says otherwise: the access is
+  initial-exec style, read once per function in the prologue (`mrs
+  TPIDR_EL0`, 7,633 reads across about 38,000 functions, no descriptor
+  calls). Passing `ctx` would save a few cycles per function, not per
+  operation. The cost in the profile is the float-status emulation itself
+  (FPSCR read, rounding, exception bits and write-back on every operation).
+  The next candidate needs a fresh profile on the Pixel 9 Pro XL to choose.
 
 ## Track D: upstream fixes, only when substantive
 
