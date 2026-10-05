@@ -172,6 +172,38 @@ measured before/after numbers are posted on #339. #339's targets (10% lower
 CPU frame time on weaker hardware, 40% shorter compilation) are goals, not
 promises.
 
+**C status (5 October, draft #416):**
+
+- **Packs rebuilt** for the final pins. Android pack fingerprint `56339f84`
+  (276 s on a fresh work folder including disc extraction; translation 34 s).
+  iOS pack 194 s.
+- **Android:** the ready-to-play 0.8.0 APK installs over 0.7.9 on the
+  emulator with the save unchanged (`rksys.dat` md5 identical before and
+  after), passes the full game-file check, reaches a Grand Prix race, and the
+  self-check reports a match. Retro Rewind downloads (about 96 s) and its first
+  Play reaches the Retro Rewind title.
+- **Mac:** the 0.8.0 dual app builds (16.5 min including translation) and races
+  Luigi Circuit at 60 FPS (median 16.7 ms, 95th percentile 17.5 ms), run with
+  a temporary HOME so Chris's own Mac data wasn't touched.
+- **iPhone/iPad:** the first 0.8.0 build failed: upstream's macOS Core Audio
+  media monitor (`external_audio_macos.cpp`) was compiled for iOS. The iOS
+  runtime fork now keeps it macOS-only (`266173a`); iOS takes the existing
+  "unavailable" path, like Android. The iPad Pro has 0.8.0 installed in place
+  (saves backed up first) and shows both games ready. Racing on the iPad needs a
+  tap from Chris.
+- **Numbers on #339 (5 October):** compile 175 s → 181 s total, compile CPU
+  1,032 s → 1,023 s; same-scene emulator frame time (Luigi Circuit, 12 racers,
+  two alternating runs each) is the same within noise, and process CPU is the
+  same within 1%. The emulator's run-to-run swing (about 15%) is too large to
+  judge a speed candidate.
+- **C3 next:** the float helpers (`Ppc*StateInline`, 57,958 call sites in
+  the translation) read the CPU context from a thread-local that, in the
+  Android pack, is an `extern __thread` owned by the app, so each read goes
+  through the TLS descriptor. Translated functions already hold `ctx`.
+  Candidate: pass `ctx` to those helpers where it's in scope (state-free
+  functions keep the thread-local). Measure on the Pixel 9 Pro XL in a fixed
+  scene; keep it only if it beats the noise.
+
 ## Track D: upstream fixes, only when substantive
 
 A change goes to WiiCompiled only if all of these hold:
