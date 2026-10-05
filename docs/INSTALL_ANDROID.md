@@ -80,9 +80,13 @@ extracted folder above instead.
 
 KartPad checks for a new release at most once an hour when the game chooser
 opens. It sends nothing about you. When one is out, **Update available**
-appears next to **Help** and opens the APK download.
+appears next to **Help**. From 0.7.14, tap it and **Update Now**: KartPad
+downloads the new version, checks it against the release's `SHA256SUMS` and
+its signing key, and Android asks you to confirm. The first time, Android asks
+you to allow KartPad to install apps; turn on **Allow from this source** and
+come back. KartPad closes when the update finishes; open it again.
 
-Install each new APK over the old one. Your saves, game data and Retro Rewind
+You can also install each new APK over the old one yourself. Your saves, game data and Retro Rewind
 stay. **Never uninstall or clear storage to update.** Android only accepts an
 update signed by the same key, so a copy you built yourself can't update the
 public app (or the other way around) without uninstalling. Back up your saves

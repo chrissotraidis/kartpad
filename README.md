@@ -39,18 +39,20 @@ The projects are independently maintained.
 
 ## Get KartPad
 
-KartPad is free. Download it from the
-[releases page](https://github.com/chrissotraidis/kartpad/releases/latest),
-install it, and add your own Mario Kart Wii game data the first time you open
-it. The downloads include KartPad's translated game code but no game files: no
-disc image, no courses, music or textures, and no console keys. You supply
-those from your own disc.
+KartPad is free. On Android, download it from the
+[releases page](https://github.com/chrissotraidis/kartpad/releases/latest). On
+iPhone, iPad and Mac, [PadMint](https://github.com/chrissotraidis/padmint)
+builds it on your own computer from your own disc. Either way, you add your own
+Mario Kart Wii game data the first time you open it. The Android download
+includes KartPad's translated game code but no game files: no disc image, no
+courses, music or textures, and no console keys. You supply those from your
+own disc.
 
-| You want KartPad on | Download | Then |
+| You want KartPad on | Get it | Then |
 |---|---|---|
-| **Android** | `KartPad-v…-android.apk` | [Android](#android) |
-| **iPhone or iPad** | `KartPad-v…-ios.ipa` | [iPhone and iPad](#iphone-and-ipad) |
-| **Mac** (Apple Silicon) | `KartPad-v…-macos-arm64.zip` | [Mac](#mac) |
+| **Android** | `KartPad-v…-android.apk` from the releases page | [Android](#android) |
+| **iPhone or iPad** | Build it with [PadMint](https://github.com/chrissotraidis/padmint) | [iPhone and iPad](#iphone-and-ipad) |
+| **Mac** (Apple Silicon) | Build it with [PadMint](https://github.com/chrissotraidis/padmint) | [Mac](#mac) |
 
 **You need** your own Mario Kart Wii: PAL (Europe) **RMCP01** revision 0 (other
 regions are not supported), and:
@@ -58,8 +60,8 @@ regions are not supported), and:
 - **Android:** an ARM64 phone or tablet with Vulkan and Android 9 or newer,
   with about 6 GB free.
 - **iPhone and iPad:** iOS or iPadOS 16 or newer, and Sideloadly, AltStore or
-  SideStore with your own Apple ID.
-- **Mac:** an Apple Silicon Mac with macOS 14 or newer.
+  SideStore with your own Apple ID, plus a computer to run PadMint.
+- **Mac:** an Apple Silicon Mac with macOS 14 or newer, to run PadMint and play.
 
 ### Your game data
 
@@ -94,10 +96,17 @@ KartPad needs your game's files once. Either:
 Coming from a PadMint game pack? Install the new APK over it. KartPad no longer
 needs the pack and frees the space it took.
 
+From 0.7.14, KartPad updates itself: when **Update available** shows on the
+game chooser, tap it and **Update Now**. The first time, Android asks you to
+allow KartPad to install apps.
+
 ### iPhone and iPad
 
-1. Install `KartPad-v…-ios.ipa` with Sideloadly, AltStore or SideStore. To keep
-   your saves, install it over your KartPad with the same tool and Apple ID.
+1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
+   your disc image and **iPhone/iPad**. Install the IPA it makes with
+   Sideloadly, AltStore or SideStore. To keep your saves, install it over your
+   KartPad with the same tool and Apple ID. PadMint also makes your
+   `KartPad game data` folder.
 2. First time only: get your game data folder onto the device (AirDrop from a
    Mac, a zip you unzip in the Files app, iCloud Drive once it has fully
    downloaded, or a USB drive). In KartPad, tap
@@ -108,36 +117,43 @@ See [iPhone/iPad setup](docs/INSTALL_IPA.md) for more.
 
 ### Mac
 
-1. Unzip `KartPad-v…-macos-arm64.zip` and move **KartPad** to Applications.
-2. The first time, macOS says it can't check the app: choose **Done**, then
+1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
+   your disc image and **Mac**, then move the **KartPad** app it makes to
+   Applications.
+2. If macOS says it can't check the app, choose **Done**, then
    **System Settings → Privacy & Security → Open Anyway**.
 3. Import your game data folder when KartPad asks for it.
 
 See [Install on Mac](docs/INSTALL_MACOS.md) for more.
 
-### Build it yourself with PadMint (optional)
+### PadMint
 
-Prefer to build KartPad from your own disc on your own computer?
-[PadMint](https://github.com/chrissotraidis/padmint) still does that on
-Windows, Mac and Linux: choose **KartPad**, your disc image and where you'll
-play, and it makes your copy and your `KartPad game data` folder. It keeps
-working with every release.
+[PadMint](https://github.com/chrissotraidis/padmint) builds KartPad from your
+own disc on your own computer: choose **KartPad**, your disc image and where
+you'll play, and it makes your copy and your `KartPad game data` folder. From
+0.7.14 it's how iPhone, iPad and Mac get KartPad, and it still works for
+Android.
 
 ### Which file is which
 
 | File on the release page | What it is |
 |---|---|
 | `KartPad-v…-android.apk` | **Android: install this.** Ready to play with your game data |
-| `KartPad-v…-ios.ipa` | **iPhone and iPad: install this.** Ready to play with your game data |
-| `KartPad-v…-macos-arm64.zip` | **Mac: unzip and open.** Ready to play with your game data |
 | `KartPad-v…-ios-for-padmint.ipa` | The iPhone app without game code. PadMint uses it; don't install it by itself |
 | `KartPad-v…-padmint.json`, `SHA256SUMS` | Used by PadMint and for checking downloads |
 | `KartPad-v…-source.tar.gz`, `KartPad-v…-notices.zip` | Source code and license notices |
 
+0.7.9 to 0.7.13 also had ready-to-play iPhone/iPad and Mac downloads. They stay
+on those release pages but won't get updates; build newer versions with PadMint.
+
 ### Updating KartPad
 
-Install the new download over your current KartPad, the same way you installed
-it. Your saves and game data stay.
+- **Android:** from 0.7.14, KartPad updates itself (**Update available →
+  Update Now**). You can also install the new APK over your current KartPad.
+- **iPhone, iPad and Mac:** build the new version with PadMint and install it
+  over your current KartPad.
+
+Your saves and game data stay.
 
 ### Source maintenance
 
@@ -188,9 +204,10 @@ known issues. Android's suggested starting point is **1x Native**. Sustained
 <details>
 <summary>Can I download an IPA or playable app?</summary>
 
-Yes. From 0.7.9 the Android APK, the iPhone/iPad IPA and the Mac app on the
-releases page are ready to play: you add your own game data the first time.
-PadMint is optional. See [Get KartPad](#get-kartpad).
+On Android, yes: the APK on the releases page is ready to play, and you add
+your own game data the first time. On iPhone, iPad and Mac, build KartPad with
+PadMint from your own disc (from 0.7.14; 0.7.9 to 0.7.13 had ready-to-play
+downloads that won't get updates). See [Get KartPad](#get-kartpad).
 
 </details>
 
