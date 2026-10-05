@@ -1,13 +1,40 @@
 #include <jni.h>
 #include <SDL3/SDL_hints.h>
 
+#include <algorithm>
+#include <cstdio>
+
 #include "kartpad/android/controller_mapping.hpp"
 #include "kartpad/android/runtime_settings.hpp"
+
+// The runtime's live sound-category levels (runtime/src/music_attenuation.cpp, in this library).
+// Declared here rather than including the runtime header, which isn't on this target's path.
+namespace MusicAttenuation {
+void SetMusicVolume(float volume) noexcept;
+void SetSoundEffectsVolume(float volume) noexcept;
+void SetUiVolume(float volume) noexcept;
+void SetVoicesVolume(float volume) noexcept;
+}  // namespace MusicAttenuation
 
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeEnableActivityRecreation(
     JNIEnv*, jobject) {
   SDL_SetHint(SDL_HINT_ANDROID_ALLOW_RECREATE_ACTIVITY, "1");
+}
+
+// Music, and game sounds (effects, voices, menus), 0 to 1. Takes effect immediately; KartPad also
+// saves both in Config.toml, which the runtime applies at the next start.
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeApplySoundLevels(
+    JNIEnv*, jobject, jfloat music, jfloat sounds) {
+  const float musicLevel = std::clamp(static_cast<float>(music), 0.0f, 1.0f);
+  const float soundsLevel = std::clamp(static_cast<float>(sounds), 0.0f, 1.0f);
+  MusicAttenuation::SetMusicVolume(musicLevel);
+  MusicAttenuation::SetSoundEffectsVolume(soundsLevel);
+  MusicAttenuation::SetVoicesVolume(soundsLevel);
+  MusicAttenuation::SetUiVolume(soundsLevel);
+  std::printf("[KartPadSound] music=%.2f sounds=%.2f\n", musicLevel, soundsLevel);
+  std::fflush(stdout);
 }
 
 extern "C" JNIEXPORT void JNICALL

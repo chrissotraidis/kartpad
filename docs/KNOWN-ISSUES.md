@@ -33,8 +33,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   From 0.7.12, **Report a Problem** logs include a one-line draw self-check
   that tells us whether this phone draws characters differently from the
   CPU path, without changing anything on screen. On the Galaxy S24 Ultra it
-  showed that the vertex path isn't the cause; 0.7.13 also checks the bone
-  matrix lookup.
+  showed that the vertex path isn't the cause, and 0.7.13 showed the bone
+  matrix lookup alone isn't either: on these GPUs only both workarounds
+  together draw bodies, and then white. A real fix needs a renderer change;
+  you don't need to send more logs for this.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
@@ -82,6 +84,11 @@ full cups on 0.7.10), the hourly update notice ([#377](https://github.com/chriss
 picker ([#380](https://github.com/chrissotraidis/kartpad/issues/380)) and auto-hiding the ⋯ button ([#402](https://github.com/chrissotraidis/kartpad/issues/402)).
 
 ## Feature requests
+
+Separate music and game-sound volume, including muting the game to play your
+own music ([#411](https://github.com/chrissotraidis/kartpad/issues/411)), is in
+progress: ••• → **Sound…** on Android and iPhone/iPad, in the next release. On
+the Mac it's already in **Game → Game Settings… → Audio**.
 
 Ghost import/export ([#295](https://github.com/chrissotraidis/kartpad/issues/295)), older iOS and macOS versions ([#300](https://github.com/chrissotraidis/kartpad/issues/300)),
 AirPlay and external displays ([#100](https://github.com/chrissotraidis/kartpad/issues/100)), DSU controller apps ([#91](https://github.com/chrissotraidis/kartpad/issues/91)) and
