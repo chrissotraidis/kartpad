@@ -101,6 +101,21 @@ Self-check logs were requested on #104, #301 and #304 on 5 October; B2 starts
 when one arrives. Not yet run on a physical Android phone (the Pixel 9 Pro XL
 has 0.7.12 installed in place but was locked).
 
+**B2, first report (5 October, #104, Galaxy S24 Ultra, Adreno 750):** all 7
+attempts on the same 81-vertex body draw gave `drawn_game=0 drawn_other=0`:
+neither vertex layout draws it, while the same draw covers 36 to 689 pixels on
+the emulator. So vertex fetch is not the cause on the 750. That matches the
+reporter's 0.7.3 tests, where the CPU repack alone left only the eyes and only
+the constant (switch) bone-matrix lookup drew bodies. The next bounded check
+(0.7.13, runtime `6fb1989`) adds a third copy with the game's layout and the
+constant lookup, and reports `result=indexing` when it differs from the
+game's draw. Emulator proof: normal runs give `match` with
+`constant_differing=0`; `debug.kartpad.selfcheck_break 2` (both layout copies
+left empty, as on the S24) gives `indexing`. If the S24 reports `indexing`,
+Automatic uses the constant lookup for skinned draws on that GPU; the white
+bodies (missing textures) seen with that lookup in 0.7.3 are the step after.
+If it reports `match` or nothing draws in any copy, record it and stop.
+
 ## Track C: 0.8.0, the WiiCompiled update and measured speed (#339)
 
 patchzyy asked for a focused performance and compile-time pass. KartPad's

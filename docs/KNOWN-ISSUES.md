@@ -28,7 +28,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   help on some phones; there's no automatic fix yet. [#104](https://github.com/chrissotraidis/kartpad/issues/104), [#301](https://github.com/chrissotraidis/kartpad/issues/301)
   From 0.7.12, **Report a Problem** logs include a one-line draw self-check
   that tells us whether this phone draws characters differently from the
-  CPU path, without changing anything on screen.
+  CPU path, without changing anything on screen. On the Galaxy S24 Ultra it
+  showed that the vertex path isn't the cause; 0.7.13 also checks the bone
+  matrix lookup.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
