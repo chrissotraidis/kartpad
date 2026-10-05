@@ -5,8 +5,8 @@
     {
       "name": "WiiCompiled",
       "repository": "https://github.com/patchzyy/Wiicompiled.git",
-      "commit": "83463764b8acda394e058b0c689a10b8561fc380",
-      "tree": "c0da769a99ff39b9303b259c7ed56485d3bdf338",
+      "commit": "279ce8328f17059a4b46172d4ce71d3f403a1aec",
+      "tree": "efbcf241827feb2b9e9ee02399f3db869db2c927",
       "path": "ref/upstream/Wiicompiled",
       "license": "GPL-3.0-only; upstream README specifies version 3",
       "role": "Primary static translator and runtime baseline",
@@ -16,8 +16,8 @@
         "method": "git-submodule",
         "repository": "https://github.com/chrissotraidis/wiicompiled.git",
         "branch": "kartpad-translator",
-        "commit": "9d563f98953c7b263f00e542e1d63c65fcf0876a",
-        "upstreamBase": "83463764b8acda394e058b0c689a10b8561fc380",
+        "commit": "c8c86cf72133d0332b9ee220169b794a5ef67d8f",
+        "upstreamBase": "279ce8328f17059a4b46172d4ce71d3f403a1aec",
         "activeConsumers": [
           "translator"
         ],
