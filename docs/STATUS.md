@@ -47,9 +47,11 @@ iPad (#310, closed).
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.
-- **Startup:** Moto G75 crash (#332, no diagnostic yet); iPhone 16 flicker while
-  a game opens (#390: the game draws one frame in nine during the safety-screen
-  fade; not seen on the iPad Pro).
+- **Startup:** Moto G75 crash (#332, no diagnostic yet); flicker while a game
+  opens on the iPhone 16 and iPad Air 4th gen (#390: the game draws one frame
+  in nine during the safety-screen fade). Both are 60 Hz screens; it isn't seen
+  on the 120 Hz iPad Pro or on a simulated iPhone 16 (0.5.1, 4,225 frames
+  checked). Needs a real 60 Hz device to reproduce.
 - **Online over mobile data (#405):** carriers block direct player-to-player
   connections; Wi-Fi or a VPN works. Not fixable in KartPad without a relay.
 - **Sound levels (#411):** in progress. Android has ••• → **Sound…** (merged,
