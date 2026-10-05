@@ -129,9 +129,11 @@ upstream and were left out. With it, KartPad's
 `test_connected_controllers_never_stay_without_a_player` passes against
 upstream's file. Branch:
 [`codex/upstream-controller-free-port`](https://github.com/chrissotraidis/wiicompiled/tree/codex/upstream-controller-free-port)
-(`471db5c` on `279ce83`). Not yet done: a full upstream build and a test with
-real controllers. Upstream has no unit test harness for `input.cpp` (it needs
-SDL), so the regression lives in the description. Chris writes the PR text.
+(`471db5c` on `279ce83`). It builds in a full upstream macOS build of
+`279ce83` (5 October). Not yet done: a test with real controllers (none is
+connected to the build Mac). Upstream has no unit test harness for
+`input.cpp` (it needs SDL), so the regression lives in the description. Chris
+writes the PR text.
 
 **Fatal errors outside Windows: ready for Chris.** Reproduced on a real
 upstream macOS build of `279ce83` (base game, built with upstream's own
