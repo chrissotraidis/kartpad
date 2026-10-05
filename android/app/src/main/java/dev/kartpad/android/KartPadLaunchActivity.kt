@@ -2,13 +2,20 @@ package dev.kartpad.android
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageInstaller
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -42,6 +49,10 @@ open class KartPadLaunchActivity : Activity() {
     private var darkMode = true
     private lateinit var preferenceButton: Button
     private var updateLink: Button? = null
+    private var updateAfterSettings: KartPadUpdateCheck.Update? = null
+    private var updateReceiver: BroadcastReceiver? = null
+    @Volatile private var updateCancelled = false
+    private var updateInstalling = false
     private val primaryTextColor get() = if (darkMode) Color.rgb(247, 247, 247) else Color.rgb(12, 17, 26)
     private val secondaryForeground get() = if (darkMode) Color.rgb(170, 170, 170) else Color.rgb(94, 94, 94)
     private val racingRed get() = if (darkMode) Color.rgb(255, 51, 66) else Color.rgb(204, 9, 31)
@@ -97,6 +108,11 @@ open class KartPadLaunchActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        // Back from Android's "Install unknown apps" page: continue the update if it was allowed.
+        updateAfterSettings?.let { update ->
+            updateAfterSettings = null
+            if (packageManager.canRequestPackageInstalls()) downloadUpdate(update)
+        }
         pausedProfile()?.let { current ->
             progress.visibility = View.GONE
             original.isEnabled = true
@@ -127,6 +143,9 @@ open class KartPadLaunchActivity : Activity() {
     override fun onDestroy() {
         validationGeneration += 1
         validator.shutdownNow()
+        updateCancelled = true
+        updateReceiver?.let { runCatching { unregisterReceiver(it) } }
+        updateReceiver = null
         super.onDestroy()
     }
 
@@ -329,6 +348,7 @@ open class KartPadLaunchActivity : Activity() {
         val context = applicationContext
         Thread {
             KartPadUpdateCheck.refresh(context)
+            if (KartPadUpdateCheck.known(context) == null) KartPadUpdateInstaller.clear(context)
             runOnUiThread {
                 if (!isFinishing && !isDestroyed && KartPadUpdateCheck.known(context) != null) {
                     updateLink?.visibility = View.VISIBLE
@@ -339,12 +359,142 @@ open class KartPadLaunchActivity : Activity() {
 
     private fun showUpdate() {
         val update = KartPadUpdateCheck.known(this) ?: return
+        val paused = if (pausedProfile() != null) {
+            "\n\nThe game paused in the background will close, so save first."
+        } else ""
         val dialog = AlertDialog.Builder(this)
             .setTitle("KartPad ${update.version} is out")
-            .setMessage("You have ${BuildConfig.VERSION_NAME}. Install the new APK over this one without uninstalling, so your saves and game data stay. The release notes say whether you also need a new game pack.")
+            .setMessage("You have ${BuildConfig.VERSION_NAME}. KartPad can download the update and install it over this one. Your saves and game data stay.$paused")
             .setNeutralButton("Release Notes") { _, _ -> openWeb(update.pageUrl) }
             .setNegativeButton("Not Now", null)
-        update.apkUrl?.let { apk -> dialog.setPositiveButton("Download APK") { _, _ -> openWeb(apk) } }
+        if (update.apkUrl != null) dialog.setPositiveButton("Update Now") { _, _ -> startUpdate(update) }
+        dialog.show()
+    }
+
+    /** Android asks once before an app may install its own updates (#377). */
+    private fun startUpdate(update: KartPadUpdateCheck.Update) {
+        if (packageManager.canRequestPackageInstalls()) {
+            downloadUpdate(update)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Allow KartPad to Install Updates")
+            .setMessage("Android asks once before an app can install its own updates. On the next screen, turn on Allow from this source, then come back to KartPad.")
+            .setPositiveButton("Continue") { _, _ ->
+                updateAfterSettings = update
+                runCatching {
+                    startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                }.onFailure {
+                    updateAfterSettings = null
+                    showUpdateFailed(update, "Android's settings couldn't be opened.")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun downloadUpdate(update: KartPadUpdateCheck.Update) {
+        val label = TextView(this).apply {
+            text = "Connecting to GitHub…"
+            setPadding(0, 0, 0, dp(12))
+        }
+        val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 1000
+            isIndeterminate = true
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), 0)
+            addView(label)
+            addView(bar)
+        }
+        updateCancelled = false
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Updating to KartPad ${update.version}")
+            .setView(content)
+            .setNegativeButton("Cancel") { _, _ -> updateCancelled = true }
+            .setCancelable(false)
+            .show()
+        listenForInstall(update, dialog)
+        val context = applicationContext
+        Thread {
+            val result = runCatching {
+                val apk = KartPadUpdateInstaller.download(context, update, { done, total ->
+                    runOnUiThread {
+                        if (total > 0) {
+                            bar.isIndeterminate = false
+                            bar.progress = (done * 1000 / total).toInt()
+                            label.text = "Downloading: ${done / 1_048_576} of ${total / 1_048_576} MB"
+                        } else {
+                            label.text = "Downloading: ${done / 1_048_576} MB"
+                        }
+                    }
+                }) { updateCancelled }
+                runOnUiThread {
+                    label.text = "Download checked. Android will ask you to confirm the update. KartPad closes when it's done; open it again."
+                    bar.isIndeterminate = true
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.isEnabled = false
+                }
+                updateInstalling = true
+                KartPadUpdateInstaller.install(context, apk)
+            }
+            result.onFailure { error ->
+                updateInstalling = false
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    dialog.dismiss()
+                    if (error !is KartPadUpdateInstaller.Cancelled) showUpdateFailed(update, error.message)
+                }
+            }
+        }.apply { isDaemon = true; name = "KartPadUpdateDownload" }.start()
+    }
+
+    /** Android's installer reports here: ask the player to confirm, then it replaces KartPad. */
+    private fun listenForInstall(update: KartPadUpdateCheck.Update, dialog: AlertDialog) {
+        updateReceiver?.let { runCatching { unregisterReceiver(it) } }
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                if (!updateInstalling) return
+                when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
+                    PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                        val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                        } else {
+                            @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
+                        }
+                        // Only Android's own confirmation screen, never one of KartPad's.
+                        if (confirm != null && confirm.component?.packageName != packageName) {
+                            runCatching { startActivity(confirm) }
+                        }
+                    }
+                    PackageInstaller.STATUS_SUCCESS, PackageInstaller.STATUS_FAILURE_ABORTED -> {
+                        updateInstalling = false
+                        dialog.dismiss()
+                    }
+                    else -> {
+                        updateInstalling = false
+                        dialog.dismiss()
+                        showUpdateFailed(update, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE))
+                    }
+                }
+            }
+        }
+        updateReceiver = receiver
+        val filter = IntentFilter(KartPadUpdateInstaller.ACTION_STATUS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(receiver, filter)
+        }
+    }
+
+    private fun showUpdateFailed(update: KartPadUpdateCheck.Update, reason: String?) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("The Update Didn't Finish")
+            .setMessage((reason?.takeIf { it.isNotBlank() } ?: "Something went wrong.") +
+                "\n\nYou can also download the APK in your browser and install it over KartPad.")
+            .setNegativeButton("Close", null)
+        update.apkUrl?.let { url -> dialog.setPositiveButton("Download in Browser") { _, _ -> openWeb(url) } }
         dialog.show()
     }
 

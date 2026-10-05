@@ -61,6 +61,7 @@ expected_permission_names="$(printf '%s\n' \
   android.permission.INTERNET \
   android.permission.POST_NOTIFICATIONS \
   android.permission.RECEIVE_BOOT_COMPLETED \
+  android.permission.REQUEST_INSTALL_PACKAGES \
   android.permission.WAKE_LOCK \
   dev.kartpad.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | sort)"
 [[ "$permission_names" == "$expected_permission_names" ]] || {
