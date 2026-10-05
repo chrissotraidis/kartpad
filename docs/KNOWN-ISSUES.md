@@ -52,8 +52,9 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Graphics (Apple)
 
-- **iPhone 16:** the screen flickers while the game starts, then plays
-  normally. [#390](https://github.com/chrissotraidis/kartpad/issues/390)
+- **iPhone 16 and iPad Air 4th gen:** the screen flickers while the game
+  starts, then plays normally. Possibly linked to 60 Hz screens; not seen on a
+  120 Hz iPad Pro. [#390](https://github.com/chrissotraidis/kartpad/issues/390)
 - **Mac, two players:** characters drawn outside their karts. [#127](https://github.com/chrissotraidis/kartpad/issues/127)
 
 ## Performance
