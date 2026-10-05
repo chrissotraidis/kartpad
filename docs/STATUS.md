@@ -2,7 +2,7 @@
 
 ## Current status: 5 October 2026
 
-**Latest release: [KartPad 0.7.12](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.12) (build 255).**
+**Latest release: [KartPad 0.7.13](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.13) (build 256).**
 Downloads are ready to play: the Android APK, the iPhone/iPad IPA and the Mac
 app include the game code, and players add their own game data the first time.
 PadMint stays an option for building your own copy. Work in progress follows
@@ -16,7 +16,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | Apple Silicon Mac | Ready-to-play ZIP from Releases, or `scripts/self-build-macos.sh` | Experimental |
 | Apple TV | Experimental source build | Experimental |
 
-### 0.7.9 to 0.7.12
+### 0.7.9 to 0.7.13
 
 | Version | What changed | Checked |
 | --- | --- | --- |
@@ -24,6 +24,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | 0.7.10 | Startup checks every game file and names missing ones (#370); fatal errors show a message instead of a black screen on iPhone/iPad; Automatic uses the full repack on Snapdragon 8xx (#316); PowerVR logs whether shaders exceed the GPU's inter-stage limit (#304); the ⋯ button hides with a controller (#402) | Emulator (data check, missing file, ⋯ hiding, update and fresh-import races); iPad Pro (fatal message, final IPA); Mac (game runs) |
 | 0.7.11 | Game data screens put the extracted folder first and say plainly that a disc image needs your Wii's key; Android imports a zip of the game data; Getting Started explains the Dolphin steps | Emulator: truncated zip refused with a clear message; the release APK reaches a race after a fresh zip import and as an update over 0.7.10 (0.7.3 → 0.7.10 → 0.7.11, data kept); Dolphin's parent folder imports. iPad Pro: release IPA installed in place. Mac: game runs at 60 FPS |
 | 0.7.12 | Android draw self-check: once per session one character draw is drawn two ways off screen and the log says `match`, `mismatch` or `inconclusive`; Report a Problem shows the result at the top. Same pack interface as 0.7.11 | Emulator: `match` on normal runs, `mismatch` with a deliberately broken copy (also in the exported log), `match` with the CPU repack on; release APK reaches a race over 0.7.11 (data kept) and after a fresh folder import. iPad Pro: release IPA installed in place and launched. Mac: game runs at 60 FPS. Not yet run on a physical Android phone |
+| 0.7.13 | The self-check draws a third copy with the other bone-matrix lookup (`result=indexing` when only that copy draws); Retro Rewind starts on the first Play after downloading it (it used to say "No DVD root is configured"). Same pack interface | Emulator: `indexing` with both layout copies deliberately emptied, `match` on normal runs; Retro Rewind download then Play reaches the game. iPad Pro: installed in place and launched. All files checked by anonymous download against `SHA256SUMS` |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
@@ -36,16 +37,25 @@ iPad (#310, closed).
   a zip so cloud transfers can't silently drop files.
 - **Android 3D drawing.**
   - Adreno 8xx: fixed by Automatic in 0.7.10.
-  - Adreno 6xx/7xx (#104, #301): no automatic fix; the character test options
-    are the only route. 0.7.12's self-check log was requested from both.
-  - PowerVR (#304): the reporter's 0.7.10 log reached a race and no shader went
-    over the Moto G54's limit of 14, so that cause is ruled out. The real cause
-    is unknown. 0.7.12's self-check log was requested.
+  - Adreno 6xx/7xx (#104, #301): no automatic fix. The 0.7.12 and 0.7.13
+    self-check logs from both phones show character bodies drawing nothing with
+    either vertex layout and with either bone lookup on its own. Only the two
+    changes together drew bodies on the S24 (white, about 24 FPS, the
+    "fix invisible characters" test option). The self-check has answered what
+    it can; the next step is a different way of handing the bone matrices to
+    the GPU, a decision for Chris (see [the loop](CURRENT-LOOP.md), B2).
+  - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
+    vertex layouts, so the vertex layout isn't the cause; the shader limit was
+    ruled out on 4 October. A 0.7.13 log was requested.
 - **Startup:** Moto G75 crash (#332, no diagnostic yet); iPhone 16 flicker while
   a game opens (#390: the game draws one frame in nine during the safety-screen
   fade; not seen on the iPad Pro).
 - **Online over mobile data (#405):** carriers block direct player-to-player
   connections; Wi-Fi or a VPN works. Not fixable in KartPad without a relay.
+- **Sound levels (#411):** in progress. Android has ••• → **Sound…** (merged,
+  #419); iPhone/iPad is in #420 and needs a tap-through on the iPad; the Mac
+  already has Game → Game Settings… → Audio. Ships in the next 0.7.x release
+  once heard on a device.
 - **Controllers:** ipega and similar fixed in 0.7.6 to 0.7.8, awaiting
   confirmation (#378); single Joy-Cons (#324); Mac Wii Remote with Classic
   Controller Pro (#306).

@@ -125,6 +125,22 @@ piece covers 26,151 pixels with both layouts (36 to 689 on the emulator), so it
 vertex layout isn't the cause on any of them; the bone-matrix lookup is the
 common suspect. 0.7.13's `drawn_constant` copy was requested on all three.
 
+**B2, 0.7.13 answers (5 October), B parked for Adreno:** the S24 (#104, 8
+attempts) and the G85 (#301, 9 attempts) both report `drawn_constant=0`: the
+constant lookup with the game's own vertex layout draws nothing either. On one
+G85 attempt the game's copy drew 2,472 px and both other copies drew nothing.
+So on Adreno 6xx/7xx neither change works alone, which matches the S24's 0.7.3
+test: only the CPU repack and the constant lookup together drew bodies, and
+then white and at about 24 FPS (the "fix invisible characters" option). Two
+reads fail on these drivers, both reading per-vertex-indexed data, and the
+self-check can't narrow it further without a new rendering path. Per the stop
+rule this is recorded and B is parked for Adreno; no more test requests to
+these reporters. The one remaining candidate is reading the bone matrices from
+a storage buffer instead of the uniform buffer, which would replace both
+workarounds at once (and possibly the white textures); it's a renderer change
+for Chris to decide on, not a logging step. PowerVR (#304) still waits for its
+0.7.13 log.
+
 ## Track C: 0.8.0, the WiiCompiled update and measured speed (#339)
 
 patchzyy asked for a focused performance and compile-time pass. KartPad's
@@ -208,13 +224,19 @@ music, mute the whole game, or keep only the game sounds.
   on its device (levels change live, survive a restart, toggle off restores
   full volume). A second pass after players try it.
 
-**F status (5 October):** F1 Android built: ••• → **Sound…**, a toggle (off)
+**F status (5 October):** F1 Android merged (#419): ••• → **Sound…**, a toggle (off)
 and Music / Game sounds sliders. On the emulator the sliders call the runtime
 live (`[KartPadSound] music=0.00 sounds=0.48` in the session log) and closing
 the dialog saved `[audio]` in Config.toml; same pack interface (85d2a9c9).
 The emulator has no audio output, so hearing it is the remaining check (Pixel
-or iPad). F2 iPhone/iPad is written (a Sound sheet from the ••• menu) and
-waits for a device run. F3 Mac: already there as **Game → Game Settings… →
+or iPad). The levels go through the shared game audio code
+(`hle/audio` → `MusicAttenuation`, re-applied every audio tick), the same
+path the Mac's Audio settings use, and `InitializeRuntimeSettings` applies the
+saved `[audio]` keys at every start on all platforms. F2 iPhone/iPad is in
+#420 (a Sound sheet from the ••• menu): it builds and is installed on the iPad,
+and waits for one tap-through there. For the second pass: SDL's default iOS
+audio session ducks other apps' music while KartPad plays, so Spotify keeps
+playing but quieter. F3 Mac: already there as **Game → Game Settings… →
 Audio** (master, music, effects, menu sounds, voices, mute; applies live).
 
 ## Track E: support, every pass
@@ -231,7 +253,7 @@ release on it in place, keeping its data.
 2. D1 and D2 verification in parallel (small), handing branches and notes to
    Chris.
 3. C1 to C4, then **0.8.0**; D3 if a speed change qualifies.
-4. B2 as reports arrive.
+4. B2: parked for Adreno (see above); PowerVR when its 0.7.13 log arrives.
 5. F1 to F3 (sound levels) in a 0.7.x release, then a second pass on feedback.
 
 The loop is finished when 0.7.11 and 0.8.0 are released with these gates met,
