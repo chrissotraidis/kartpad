@@ -304,7 +304,55 @@ internal object KartPadGameDataStorage {
         if (relHash != STATIC_R_SHA256) {
             return MODIFIED_GAME_DATA
         }
-        return null
+        return incompleteFilesError(root)
+    }
+
+    /**
+     * Every file the disc's own table (sys/fst.bin) lists must be present at its full size. The
+     * game checks the same rule when it starts (#370); checking here too means a copy that didn't
+     * finish is caught at import, and never shows as "Ready to play".
+     */
+    internal fun incompleteFilesError(root: File): String? {
+        val damaged = "The game data's file table (sys/fst.bin) is damaged. Import your game data again."
+        val fst = runCatching { File(root, "sys/fst.bin").readBytes() }
+            .getOrElse { return "KartPad could not read sys/fst.bin." }
+        fun be32(at: Int): Long = ((fst[at].toLong() and 0xff) shl 24) or ((fst[at + 1].toLong() and 0xff) shl 16) or
+            ((fst[at + 2].toLong() and 0xff) shl 8) or (fst[at + 3].toLong() and 0xff)
+        if (fst.size < 12) return damaged
+        val count = be32(8)
+        if (count < 1 || count * 12 > fst.size) return damaged
+        val names = count.toInt() * 12
+        // A directory entry stores the index just past its last child.
+        val directories = ArrayDeque<Pair<Long, String>>().apply { addLast(count to "") }
+        var listed = 0
+        var incomplete = 0
+        var example: String? = null
+        for (index in 1 until count.toInt()) {
+            while (directories.size > 1 && index >= directories.last().first) directories.removeLast()
+            val word = be32(index * 12)
+            val nameStart = names + (word and 0xffffff).toInt()
+            var nameEnd = nameStart
+            while (nameEnd < fst.size && fst[nameEnd] != 0.toByte()) nameEnd++
+            if (nameStart >= fst.size || nameEnd == nameStart) return damaged
+            val name = String(fst, nameStart, nameEnd - nameStart, Charsets.ISO_8859_1)
+            if (name == "." || name == ".." || '/' in name) return damaged
+            val path = directories.last().second + name
+            val size = be32(index * 12 + 8)
+            if ((word ushr 24) != 0L) {
+                directories.addLast(size to "$path/")
+            } else {
+                listed += 1
+                val file = File(root, "files/$path")
+                if (!file.isFile || file.length() < size) {
+                    incomplete += 1
+                    if (example == null) example = path
+                }
+            }
+        }
+        if (incomplete == 0) return null
+        return "The game data is incomplete: $incomplete of $listed game files are missing or cut short, " +
+            "for example files/$example. A copy probably didn't finish. Copy the complete folder (or zip) " +
+            "to this phone again, then import it again."
     }
 
     private fun copyTree(
