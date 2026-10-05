@@ -6,8 +6,10 @@ import android.provider.DocumentsContract
 import android.util.AtomicFile
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.security.MessageDigest
 import java.util.UUID
+import java.util.zip.ZipInputStream
 
 /** Crash-safe storage transaction for user-selected extracted RMCP01 game data. */
 internal object KartPadGameDataStorage {
@@ -22,6 +24,8 @@ internal object KartPadGameDataStorage {
         "16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d"
     private const val MODIFIED_GAME_DATA =
         "This game data is modified (for example Wiimmfi-patched or pre-patched). Please use a clean RMCP01 dump."
+    private const val DAMAGED_ZIP =
+        "The zip is damaged or incomplete. Copy it to the phone again and retry."
 
     private val requiredPaths = listOf(
         "sys/boot.bin",
@@ -116,6 +120,87 @@ internal object KartPadGameDataStorage {
         }
     }
 
+    /**
+     * Imports one .zip of an extracted disc: files/ and sys/ at the top, or inside
+     * DATA/ or the folder Dolphin made. A zip moves through cloud drives and
+     * messaging apps as a single file, and a cut-off one fails here instead of
+     * leaving game files missing. Read as a stream: the picked document can't be
+     * reopened for random access.
+     */
+    fun importZip(
+        resolver: ContentResolver,
+        zipUri: Uri,
+        filesDir: File,
+        progress: (String) -> Unit,
+    ): ImportResult {
+        val support = root(filesDir)
+        check(support.isDirectory || support.mkdirs()) { "Game-data storage is unavailable." }
+        recoverInterruptedImport(support)
+        progress("Opening the zip…")
+        val staging = File(support, "GameData.import-${UUID.randomUUID()}")
+        check(staging.mkdir()) { "The game-data staging folder could not be created." }
+        try {
+            val counter = CopyCounter()
+            var gameRoot: File? = null
+            val input = resolver.openInputStream(zipUri)
+                ?: throw IllegalArgumentException("The selected zip could not be opened.")
+            try {
+                ZipInputStream(input.buffered()).use { zip ->
+                    while (true) {
+                        val entry = zip.nextEntry ?: break
+                        val parts = entry.name.trimEnd('/').split('/')
+                        require(parts.size <= MAX_DEPTH && parts.all {
+                            it.isNotBlank() && it != "." && it != ".." &&
+                                '\\' !in it && '\u0000' !in it
+                        }) { "The zip contains an unsafe file name." }
+                        // Dolphin's other partitions and macOS metadata aren't game data.
+                        val gameStart = parts.indexOfFirst { it == "files" || it == "sys" }
+                        val before = if (gameStart < 0) parts else parts.subList(0, gameStart)
+                        if (before.any { it == "UPDATE" || it == "CHANNEL" || it == "__MACOSX" }) continue
+                        counter.entries += 1
+                        require(counter.entries <= MAX_ENTRIES) { "The zip contains too many files." }
+                        val output = File(staging, parts.joinToString("/"))
+                        if (entry.isDirectory) {
+                            check(output.isDirectory || output.mkdirs()) { "A game-data directory could not be created." }
+                            continue
+                        }
+                        output.parentFile?.let { parent ->
+                            check(parent.isDirectory || parent.mkdirs()) { "A game-data directory could not be created." }
+                        }
+                        FileOutputStream(output).use { stream ->
+                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                            while (true) {
+                                val count = zip.read(buffer)
+                                if (count < 0) break
+                                stream.write(buffer, 0, count)
+                                counter.bytes += count
+                                require(counter.bytes <= MAX_BYTES) { "The zip exceeds KartPad's import limit." }
+                            }
+                        }
+                        if (parts.size >= 2 && parts.takeLast(2) == listOf("sys", "main.dol")) {
+                            gameRoot = output.parentFile?.parentFile
+                        }
+                        if (counter.entries % 64 == 0) {
+                            progress("Copying game data from the zip… ${counter.entries} items")
+                        }
+                    }
+                }
+            } catch (error: IOException) {
+                android.util.Log.w("KartPadGameData", "Zip import failed", error)
+                throw IllegalArgumentException(DAMAGED_ZIP)
+            }
+            val root = gameRoot ?: throw IllegalArgumentException(
+                "This zip doesn't contain Mario Kart Wii game data. Zip the folder Dolphin's Extract Entire Disc made.",
+            )
+            localValidationError(root)?.let { throw IllegalArgumentException(it) }
+            ensureRelativeDvdRoot(support)
+            activate(support, root)
+            File(support, REMOVAL_MARKER).delete()
+            return ImportResult(counter.entries, counter.bytes)
+        } finally {
+            staging.deleteRecursively()
+        }
+    }
     fun importDiscImage(
         resolver: ContentResolver,
         image: Uri,

@@ -8,6 +8,29 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 class AndroidGameDataSaveContractTests(unittest.TestCase):
+    def test_zip_import_is_safe_and_folder_comes_first(self) -> None:
+        manager = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadGameDataActivity.kt").read_text()
+        storage = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadGameDataStorage.kt").read_text()
+        zip_import = storage[storage.index("fun importZip("):storage.index("fun importDiscImage(")]
+        # Unsafe names are refused before anything is written outside staging.
+        self.assertIn('it != ".."', zip_import)
+        self.assertIn("it.isNotBlank()", zip_import)
+        self.assertIn("MAX_ENTRIES", zip_import)
+        self.assertIn("MAX_BYTES", zip_import)
+        # Same validation and activation as a folder; a failed import leaves no staging.
+        self.assertIn("localValidationError(root)", zip_import)
+        self.assertIn("activate(support, root)", zip_import)
+        self.assertIn("staging.deleteRecursively()", zip_import)
+        self.assertIn("DAMAGED_ZIP", zip_import)
+        # Dolphin's UPDATE/CHANNEL partitions are skipped; the picked document is streamed.
+        self.assertIn('"UPDATE"', zip_import)
+        self.assertIn("ZipInputStream", zip_import)
+        self.assertIn("KartPadGameDataStorage.importZip", manager)
+        # The recommended folder import is offered before the key-requiring disc image.
+        self.assertLess(manager.index("importFolderButton = Button"), manager.index("importZipButton = Button"))
+        self.assertLess(manager.index("importZipButton = Button"), manager.index("importButton = Button"))
+        self.assertIn('.setPositiveButton("Use Extracted Folder…")', manager)
+
     def test_successful_native_import_is_not_treated_as_a_null_descriptor(self) -> None:
         importer = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadDiscImageImporter.kt").read_text()
         # JNI returns null on success. A trailing Elvis on use() would therefore

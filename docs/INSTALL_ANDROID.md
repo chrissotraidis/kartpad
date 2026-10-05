@@ -47,9 +47,10 @@ that copies the whole folder:
 - **USB cable (most reliable).** Connect the phone, choose **File transfer**
   on the phone, and copy the folder into **Download**. On a Mac, use
   [OpenMTP](https://openmtp.ganeshrvel.com).
-- **A zip file.** Zip the folder on the computer, send the one file any way you
-  like (Google Drive, Quick Share, a cable), then open it in **Files by Google**
-  and choose **Extract**.
+- **A zip file.** Zip the folder on the computer and send the one file any way
+  you like (Google Drive, Quick Share, a cable). From 0.7.11, save it to the
+  phone and tap **Import Game Data Zip…** in KartPad; on older versions, open it
+  in **Files by Google** and choose **Extract** first.
 - **Google Drive with loose files** is the risky way: KartPad can't pick a
   folder inside Google Drive, and a partly downloaded folder is missing files.
   Download it to the phone as a zip instead.

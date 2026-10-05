@@ -22,6 +22,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | --- | --- | --- |
 | 0.7.9 | Ready-to-play downloads (#403); hourly update check (#397) | Android 16 emulators (update and fresh install), iOS Simulator, Mac race |
 | 0.7.10 | Startup checks every game file and names missing ones (#370); fatal errors show a message instead of a black screen on iPhone/iPad; Automatic uses the full repack on Snapdragon 8xx (#316); PowerVR logs whether shaders exceed the GPU's inter-stage limit (#304); the ⋯ button hides with a controller (#402) | Emulator (data check, missing file, ⋯ hiding, update and fresh-import races); iPad Pro (fatal message, final IPA); Mac (game runs) |
+| 0.7.11 | Game data screens put the extracted folder first and say plainly that a disc image needs your Wii's key; Android imports a zip of the game data; Getting Started explains the Dolphin steps | Fresh emulator: new screen, truncated zip refused with a clear message, zip import reaches a race, Dolphin's parent folder imports |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
@@ -29,9 +30,9 @@ iPad (#310, closed).
 
 ### What remains
 
-- **Setup.** Players still pick the disc-image import first and hit the Wii
-  key prompt, and lose files copying the folder through cloud drives (Discord,
-  4 October; #370). Track A of the loop fixes the screens and adds zip import.
+- **Setup.** 0.7.11 addresses the 4 October Discord confusion: the extracted
+  folder comes first, the key requirement is stated up front, and Android takes
+  a zip so cloud transfers can't silently drop files.
 - **Android 3D drawing.**
   - Adreno 8xx: fixed by Automatic in 0.7.10.
   - Adreno 6xx/7xx (#104, #301): no automatic fix; the character test options
@@ -70,8 +71,8 @@ iPad (#310, closed).
 
 ### Next versions
 
-- **0.7.11** (app-only): clearer game data screens, zip import on Android, and
-  the draw self-check if its proof passes.
+- **0.7.11** (app-only): clearer game data screens and zip import on Android.
+  The draw self-check (Track B) follows in a later app release.
 - **0.8.0** (pack interface change): WiiCompiled sync plus measured speed work
   from #339.
 

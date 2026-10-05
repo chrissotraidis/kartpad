@@ -119,6 +119,25 @@ Contribution candidates, to reproduce on upstream's own main before any PR
 | A saved Player 1 for a missing controller leaves a connected pad with no player | Android runtime `094b567` (#378) | `apply_port_preferences` in `aurora-main/lib/input.cpp` has the same structure and no free-port pass |
 | Fatal errors are invisible outside Windows | Runtime `3e13d6e`/`b0dee27` write the message for the app to show | Non-Windows `ShowRuntimeFatalPopup` only logs, and upstream now ships macOS |
 
+**Controller with no player: ready for Chris.** Upstream's own
+`apply_port_preferences`, compiled alone with the #378 scenarios, leaves the
+pad on Player 1 with no player both when Player 1 is saved for a missing
+controller and when Player 1 is left empty. The generic part of `094b567`
+(`port_reserved`, `assign_free_ports` and their two call sites) applies to
+upstream cleanly; the hunks for KartPad's standard-gamepad bridge don't exist
+upstream and were left out. With it, KartPad's
+`test_connected_controllers_never_stay_without_a_player` passes against
+upstream's file. Branch:
+[`codex/upstream-controller-free-port`](https://github.com/chrissotraidis/wiicompiled/tree/codex/upstream-controller-free-port)
+(`471db5c` on `279ce83`). Not yet done: a full upstream build and a test with
+real controllers. Upstream has no unit test harness for `input.cpp` (it needs
+SDL), so the regression lives in the description. Chris writes the PR text.
+
+**Fatal errors outside Windows: deferred.** The gap is confirmed in upstream's
+code. A fix needs care: the popup is reached from crash handlers and background
+threads, where a macOS dialog isn't safe. Test it on a real upstream macOS build
+during the Track C sync before proposing anything.
+
 KartPad's Adreno repack, the iOS fatal-error hook and the game-data
 completeness check are KartPad platform code and aren't candidates unless
 upstream is shown to have the same problem.

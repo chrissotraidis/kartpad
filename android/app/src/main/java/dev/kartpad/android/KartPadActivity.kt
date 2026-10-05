@@ -685,8 +685,8 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Time Trial Ghosts (.rkg)…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showGhostManager) },
             MenuRow("Manage Saves…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showSaveManager) },
             MenuRow("Manage Retro Rewind…", R.drawable.ic_kartpad_gobackward) { closeKartPadMenu { startActivity(Intent(this, RetroRewindInstallActivity::class.java)) } },
-            MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT) } },
             MenuRow("Import from Extracted Folder…", R.drawable.ic_kartpad_folder) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT_FOLDER) } },
+            MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT) } },
             MenuRow("Remove Stored Game Data…", R.drawable.ic_kartpad_trash) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_REMOVE) } },
         ), showBack = true,
     )

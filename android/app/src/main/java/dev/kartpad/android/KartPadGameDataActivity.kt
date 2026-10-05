@@ -19,6 +19,7 @@ class KartPadGameDataActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var importButton: Button
     private lateinit var importFolderButton: Button
+    private lateinit var importZipButton: Button
     private lateinit var removeButton: Button
     private lateinit var progress: ProgressBar
     private val worker = Executors.newSingleThreadExecutor()
@@ -33,6 +34,7 @@ class KartPadGameDataActivity : Activity() {
         setContentView(buildContent())
         importButton.setOnClickListener { chooseDiscImage() }
         importFolderButton.setOnClickListener { chooseExtractedFolder() }
+        importZipButton.setOnClickListener { chooseZip() }
         removeButton.setOnClickListener { confirmRemoval() }
         refreshStatus()
         val action = intent.getStringExtra(EXTRA_ACTION)
@@ -78,14 +80,17 @@ class KartPadGameDataActivity : Activity() {
         }
         if (!KartPadCommonKey.isInstalled(filesDir)) {
             AlertDialog.Builder(this)
-                .setTitle("Your Wii Common Key")
+                .setTitle("Disc Images Need Your Wii's Key")
                 .setMessage(
-                    "Reading a disc image needs your own 16-byte Wii common key, saved as common-key.bin " +
-                        "(for example from a BootMii NAND backup of your Wii). KartPad keeps it privately on this device.\n\n" +
-                        "No key? Choose an extracted game data folder instead (Dolphin: right-click the game, Properties, Filesystem, Extract Entire Disc).",
+                    "To read a disc image, KartPad needs the 16-byte common key from your own Wii, saved as " +
+                        "common-key.bin (for example from a BootMii NAND backup). Most people don't have it, and " +
+                        "KartPad can't provide it.\n\n" +
+                        "Easier: in Dolphin on a computer, right-click Mario Kart Wii, choose Properties, then " +
+                        "Filesystem, right-click the disc and choose Extract Entire Disc. Copy that folder (or a zip " +
+                        "of it) to this phone and import it here. No key needed.",
                 )
-                .setPositiveButton("Choose common-key.bin…") { _, _ -> chooseCommonKey() }
-                .setNeutralButton("Use Extracted Folder…") { _, _ -> chooseExtractedFolder() }
+                .setPositiveButton("Use Extracted Folder…") { _, _ -> chooseExtractedFolder() }
+                .setNeutralButton("Choose common-key.bin…") { _, _ -> chooseCommonKey() }
                 .setNegativeButton("Cancel", null)
                 .show()
             return
@@ -97,6 +102,21 @@ class KartPadGameDataActivity : Activity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             },
             REQUEST_DISC_IMAGE,
+        )
+    }
+
+    private fun chooseZip() {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(
+                    Intent.EXTRA_MIME_TYPES,
+                    arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream"),
+                )
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            },
+            REQUEST_ZIP,
         )
     }
 
@@ -125,12 +145,16 @@ class KartPadGameDataActivity : Activity() {
             importDiscImage(selected)
             return
         }
+        if (requestCode == REQUEST_ZIP) {
+            importZip(selected)
+            return
+        }
         if (requestCode != REQUEST_EXTRACTED_FOLDER) return
         val tree = selected
         runCatching {
             contentResolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        setWorking(true, "Validating the selected extracted disc…")
+        setWorking(true, "Checking the selected folder…")
         worker.execute {
             runCatching {
                 KartPadGameDataStorage.importExtractedTree(contentResolver, tree, filesDir) { message ->
@@ -140,7 +164,7 @@ class KartPadGameDataActivity : Activity() {
                 runOnUiThread {
                     changed = true
                     setResult(RESULT_OK)
-                    setWorking(false, "Validated RMCP01 game data is installed privately (${result.files} items).")
+                    setWorking(false, "Game data is installed and checked (${result.files} items).")
                     AlertDialog.Builder(this)
                         .setTitle("Game Data Imported")
                         .setMessage("Restart KartPad to use the new copy. Saves, Miis, control settings, and Retro Rewind are unchanged.")
@@ -176,10 +200,25 @@ class KartPadGameDataActivity : Activity() {
         }
     }
 
+    private fun importZip(zip: android.net.Uri) {
+        setWorking(true, "Opening the zip…")
+        worker.execute {
+            runCatching {
+                KartPadGameDataStorage.importZip(contentResolver, zip, filesDir) { message ->
+                    runOnUiThread { status.text = message }
+                }
+            }.onSuccess { result ->
+                runOnUiThread { showImportSuccess(result) }
+            }.onFailure { error ->
+                runOnUiThread { showImportFailure(error) }
+            }
+        }
+    }
+
     private fun showImportSuccess(result: KartPadGameDataStorage.ImportResult) {
         changed = true
         setResult(RESULT_OK)
-        setWorking(false, "Validated RMCP01 game data is installed privately (${result.files} items).")
+        setWorking(false, "Game data is installed and checked (${result.files} items).")
         AlertDialog.Builder(this)
             .setTitle("Game Data Imported")
             .setMessage("Restart KartPad to use the new copy. Saves, Miis, control settings, and Retro Rewind are unchanged.")
@@ -237,8 +276,8 @@ class KartPadGameDataActivity : Activity() {
         val error = KartPadGameDataStorage.validationError(filesDir)
         status.text = when {
             pending -> "Removal is scheduled for the next game restart."
-            error == null -> "Validated RMCP01 game data is installed privately."
-            else -> "Game data is not ready. Select an extracted RMCP01 DATA folder."
+            error == null -> "Game data is installed and checked."
+            else -> "No game data yet. Import the folder Dolphin made, or a zip of it."
         }
         removeButton.isEnabled = error == null && !pending
     }
@@ -247,6 +286,7 @@ class KartPadGameDataActivity : Activity() {
         progress.visibility = if (working) View.VISIBLE else View.GONE
         importButton.isEnabled = !working && BuildConfig.DISC_IMAGE_IMPORT
         importFolderButton.isEnabled = !working
+        importZipButton.isEnabled = !working
         removeButton.isEnabled = !working && KartPadGameDataStorage.validationError(filesDir) == null
         status.text = message
     }
@@ -272,7 +312,9 @@ class KartPadGameDataActivity : Activity() {
             gravity = Gravity.CENTER
         })
         column.addView(TextView(this).apply {
-            text = "KartPad extracts your selected ISO/WBFS/RVZ image or copies an extracted DATA folder into private storage. RVZ reduces the source image size, not the extracted game data."
+            text = "Import your own Mario Kart Wii (PAL, RMCP01) once. Easiest: the folder Dolphin's " +
+                "Extract Entire Disc makes (DATA, or the folder that holds it), or a zip of that folder. " +
+                "Your saves are kept."
             textSize = 14f
             setTextColor(Color.LTGRAY)
             gravity = Gravity.CENTER
@@ -288,17 +330,29 @@ class KartPadGameDataActivity : Activity() {
         column.addView(status)
         progress = ProgressBar(this).apply { visibility = View.GONE }
         column.addView(progress)
+        importFolderButton = Button(this).apply {
+            text = "Import from Extracted Game Data Folder…"
+            contentDescription = "Recommended: choose the game data folder Dolphin extracted"
+        }
+        column.addView(importFolderButton)
+        importZipButton = Button(this).apply {
+            text = "Import Game Data Zip…"
+            contentDescription = "Choose a zip of the game data folder"
+        }
+        column.addView(importZipButton)
         importButton = Button(this).apply {
             text = "Import or Reimport Wii Disc Image…"
-            contentDescription = "Choose a Mario Kart Wii ISO, WBFS or RVZ disc image"
+            contentDescription = "Choose a disc image; needs your own Wii common key"
             isEnabled = BuildConfig.DISC_IMAGE_IMPORT
         }
         column.addView(importButton)
-        importFolderButton = Button(this).apply {
-            text = "Import from Extracted Game Data Folder…"
-            contentDescription = "Choose an extracted Mario Kart Wii DATA folder"
-        }
-        column.addView(importFolderButton)
+        column.addView(TextView(this).apply {
+            text = "Disc images (ISO, WBFS, RVZ) need your own Wii's common key."
+            textSize = 13f
+            setTextColor(Color.LTGRAY)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(8))
+        })
         removeButton = Button(this).apply {
             text = "Remove Stored Game Data…"
             contentDescription = "Remove stored game data without removing saves"
@@ -334,6 +388,7 @@ class KartPadGameDataActivity : Activity() {
         private const val REQUEST_EXTRACTED_FOLDER = 4_401
         private const val REQUEST_DISC_IMAGE = 4_402
         private const val REQUEST_COMMON_KEY = 4_403
+        private const val REQUEST_ZIP = 4_404
         private const val STATE_CHANGED = "changed"
         private const val STATE_ACTION_CONSUMED = "automatic_action_consumed"
     }
