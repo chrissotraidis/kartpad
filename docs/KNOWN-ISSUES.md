@@ -26,6 +26,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   Galaxy S24 Ultra and Moto G85): characters missing, white or washed out while
   tracks look fine. **Help → Character Graphics Test…** has workarounds that
   help on some phones; there's no automatic fix yet. [#104](https://github.com/chrissotraidis/kartpad/issues/104), [#301](https://github.com/chrissotraidis/kartpad/issues/301)
+  From 0.7.12, **Report a Problem** logs include a one-line draw self-check
+  that tells us whether this phone draws characters differently from the
+  CPU path, without changing anything on screen.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
