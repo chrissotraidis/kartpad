@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.system.Os
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -29,6 +30,10 @@ internal class RetroRewindInstallWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val token = inputData.getString(RetroRewindInstallWork.KEY_TOKEN)
             ?: return@withContext failure("missing-token")
+        // Extraction loads libmain.so in this process, which the game may reuse. Export the same
+        // directories KartPadActivity does first, so the runtime never caches paths without them.
+        Os.setenv("KARTPAD_ANDROID_FILES_DIR", applicationContext.filesDir.absolutePath, true)
+        Os.setenv("KARTPAD_ANDROID_CACHE_DIR", applicationContext.cacheDir.absolutePath, true)
         setForeground(foregroundInfo("Preparing installation…"))
         if (inputData.getBoolean(RetroRewindInstallWork.KEY_DEBUG_FIXTURE, false)) {
             if (!BuildConfig.DEBUG || BuildConfig.GAME_RUNTIME) {
