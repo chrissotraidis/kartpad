@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.7.10** (5 October 2026). Each item links its GitHub
+Current for **KartPad 0.7.13** (5 October 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).
@@ -17,6 +17,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   Usually the game data copy didn't finish (for example a folder half
   downloaded from a cloud drive). 0.7.10 checks every file and names the
   missing ones; copy the folder again and reimport. [#370](https://github.com/chrissotraidis/kartpad/issues/370)
+- **Android, fixed in 0.7.13: "The game stopped because DVD data is
+  unavailable" the first time you play Retro Rewind right after downloading
+  it.** Starting it again worked. Before 0.7.13, the download left the game
+  with settings read before KartPad set them up.
 - **Only PAL (Europe) RMCP01 revision 0 works.** USA, Japan and Korea discs
   aren't supported yet. [#203](https://github.com/chrissotraidis/kartpad/issues/203)
 
