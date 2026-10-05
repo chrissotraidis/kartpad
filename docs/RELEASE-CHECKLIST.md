@@ -5,6 +5,46 @@ in [STATUS.md](STATUS.md) and the [maintenance board](MAINTENANCE-BOARD.md).
 Completed [release checkpoints through 0.4.11](archive/release-checkpoints-through-0.4.11.md)
 are historical evidence, not a checklist for the next build.
 
+## Ready-to-play release (from 0.7.9)
+
+[AGENTS.md](../AGENTS.md) lists the files every release publishes. The steps
+used for 0.7.10, in order:
+
+1. Merge the release PR, then confirm `git rev-parse <merge>^{tree}` equals the
+   tree you build from. Bump `version.json` (version and build) in the PR.
+2. **Android:** `KARTPAD_ANDROID_PACKAGE_FORMAT=aab
+   KARTPAD_ANDROID_BUNDLED_GAME_PACK=<pack> scripts/build-android-app.sh
+   <absolute output dir>`. Use an absolute output path; a relative one breaks
+   the build-provenance step. The pack must match the printed pack fingerprint.
+   Then `KARTPAD_ANDROID_ALLOW_GAME_PACK=1 scripts/derive-android-release-apk.sh`
+   with the Community Release key, **twice**; both APKs must be byte-identical.
+3. **iPhone/iPad:** `scripts/build-ios-app.sh <dir>` gives the no-game-code
+   IPA, published as `-ios-for-padmint.ipa`. Check the iOS pack against that
+   exact app with `scripts/check-game-pack-state.py`, add it with
+   `scripts/add-game-pack-to-ipa.sh` for `-ios.ipa`, and run
+   `scripts/audit-ios-game-app.sh <app> IOS` on the result.
+4. **Mac:** `scripts/build-macos-app.sh <translation> <source> <build> <app> dual`,
+   then `codesign --verify --deep --strict` and
+   `ditto -c -k --keepParent KartPad.app KartPad-v…-macos-arm64.zip`.
+5. **Other files:** `padmint.json` as `-padmint.json`; a notices zip with
+   `LICENSE`, `LICENSES/`, `RIGHTS_AND_LICENSES.md` and
+   `THIRD_PARTY_NOTICES.md`; `scripts/package-release-source.py` with the
+   KartPad merge commit and every runtime and translator gitlink;
+   `SHA256SUMS` over all of them.
+6. **Audits:** `python3 -m padmint audit` (from the PadMint checkout) on every
+   file, and the release gate on the folder. The only accepted findings are
+   translated game code (address-named symbols and the embedded data-sections
+   marker) in the APK, the `-ios.ipa` and the Mac zip, plus the same marker
+   string inside the translator's source file. Any key, disc data or private path
+   is a stop.
+7. **Tests:** the final APK installs over the previous release on an emulator
+   and reaches a race with data kept; on a fresh emulator it imports an
+   extracted folder and reaches a race; the final IPA runs on a device installed
+   in place; the Mac app runs the game.
+8. Publish with `gh release create --target <full merge SHA>` (a short SHA is
+   rejected), then download every file anonymously and check it against
+   `SHA256SUMS`, and confirm GitHub reports the new tag as latest.
+
 ## Source and scope
 
 - [ ] Record platform, version/build, exact source commit and intended test or
@@ -43,7 +83,7 @@ Platform procedures: [Android release](RELEASING_ANDROID.md),
       known limits. Use a prerelease for an unaccepted testing candidate.
 - [ ] Publish only within the owner's explicit release authorization. The
       scheduled coordinator and its workers **must never publish an IPA**;
-      [manual Apple ownership is separate](MAINTENANCE.md#platforms-and-build-completion).
+      [manual Apple ownership is separate](MAINTENANCE.md#release-gates).
 - [ ] Download hosted assets anonymously, compare hashes and bytes, and re-audit
       the downloaded package, signature and provenance.
 - [ ] Update the README download table, installation guide, status and maintenance

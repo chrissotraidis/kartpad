@@ -1,141 +1,78 @@
 # KartPad known issues
 
-Current priorities, available builds and pending tests live only in the
-[maintenance board](MAINTENANCE-BOARD.md). Device/build facts below retain the
-scope of the reports that supplied them. The
-[1 October review](FOCUSED-REVIEW-2026-10-01.md) accounts for the 67 issues open at review
-and distinguishes completed scopes, remaining failures and new features.
-Android shoulder/D-pad/trigger remapping and the L1 item preset are implemented;
-[#297](https://github.com/chrissotraidis/kartpad/issues/297) retains its exact
-controller acceptance question. The community-report sections below are dated
-historical evidence, not the current release's support matrix.
+Current for **KartPad 0.7.10** (5 October 2026). Each item links its GitHub
+issue, where updates appear first. If your problem isn't here, see the
+[reporting guide](REPORTING.md). The September evidence register is kept in
+the [archive](archive/known-issues-through-2026-09.md).
 
-## Community reports reviewed 9 September 2026 (Japan time)
+## Setup and game data
 
-See the [support guide](SUPPORT.md) for workarounds and the exact diagnostic
-steps. Open reports are not treated as verified root causes.
-All 20 open GitHub issues were checked on 8 September 2026 at 21:52 UTC
-(9 September, 06:52 Japan time), including their latest replies. The targeted
-[Android investigation handoff](ANDROID-PERFORMANCE-HANDOFF.md) ranks the next
-experiments and distinguishes installed, public and local candidate builds.
-The [maintenance workflow](MAINTENANCE.md) defines how evidence advances into
-reviewed fixes, platform tests and accepted builds.
+- **KartPad asks for a "Wii common key".** That only happens with
+  **Import or Reimport Wii Disc Image…**. Use **Import from Extracted Game Data
+  Folder…** with a folder from Dolphin's **Extract Entire Disc** instead; it
+  needs no key. Steps: [Android](INSTALL_ANDROID.md#2-make-your-game-data-folder),
+  [iPhone/iPad](INSTALL_IPA.md#2-make-your-game-data-folder).
+- **"Ready to play", then a black screen or a crash right after starting.**
+  Usually the game data copy didn't finish (for example a folder half
+  downloaded from a cloud drive). 0.7.10 checks every file and names the
+  missing ones; copy the folder again and reimport. [#370](https://github.com/chrissotraidis/kartpad/issues/370)
+- **Only PAL (Europe) RMCP01 revision 0 works.** USA, Japan and Korea discs
+  aren't supported yet. [#203](https://github.com/chrissotraidis/kartpad/issues/203)
 
-The [Android device report register](TECH-DEBT.md#android-device-report-register)
-records reported hardware, exact builds where available, successful milestones,
-failures and remaining checks from the 9 September GitHub review. It distinguishes
-logged driver versions from suspected causes and is not a compatibility certification.
+## Graphics (Android)
 
-The [9 September Reddit triage](artifacts/2026-09-09/reddit-android-report-triage.md)
-maps additional Android reports to these issues and records setup, remapping
-and resolution-change leads in [technical debt](TECH-DEBT.md#android-community-reports-and-flow-gaps).
-Those comments omit exact APK versions and do not establish results for the
-separate Android build/test workstream.
+- **Snapdragon 8 Gen 3 and older Adreno GPUs** (Adreno 6xx and 7xx, for example
+  Galaxy S24 Ultra and Moto G85): characters missing, white or washed out while
+  tracks look fine. **Help → Character Graphics Test…** has workarounds that
+  help on some phones; there's no automatic fix yet. [#104](https://github.com/chrissotraidis/kartpad/issues/104), [#301](https://github.com/chrissotraidis/kartpad/issues/301)
+- **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
+  (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
+  Rewind, choose **Experimental: fix broken characters** instead.
+- **PowerVR GPUs** (for example Moto G54): the 3D scene breaks up. The cause is
+  not found yet; 0.7.10's log ruled out the GPU's shader limit. [#304](https://github.com/chrissotraidis/kartpad/issues/304)
+- **Moto G75:** crashes while loading the game; we need a diagnostic log.
+  [#332](https://github.com/chrissotraidis/kartpad/issues/332)
+- **AYN Thor:** black bars even with full screen. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
 
-| Issue | Current boundary / next evidence |
-| --- | --- |
-| [#169](https://github.com/chrissotraidis/kartpad/issues/169) POCO save/performance/display report | POCO F6 Pro/Snapdragon8Gen2/12GB/Android 15,0.4.10-android.1/build 21, Original and Retro. Reports Retro progress lost after exit, poor FPS and unused display area. Save concern prioritized: missing license versus records/unlocks versus rating, exit path/same profile and existing save-error excerpt requested. No deliberate loss/reinstall requested. GPU cause, thermal throttling and applicability of newer fixes unverified. |
-| [#166](https://github.com/chrissotraidis/kartpad/issues/166) HONOR graphics corruption | YLE-W09, Android 16/API36, exact preview 1/build 28, Original/base,1x Fill Screen, validation ON; report KP-13D4AF72. Reporter supplied Adreno829/Qualcomm driver512.842.36. Android owner inspected images: corruption across menu panels, models and race with HUD intact. Actual failing-draw cause remains unproven; no repeated settings/validation request. |
-| [#167](https://github.com/chrissotraidis/kartpad/issues/167) Helio G200 performance | Reporter identifies Infinix Hot60Pro, Android 16/XOS16.3, HelioG200/MaliG57MC2/8GB and0.4.11Original; reports15–20 FPS gameplay/~30menus versus Dolphin50–60 FPS. Reporter confirms same performance at 1x in4:3 and16:9; Dolphin Vulkan felt smoother than OpenGL. Settings response acknowledged, no repeat benchmark. No hardware acceptance or shared-cause claim from other-device measurements. |
-| [#142](https://github.com/chrissotraidis/kartpad/issues/142) AI disclosure and documentation | Answered publicly; disclosure shipped. README ordering and repository documentation cleanup merged in PR #148. Closed by Christopher after his follow-up; UI criticism is not a diagnosed rendering or performance defect. |
-| [#137](https://github.com/chrissotraidis/kartpad/issues/137) preview 1 vertex explosion | Galaxy S26 Ultra/SM-S948B, Android 16, exact published cecd69c source fingerprints, Original/base and Retro not installed. Reported 4x/16:9 with validation active; settings changes did not resolve stretching. GPU/driver and actual-draw excerpts are not yet supplied. Keep related reports linked without asserting a shared cause or repeating broad settings/import tests. |
-| [#143](https://github.com/chrissotraidis/kartpad/issues/143) Android game-launch crash | Honor X7D/Snapdragon685/Android 15, after import and Launch. Exact build/profile/import completion and matching exit/final console excerpt requested; no renderer/CPU cause inferred from device name. Video was not accessible to the review tool. No reinstall or full archive requested. |
-| [#135](https://github.com/chrissotraidis/kartpad/issues/135) iPad opening crash | [Independent raw-crash review](artifacts/2026-09-09/issue-135-raw-crash-review.md) identifies faulting LDAPRB unsupported by A10X in supplied 0.4.0/build 15 report. Edited image list/redacted UUID limit exact binary identification. Published iOS build 29 startup and Original/Retro loading are now reporter-confirmed. Reporter describes unstable roughly 30FPS Retro and30–35 FPS Original at native resolution, versus Dolphin60FPS; these are reported comparisons, not controlled profiling. Performance remains open. No repeated raw-report or jailbreak-change request. |
-| [#128](https://github.com/chrissotraidis/kartpad/issues/128), [#131](https://github.com/chrissotraidis/kartpad/issues/131) end-of-cup crash | AYN Thor Retro report and Poco X8 Pro/Android 16/HyperOS 3.1 report. #131 identifies tapping Next after the final Grand Prix race, before the ceremony, at fullscreen/3x/60 FPS; reporter now confirms Original and Retro are both affected (also mentions online). Matching reviewed exit/error excerpts are requested. Similar timing does not establish a shared cause or all-device impact. No repeat cup runs, reinstall or data clearing requested. |
-| [#127](https://github.com/chrissotraidis/kartpad/issues/127) macOS two-player character offsets | Contributor reports M5 MacBook Air / macOS 27 beta / Original at PR #112 head 271fdc1, 4x, 120 FPS, borderless/notch extension. Controller input works; characters appear outside karts. Same-scene main comparison is pending; neither PR regression nor shared Android cause is established. |
-| [#105](https://github.com/chrissotraidis/kartpad/issues/105) save location/transfer | Android preview 1 (retired) adds matched offline rating restore. At 14:06 UTC on 8 September, after the build-28 test instructions, the reporter confirmed that ratings and offline information transferred successfully. Record reporter-confirmed success for that workflow and acknowledge it; do not repeat the completed test request. Full Mii migration, online/server synchronization and Apple parity are not established by this response. |
-| [#102](https://github.com/chrissotraidis/kartpad/issues/102), [#104](https://github.com/chrissotraidis/kartpad/issues/104) Android geometry/textures | Fold #102 supplied Vulkan/Adreno 840 driver 512.842.19 logs confirming 1x/4:3, both screen states, Retro Rewind 6.12.7. A [synthetic renderer probe](../tools/renderer-probe/README.md) tests packed decoding and uniform layouts; Mac Metal and physical Pixel Vulkan baselines pass. Adreno 840 (512.842.19) and Adreno 750 (512.762.39 / 512.762.41) all pass the compute checks; the reporter confirms matching Original corruption and no logged GPU errors. The expanded 0.2.0 diagnostic (retired) now tests synthetic indexed draws, textures and queued updates; the #104 reporter also passes all eight compute/draw checks on Adreno 750 / 512.762.41. Adreno 840 draw results remain open. #104 confirmed corruption at 1x/4:3 affecting drivers only, with vehicles/tracks correct; no more repeat logs are requested from that reporter. Character transforms and generated shaders need a failing-draw reproduction; #102’s road-texture symptom remains separate. Build-23 actual-game validation on/off is now complete on the Fold: unchanged corruption, no crash, and the supplied interval presents near 60 FPS with no queued pipelines. No repeat comparison is requested. The #104 reporter also confirms unchanged driver corruption with actual-game validation enabled; no repeat import/validation comparison requested. No verified renderer correction. |
-| [#123](https://github.com/chrissotraidis/kartpad/issues/123) Pixel online-menu freezes (closed upstream 12 September 2026) | Historical evidence: Pixel 8 Pro/API 37/Mali-G715 reported online-menu stalls, with a 2222.337 ms presentation gap in one build-28 capture and later online-race drops reported on Pixel 8 Pro / 0.4.16 build 65. PR #141's regression passes and its correction is in published Android 63, but the reports never established a single freeze cause. GitHub now records `CLOSED` / `COMPLETED`; retain this row for history and do not treat closure as technical acceptance or assign new work unless reopened with new evidence. |
-| [#103](https://github.com/chrissotraidis/kartpad/issues/103) Android frame drops | Original reporter improved behavior after changing Game Booster+ mode and resolution; controlled comparison remains pending. A separate Retroid Pocket5/Snapdragon865 reporter reports40–45 FPS at 1x/standard profile versus60FPS with higher heat/power in high-performance mode, and Dolphin60FPS at standard. Reporter confirms Android .2 and preview 1 with validation OFF, mainly Original (Retro installed separately). No repeat settings/benchmark requested; exact OS remains unspecified. No parity, thermal comparison or settings fix verified. |
-| [#101](https://github.com/chrissotraidis/kartpad/issues/101) Fill Screen distortion | 16:9/4:3 fallback; paired scene screenshots and technical report requested. Shared projection correction needs reproduction and cross-platform checks. |
-| [#100](https://github.com/chrissotraidis/kartpad/issues/100) external video black with audio | Device/output chain, local-screen behavior and connection-order comparison requested. Mirroring and a dedicated external game view need separate acceptance. Apple and Android external output are accepted priorities; see the [implementation/test plan](EXTERNAL-DISPLAYS.md). |
+## Graphics (Apple)
 
-| [#91](https://github.com/chrissotraidis/kartpad/issues/91) DSU phone controller | Open experimental feature; tester identified Apple TV 4K 3rd gen and DSUController 3.0.8. Exact tvOS and phone layout requested. No DSU build yet. |
-| [#90](https://github.com/chrissotraidis/kartpad/issues/90) Wiimmfi | Open compatibility feature, no release commitment. Requires matching executable integration and private identity/authentication handling, not just a MAC/host field. |
-| [#5](https://github.com/chrissotraidis/kartpad/issues/5) Mii/Wii Remote | Shipped cursor/Mii work; reporter directed to current ready-made Mac download for remaining experimental Wii Remote/Nunchuk hardware results. |
-| [#92](https://github.com/chrissotraidis/kartpad/issues/92) licensing clarity | Correction already merged in #93; remains open for upstream author's review. No new unanswered follow-up at review time. |
+- **iPhone 16:** the screen flickers while the game starts, then plays
+  normally. [#390](https://github.com/chrissotraidis/kartpad/issues/390)
+- **Mac, two players:** characters drawn outside their karts. [#127](https://github.com/chrissotraidis/kartpad/issues/127)
 
-Latest renderer evidence: #104's video shows character corruption in both
-vehicle selection and the starting grid, before driving. #102's second device,
-Galaxy Tab S7 FE / Adreno 619, also passes all eight synthetic checks. Its
-Android 14 / 0.4.10 build logs confirm Retro at 1× / Fill Screen. The latest
-session ends after roughly 9 FPS with no captured termination reason; the sole
-fatal report is an earlier missing-DVD-root startup, followed by successful
-game loads. The tablet reporter subsequently completed a race at 4:3 after
-also moving the app from microSD to internal storage. Both changed, so neither
-is established as the cause; keep that working setup. These are separate
-observations, not one established GPU bug.
+## Performance
 
-[#120](https://github.com/chrissotraidis/kartpad/issues/120) adds a OnePlus
-OPD2514 / Android 16 / build 21 / Retro 6.12.7 report with large stretched
-surfaces obscuring the race. Reinstalling and clearing caches did not help.
-The exact GPU/driver is not inferred from the device name.
+- **Short pauses** the first time a menu or course appears, while KartPad
+  prepares its graphics. They get rarer the more you play.
+- **Slow on mid-range and older phones**, and higher render resolutions cost a
+  lot. Start at **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
 
-The Android 0.4.12-android.2 diagnostic beta (retired)
-adds opt-in validation/bounds protection for the actual game renderer and
-bounded OS exit history. It also fixes the Android system bars remaining visible
-during play ([#119](https://github.com/chrissotraidis/kartpad/issues/119)); local
-release-emulator checks cover launch, menu return, Home/resume and transient
-edge swipes. The AYN Thor reporter in #128 says system bars still remain visible on build 23; display, affected bars and launch/resume behavior are requested. Device-wide resolution is not established. Normal mode keeps the
-previous renderer toggles.
-Local host/emulator checks pass; affected Adreno testing and a failing game
-draw remain open. This is an Android diagnostic, not a macOS/iPadOS fix.
+## Controllers
 
-## macOS contribution under local review
+- **Controllers that send nothing, or the wrong buttons:** 0.7.6 to 0.7.8
+  fixed several cases (ipega and other "keyboard" gamepads, a controller left
+  with no player). Still waiting on confirmation. [#378](https://github.com/chrissotraidis/kartpad/issues/378)
+- **Single Joy-Cons** aren't supported. [#324](https://github.com/chrissotraidis/kartpad/issues/324)
+- **Mac: Wii Remote with Classic Controller Pro** has input lag and no D-pad.
+  [#306](https://github.com/chrissotraidis/kartpad/issues/306)
 
-[#112](https://github.com/chrissotraidis/kartpad/pull/112) proposes controller
-assignment/profiles, trigger bindings, native settings and menu integration.
-The revised contributor head `271fdc1` includes the trigger correction and
-a narrower controller layout. The full dual runtime rebuilds and audits, the
-200-case trigger/profile checks pass, and the right-hand controls fit in the
-actual native window. A local Apple Silicon candidate (0.4.12/build 27) is
-available. It is **not approved**: physical controller/race acceptance remains open. A portable contributor guide
-is prepared on the maintainer review branch. See the [local review record](artifacts/2026-09-08/macos-pr112-review.md)
-for exact source and acceptance limits.
+## Online
 
-The targeted Android pass prioritizes measured steady-state CPU costs and an
-actual failing character draw, with the existing alarm candidate ready for a
-separate online-stall comparison. Keep macOS controller acceptance with its
-current owner. #105 has already confirmed the offline rating-transfer test;
-Mii migration and server synchronization remain separate. Ratings are loaded
-into memory and synchronized by network code, so live file replacement is not
-an accepted sync workflow. Android character rendering needs an actual
-failing draw reproduction; synthetic passes are insufficient. Performance and
-external-display reports still need their requested comparisons. DSU and
-Wiimmfi remain independent feature work, not bugs blocked solely on logs.
+- **Finding a room fails on mobile data** (error 86420) while Wi-Fi works. Many
+  carriers block the direct player-to-player connections the game uses; use
+  Wi-Fi or a VPN. [#405](https://github.com/chrissotraidis/kartpad/issues/405)
+- **Moving an online identity or rating** between devices doesn't fully work.
+  [#234](https://github.com/chrissotraidis/kartpad/issues/234) More in [online status](ONLINE.md).
 
-Profile-aware save management, reusable network-controller input, and any
-shared projection/service fixes need platform-specific UI and acceptance work.
-An Android picker or a tvOS prototype does not establish parity across hosts.
+## Waiting for players to confirm
 
-## Latest macOS PR source boundary
+These have a fix or explanation and are open until someone affected confirms
+it: the crash after the last race of a cup ([#131](https://github.com/chrissotraidis/kartpad/issues/131), no crash in automated
+full cups on 0.7.10), the hourly update notice ([#377](https://github.com/chrissotraidis/kartpad/issues/377)), the iPad folder
+picker ([#380](https://github.com/chrissotraidis/kartpad/issues/380)) and auto-hiding the ⋯ button ([#402](https://github.com/chrissotraidis/kartpad/issues/402)).
 
-The contributor's physical controller results apply to `271fdc1`, Original only.
-Current PR #112 head `a332264` incorporates the later capture/layout corrections;
-independent source review and the exact-head native profile harness cleared
-those findings. GitHub review status must be reconciled with the latest head.
-An integrated candidate still needs actual AppKit/layout/controller and
-Original/Retro acceptance. The latest public Mac 34 excludes PR #112. Use the
-[board](MAINTENANCE-BOARD.md) for the current owner and candidate, not older commits.
+## Feature requests
 
-## Resolved related report
-
-[#94](https://github.com/chrissotraidis/kartpad/issues/94) is closed: the console-serial
-correction is distributed on every platform, and the upstream reporter confirmed
-server-history cleanup on 8 September. Persistent login failures or an unavailable
-original IP need service-admin help, not identity resets.
-
-## macOS screen tearing and V-Sync control report
-
-On 10 September, Christopher relayed a report of screen tearing and no V-Sync
-option in the macOS build. This is not yet reproduced; the affected version,
-display/refresh rate and window mode are unspecified. The absence of an exposed
-option does not establish that presentation synchronization is disabled.
-
-Queued investigation: inspect the current presentation mode and settings UI,
-then reproduce the reported scene and distinguish tearing from uneven frame
-pacing before deciding whether a correction or user-facing control is needed.
-This is separate from PR #157's split-screen interpolation defect. Android,
-iPhone/iPad and tvOS applicability has not been evaluated. No fix or build is
-claimed. No matching issue title/body was found in the GitHub issue search at
-recording time; this entry preserves the owner-relayed report.
+Ghost import/export ([#295](https://github.com/chrissotraidis/kartpad/issues/295)), older iOS and macOS versions ([#300](https://github.com/chrissotraidis/kartpad/issues/300)),
+AirPlay and external displays ([#100](https://github.com/chrissotraidis/kartpad/issues/100)), DSU controller apps ([#91](https://github.com/chrissotraidis/kartpad/issues/91)) and
+Wiimmfi ([#90](https://github.com/chrissotraidis/kartpad/issues/90)). They're open, with no release planned yet.

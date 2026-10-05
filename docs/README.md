@@ -3,7 +3,8 @@
 [Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
 [Canonical active queue](MAINTENANCE-BOARD.md).
 
-For downloads, start with the [project README](../README.md#downloads).
+For downloads, start with [Get KartPad](../README.md#get-kartpad) in the
+project README.
 The [expandable FAQ](../README.md#frequently-asked-questions) answers common
 setup, controls, compatibility and troubleshooting questions.
 Guides below describe current workflows; dated records describe only the build
@@ -33,8 +34,8 @@ and observations named in them.
 
 | Task | Guide |
 | --- | --- |
-| Resume current work | [Handoff](HANDOFF.md), [maintenance workflow](MAINTENANCE.md), [work/test board](MAINTENANCE-BOARD.md) |
-| Check requirements | [PRD](PRD.md), [engineering goal loop](GOAL-LOOP.md), [Android goal loop](ANDROID-GOAL-LOOP.md) |
+| Resume current work | [Current goal loop](CURRENT-LOOP.md), [handoff](HANDOFF.md), [maintenance workflow](MAINTENANCE.md), [work/test board](MAINTENANCE-BOARD.md) |
+| Check requirements | [PRD](PRD.md); original [engineering](GOAL-LOOP.md) and [Android](ANDROID-GOAL-LOOP.md) goal loops (history) |
 | Prepare a release | [Release checklist](RELEASE-CHECKLIST.md), [Android publication](RELEASING_ANDROID.md), [upstream updates](UPSTREAM_UPDATES.md) |
 | Plan deferred work | [Technical debt](TECH-DEBT.md), [future features](FUTURE-FEATURES.md), [research](RESEARCH.md) |
 | Review attribution and rights | [Rights and licenses](../RIGHTS_AND_LICENSES.md), [third-party notices](../THIRD_PARTY_NOTICES.md), [artwork provenance](../branding/PROVENANCE.md) |

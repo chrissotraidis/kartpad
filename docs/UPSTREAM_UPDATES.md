@@ -98,6 +98,31 @@ four maintained runtimes, retaining KartPad platform adapters. The previous gap
 above describes the 19 September state. See the [current integration record](artifacts/2026-09-22/upstream-all-platforms.md) for tests, packages and remaining
 acceptance gates. Updating a source pin alone does not validate a release.
 
+## 5 October 2026 upstream audit
+
+Upstream main is [`279ce8328f17`](https://github.com/patchzyy/Wiicompiled/commit/279ce8328f17)
+(3 October). Since the 1 October audit it added
+[PSQ fallback splits and tests](https://github.com/patchzyy/Wiicompiled/pull/278)
+(`9d182f831618`, the base of draft #384) and
+[macOS support](https://github.com/patchzyy/Wiicompiled/pull/228)
+(`279ce8328f17`). The earlier `e164af9ff466` "Shader wait screen" is
+relevant to KartPad's first-time pauses. Open upstream PRs worth tracking:
+[#247](https://github.com/patchzyy/Wiicompiled/pull/247) (NTSC-U, NTSC-J and
+NTSC-K support; KartPad is PAL-only) and #252 (macOS guest memory, already
+noted below).
+
+Contribution candidates, to reproduce on upstream's own main before any PR
+(rules in the [current goal loop](CURRENT-LOOP.md#track-d-upstream-fixes-only-when-substantive)):
+
+| Candidate | KartPad source | Upstream state at `279ce8328f17` |
+| --- | --- | --- |
+| A saved Player 1 for a missing controller leaves a connected pad with no player | Android runtime `094b567` (#378) | `apply_port_preferences` in `aurora-main/lib/input.cpp` has the same structure and no free-port pass |
+| Fatal errors are invisible outside Windows | Runtime `3e13d6e`/`b0dee27` write the message for the app to show | Non-Windows `ShowRuntimeFatalPopup` only logs, and upstream now ships macOS |
+
+KartPad's Adreno repack, the iOS fatal-error hook and the game-data
+completeness check are KartPad platform code and aren't candidates unless
+upstream is shown to have the same problem.
+
 ## 1 October 2026 upstream audit
 
 This audit uses public KartPad `main` at `978a9f1c8132`, not the older dirty

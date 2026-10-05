@@ -67,7 +67,8 @@ KartPad needs your game's files once. Either:
 
 - **An extracted folder (easiest).** In [Dolphin](https://dolphin-emu.org),
   right-click Mario Kart Wii → **Properties → Filesystem**, right-click the
-  disc, choose **Extract Entire Disc** and keep the `DATA` folder it makes.
+  disc, choose **Extract Entire Disc** and keep the `DATA` folder it makes
+  (KartPad doesn't need `UPDATE` or `CHANNEL`).
   [PadMint](https://github.com/chrissotraidis/padmint) also saves one, named
   `KartPad game data`, when it builds KartPad.
 - **Your disc image.** KartPad can import an ISO or WBFS directly (Android also
@@ -79,8 +80,10 @@ KartPad needs your game's files once. Either:
 
 1. Install `KartPad-v…-android.apk`. It updates an older KartPad and keeps your
    saves; don't uninstall first.
-2. Copy your game data folder (or disc image) to the phone: USB cable, Google
-   Drive or Quick Share.
+2. Copy your game data folder to the phone. It's about 2,000 files and all of
+   them must arrive: a USB cable is most reliable, or zip the folder, send the
+   zip any way you like and extract it with **Files by Google**. KartPad can't
+   pick a folder inside Google Drive.
 3. Open KartPad and tap **Import Game** on the Mario Kart Wii card. At
    **Game Data & Saves**, tap **Import from Extracted Game Data Folder…**, pick
    the folder, tap **Use this folder** and **Allow**, then **Done**. If you
@@ -96,7 +99,8 @@ needs the pack and frees the space it took.
 1. Install `KartPad-v…-ios.ipa` with Sideloadly, AltStore or SideStore. To keep
    your saves, install it over your KartPad with the same tool and Apple ID.
 2. First time only: get your game data folder onto the device (AirDrop from a
-   Mac, iCloud Drive, a USB drive or a cloud drive app). In KartPad, tap
+   Mac, a zip you unzip in the Files app, iCloud Drive once it has fully
+   downloaded, or a USB drive). In KartPad, tap
    **Import Game** on the Mario Kart Wii card, then **Import from Extracted
    Folder…**, and pick the folder in the Files window that opens.
 
@@ -191,6 +195,36 @@ PadMint is optional. See [Get KartPad](#get-kartpad).
 </details>
 
 <details>
+<summary>KartPad asks me for a "Wii common key". What is that?</summary>
+
+You chose **Import or Reimport Wii Disc Image…**. Reading a disc image needs a
+key from your own Wii, which most people don't have and KartPad can't provide.
+Go back and choose **Import from Extracted Game Data Folder…** (iPhone/iPad:
+**Import from Extracted Folder…**) with a folder from Dolphin instead. It needs
+no key. See [Your game data](#your-game-data).
+
+</details>
+
+<details>
+<summary>Dolphin made DATA, UPDATE and CHANNEL folders. Which one do I use?</summary>
+
+`DATA`. You can also pick the folder that contains all three; KartPad finds
+`DATA` inside it.
+
+</details>
+
+<details>
+<summary>It says "Ready to play" but the game goes black or crashes on start</summary>
+
+Usually some game files didn't copy, often from a cloud drive that hadn't
+finished downloading. KartPad 0.7.10 and newer check every file and tell you
+which are missing. Copy the folder again (a USB cable, or one zip file) and
+import it again. See [Android](docs/INSTALL_ANDROID.md#3-copy-it-to-the-phone)
+or [iPhone/iPad](docs/INSTALL_IPA.md#3-copy-it-to-the-device).
+
+</details>
+
+<details>
 <summary>PadForge says "KartPad cannot be built for android yet"</summary>
 
 PadForge is PadMint's old name. From KartPad 0.7.1, only PadMint can read
@@ -218,6 +252,10 @@ a newly verified complete online race/reconnect sequence or compatibility on
 every device. Native room hosting and Original Wiimmfi compatibility remain
 unfinished. See [online status](docs/ONLINE.md) and
 [friend-room guidance](docs/MULTIPLAYER.md#private-friend-rooms).
+
+If finding a room fails on mobile data but works on Wi-Fi, your carrier is
+blocking the direct player-to-player connections the game uses. Use Wi-Fi or a
+VPN ([#405](https://github.com/chrissotraidis/kartpad/issues/405)).
 
 </details>
 
@@ -301,7 +339,7 @@ No. PowerPC code is translated ahead of time and compiled into the app. The iPho
 <details>
 <summary>Why is it slow or freezing, and are distorted graphics fixed?</summary>
 
-First-use shader/pipeline compilation can cause stalls, and heat or higher render resolution can worsen performance. **Not every freeze is shader compilation.** Android has separate unresolved character corruption, online-menu stalls and cup-transition crashes. Start at **1x Native**, but do not treat a settings change or passing renderer probe as a confirmed fix. Use [known issues](docs/KNOWN-ISSUES.md) and [diagnostic guidance](docs/SUPPORT.md) to match your symptoms; the preview adds useful changes and logs, not a blanket stability guarantee.
+The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**. Broken characters on Android depend on the GPU: Snapdragon 8 Elite (Adreno 8xx) is fixed by **Automatic** in 0.7.10, while older Adreno and PowerVR GPUs are still open. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
 
 </details>
 

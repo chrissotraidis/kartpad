@@ -1,7 +1,8 @@
 # KartPad focused goal loop, 1 October 2026
 
 Owner: this Codex chat (`01a0f4be-5b6d-7b63-8cdb-a990f49f7cbb`).
-Status: active. Goal: execute the [focused review](FOCUSED-REVIEW-2026-10-01.md)
+Status: superseded on 5 October by the [current goal loop](CURRENT-LOOP.md).
+Goal: execute the [focused review](FOCUSED-REVIEW-2026-10-01.md)
 through narrow, verified changes that improve setup, reliability and maintenance.
 
 ## Loop

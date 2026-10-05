@@ -7,7 +7,8 @@ Run commands from the repository root. For downloads and first launch, use the
 [Mac](INSTALL_MACOS.md) or [iPhone/iPad](INSTALL_IPA.md) installation guide.
 Android has a separate [source-build guide](../android/README.md).
 
-For a personal unsigned IPA, the [Personal IPA Builder](BUILDER.md) handles
+Players don't need this: the releases are ready to play. To build your own
+unsigned IPA from your disc, the [Personal IPA Builder](BUILDER.md) handles
 bootstrap, input validation and translation:
 
 ```sh
