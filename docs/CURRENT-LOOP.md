@@ -1,5 +1,18 @@
 # Current goal loop: next-release issue fixes (6 October 2026)
 
+## Latest result: Android save/ghost failure handling
+
+The next device-free pass found and corrected unchecked Android atomic writes.
+Silent staging failures no longer report success; failed backups or save
+replacement stop the import and retain the request. Fourteen controlled failure
+cases pass, and real Android framework probes reproduce the before/after
+staging behavior for both save and ghost imports. See the
+[fix and validation receipt](TRIAGE-2026-10-06.md#follow-up-fix-checked-android-save-and-ghost-writes).
+This is pending in draft #416, not released or confirmation of #234.
+
+Next: audit the separate identity/Mii transaction writers with the same focused
+failure tests, then a fresh exact Mac build and complete two-player race.
+
 ## Current constraint: device-free investigation
 
 Chris requested the next pass without a physical device. The
@@ -12,8 +25,8 @@ two-player race with both characters in their karts at 1x and selected 4x/120;
 it is not an exact-candidate, sustained-race or affected-M5 acceptance result.
 No new runtime patch, merge or release came from this pass.
 
-Next without hardware: controlled failures during pending ghost/save import,
-then a fresh exact Mac candidate and complete two-player race. Keep physical
+Controlled pending ghost/save failure checks have now produced the fix above.
+Continue without hardware with the next work listed there. Keep physical
 sound/gesture/GPU acceptance and genuine signed Android fresh/update acceptance
 explicit; simulator results do not substitute for those gates.
 

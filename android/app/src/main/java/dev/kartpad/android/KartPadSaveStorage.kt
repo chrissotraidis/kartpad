@@ -1,6 +1,8 @@
 package dev.kartpad.android
 
 import android.util.AtomicFile
+import android.system.Os
+import android.system.OsConstants
 import java.io.File
 import java.util.UUID
 import java.util.zip.CRC32
@@ -130,6 +132,9 @@ internal object KartPadSaveStorage {
                 writeAtomic(File(backups, "rksys-ghost-${System.currentTimeMillis()}-${UUID.randomUUID()}.dat"), current)
                 writeAtomic(active(files), next)
             }
+            // A retry may find the complete slot after a prior directory-sync failure.
+            // Confirm publication before consuming the request even when no rewrite is needed.
+            syncDirectory(checkNotNull(active(files).parentFile))
             check(file.delete()) { "Pending ghost could not be finalized." }
         }.exceptionOrNull()?.let { "The ghost import could not be applied safely. Existing progress is retained. Cancel the pending ghost in Original save settings and choose it again." }
     }
@@ -155,14 +160,30 @@ internal object KartPadSaveStorage {
     }
 
     private fun writeAtomic(file: File, data: ByteArray) {
+        val parent = checkNotNull(file.parentFile)
+        // Persist newly created staging/backup directories before replacing a save.
+        syncDirectory(checkNotNull(parent.parentFile))
         val atomic = AtomicFile(file)
         val output = atomic.startWrite()
         try {
             output.write(data)
+            // Android may only log sync/rename failures from finishWrite.
+            Os.fsync(output.fd)
             atomic.finishWrite(output)
+            check(!File(file.path + ".new").exists() && !File(file.path + ".bak").exists() &&
+                file.isFile && file.length() == data.size.toLong() && file.readBytes().contentEquals(data)) {
+                "Save publication did not complete."
+            }
+            syncDirectory(parent)
         } catch (error: Throwable) {
             atomic.failWrite(output)
             throw error
         }
+    }
+
+    private fun syncDirectory(file: File) {
+        check(file.isDirectory)
+        val directory = Os.open(file.path, OsConstants.O_RDONLY, 0)
+        try { Os.fsync(directory) } finally { Os.close(directory) }
     }
 }
