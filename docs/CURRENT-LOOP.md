@@ -1,4 +1,43 @@
-# Current goal loop: 0.7.11 and 0.8.0
+# Current goal loop: next-release issue fixes (6 October 2026)
+
+## Active pass: 6 October
+
+[Evidence, validation and remaining gates](TRIAGE-2026-10-06.md).
+
+Chris renewed this loop: fix as many recent issues as the evidence supports,
+keep the Controls hierarchy consistent across KartPad platforms, reply in his
+voice, and triple-check changes. This section supersedes the older next actions
+below. Current public release is 0.7.14; release scope is selected by acceptance,
+not by an arbitrary issue count. No new release is authorized by a green build
+alone.
+
+One issue at a time: read the supplied evidence -> identify a discriminating
+local reproduction -> make the smallest correction -> review the diff, run
+behavior/regression tests, and check the relevant built app -> commit/PR ->
+report the proven result. A candidate that cannot reproduce or improve the
+failure stays out of the release. Keep working on another ready item while a
+specific hardware gate remains unavailable. Do not repeat unchanged tests or
+request another reporter capture without a new question it can answer.
+
+| Work | Evidence / next gate |
+|---|---|
+| #304 PowerVR | New 0.7.14/build 258 ZIP reviewed. Self-check: 149544 covered pixels in all three copies; alternate layout differs in all those pixels, constant-index copy matches original. This is a comparison, not a known-good image. Review recorded draw state and shader layout before any default workaround. Reporter acknowledged; no new capture requested. |
+| #104 / #301 Adreno | Retain existing 0.7.12/13 reports. Empty comparisons cannot rule out a vertex-path problem or prove a bone-lookup root cause. G85 has one mismatch with only the original drawing pixels. Do not automatically enable a workaround from `mismatch` alone. Need a candidate checked against a representative failing draw and affected hardware. |
+| #430 Shake to Trick | iOS already has a hidden implementation; Android lacks it. Candidate adds the same Controls -> Shake to Trick entry on both mobile hosts, default off and independent of tilt steering. Fix Apple flat-device early return. Verify gesture hysteresis/cooldown, sensor lifecycle, controller priority, release/cancellation, persistence and menu navigation. Mac/tvOS have no handset sensor; do not add a misleading active control. |
+| #390 startup flicker | Reporter confirms every launch on iPhone 16 and iPad Air 4, starting with 0.5.x; gameplay otherwise fine. Existing diagnostic and video sufficient for investigation. Physical iPhone 14 is a possible 60 Hz reproduction target, not yet proof. Compare startup presentation and fade paths before shader/timing changes. |
+| #420 / #411 sound | Open PR builds/launches; physical sheet navigation, audible levels and restart persistence remain unverified. Keep its status explicit. |
+| #378 controller routing | Actual ipega fails on 0.7.7; 0.7.8 candidate has only virtual-controller proof. Do not resend an unchanged request or call it fixed. |
+| #370 / #380 / #131 | Existing released fixes/workarounds or emulator passes await affected-device confirmation; no new evidence justifies more patches yet. |
+| #416 / #339 upstream/performance | Draft conflicts with main; no proven speed gain. Correctness-preserving CPU-context change must beat same-scene physical-device noise and pass equivalence tests. Reply to rounding concern posted. |
+| #375 / #295 ghosts | Draft has unresolved replay/rendering and physical-iPhone gates. Do not bundle it into the next release merely because CI passes. |
+| #431 HONOR | Main report for identical #432-434, which were assigned then closed as duplicates. Device/build/settings known; screenshot and reviewed standard diagnostic requested once. No GPU root cause inferred. |
+
+Every change gets three complementary checks: code/lifecycle review, executable
+regressions, and app/platform validation. Record limitations rather than calling
+three repetitions of one test acceptance. Do not close a bug as fixed without
+an affected user's confirmation or equivalent direct affected-device evidence.
+
+## Earlier loop and evidence (retained history)
 
 Written 5 October 2026, after 0.7.10. It replaces the next actions in the
 [1 October loop](FOCUSED-LOOP-2026-10-01.md); the

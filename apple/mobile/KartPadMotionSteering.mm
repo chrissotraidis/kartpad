@@ -105,7 +105,7 @@ KartPadShakeAction KartPadShakeActionForSample(
     _calibrated.store(false);
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
     _shakeTricksEnabled.store([defaults boolForKey:kShakeTricksEnabledKey]);
-    _shakeArmed.store(true);
+    _shakeArmed.store(false);
     _lastShakeTimestamp.store(-1.0);
     _shakePending.store(false);
     if ([defaults objectForKey:kSensitivityKey] == nil) {
@@ -165,7 +165,7 @@ KartPadShakeAction KartPadShakeActionForSample(
   [NSUserDefaults.standardUserDefaults setBool:enabled
                                         forKey:kShakeTricksEnabledKey];
   _shakeTricksEnabled.store(enabled, std::memory_order_relaxed);
-  _shakeArmed.store(true, std::memory_order_relaxed);
+  _shakeArmed.store(false, std::memory_order_relaxed);
   _lastShakeTimestamp.store(-1.0, std::memory_order_relaxed);
   _shakePending.store(false, std::memory_order_relaxed);
   if (enabled || self.enabled) {
@@ -201,16 +201,20 @@ KartPadShakeAction KartPadShakeActionForSample(
     KartPadMotionSteering *strongSelf = weakSelf;
     if (strongSelf == nil || error != nil) return;
     const CMAcceleration gravity = motion.gravity;
-    if (std::hypot(gravity.x, gravity.y) < 0.08) return;
-    const double angle = std::atan2(gravity.y, gravity.x);
-    strongSelf->_lastAngle.store(angle, std::memory_order_relaxed);
-    if (!strongSelf->_calibrated.exchange(true, std::memory_order_relaxed)) {
-      strongSelf->_centerAngle.store(angle, std::memory_order_relaxed);
+    // Flat devices have no useful steering angle, but can still shake to trick.
+    if (std::hypot(gravity.x, gravity.y) >= 0.08) {
+      const double angle = std::atan2(gravity.y, gravity.x);
+      strongSelf->_lastAngle.store(angle, std::memory_order_relaxed);
+      if (!strongSelf->_calibrated.exchange(true, std::memory_order_relaxed)) {
+        strongSelf->_centerAngle.store(angle, std::memory_order_relaxed);
+      }
+      const float value = KartPadMotionSteeringValue(
+          angle, strongSelf->_centerAngle.load(std::memory_order_relaxed),
+          strongSelf.sensitivity, strongSelf.inverted);
+      strongSelf->_steering.store(value, std::memory_order_relaxed);
+    } else {
+      strongSelf->_steering.store(0.0f, std::memory_order_relaxed);
     }
-    const float value = KartPadMotionSteeringValue(
-        angle, strongSelf->_centerAngle.load(std::memory_order_relaxed),
-        strongSelf.sensitivity, strongSelf.inverted);
-    strongSelf->_steering.store(value, std::memory_order_relaxed);
 
     if (strongSelf->_shakeTricksEnabled.load(std::memory_order_relaxed)) {
       const CMAcceleration acceleration = motion.userAcceleration;
@@ -243,7 +247,7 @@ KartPadShakeAction KartPadShakeActionForSample(
 #endif
   _steering.store(0.0f, std::memory_order_relaxed);
   _calibrated.store(false, std::memory_order_relaxed);
-  _shakeArmed.store(true, std::memory_order_relaxed);
+  _shakeArmed.store(false, std::memory_order_relaxed);
   _lastShakeTimestamp.store(-1.0, std::memory_order_relaxed);
   _shakePending.store(false, std::memory_order_relaxed);
 }

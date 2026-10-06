@@ -11,16 +11,21 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.sign
+import kotlin.math.sqrt
 
 /** Gravity-based steering with the same calibration curve as KartPad on iOS. */
 internal class KartPadMotionSteering(
     context: Context,
+    private val onShakeTrick: () -> Unit,
     private val onSteeringChanged: (Float) -> Unit,
 ) : SensorEventListener {
     private val applicationContext = context.applicationContext
     private val sensorManager = context.getSystemService(SensorManager::class.java)
     private val sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         ?: sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    private val shakeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+    private val shakeDetector = KartPadShakeDetector()
+    private var shakeRegistered = false
     private var registered = false
     private var calibrated = false
     private var lastAngle = Double.NaN
@@ -28,13 +33,22 @@ internal class KartPadMotionSteering(
     private var lastLoggedBucket = Int.MIN_VALUE
 
     val sensorAvailable: Boolean get() = sensor != null
+    val shakeSensorAvailable: Boolean get() = shakeSensor != null
+    val shakeTricksEnabled: Boolean get() = KartPadTouchSettings.shakeTricksEnabled(applicationContext)
+
+    fun setShakeTricksEnabled(value: Boolean) {
+        KartPadTouchSettings.setShakeTricksEnabled(applicationContext, value)
+        stop()
+        start()
+    }
     val enabled: Boolean get() = KartPadTouchSettings.motionEnabled(applicationContext)
     val inverted: Boolean get() = KartPadTouchSettings.motionInverted(applicationContext)
     val sensitivity: Float get() = KartPadTouchSettings.motionSensitivity(applicationContext)
 
     fun setEnabled(value: Boolean) {
         KartPadTouchSettings.setMotionEnabled(applicationContext, value)
-        if (value) start() else stop()
+        stop()
+        start()
         Log.i(TAG, "enabled=$value sensor=$sensorAvailable")
     }
 
@@ -49,6 +63,12 @@ internal class KartPadMotionSteering(
     }
 
     fun start() {
+        if (shakeTricksEnabled && !shakeRegistered && shakeSensor != null) {
+            shakeDetector.reset()
+            shakeRegistered = sensorManager.registerListener(
+                this, shakeSensor, SensorManager.SENSOR_DELAY_GAME,
+            )
+        }
         if (!enabled || registered) return
         val availableSensor = sensor ?: return
         calibrated = false
@@ -60,8 +80,10 @@ internal class KartPadMotionSteering(
     }
 
     fun stop() {
-        if (registered) sensorManager.unregisterListener(this)
+        sensorManager.unregisterListener(this)
         registered = false
+        shakeRegistered = false
+        shakeDetector.reset()
         calibrated = false
         onSteeringChanged(0f)
         Log.i(TAG, "stopped")
@@ -76,6 +98,16 @@ internal class KartPadMotionSteering(
     }
 
     override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            if (!shakeRegistered || !shakeTricksEnabled || event.values.size < 3) return
+            val x = event.values[0].toDouble()
+            val y = event.values[1].toDouble()
+            val z = event.values[2].toDouble()
+            val magnitude = sqrt(x * x + y * y + z * z) / SensorManager.GRAVITY_EARTH
+            if (shakeDetector.sample(magnitude, event.timestamp / 1e9)) onShakeTrick()
+            return
+        }
+        if (!registered || !enabled) return
         val x = event.values.getOrElse(0) { 0f }
         val y = event.values.getOrElse(1) { 0f }
         if (hypot(x.toDouble(), y.toDouble()) < 0.08) return

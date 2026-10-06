@@ -67,6 +67,12 @@ class KartPadOverlayView(context: Context) : View(context) {
     private var rightX = 0f
     private var rightY = 0f
     private var motionSteeringX = 0f
+    private var shakeTrickHeld = false
+    private val releaseShakeTrick = Runnable {
+        shakeTrickHeld = false
+        publishState(connected = !hiddenForController)
+        if (BuildConfig.DEBUG) android.util.Log.d("KartPadMotion", "shake released buttons=$lastPublishedButtons")
+    }
     private var controllerConnected = false
     private var gasHoldGeneration = 0
     private var autoAccelerate = KartPadTouchSettings.autoAccelerate(context)
@@ -240,6 +246,9 @@ class KartPadOverlayView(context: Context) : View(context) {
     }
 
     fun clearTouchInput() {
+        mainHandler.removeCallbacks(releaseShakeTrick)
+        shakeTrickHeld = false
+        motionSteeringX = 0f
         pointerOwners.clear()
         leftX = 0f
         leftY = 0f
@@ -782,9 +791,23 @@ class KartPadOverlayView(context: Context) : View(context) {
         publishState(connected = true)
     }
 
+    fun triggerShakeTrick() {
+        if (controllerConnected || editingLayout || !hasWindowFocus() ||
+            !KartPadTouchSettings.shakeTricksEnabled(context)) return
+        shakeTrickHeld = true
+        mainHandler.removeCallbacks(releaseShakeTrick)
+        publishState(connected = true)
+        if (BuildConfig.DEBUG) android.util.Log.d("KartPadMotion", "shake pressed buttons=$lastPublishedButtons")
+        mainHandler.postDelayed(releaseShakeTrick, 100L)
+    }
+
     fun setControllerConnected(connected: Boolean) {
         controllerConnected = connected
-        if (connected) motionSteeringX = 0f
+        if (connected) {
+            motionSteeringX = 0f
+            shakeTrickHeld = false
+            mainHandler.removeCallbacks(releaseShakeTrick)
+        }
         publishState(connected = true)
     }
 
@@ -1218,6 +1241,7 @@ class KartPadOverlayView(context: Context) : View(context) {
 
     private fun publishState(connected: Boolean) {
         var buttons = (if (gasLocked) BUTTON_A else 0) or accessibilityButtons or controllerKeyButtons
+        if (shakeTrickHeld) buttons = buttons or BUTTON_UP
         pointerOwners.values.forEach { owner ->
             buttons = buttons or (controls.firstOrNull { it.id == owner }?.mask ?: 0)
         }
