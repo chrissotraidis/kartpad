@@ -1,10 +1,15 @@
 # Current goal loop: next-release issue fixes (6 October 2026)
 
-## Active pass: 6 October
+## Paused by Chris: 6 October, 14:55 JST
 
 [Evidence, validation and remaining gates](TRIAGE-2026-10-06.md).
 
-Chris renewed this loop: fix as many recent issues as the evidence supports,
+Chris requested a natural stopping point and paused the goal after the additional
+investigation. Resume investigation, builds, device work and reporter replies
+only when he explicitly resumes it. Pending comparison-ghost import and test
+state are preserved; no release was published.
+
+Before this pause, Chris renewed this loop: fix as many recent issues as the evidence supports,
 keep the Controls hierarchy consistent across KartPad platforms, reply in his
 voice, and triple-check changes. This section supersedes the older next actions
 below. Current public release is 0.7.14; release scope is selected by acceptance,
@@ -33,6 +38,8 @@ request another reporter capture without a new question it can answer.
 | #431 HONOR | Main report for identical #432-434, which were assigned then closed as duplicates. Device/build/settings known; screenshot and reviewed standard diagnostic requested once. No GPU root cause inferred. |
 
 The reviewed candidates are now combined in draft #416: upstream 0.8.0, #420 sound, #435 shake, and #436 Original compressed imports. The combined suite passes (346 tests, 1 skip, 214 subtests); full Android and iOS apps build. See the triage record for exact pack identities and remaining device acceptance. This is not permission to merge/release before acceptance. Preserve #375 as a separate unfinished Retro feature.
+
+The additional one-hour pass is recorded in [the triage receipt](TRIAGE-2026-10-06.md#additional-investigation-and-pause-6-october-13451455-jst). The exact Android candidate now has retail license/menu and sustained built-in staff-replay movement evidence. Finish, imported replay, physical hardware and final signed fresh/update gates remain separate. A retained Mac build reached two keyboard-player registration but did not validate split-screen rendering.
 
 Every change gets three complementary checks: code/lifecycle review, executable
 regressions, and app/platform validation. Record limitations rather than calling
