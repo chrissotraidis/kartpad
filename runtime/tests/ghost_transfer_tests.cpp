@@ -14,5 +14,14 @@ int main(){
  std::vector<uint8_t>c(g.begin(),g.begin()+0x88);c[12]|=8;c.resize(0x8c+16);Write32(c,0x8c,0x59617a31);Write32(c,0x90,14);
  c.push_back(0xff);c.insert(c.end(),g.begin()+0x88,g.begin()+0x90);c.push_back(0xfc);c.insert(c.end(),g.begin()+0x90,g.begin()+0x96);Write32(c,0x88,uint32_t(c.size()-0x8c));auto end=c.size();c.resize(end+4);Write32(c,end,Crc(std::span<const uint8_t>(c).first(end)));Require(Validate(c).bytes==c.size(),"compressed ghost rejected");
  Require(Validate(Export(Import(s,c,0),0,0,true)).course==8,"compressed save roundtrip");
+ auto expandedSave=Import(s,c,0);auto expanded=Export(expandedSave,0,0,true);
+ // Original's downloaded replay copies the slot directly and treats 0x88 as
+ // the native stream table. Compressed length/Yaz bytes are not replay inputs.
+ Require(expanded.size()==GhostBytes&&!(expanded[12]&8),"Original slot must contain an uncompressed ghost");
+ Require(std::equal(g.begin()+0x88,g.begin()+0x96,expanded.begin()+0x88),"expanded native stream table and input records differ");
+ Require(expanded[0x89]==1&&expanded[0x90]==1&&expanded[0x91]==60,"native loader lost recorded acceleration");
+ auto expectedHeader=std::vector<uint8_t>(c.begin(),c.begin()+0x88);expectedHeader[12]&=0xf6;expectedHeader[13]=uint8_t((expectedHeader[13]&3u)|(7u<<2));
+ Require(std::equal(expectedHeader.begin(),expectedHeader.end(),expanded.begin()),"ghost metadata changed beyond container and comparison type");
+ for(size_t i=0;i<s.size();++i){bool allowed=(i>=16&&i<20)||(i>=0x27ffc&&i<0x28000)||(i>=0x78000&&i<0x7a800);Require(allowed||s[i]==expandedSave[i],"compressed import changed unrelated save data");}
  std::cout<<"Ghost checksums, bounds, compressed roundtrip and unrelated save preservation passed\n";
 }

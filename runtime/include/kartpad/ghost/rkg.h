@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <span>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace kartpad::ghost {
@@ -15,7 +16,7 @@ inline uint32_t Read32(std::span<const uint8_t> b,size_t p){Require(p<=b.size()&
 inline void Write32(std::span<uint8_t>b,size_t p,uint32_t v){for(int i=0;i<4;++i)b[p+i]=uint8_t(v>>(24-8*i));}
 inline uint32_t Crc(std::span<const uint8_t>b){uint32_t c=~0u;for(auto v:b){c^=v;for(int i=0;i<8;++i)c=(c>>1)^(0xedb88320u&uint32_t(-int(c&1)));}return ~c;}
 struct Info {unsigned course;size_t bytes;};
-inline Info Validate(std::span<const uint8_t>b){
+inline Info Validate(std::span<const uint8_t>b,std::vector<uint8_t>*expandedInputs=nullptr){
  Require(b.size()>=0x90&&b.size()<=GhostBytes,"Unsupported ghost size");
  Require(Read32(b,0)==0x524b4744,"Not an RKG ghost");
  const uint32_t race=Read32(b,4),who=Read32(b,8);
@@ -39,6 +40,7 @@ inline Info Validate(std::span<const uint8_t>b){
  }else{Require(b.size()==GhostBytes,"Uncompressed ghosts must be 10240 bytes");input.assign(b.begin()+0x88,b.begin()+0x88+length);}
  Require(Read32(b,crcOffset)==Crc(b.first(crcOffset)),"Ghost checksum mismatch");
  size_t expected=8;for(size_t p:{0u,2u,4u})expected+=2*((unsigned(input[p])<<8)|input[p+1]);Require(expected==input.size(),"Invalid input stream table");
+ if(expandedInputs)*expandedInputs=std::move(input);
  return {course,crcOffset+4};
 }
 inline void ValidateSave(std::span<const uint8_t>b,unsigned license){
@@ -53,12 +55,16 @@ inline std::vector<uint8_t> Export(std::span<const uint8_t>save,unsigned license
  auto data=save.subspan(p,GhostBytes);auto info=Validate(data);Require(info.course==CourseIds[slot],"Ghost/course mismatch");return {data.begin(),data.begin()+info.bytes};
 }
 inline std::vector<uint8_t> Import(std::span<const uint8_t>save,std::span<const uint8_t>ghost,unsigned license){
- ValidateSave(save,license);auto info=Validate(ghost);unsigned slot=unsigned(std::find(CourseIds.begin(),CourseIds.end(),info.course)-CourseIds.begin());Require(slot<32,"Unknown course");
+ ValidateSave(save,license);std::vector<uint8_t>inputs;auto info=Validate(ghost,&inputs);unsigned slot=unsigned(std::find(CourseIds.begin(),CourseIds.end(),info.course)-CourseIds.begin());Require(slot<32,"Unknown course");
  std::vector<uint8_t> result(save.begin(),save.end());size_t p=0x28000+license*0xa5000+0x50000+slot*GhostBytes;
- std::fill_n(result.begin()+p,GhostBytes,0);std::copy_n(ghost.begin(),info.bytes,result.begin()+p);
+ std::fill_n(result.begin()+p,GhostBytes,0);
+ // Original's downloaded replay consumes a native input table at 0x88;
+ // unlike staff/Retro replay, it does not decompress the saved container.
+ if(ghost[12]&8){std::copy_n(ghost.begin(),0x88,result.begin()+p);std::copy(inputs.begin(),inputs.end(),result.begin()+p+0x88);result[p+12]&=0xf7;}
+ else std::copy_n(ghost.begin(),info.bytes,result.begin()+p);
  // Imported comparison ghost: leave personal records and their ghost slots intact.
  result[p+12]=uint8_t((result[p+12]&0xfeu)|((7u>>6)&1u));result[p+13]=uint8_t((result[p+13]&3u)|((7u&63u)<<2));
- Write32(result,p+info.bytes-4,Crc(std::span<const uint8_t>(result).subspan(p,info.bytes-4)));
+ Write32(result,p+GhostBytes-4,Crc(std::span<const uint8_t>(result).subspan(p,GhostBytes-4)));
  const size_t bits=8+license*0x8cc0+8;Write32(result,bits,Read32(result,bits)|(1u<<slot));Write32(result,0x27ffc,Crc(std::span<const uint8_t>(result).first(0x27ffc)));return result;
 }
 }
