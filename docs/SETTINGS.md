@@ -4,12 +4,12 @@ Android and iPhone/iPad use the same hierarchy for shared controls. The table de
 
 | Menu | Options, in order |
 | --- | --- |
-| Main | Return to KartPad Menu; Multiplayer; Show FPS Counter; Controls; Display; Game Data & Saves; Report a Problem |
+| Main | Return to KartPad Menu; Multiplayer; Show FPS Counter; Controls; Display; Sound; Game Data & Saves; Report a Problem |
 | Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
 | Display | Aspect Ratio; Render Resolution; FPS Counter Size |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Import or Reimport Wii Disc Image; Import from Extracted Folder; Remove Stored Game Data |
 
-Android also has Sound in the main menu (iPhone/iPad support is pending in #420) and Android Graphics Diagnostics under Display. This is device-specific troubleshooting, not an Apple setting. Native file pickers and Retro Rewind installation workflows differ between platforms.
+Sound is in the main menu on both mobile hosts in this candidate; iPhone/iPad support is not yet released in 0.7.14. Android also has Android Graphics Diagnostics under Display. This is device-specific troubleshooting, not an Apple setting. Native file pickers and Retro Rewind installation workflows differ between platforms.
 
 ## Time Trial Ghosts
 
