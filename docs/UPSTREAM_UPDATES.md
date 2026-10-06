@@ -129,14 +129,37 @@ upstream and were left out. With it, KartPad's
 `test_connected_controllers_never_stay_without_a_player` passes against
 upstream's file. Branch:
 [`codex/upstream-controller-free-port`](https://github.com/chrissotraidis/wiicompiled/tree/codex/upstream-controller-free-port)
-(`471db5c` on `279ce83`). Not yet done: a full upstream build and a test with
-real controllers. Upstream has no unit test harness for `input.cpp` (it needs
-SDL), so the regression lives in the description. Chris writes the PR text.
+(`471db5c` on `279ce83`). It builds in a full upstream macOS build of
+`279ce83` (5 October). Not yet done: a test with real controllers (none is
+connected to the build Mac). Upstream has no unit test harness for
+`input.cpp` (it needs SDL), so the regression lives in the description. Chris
+writes the PR text.
 
-**Fatal errors outside Windows: deferred.** The gap is confirmed in upstream's
-code. A fix needs care: the popup is reached from crash handlers and background
-threads, where a macOS dialog isn't safe. Test it on a real upstream macOS build
-during the Track C sync before proposing anything.
+**Fatal errors outside Windows: ready for Chris.** Reproduced on a real
+upstream macOS build of `279ce83` (base game, built with upstream's own
+`docs/building-macos.md` steps, separate HOME so no real settings were
+touched). With one compressed file damaged (`Boot/Strap/eu/English.szs`,
+first Yaz0 flag byte zeroed) the game logs "fatal dialog: The game stopped
+because corrupt compressed file…" and exits about 7 seconds in with nothing
+on screen. Branch
+[`codex/upstream-fatal-dialog`](https://github.com/chrissotraidis/wiicompiled/tree/codex/upstream-fatal-dialog)
+(`45a9e78` on `279ce83`, one file, two commits to squash) shows the same
+message as Windows through `SDL_ShowSimpleMessageBox`, keeps the log line,
+and skips the dialog in two cases: inside the POSIX native-fault handler (UI
+isn't safe there, and the crash log must still be written), and on macOS off
+the main thread (SDL would `dispatch_sync` to the main thread, which may be
+waiting on the caller). Evidence with the branch built:
+
+| Case | Upstream `279ce83` | With the branch |
+| --- | --- | --- |
+| Damaged file (orderly fatal error, main thread) | Exits after ~7 s; log line only | Alert window shown (260×320, owned by WiiCompiled); the game waits for OK |
+| Native crash (`kill -SEGV` during boot) | Crash log | No dialog; exits within 4 s; `crash_sigsegv.txt` written |
+
+Not covered: Linux (the code path is the same SDL call), and fatal errors
+raised off the main thread on macOS, which keep today's log-only behavior.
+There's no automated test: upstream's tests have no UI seam. KartPad's own Mac
+runtime has the same silent path; adopting the change there is a separate
+KartPad step. Chris writes the PR text.
 
 KartPad's Adreno repack, the iOS fatal-error hook and the game-data
 completeness check are KartPad platform code and aren't candidates unless

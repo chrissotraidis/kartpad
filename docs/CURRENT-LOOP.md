@@ -269,7 +269,9 @@ or iPad). The levels go through the shared game audio code
 path the Mac's Audio settings use, and `InitializeRuntimeSettings` applies the
 saved `[audio]` keys at every start on all platforms. F2 iPhone/iPad is in
 #420 (a Sound sheet from the ••• menu): it builds and is installed on the iPad,
-and waits for one tap-through there. For the second pass: SDL's default iOS
+and waits for one tap-through there. A remote check isn't possible: the iPhone/iPad
+runtime rejects launch arguments ("does not accept command-line options"), so the
+game can't be started on the iPad without a tap. For the second pass: SDL's default iOS
 audio session ducks other apps' music while KartPad plays, so Spotify keeps
 playing but quieter. F3 Mac: already there as **Game → Game Settings… →
 Audio** (master, music, effects, menu sounds, voices, mute; applies live).
