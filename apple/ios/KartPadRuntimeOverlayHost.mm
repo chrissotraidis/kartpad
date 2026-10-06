@@ -69,6 +69,7 @@ extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std
 @property(nonatomic, copy) void (^multiplayerRequested)(void);
 @property(nonatomic, copy) void (^mainMenuRequested)(void);
 @property(nonatomic, copy) void (^motionSteeringRequested)(void);
+@property(nonatomic, copy) void (^shakeTricksRequested)(void);
 @property(nonatomic, copy) void (^miiManagerRequested)(void);
 @property(nonatomic, copy) void (^ghostManagerRequested)(void);
 @property(nonatomic, copy) void (^saveManagerRequested)(void);
@@ -2538,6 +2539,16 @@ static void KartPadApplySoundLevels(BOOL persist) {
                             weakSelf.multiplayerRequested();
                           }
                         }];
+  UIAction *shakeTricks =
+      [UIAction actionWithTitle:@"Shake to Trick…"
+                          image:[UIImage systemImageNamed:@"gyroscope"]
+                     identifier:@"dev.kartpad.shake-tricks"
+                        handler:^(__kindof UIAction *action) {
+                          (void)action;
+                          if (weakSelf.shakeTricksRequested != nil) {
+                            weakSelf.shakeTricksRequested();
+                          }
+                        }];
   UIAction *motionSteering =
       [UIAction actionWithTitle:@"Motion Steering…"
                           image:[UIImage systemImageNamed:@"gyroscope"]
@@ -2671,6 +2682,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   if (controllerMapping != nil) [controlItems addObject:controllerMapping];
   if (touchControlSettings != nil) [controlItems addObject:touchControlSettings];
   [controlItems addObject:[UIAction actionWithTitle:@"Controller Player Setup…" image:[UIImage systemImageNamed:@"gamecontroller"] identifier:nil handler:^(__kindof UIAction *action) { [weakSelf.delegate gameOverlayRequestsControllerMapping:weakSelf]; }]];
+  [controlItems addObject:shakeTricks];
   [controlItems addObject:motionSteering];
   [controlItems addObject:experimentalWiimote];
   UIMenu *controls =
@@ -3125,6 +3137,9 @@ static void KartPadApplySoundLevels(BOOL persist) {
   overlay.mainMenuRequested = ^{
     gKartPadMainMenuRequested = YES;
   };
+  overlay.shakeTricksRequested = ^{
+    [weakSelf showShakeTricks];
+  };
   overlay.motionSteeringRequested = ^{
     [weakSelf showMotionSteering];
   };
@@ -3216,6 +3231,32 @@ static void KartPadApplySoundLevels(BOOL persist) {
   });
 }
 
+- (void)showShakeTricks {
+  [[SunPadInputMixer sharedMixer] clearInputFromTouch:YES];
+  UIViewController *controller = KartPadVisibleViewController(_window);
+  if (controller == nil) return;
+  KartPadMotionSteering *motion = [KartPadMotionSteering sharedSteering];
+  NSString *message = motion.sensorAvailable
+      ? [NSString stringWithFormat:@"Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. Works without tilt steering. Physical controllers take priority.\n\nCurrent state: %@.",
+                                   motion.shakeTricksEnabled ? @"On" : @"Off"]
+      : @"Shake input is unavailable on this device. You can still use D-pad Up.";
+  UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Shake to Trick"
+      message:message preferredStyle:UIAlertControllerStyleActionSheet];
+  if (motion.sensorAvailable) {
+    [sheet addAction:[UIAlertAction actionWithTitle:motion.shakeTricksEnabled ? @"Turn Off" : @"Turn On"
+        style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+      (void)action;
+      motion.shakeTricksEnabled = !motion.shakeTricksEnabled;
+    }]];
+  }
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Continue Playing"
+      style:UIAlertActionStyleCancel handler:nil]];
+  sheet.popoverPresentationController.sourceView = _overlay;
+  sheet.popoverPresentationController.sourceRect = CGRectMake(
+      CGRectGetMidX(_overlay.bounds), CGRectGetMidY(_overlay.bounds), 1.0, 1.0);
+  [controller presentViewController:sheet animated:YES completion:nil];
+}
+
 - (void)showMotionSteering {
   [[SunPadInputMixer sharedMixer] clearInputFromTouch:YES];
   UIViewController *controller = KartPadVisibleViewController(_window);
@@ -3223,9 +3264,8 @@ static void KartPadApplySoundLevels(BOOL persist) {
   KartPadMotionSteering *motion = [KartPadMotionSteering sharedSteering];
   NSString *status = motion.sensorAvailable
       ? [NSString stringWithFormat:
-            @"Tilt steering: %@. Shake tricks/wheelies: %@. Sensitivity: %.1fx. Physical controllers take priority.",
-            motion.enabled ? @"On" : @"Off",
-            motion.shakeTricksEnabled ? @"On" : @"Off", motion.sensitivity]
+            @"Tilt steering: %@. Sensitivity: %.1fx. Physical controllers take priority.",
+            motion.enabled ? @"On" : @"Off", motion.sensitivity]
       : @"Motion data is unavailable on this device or Simulator. Touch and physical-controller steering remain available.";
   UIAlertController *sheet =
       [UIAlertController alertControllerWithTitle:@"Motion Steering"
@@ -3254,15 +3294,6 @@ static void KartPadApplySoundLevels(BOOL persist) {
                   handler:^(UIAlertAction *action) {
       (void)action;
       motion.inverted = !motion.inverted;
-    }]];
-    [sheet addAction:[UIAlertAction
-        actionWithTitle:motion.shakeTricksEnabled
-            ? @"Disable Shake Tricks/Wheelies"
-            : @"Enable Shake Tricks/Wheelies"
-                    style:UIAlertActionStyleDefault
-                  handler:^(UIAlertAction *action) {
-      (void)action;
-      motion.shakeTricksEnabled = !motion.shakeTricksEnabled;
     }]];
     [sheet addAction:[UIAlertAction
         actionWithTitle:@"Cycle Sensitivity"

@@ -1,15 +1,15 @@
 # Mobile settings
 
-Android and iPhone/iPad share this menu order (KartPad 0.7.10). Open **•••** (top right) while a game is running.
+Android and iPhone/iPad use the same hierarchy for shared controls. The table describes current source; Android shake input and the separate Shake to Trick entry are not yet released in 0.7.14. Open **•••** (top right) while a game is running.
 
 | Menu | Options, in order |
 | --- | --- |
 | Main | Return to KartPad Menu; Multiplayer; Show FPS Counter; Controls; Display; Game Data & Saves; Report a Problem |
-| Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Motion Steering; Experimental Wii Remote + Nunchuk |
+| Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
 | Display | Aspect Ratio; Render Resolution; FPS Counter Size |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Import or Reimport Wii Disc Image; Import from Extracted Folder; Remove Stored Game Data |
 
-Android also has Android Graphics Diagnostics under Display. This is device-specific troubleshooting, not an Apple setting. Native file pickers and Retro Rewind installation workflows differ between platforms.
+Android also has Sound in the main menu (iPhone/iPad support is pending in #420) and Android Graphics Diagnostics under Display. This is device-specific troubleshooting, not an Apple setting. Native file pickers and Retro Rewind installation workflows differ between platforms.
 
 ## Time Trial Ghosts
 
@@ -25,7 +25,9 @@ Controller Button Mapping supports D-pad directions and triggers, optional share
 
 **Touch auto-accelerate** is under Controls → Touch Control Settings. OFF uses ordinary touch A press/hold/release; ON retains the one-second touch hold-to-latch behavior. The choice persists and does not change physical controller buttons.
 
-Motion steering supports calibration and sensitivity. iPhone/iPad additionally offer shake-to-trick; Android currently has tilt steering only.
+Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. Physical controllers take priority. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
+
+On the released 0.7.14, iPhone/iPad shake input is inside Motion Steering, and Android has tilt steering only.
 
 FPS Counter Size offers Small, Medium and Large on both platforms. Render Resolution can reduce GPU workload; it does not fix a CPU bottleneck or guarantee a faster race. Start with 1x Native on Android.
 
