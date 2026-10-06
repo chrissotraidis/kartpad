@@ -3461,6 +3461,10 @@ static void KartPadApplySoundLevels(BOOL persist) {
 
 - (void)applicationWillResignActive:(NSNotification *)notification {
   (void)notification;
+  // The sound sheet can stay open while iOS suspends or terminates the app.
+  if ([NSUserDefaults.standardUserDefaults objectForKey:kKartPadSoundCustomKey] != nil) {
+    KartPadApplySoundLevels(YES);
+  }
   [[SunPadInputMixer sharedMixer] clearInputFromTouch:YES];
   if ([_overlay isKindOfClass:KartPadGameOverlay.class]) {
     [(KartPadGameOverlay *)_overlay resetKartPadControlAppearance];
