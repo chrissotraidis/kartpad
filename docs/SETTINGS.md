@@ -15,6 +15,8 @@ Android also has Android Graphics Diagnostics under Display. This is device-spec
 
 Open **Game Data & Saves → Time Trial Ghosts**. Choose the Original license and use the import/export actions for `.rkg` files. Imports are validated and applied at the next complete app restart. Importing replaces the downloaded comparison ghost, not the personal best. Pending imports apply to the latest save, preserving progress made before restarting; a backup is retained. Exports support personal-best and downloaded ghosts.
 
+The next-version compressed-import correction expands a validated `.rkg` into the native comparison slot before replay. Exporting that imported ghost therefore produces an uncompressed 10,240-byte file with the same recorded inputs, rather than the original compressed file bytes. Ghosts imported by older builds need to be imported again from their source file to receive this correction; existing saves are not automatically rewritten. This correction is not released in 0.7.14.
+
 This release transfers ghosts from the Original game profile only. Retro Rewind ghost transfers are not implemented, including original Wii courses played inside Retro Rewind. If a file fails, report the app build, course and import/export step; do not post your full save or identity publicly.
 
 ## Controls and display
