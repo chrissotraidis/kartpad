@@ -124,7 +124,7 @@ class KartPadActivity : SDLActivity() {
             RetroRewindInstallStorage.recoverForLaunch(filesDir, requestedRuntimeProfile())
             if (!identityStartupChecked) {
                 saveRestoreStartupError = KartPadSaveStorage.applyPending(filesDir)
-                KartPadMiiStorage.applyPending(filesDir)?.let { error -> Log.e(TAG, error) }
+                saveRestoreStartupError = saveRestoreStartupError ?: KartPadMiiStorage.applyPending(filesDir)
             }
             KartPadRuntimeResources.install(this)
             configureRuntimeProfile()
