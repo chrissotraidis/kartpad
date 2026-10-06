@@ -29,8 +29,10 @@ request another reporter capture without a new question it can answer.
 | #378 controller routing | Actual ipega fails on 0.7.7; 0.7.8 candidate has only virtual-controller proof. Do not resend an unchanged request or call it fixed. |
 | #370 / #380 / #131 | Existing released fixes/workarounds or emulator passes await affected-device confirmation; no new evidence justifies more patches yet. |
 | #416 / #339 upstream/performance | Draft #416 now includes main through 0.7.14 (`104feef7`); version conflict resolved, tests/build and unchanged candidate pack fingerprints verified. No proven speed gain. Correctness-preserving CPU-context change must beat same-scene physical-device noise and pass equivalence tests. Reply to rounding concern posted. |
-| #375 / #295 ghosts | Draft has unresolved replay/rendering and physical-iPhone gates. Do not bundle it into the next release merely because CI passes. |
+| #375 / #295 ghosts | Draft has unresolved Retro replay/rendering and physical-iPhone gates. Its independently reproduced Original compressed-import correction is now isolated in draft #436, with a failing-then-passing native/sanitizer regression and mobile builds. Matching rebuilt packs and exact-candidate gameplay remain required. |
 | #431 HONOR | Main report for identical #432-434, which were assigned then closed as duplicates. Device/build/settings known; screenshot and reviewed standard diagnostic requested once. No GPU root cause inferred. |
+
+Next integration pass: assemble the reviewed candidates (#416 upstream, #420 sound, #435 shake, #436 Original compressed imports) on a draft integration branch, check their combined diff/tests and final pack fingerprints, then build matching packs once for exact-candidate validation. This is not permission to merge/release before acceptance. Preserve #375 as a separate unfinished Retro feature.
 
 Every change gets three complementary checks: code/lifecycle review, executable
 regressions, and app/platform validation. Record limitations rather than calling
