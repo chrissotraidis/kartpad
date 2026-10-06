@@ -154,9 +154,11 @@ class KartPadActivity : SDLActivity() {
         } else {
             null
         }
-        motionSteering = KartPadMotionSteering(this) { value ->
+        motionSteering = KartPadMotionSteering(this, onShakeTrick = {
+            kartPadOverlay.triggerShakeTrick()
+        }) { value ->
             kartPadOverlay.post {
-                kartPadOverlay.setMotionSteering(value)
+                if (kartPadOverlay.hasWindowFocus()) kartPadOverlay.setMotionSteering(value)
                 if (debugMotionSensorMode != null) {
                     Log.i(
                         TAG,
@@ -438,6 +440,9 @@ class KartPadActivity : SDLActivity() {
             verifyDebugLifecycleClear("focus-loss")
         }
         super.onWindowFocusChanged(hasFocus)
+        if (::motionSteering.isInitialized) {
+            if (hasFocus) motionSteering.start() else motionSteering.stop()
+        }
         if (hasFocus) hideGameSystemBars()
     }
 
@@ -657,6 +662,9 @@ class KartPadActivity : SDLActivity() {
             },
             MenuRow("Controller Player Setup…", R.drawable.ic_kartpad_gamecontroller) {
                 closeKartPadMenu(::showControllerPlayers)
+            },
+            MenuRow("Shake to Trick…", R.drawable.ic_kartpad_gyroscope) {
+                closeKartPadMenu(::showShakeTricks)
             },
             MenuRow("Motion Steering…", R.drawable.ic_kartpad_gyroscope) {
                 closeKartPadMenu(::showMotionSteering)
@@ -1204,6 +1212,32 @@ class KartPadActivity : SDLActivity() {
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
         nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
+    }
+
+    private fun showShakeTricks() {
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(4), dp(24), dp(8))
+            addView(settingsLabel(if (motionSteering.shakeSensorAvailable) {
+                "Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. " +
+                    "Works without tilt steering. Physical controllers take priority."
+            } else {
+                "Shake input is unavailable on this device. You can still use D-pad Up."
+            }))
+            addView(Switch(this@KartPadActivity).apply {
+                text = "Shake to Trick"
+                isChecked = motionSteering.shakeTricksEnabled
+                isEnabled = motionSteering.shakeSensorAvailable
+                setOnCheckedChangeListener { _, checked ->
+                    kartPadOverlay.clearTouchInput()
+                    motionSteering.setShakeTricksEnabled(checked)
+                    // The dialog owns focus; sampling resumes when gameplay regains it.
+                    motionSteering.stop()
+                }
+            })
+        }
+        AlertDialog.Builder(this).setTitle("Shake to Trick").setView(content)
+            .setPositiveButton("Continue Playing", null).show()
     }
 
     private fun showMotionSteering() {
