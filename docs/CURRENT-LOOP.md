@@ -1,5 +1,21 @@
 # Current goal loop: next-release issue fixes (6 October 2026)
 
+## Latest recheck: identity/Mii recovery
+
+The expanded pass confirms the previous save/ghost tests and finds new
+identity/Mii failures: partial linked renames and lost pending imports after
+silent writes, plus console recovery proceeding after a failed backup.
+[Evidence and correction](TRIAGE-2026-10-06.md#recheck-and-extension-android-identity-and-mii-writes)
+are recorded. Save, identity and Mii paths now share the small checked writer;
+failed Mii application uses the existing startup gate. Fourteen new fault cases
+and two console checkpoints pass, including real Android API before/after
+checks and preservation/retry checks. These changes do not resolve #234's
+missing-data migration boundary.
+
+Next device-free work: abrupt process termination at transaction completion,
+launcher access to failed-import recovery, and a fresh exact Mac two-player
+race. Keep the physical/release acceptance gates below separate.
+
 ## Latest result: Android save/ghost failure handling
 
 The next device-free pass found and corrected unchecked Android atomic writes.
@@ -10,8 +26,8 @@ staging behavior for both save and ghost imports. See the
 [fix and validation receipt](TRIAGE-2026-10-06.md#follow-up-fix-checked-android-save-and-ghost-writes).
 This is pending in draft #416, not released or confirmation of #234.
 
-Next: audit the separate identity/Mii transaction writers with the same focused
-failure tests, then a fresh exact Mac build and complete two-player race.
+The separate identity/Mii writer audit is now covered by the recheck above;
+its remaining boundaries and next work supersede this earlier action.
 
 ## Current constraint: device-free investigation
 

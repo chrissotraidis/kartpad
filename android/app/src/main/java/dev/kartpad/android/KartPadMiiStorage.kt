@@ -1,7 +1,7 @@
 package dev.kartpad.android
 
-import android.util.AtomicFile
 import java.io.File
+import java.util.UUID
 
 /** App-private staging and crash-safe startup application for Mii database edits. */
 internal object KartPadMiiStorage {
@@ -27,17 +27,7 @@ internal object KartPadMiiStorage {
     fun writePending(filesDir: File, database: ByteArray) {
         require(!KartPadIdentityStorage.hasPending(filesDir)) { "Apply pending identity edits before changing Mii appearances." }
         require(isValidDatabase(database)) { "The updated Mii database is invalid." }
-        val file = pendingFile(filesDir)
-        file.parentFile?.mkdirs()
-        val atomic = AtomicFile(file)
-        val stream = atomic.startWrite()
-        try {
-            stream.write(database)
-            atomic.finishWrite(stream)
-        } catch (error: Throwable) {
-            atomic.failWrite(stream)
-            throw error
-        }
+        KartPadAtomicFile.write(pendingFile(filesDir), database)
     }
 
     /** Applies a previously validated edit before SDL starts and retains a backup. */
@@ -56,18 +46,10 @@ internal object KartPadMiiStorage {
             if (database.isFile) {
                 val backups = File(filesDir, "$SUPPORT_ROOT/MiiBackups")
                 backups.mkdirs()
-                val backup = File(backups, "RFL_DB-${System.currentTimeMillis()}.dat")
-                database.copyTo(backup, overwrite = false)
+                val backup = File(backups, "RFL_DB-${System.currentTimeMillis()}-${UUID.randomUUID()}.dat")
+                KartPadAtomicFile.write(backup, database.readBytes())
             }
-            val atomic = AtomicFile(database)
-            val stream = atomic.startWrite()
-            try {
-                stream.write(data)
-                atomic.finishWrite(stream)
-            } catch (error: Throwable) {
-                atomic.failWrite(stream)
-                throw error
-            }
+            KartPadAtomicFile.write(database, data)
             check(pending.delete()) { "Pending Mii database could not be removed." }
             null
         }.getOrElse { "Pending Mii changes could not be applied safely." }
