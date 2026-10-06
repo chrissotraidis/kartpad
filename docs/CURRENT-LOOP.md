@@ -1,15 +1,16 @@
 # Current goal loop: next-release issue fixes (6 October 2026)
 
-## Paused by Chris: 6 October, 14:55 JST
+## Resumed by Chris: 6 October, 16:46 JST
 
 [Evidence, validation and remaining gates](TRIAGE-2026-10-06.md).
 
-Chris requested a natural stopping point and paused the goal after the additional
-investigation. Resume investigation, builds, device work and reporter replies
-only when he explicitly resumes it. Pending comparison-ghost import and test
-state are preserved; no release was published.
+Chris explicitly resumed the paused investigation. The pending comparison-ghost
+import has now applied through the normal Play launch, created a backup, and
+passed save/input readback checks and a complete imported replay. The resumed
+evidence and next acceptance steps are recorded in the triage receipt; no
+release was published.
 
-Before this pause, Chris renewed this loop: fix as many recent issues as the evidence supports,
+Chris renewed this loop: fix as many recent issues as the evidence supports,
 keep the Controls hierarchy consistent across KartPad platforms, reply in his
 voice, and triple-check changes. This section supersedes the older next actions
 below. Current public release is 0.7.14; release scope is selected by acceptance,
@@ -34,12 +35,12 @@ request another reporter capture without a new question it can answer.
 | #378 controller routing | Actual ipega fails on 0.7.7; 0.7.8 candidate has only virtual-controller proof. Do not resend an unchanged request or call it fixed. |
 | #370 / #380 / #131 | Existing released fixes/workarounds or emulator passes await affected-device confirmation; no new evidence justifies more patches yet. |
 | #416 / #339 upstream/performance | Draft #416 now includes main through 0.7.14 (`104feef7`); version conflict resolved, tests/build and unchanged candidate pack fingerprints verified. No proven speed gain. Correctness-preserving CPU-context change must beat same-scene physical-device noise and pass equivalence tests. Reply to rounding concern posted. |
-| #375 / #295 ghosts | Draft has unresolved Retro replay/rendering and physical-iPhone gates. Its independently reproduced Original compressed-import correction is now isolated in draft #436, with a failing-then-passing native/sanitizer regression and mobile builds. Matching rebuilt packs and exact-candidate gameplay remain required. |
+| #375 / #295 ghosts | Draft has unresolved Retro replay/rendering and physical-iPhone gates. Its independently reproduced Original compressed-import correction is now isolated in draft #436, with a failing-then-passing native/sanitizer regression and mobile builds. Matching rebuilt packs and an exact combined Android imported replay now pass. Physical/iOS replay and broader Retro acceptance remain separate. |
 | #431 HONOR | Main report for identical #432-434, which were assigned then closed as duplicates. Device/build/settings known; screenshot and reviewed standard diagnostic requested once. No GPU root cause inferred. |
 
 The reviewed candidates are now combined in draft #416: upstream 0.8.0, #420 sound, #435 shake, and #436 Original compressed imports. The combined suite passes (346 tests, 1 skip, 214 subtests); full Android and iOS apps build. See the triage record for exact pack identities and remaining device acceptance. This is not permission to merge/release before acceptance. Preserve #375 as a separate unfinished Retro feature.
 
-The additional one-hour pass is recorded in [the triage receipt](TRIAGE-2026-10-06.md#additional-investigation-and-pause-6-october-13451455-jst). The exact Android candidate now has retail license/menu and sustained built-in staff-replay movement evidence. Finish, imported replay, physical hardware and final signed fresh/update gates remain separate. A retained Mac build reached two keyboard-player registration but did not validate split-screen rendering.
+The additional one-hour pass is recorded in [the triage receipt](TRIAGE-2026-10-06.md#additional-investigation-and-pause-6-october-13451455-jst). The exact Android candidate now has retail license/menu and sustained built-in staff-replay movement evidence. The resumed pass also verifies the imported comparison ghost through the exact expected finish frame. Physical hardware and final signed fresh/update gates remain open. A retained Mac build reached two keyboard-player registration but did not validate split-screen rendering.
 
 Every change gets three complementary checks: code/lifecycle review, executable
 regressions, and app/platform validation. Record limitations rather than calling
