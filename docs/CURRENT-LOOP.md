@@ -1,5 +1,22 @@
 # Current goal loop: next-release issue fixes (6 October 2026)
 
+## Current constraint: device-free investigation
+
+Chris requested the next pass without a physical device. The
+[device-free follow-up](TRIAGE-2026-10-06.md#device-free-follow-up-6-october)
+adds a failing-before/passing-after **actual iOS Simulator background test**
+for Sound, cold-launch and Done persistence, phone/tablet UIKit layout checks,
+and **64 ghosts / 32 courses / four licenses** of native and independent
+format/save-preservation checks. The retained Mac build now reaches a real
+two-player race with both characters in their karts at 1x and selected 4x/120;
+it is not an exact-candidate, sustained-race or affected-M5 acceptance result.
+No new runtime patch, merge or release came from this pass.
+
+Next without hardware: controlled failures during pending ghost/save import,
+then a fresh exact Mac candidate and complete two-player race. Keep physical
+sound/gesture/GPU acceptance and genuine signed Android fresh/update acceptance
+explicit; simulator results do not substitute for those gates.
+
 ## Resumed by Chris: 6 October, 16:46 JST
 
 [Evidence, validation and remaining gates](TRIAGE-2026-10-06.md).
@@ -40,7 +57,7 @@ request another reporter capture without a new question it can answer.
 
 The reviewed candidates are now combined in draft #416: upstream 0.8.0, #420 sound, #435 shake, and #436 Original compressed imports. The combined suite passes (346 tests, 1 skip, 214 subtests); full Android and iOS apps build. See the triage record for exact pack identities and remaining device acceptance. This is not permission to merge/release before acceptance. Preserve #375 as a separate unfinished Retro feature.
 
-The additional one-hour pass is recorded in [the triage receipt](TRIAGE-2026-10-06.md#additional-investigation-and-pause-6-october-13451455-jst). The exact Android candidate now has retail license/menu and sustained built-in staff-replay movement evidence. The resumed pass also verifies the imported comparison ghost through the exact expected finish frame. Physical hardware and final signed fresh/update gates remain open. A retained Mac build reached two keyboard-player registration but did not validate split-screen rendering.
+The additional one-hour pass is recorded in [the triage receipt](TRIAGE-2026-10-06.md#additional-investigation-and-pause-6-october-13451455-jst). The exact Android candidate now has retail license/menu and sustained built-in staff-replay movement evidence. The resumed pass also verifies the imported comparison ghost through the exact expected finish frame. Physical hardware and final signed fresh/update gates remain open. The later device-free pass advances the retained Mac build into split-screen rendering; see the current constraint above for its limits.
 
 Every change gets three complementary checks: code/lifecycle review, executable
 regressions, and app/platform validation. Record limitations rather than calling
