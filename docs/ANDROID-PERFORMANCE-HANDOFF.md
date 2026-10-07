@@ -1,5 +1,12 @@
 # Android investigation handoff
 
+**Current direction (7 October):** use the [bug-fix priority board](MAINTENANCE-BOARD.md)
+and [GitHub review](GITHUB-REVIEW-2026-10-07.md). Public baseline is 0.7.14/build 258;
+#416 is an unreleased candidate with no demonstrated performance gain. The
+measurements below are historical, not current device assignments or next actions.
+
+## Historical September evidence
+
 Refreshed September 23, 2026. Current public baseline: **Android 0.5.0/code135**. Apple 0.5.1-experimental.1/build60 is a separate diagnostic-overhead mitigation and does not update Android. See the [current issue inventory](artifacts/2026-09-21/open-issue-inventory.md), [evening evidence](artifacts/2026-09-21/evening-goal-loop.md) and [maintenance board](MAINTENANCE-BOARD.md). Older code63/code73/code83 assignments are historical.
 
 ## September 23 overnight investigation

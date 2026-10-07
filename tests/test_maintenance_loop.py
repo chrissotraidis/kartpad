@@ -759,13 +759,14 @@ class PriorityExecutionTests(unittest.TestCase):
         work = MAINTENANCE_LOOP.load_priorities(MAINTENANCE_LOOP.DEFAULT_PRIORITIES)
         self.assertTrue(work)
 
-    def test_closed_issue123_is_not_active_priority_work(self):
+    def test_closed_online_reports_are_not_active_priority_work(self):
         work = MAINTENANCE_LOOP.load_priorities(MAINTENANCE_LOOP.DEFAULT_PRIORITIES)
         online = next(item for item in work if item["id"] == "android-online")
-        self.assertEqual(online["issues"], [206])
-        self.assertNotIn(123, online["issues"])
-        self.assertEqual(online["state"], "awaiting-reporter")
-        self.assertEqual(online["dependency"]["owner"], "#206 reporter")
+        self.assertEqual(online["issues"], [405])
+        self.assertTrue({123, 206}.isdisjoint(online["issues"]))
+        self.assertEqual(online["state"], "deferred")
+        # A retained VPN workaround is not a new reporter request or ready fix.
+        self.assertIsNone(MAINTENANCE_LOOP.select_work([online], [{"number": 405}], {}))
 
     def work(self, identity, priority, number, state="ready-local"):
         return {"id": identity, "priority": priority, "issues": [number], "state": state,

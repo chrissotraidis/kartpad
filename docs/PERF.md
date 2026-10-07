@@ -2,7 +2,9 @@
 
 Historical Apple measurements: 30 August 2026. The measurement contract below
 applies to new comparisons; active Android and Apple investigations are on the
-[maintenance board](MAINTENANCE-BOARD.md).
+[bug-fix priority board](MAINTENANCE-BOARD.md), including the current CPU/stutter
+and clean/incremental build measurement contracts. The historical G11/soak
+sequence below does not override the current bounded investigation order.
 
 G11 is not accepted. KartPad reaches real native gameplay on Apple Silicon,
 but first-use shader compilation and some sustained scenes are materially

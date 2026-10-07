@@ -1,12 +1,13 @@
 # KartPad status
 
-## Current status: 5 October 2026
+## Current status: 7 October 2026
 
 **Latest release: [KartPad 0.7.14](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.14) (build 258).**
 Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
 build KartPad with PadMint from 0.7.14 (the release carries the PadMint inputs).
 Players add their own game data the first time. Work in progress follows
-the [current goal loop](CURRENT-LOOP.md); open problems by device are in
+the [bug-fix priority board](MAINTENANCE-BOARD.md) and
+[current goal loop](CURRENT-LOOP.md); open problems by device are in
 [known issues](KNOWN-ISSUES.md).
 
 | Platform | How players get it | State |

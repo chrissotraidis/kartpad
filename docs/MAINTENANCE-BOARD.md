@@ -1,6 +1,148 @@
-# Maintenance work and test board
+# Bug-fix priorities and maintenance board
 
-## Current work (from 5 October)
+## Current priorities: 7 October 2026
+
+**Primary goal: improve Android race performance across hardware, with evidence
+that the improvement reaches players.** A demonstrated new data-loss or launch
+regression preempts this order. Otherwise, protect sustained CPU/stutter work
+from being displaced by more small features or repeated diagnostic runs.
+
+[Complete GitHub review and intake counts](GITHUB-REVIEW-2026-10-07.md) ·
+[Executable priority queue](maintenance-priorities.json) ·
+[Current execution checkpoint](CURRENT-LOOP.md).
+
+The JSON owns ordering, readiness and next actions; this board explains that same
+order and its measurement gates. The public baseline is 0.7.14/build 258.
+Draft #416 at product-code commit `e6bb7da7` is a candidate, not a speed release.
+There are 26 open issues and five open PRs, four of which overlap in #416.
+New issue intake has not demonstrably slowed: 17, 14, then 19 in the last three
+complete weeks. Closure/consolidation must not be counted as repaired defects.
+
+### Work order and the next useful result
+
+| Rank / queue card | Problem and reason | Next bounded result / acceptance |
+| --- | --- | --- |
+| 1 `warmed-performance` | #339: slow races across low/mid/high-end Android; twelve earlier reports are consolidated here, with #200 now playable but still slow. Largest repeated user impact. | Reconcile retained profiles and exact artifacts, then rank guest/FP/dispatch, GX preparation, waits, shader work and presentation by measured cost. Produce one bounded candidate with an explicit maximum removable cost. Physical same-scene performance acceptance is required later; emulator time is not Android speed proof. |
+| 2 `build-throughput` | #339: slow builds make every hard experiment expensive. Patchy's second target deserves its own measurements. | Separate translation, shard generation, compiler critical path and linking on the same host. Measure clean, no-op and a fixed small-change rebuild. Optimize the measured dominant stage, retain symbols for diagnostics, preserve generated code semantics and reject stale build reuse. |
+| 3 `adreno-geometry` | #104/#301: affected phones still draw characters incorrectly; #431 has no attached draw evidence yet. | Use retained actual failing draws to distinguish vertex input layout from matrix lookup/upload. Verify the actual generated shader, not a generic probe. A changed/empty image is not a passing image. Affected plus known-working hardware ultimately required. |
+| 4 `android-powervr-capability` | #304: distinct PowerVR evidence; earlier capability repair does not establish correct character rendering. | Reconcile the 0.7.14 three-copy result against exact draw state. First prove what was drawn and whether any copy is correct; no automatic global workaround or repeat phone-crash capture. |
+| 5 `storage-recovery` | #234-adjacent recovery defects were reproduced and fixed in #416, but full identity migration is still missing. | Synthetic process-death checkpoints and launcher access after failed import. Existing progress, backup and request survive, retry succeeds, and failure does not trap the user. Do not relabel this as full NAND/Mii/country migration. |
+| 6 `apple-startup-flicker` | #390: repeatable startup flicker on two Apple devices; video/log already sufficient. | Correlate drawable/present/fade boundaries with game/FPS disappearance while touch remains. One failing-before/passing-after presentation experiment; physical matching-device acceptance remains separate. |
+| 7 `controller-and-insets` | #378/#306/#202: input routing and usable screen area; distinct platform paths. | Trace raw event, player assignment, mapping and release separately; reproduce inset transitions separately. Existing ipega fix needs actual hardware confirmation, not another virtual-pad pass. |
+| 8 `candidate-delivery` | #411/#430/#377/#127: complete existing sound/shake/updater and renderer acceptance without starting more features. | Final rebuilt #416 Android package; matching packs and signed fresh/update paths; audible iOS Sound and physical shake; exact Mac split-screen regression. Component PRs are not independent release obligations. |
+| 9 `released-path-confirmation`, `android-launch-classification`, `single-joycon`, `android-online` | #131/#370/#380, #332, #324, #405: specific affected-device/evidence gates or network constraints. | Preserve existing asks and workarounds. No fresh patch from silence. Wi-Fi/VPN success narrows the network path but does not prove carrier NAT details. Move up only when a discriminating local experiment or new failure evidence appears. |
+| 10 `retro-ghost-transfer`, `save-identity-migration`, `larger-feature-requests` | #295, #234/#203, #90/#91/#100/#203/#300: substantial new capability or unaccepted feature scope. | Keep independent contracts for Retro replay, complete migration, Wiimmfi, DSU, display output, other disc regions, cheats and older OS support. Defer expansion while Android performance and current candidate correctness are active. |
+
+### Android performance: define the gain before spending compute
+
+[Patchy's request](https://github.com/chrissotraidis/kartpad/issues/339) sets an
+approximate **10% reduction in CPU frame time on weaker systems**, with average
+and worst-case frame times, not simply a higher FPS counter. This is a goal,
+not a gain already established by #416 or a universal device guarantee.
+
+The [context-cost correction](https://github.com/chrissotraidis/kartpad/issues/339#issuecomment-6007676791)
+changes candidate selection: ~17% was all sampled FP-helper work; ~3% was
+context/TLS work in the cited profile. Even eliminating that entire 3% would
+remove only 3% of total time in that workload; the subset reachable by passing
+`CpuContext*` is smaller and may add register pressure. It cannot alone meet
+the 10% target. Sampled proportions are a hypothesis budget, not a portable
+performance forecast. Do not change rounding or FPSCR semantics for speed.
+
+For any such candidate, check NaN/sNaN, signed zero, subnormals, all guest rounding
+modes, destination suppression, FPSCR flags/exceptions, nested/reentrant context
+lifetime and context switches. Compare emitted ARM64 loads/calls, spills and
+code size. A removed lookup proves removed work, not faster gameplay. Earlier
+context, affinity, cache-size and function-ordering experiments without gains
+are retained in the [Android history](ANDROID-PERFORMANCE-HANDOFF.md); do not
+repeat them without a changed hypothesis or workload.
+
+Use a small benchmark matrix with fixed scenes and separate outcomes:
+
+| Workload | Why | Required record |
+| --- | --- | --- |
+| Warm Original Luigi Circuit, 12 racers, fixed replay/CPU fixture | Guest CPU and GX preparation under race load | Game-thread CPU/frame, average and p50/p95/p99/worst intervals, guest cadence, native profile, audio drops, memory, thermal state |
+| Warm Cookie Land battle, fixed character/camera and load | Existing #204-style stutter evidence | Same metrics plus counts above 25/40 ms, pipeline queues and blocking waits |
+| Cold versus warm first race, Original and Retro separately | Separate pipeline-compilation stalls from sustained slowdown | Time to playable race, first-lap tails, later-lap tails, shader demand/waits, audio and memory |
+| Later physical low-end and representative working Android | Confirm benefit outside the owner's fast device | Same exact app/pack/settings and matched baseline/candidate; affected GPU correctness remains its own gate |
+
+Use at least three counterbalanced matched pairs for a physical acceptance
+comparison; fix cache policy, scene, resolution, power/refresh settings, profiler
+mode and a comparable thermal range. Report all pairs and baseline variation.
+A candidate proceeds only if CPU improvement exceeds measured variation and
+p95/p99/worst, audio, rendering, saves and lifecycle show no material regression.
+If noise obscures the target, improve the fixture or park the claim. Do not
+average away a stutter regression. Finish acceptance with profiling disabled.
+The historic Pixel stationary-battle improvement is scene-specific; it does not
+close the weaker-device race reports. No physical device is used by this pass.
+
+### Build time: make experimentation cheaper
+
+Patchy's separate goal is **roughly 40% shorter final compilation** on the same
+machine. Also report full pack-build wall time, so moving work into translation
+cannot masquerade as a total improvement.
+
+[The 0.7.5 measurement](https://github.com/chrissotraidis/kartpad/issues/339#issuecomment-5966957229)
+reported compile CPU 2,232 → 1,404 seconds (-37%) and wall time 396 → 271 seconds
+(-32%, eight jobs on a busy host) after omitting debug information from stripped
+Android packs. That is already-shipped work, not a new 0.8.0 gain or proof of the
+full 40% target. Keep a symbolized diagnostic route; don't blanket-strip debugging
+capability to improve a benchmark.
+
+[The upstream-sync comparison](https://github.com/chrissotraidis/kartpad/issues/339#issuecomment-5990733427)
+reported total 175 → 181 seconds, translation 39 → 46, compile wall 131 → 130.
+This provides no demonstrated build speedup and lacks a repeated, separately
+isolated shard-generation/incremental comparison. Use the current pinned
+baseline and candidate for the next experiment, with fresh output directories
+and fixed toolchain/jobs/host load/cache policy. Never erase a player's build or
+private source inputs just to obtain a clean sample.
+
+First inspect retained Ninja logs and the dependency graph: identify critical-path
+shards, wall versus CPU time, peak memory and unexpected regeneration. Then run
+one controlled no-op and one predefined small-change build before changing shard
+size, flags or parallelism. Check generated file hashes/mtimes and whether
+unchanged output is rewritten; this is an experiment, not an established bug.
+Use the measurements to choose one change. Preserve pack fingerprints and exact
+code/data dependencies, compare clean and incremental medians/spread, and reject
+an optimization that skips a required rebuild or makes updates worse.
+
+### Focus loop and resource limits
+
+Default investigation allocation for the next block of work: about **50% Android
+CPU/stutter, 25% build throughput, 15% affected graphics, 10% safety/delivery**.
+These are planning weights, not a schedule or a quota on fixing critical bugs.
+When hardware is unavailable, spend the performance share on profiles, codegen,
+equivalence and cheap candidate rejection; move unavailable timing acceptance to
+its explicit gate. Build-throughput work is the strongest immediately measurable
+next experiment on this host. Do not use repeated emulator timing runs to claim
+a small phone speedup.
+
+One primary question and one heavy build at a time. Before consuming significant
+compute, write: affected workload, exact artifact, competing explanations,
+maximum plausible gain, smallest discriminating test and stop condition. Use
+roughly 10 minutes to select evidence, 40 to investigate/measure and 10 to review
+and record; a genuinely running build may outlast that block with a checkpoint.
+After two non-informative experiments, change the discriminator or record the
+missing prerequisite. Do not fill the time with passing tests or more status prose.
+
+Every change gets three different checks: source/lifecycle review, a meaningful
+behavior/equivalence regression, and the relevant package/platform/measurement
+check. Record a red/green comparison when a bug can be reproduced. Each result
+must update the JSON card and this board together with exact source/artifact,
+measurement, limits and the next decision. No new automation or model-routing
+change is implied by this plan.
+
+Judge progress by measured CPU/frame and tail reduction, build seconds saved,
+confirmed playable/rendering outcomes, accepted recovery paths, and complete
+release gates. PR count, log volume, successful builds and closed-issue counts
+are supporting activity, not the objective.
+
+## Historical maintenance snapshots
+
+The sections below preserve dated evidence. Their old priority numbers, open
+counts, versions and next actions are superseded by the current section and JSON.
+
+
+## 5 October work snapshot
 
 The [current goal loop](CURRENT-LOOP.md) sets the order of work for 0.7.11 and
 0.8.0. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept

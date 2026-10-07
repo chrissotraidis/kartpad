@@ -1,4 +1,25 @@
-# Current goal loop: next-release issue fixes (6 October 2026)
+# Current goal loop: Android performance and next-release fixes
+
+## Focus review: 7 October 2026
+
+The [bug-fix priority board](MAINTENANCE-BOARD.md) and matching
+[executable queue](maintenance-priorities.json) now own the work order. The
+[complete GitHub review](GITHUB-REVIEW-2026-10-07.md) covers 26 open issues and
+five PRs; intake has not demonstrably slowed, and no reply arrived after the
+previous pass finished. #200 confirms playable gameplay but poor speed; #339
+correctly limits a context-lookup optimization to its eligible part of ~3%
+sampled cost, not all ~17% FP-helper cost.
+
+Prioritize Android CPU/stutter and build throughput. The next device-free
+experiment should inspect retained build critical-path logs and measure no-op
+and fixed-small-change invalidation, while runtime candidates pass cheap
+equivalence/disassembly screening. No speedup is established by this review.
+The storage process-death/launcher work below remains a bounded safety gate,
+not the primary performance task. Final #416 packaging and affected-device
+acceptance remain open; no hardware, product-code, merge or release action was
+performed in this documentation pass.
+
+## Product-code checkpoint: 6 October 2026
 
 ## Latest recheck: identity/Mii recovery
 

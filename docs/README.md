@@ -1,6 +1,9 @@
 # KartPad documentation
 
-**[To-do: things we decided to do later](TODO.md)**
+**[Bug-fix priorities: Android performance, build time and acceptance](MAINTENANCE-BOARD.md)**
+
+[Latest GitHub review and intake trend](GITHUB-REVIEW-2026-10-07.md) ·
+[To-do: things we decided to do later](TODO.md)
 
 [Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
 [Canonical active queue](MAINTENANCE-BOARD.md).
