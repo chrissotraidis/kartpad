@@ -21,9 +21,9 @@
         339
       ],
       "state": "ready-local",
-      "next_action": "Analyze retained Ninja critical-path logs, then measure clean/no-op/fixed-small-change builds on the same host/toolchain/jobs. Separate translation, shard generation, Clang and linking; test unchanged-output invalidation before changing flags or shard sizes. Prior -32% compile wall result shipped in 0.7.5 and is not a new gain.",
+      "next_action": "8 October probes confirm warm Ninja no-op in 0.011-0.078 s and a metadata-source edit rebuilding exactly one object plus link in 1.515 s; original bytes/timestamps restored. Three representative NDK shard profiles spend 82-92% in the back end. Select one common-shard code-generation/partition candidate from pass reports and compare compile time/code size/semantics before full packs. Player builder already reuses compatible packs; do not infer every update recompiles from the timestamped developer script.",
       "acceptance": "Goal ~40% shorter final compilation versus a named baseline; report full build wall time, CPU, memory and spread too. No incremental regression, stale outputs, pack guard bypass or lost diagnostic-symbol route.",
-      "checkpoint": "docs/MAINTENANCE-BOARD.md",
+      "checkpoint": "docs/INVESTIGATION-2026-10-08.md",
       "priority_reason": "Cheaper iteration directs more engineering effort to hard runtime problems; immediately measurable without devices."
     },
     {
@@ -207,11 +207,23 @@
       "acceptance": "Each selected capability has its own build/runtime/hardware proof; no broad compatibility claim.",
       "checkpoint": "docs/MAINTENANCE-BOARD.md",
       "priority_reason": "Do not dilute protected Android performance and release correctness work."
+    },
+    {
+      "id": "app-icon-choice",
+      "priority": 8,
+      "issues": [
+        437
+      ],
+      "state": "ready-local",
+      "next_action": "Chris accepted #437 for the next build and it is already assigned to him. Inspect existing iOS/Android icon assets and supported selection/reset paths; define bundled choices versus arbitrary image behavior before implementation. Keep placement consistent and preserve launcher identity/update behavior.",
+      "acceptance": "Supported icon selection and reset work across relaunch/update without duplicate or missing launcher entries, broken navigation or lost app data; platform limitations and package/device gates recorded.",
+      "checkpoint": "docs/INVESTIGATION-2026-10-08.md",
+      "priority_reason": "New accepted feature commitment; keep bounded below performance/correctness work and do not claim it shipped."
     }
   ],
   "priority_review": {
-    "date": "2026-10-07",
-    "reason": "Full live review of 26 open issues and five PRs; replace stale/closed-report tasks with canonical #339 runtime and build goals, current graphics evidence, bounded recovery work and explicit acceptance/deferred scope.",
-    "evidence": "docs/GITHUB-REVIEW-2026-10-07.md"
+    "date": "2026-10-08",
+    "reason": "27 open issues, five unchanged PRs; new #437 accepted/assigned, no new existing-bug reporter evidence. Real incremental and compiler-profile tests narrow #339 toward back-end cost.",
+    "evidence": "docs/INVESTIGATION-2026-10-08.md"
   }
 }

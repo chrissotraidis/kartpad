@@ -1,6 +1,6 @@
 # Bug-fix priorities and maintenance board
 
-## Current priorities: 7 October 2026
+## Current priorities: 8 October 2026
 
 **Primary goal: improve Android race performance across hardware, with evidence
 that the improvement reaches players.** A demonstrated new data-loss or launch
@@ -14,7 +14,12 @@ from being displaced by more small features or repeated diagnostic runs.
 The JSON owns ordering, readiness and next actions; this board explains that same
 order and its measurement gates. The public baseline is 0.7.14/build 258.
 Draft #416 at product-code commit `e6bb7da7` is a candidate, not a speed release.
-There are 26 open issues and five open PRs, four of which overlap in #416.
+There are 27 open issues and five open PRs, four of which overlap in #416.
+[8 October intake and build experiment](INVESTIGATION-2026-10-08.md): #437 icon
+customization is newly accepted and assigned; no new replies on existing bugs.
+Three compiler probes put 82–92% of their time in the back end. Warm incremental
+builds work; a metadata-only edit takes two steps, not a full rebuild. No speed
+improvement or issue resolution is claimed from these measurements.
 New issue intake has not demonstrably slowed: 17, 14, then 19 in the last three
 complete weeks. Closure/consolidation must not be counted as repaired defects.
 
@@ -23,13 +28,14 @@ complete weeks. Closure/consolidation must not be counted as repaired defects.
 | Rank / queue card | Problem and reason | Next bounded result / acceptance |
 | --- | --- | --- |
 | 1 `warmed-performance` | #339: slow races across low/mid/high-end Android; twelve earlier reports are consolidated here, with #200 now playable but still slow. Largest repeated user impact. | Reconcile retained profiles and exact artifacts, then rank guest/FP/dispatch, GX preparation, waits, shader work and presentation by measured cost. Produce one bounded candidate with an explicit maximum removable cost. Physical same-scene performance acceptance is required later; emulator time is not Android speed proof. |
-| 2 `build-throughput` | #339: slow builds make every hard experiment expensive. Patchy's second target deserves its own measurements. | Separate translation, shard generation, compiler critical path and linking on the same host. Measure clean, no-op and a fixed small-change rebuild. Optimize the measured dominant stage, retain symbols for diagnostics, preserve generated code semantics and reject stale build reuse. |
+| 2 `build-throughput` | #339: slow builds make every hard experiment expensive. Patchy's second target deserves its own measurements. | No-op and metadata-source incremental checks now pass. Three shard profiles are 82–92% back-end time. Choose one common-shard code-generation/partition candidate; compare representative compile time/code size/semantics, then full clean and incremental builds. Retain diagnostic symbols and reject stale reuse. |
 | 3 `adreno-geometry` | #104/#301: affected phones still draw characters incorrectly; #431 has no attached draw evidence yet. | Use retained actual failing draws to distinguish vertex input layout from matrix lookup/upload. Verify the actual generated shader, not a generic probe. A changed/empty image is not a passing image. Affected plus known-working hardware ultimately required. |
 | 4 `android-powervr-capability` | #304: distinct PowerVR evidence; earlier capability repair does not establish correct character rendering. | Reconcile the 0.7.14 three-copy result against exact draw state. First prove what was drawn and whether any copy is correct; no automatic global workaround or repeat phone-crash capture. |
 | 5 `storage-recovery` | #234-adjacent recovery defects were reproduced and fixed in #416, but full identity migration is still missing. | Synthetic process-death checkpoints and launcher access after failed import. Existing progress, backup and request survive, retry succeeds, and failure does not trap the user. Do not relabel this as full NAND/Mii/country migration. |
 | 6 `apple-startup-flicker` | #390: repeatable startup flicker on two Apple devices; video/log already sufficient. | Correlate drawable/present/fade boundaries with game/FPS disappearance while touch remains. One failing-before/passing-after presentation experiment; physical matching-device acceptance remains separate. |
 | 7 `controller-and-insets` | #378/#306/#202: input routing and usable screen area; distinct platform paths. | Trace raw event, player assignment, mapping and release separately; reproduce inset transitions separately. Existing ipega fix needs actual hardware confirmation, not another virtual-pad pass. |
 | 8 `candidate-delivery` | #411/#430/#377/#127: complete existing sound/shake/updater and renderer acceptance without starting more features. | Final rebuilt #416 Android package; matching packs and signed fresh/update paths; audible iOS Sound and physical shake; exact Mac split-screen regression. Component PRs are not independent release obligations. |
+| 8 `app-icon-choice` | #437: Chris accepted icon customization for the next build. | Inspect current platform assets and selection/reset support, then define the smallest supported flow. Check launcher identity, relaunch and update behavior before shipping; arbitrary image support is not established. |
 | 9 `released-path-confirmation`, `android-launch-classification`, `single-joycon`, `android-online` | #131/#370/#380, #332, #324, #405: specific affected-device/evidence gates or network constraints. | Preserve existing asks and workarounds. No fresh patch from silence. Wi-Fi/VPN success narrows the network path but does not prove carrier NAT details. Move up only when a discriminating local experiment or new failure evidence appears. |
 | 10 `retro-ghost-transfer`, `save-identity-migration`, `larger-feature-requests` | #295, #234/#203, #90/#91/#100/#203/#300: substantial new capability or unaccepted feature scope. | Keep independent contracts for Retro replay, complete migration, Wiimmfi, DSU, display output, other disc regions, cheats and older OS support. Defer expansion while Android performance and current candidate correctness are active. |
 
@@ -96,7 +102,9 @@ baseline and candidate for the next experiment, with fresh output directories
 and fixed toolchain/jobs/host load/cache policy. Never erase a player's build or
 private source inputs just to obtain a clean sample.
 
-First inspect retained Ninja logs and the dependency graph: identify critical-path
+The [8 October measurements](INVESTIGATION-2026-10-08.md) complete the initial
+no-op/small-change probes and find back-end-heavy compiler samples. For the next
+candidate, inspect retained Ninja logs and the dependency graph: identify critical-path
 shards, wall versus CPU time, peak memory and unexpected regeneration. Then run
 one controlled no-op and one predefined small-change build before changing shard
 size, flags or parallelism. Check generated file hashes/mtimes and whether
@@ -112,8 +120,8 @@ CPU/stutter, 25% build throughput, 15% affected graphics, 10% safety/delivery**.
 These are planning weights, not a schedule or a quota on fixing critical bugs.
 When hardware is unavailable, spend the performance share on profiles, codegen,
 equivalence and cheap candidate rejection; move unavailable timing acceptance to
-its explicit gate. Build-throughput work is the strongest immediately measurable
-next experiment on this host. Do not use repeated emulator timing runs to claim
+its explicit gate. The initial build-throughput measurement is now complete; use its compiler
+pass reports to choose the next common-shard candidate on this host. Do not use repeated emulator timing runs to claim
 a small phone speedup.
 
 One primary question and one heavy build at a time. Before consuming significant

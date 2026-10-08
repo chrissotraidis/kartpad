@@ -1,5 +1,20 @@
 # Current goal loop: Android performance and next-release fixes
 
+## Latest result: 8 October 2026
+
+[Fresh intake and compiler investigation](INVESTIGATION-2026-10-08.md): 27 open
+issues, five unchanged PRs. #437 icon customization is already accepted and
+assigned to Chris; no new existing-bug reporter replies or logs arrived.
+
+#339 now has real incremental-build evidence: warm no-op 0.011–0.078 seconds,
+metadata-source edit two steps/1.515 seconds with identical library bytes.
+Three generated-shard compiler samples spend 82–92% in the back end. The normal
+player builder already reuses compatible packs; the developer script's fresh
+stage does not establish a player-update regression. Next: choose one bounded
+common-shard code-generation/partition experiment from the pass reports.
+No game-speed or full-build speedup was established. Retained candidate source
+and build bytes/timestamps were restored and verified; no device was touched.
+
 ## Focus review: 7 October 2026
 
 The [bug-fix priority board](MAINTENANCE-BOARD.md) and matching
