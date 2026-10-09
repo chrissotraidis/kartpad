@@ -41,6 +41,9 @@ void TestMotionMapping() {
 
 void TestShakeDetection() {
   constexpr double neverTriggered = -1.0;
+  Require(KartPadShakeActionForSample(2.0, 0.0, false, neverTriggered) ==
+              KartPadShakeAction::None,
+          "resume in motion must wait for the device to settle");
   Require(KartPadShakeActionForSample(0.2, 1.0, true, neverTriggered) ==
               KartPadShakeAction::Rearm,
           "settled motion did not arm shake detection");
