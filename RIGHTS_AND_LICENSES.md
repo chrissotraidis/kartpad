@@ -114,8 +114,12 @@ maintainer decided to publish ready-to-play builds again, starting with
 v0.7.9: the Android APK, the iPhone/iPad IPA and the Mac app contain KartPad's
 ahead-of-time translated game logic (the game pack). The decision rests on how
 community static recompilations are handled today, not on a rights clearance.
-PadMint remains an optional route for players who prefer to build their own
-copy from their own disc. Neither the source nor the apps include disc images,
+From v0.7.14 on 5 October 2026, Android retains the ready-to-play APK, while
+iPhone, iPad and Mac use PadMint builds from the player's own disc. Releases
+include the game-code-free iOS app for PadMint, its recipe, source, notices and
+checksums; they no longer include ready-to-play Apple downloads. This changes
+distribution, not the license or rights boundaries described above.
+Neither the source nor the apps include disc images,
 extracted courses, textures, audio, saves, console keys, or private signing
 material.
 Users supply their own legally obtained supported PAL `RMCP01` revision 0

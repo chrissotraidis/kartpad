@@ -102,12 +102,11 @@ strict archive/path/expanded-size bounds and payload signatures.
 ## Release delivery and unresolved gates
 
 Latest 0.7.14 delivers an Android APK, a game-code-free iOS IPA for PadMint,
-recipe, source, notices and checksums. Current `AGENTS.md` still lists additional
-ready-to-play Apple artifacts under an older 4 October decision, while the
-5 October release/README says Apple builds use PadMint. Reconcile the stale
-release instruction before publication; do not silently broaden public assets.
-Prepare the established 0.7.14 delivery set first. Preserve the existing Android
-ready-to-play exception and never publish disc files, private keys or saves.
+recipe, source, notices and checksums. The draft follows that six-file delivery
+set. The release-paradigm review reconciled the stale 4 October ready-to-play
+Apple instructions with the newer published distribution model. Personal Apple
+packages remain private. Preserve the Android ready-to-play exception and never
+publish disc files, private keys or saves.
 
 Source tests, compilation, package audits, emulator gameplay, physical gameplay,
 production online and reporter acceptance are separate results. Missing hardware
@@ -369,3 +368,44 @@ these acceptance steps, not yet approved as a working public online release.
   code or installer behavior was substituted. Evidence: public-retro-race.png
   and public-fresh-install.log. Completed races/results, production online and
   the physical Apple motion/audio/ghost checks remain pending.
+
+## Release-paradigm review (9 October, after the draft build)
+
+The current release model is Android APK plus PadMint inputs for Apple, as
+published in 0.7.14. Reconciled the stale 4 October asset instructions in
+AGENTS.md, RELEASE-CHECKLIST and the distribution history in RIGHTS_AND_LICENSES.
+Kept all identity, data-preservation, audit and acceptance requirements. The
+recipe's personal-output publication flag remains false; its explanation no
+longer incorrectly describes maintainer releases as source-only.
+
+Found and corrected the Mac recipe's preflight: `doctor` only verifies cached
+dependencies, while the following translate step requires the pinned Retro pack
+and payload. It now invokes the existing `bootstrap` path, which fetches and
+verifies those inputs and the Mac Dawn dependency. This is a recipe correction;
+a fresh complete Mac build/gameplay remains unverified. No Android or Apple app
+source changed during this review.
+
+Rechecked the exact signed APK audit, signing certificate, both independently
+derived APKs and all existing asset hashes. Version remains 0.7.15/build 260;
+public latest remains 0.7.14. Updated status and the maintenance board with a
+candidate-only entry, preserving historical and reporter-acceptance boundaries.
+
+The draft is not ready to publish simply by pressing Publish. Before finalizing:
+
+1. Complete offline race/results, production online race/results/reconnect, and
+   the physical Apple checks for included motion/audio/ghost fixes. Accept or
+   remove optional fixes based on those results. Validate the affected Mac path.
+2. Merge the accepted source, check final source/tree identity, regenerate the
+   source snapshot from the full merge SHA, and rebuild/retest affected binaries
+   when their inputs change. Android was built at daf662ec; iOS at d97eadfc. The
+   only non-document changes between those two commits were the Apple installer
+   correction and its regression test. The current recipe differs from both.
+3. Keep the final six-file manifest consistent, retarget the draft to the full
+   merge SHA, and obtain the owner's final publication instruction. Do not upload
+   private Apple test packages, player backups or signing material.
+4. After publication, verify anonymous downloads, signatures and all checksums,
+   then the actual Android updater and latest-release state. Authenticated draft
+   downloads do not satisfy the anonymous/public-updater gate.
+
+This review refreshes the draft recipe, notices, source archive and checksums;
+the already-tested APK and game-code-free iOS IPA retain their exact hashes.

@@ -98,7 +98,7 @@
           "command": [
             "/bin/bash",
             "{repo}/scripts/build-user-ipa.sh",
-            "doctor"
+            "bootstrap"
           ]
         },
         {
@@ -263,6 +263,6 @@
   ],
   "publication": {
     "public_binaries": false,
-    "reason": "Personal builds contain translated game code; public releases are source only."
+    "reason": "PadMint outputs are personal builds. Maintainer releases provide an Android APK and game-code-free iOS inputs for PadMint, plus source and notices."
   }
 }

@@ -1,5 +1,15 @@
 # KartPad status
 
+## Candidate: 0.7.15 / build 260 (9 October 2026)
+
+[Draft PR #440](https://github.com/chrissotraidis/kartpad/pull/440) updates Retro
+Rewind to 6.13.1 and includes focused fixes. The signed APK and PadMint inputs
+are staged in a draft release. Fresh/upgrade Android race-start and data-retention
+checks passed; completed races, production online, physical Apple acceptance,
+affected Mac validation and final source reconciliation remain open. Nothing is
+published or reporter-confirmed by this entry. Public latest remains 0.7.14.
+See the [working release plan](RELEASE-PLAN-2026-10-09.md) for exact evidence.
+
 ## Current status: 5 October 2026
 
 **Latest release: [KartPad 0.7.14](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.14) (build 258).**
