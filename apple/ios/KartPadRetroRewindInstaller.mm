@@ -174,6 +174,57 @@ void KartPadRemoveRetroRewindRollbacks() {
   }
 }
 
+BOOL KartPadCopyRetroSaveTree(NSString *source, NSString *destination,
+                             NSError **error) {
+  NSFileManager *files = NSFileManager.defaultManager;
+  NSDictionary *attributes = [files attributesOfItemAtPath:source error:error];
+  if (attributes == nil) return NO;
+  NSString *type = attributes[NSFileType];
+  if ([type isEqualToString:NSFileTypeDirectory]) {
+    if (![files createDirectoryAtPath:destination withIntermediateDirectories:NO
+                          attributes:nil error:error]) return NO;
+    NSArray *entries = [files contentsOfDirectoryAtPath:source error:error];
+    if (entries == nil) return NO;
+    for (NSString *entry in entries) {
+      if (!KartPadCopyRetroSaveTree([source stringByAppendingPathComponent:entry],
+              [destination stringByAppendingPathComponent:entry], error)) return NO;
+    }
+    return YES;
+  }
+  if (![type isEqualToString:NSFileTypeRegular])
+    return KartPadRetroRewindFail(error, 35, @"The existing Retro Rewind saves contain an unsupported file.");
+  if (![files copyItemAtPath:source toPath:destination error:error]) return NO;
+  if (![files contentsEqualAtPath:source andPath:destination])
+    return KartPadRetroRewindFail(error, 36, @"The Retro Rewind save copy could not be verified.");
+  return YES;
+}
+
+BOOL KartPadPreserveRetroRewindSaves(NSString *installedParent,
+                                    NSString *stageParent, NSError **error) {
+  NSFileManager *files = NSFileManager.defaultManager;
+  NSString *parent = [installedParent stringByAppendingPathComponent:@"riivolution"];
+  NSError *readError = nil;
+  NSDictionary *attributes = [files attributesOfItemAtPath:parent error:&readError];
+  if (attributes == nil && [readError.domain isEqualToString:NSCocoaErrorDomain] &&
+      (readError.code == NSFileNoSuchFileError || readError.code == NSFileReadNoSuchFileError)) return YES;
+  if (attributes == nil) { if (error) *error = readError; return NO; }
+  if (![attributes[NSFileType] isEqualToString:NSFileTypeDirectory])
+    return KartPadRetroRewindFail(error, 35, @"The existing Retro Rewind save folder is invalid.");
+  NSString *source = [parent stringByAppendingPathComponent:@"save"];
+  readError = nil;
+  attributes = [files attributesOfItemAtPath:source error:&readError];
+  if (attributes == nil && [readError.domain isEqualToString:NSCocoaErrorDomain] &&
+      (readError.code == NSFileNoSuchFileError || readError.code == NSFileReadNoSuchFileError)) return YES;
+  if (attributes == nil) { if (error) *error = readError; return NO; }
+  if (![attributes[NSFileType] isEqualToString:NSFileTypeDirectory])
+    return KartPadRetroRewindFail(error, 35, @"The existing Retro Rewind save folder is invalid.");
+  NSString *destination = [stageParent stringByAppendingPathComponent:@"riivolution"];
+  if (![files createDirectoryAtPath:destination withIntermediateDirectories:NO
+                        attributes:nil error:error]) return NO;
+  return KartPadCopyRetroSaveTree(source,
+      [destination stringByAppendingPathComponent:@"save"], error);
+}
+
 BOOL KartPadFileMatches(NSString *path, uint64_t expectedBytes,
                         const char *expectedHash, NSError **error) {
   NSDictionary<NSFileAttributeKey, id> *attributes =
@@ -545,6 +596,13 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
 
   NSString *installedParent =
       [supportRoot stringByAppendingPathComponent:@"RetroRewind"];
+  // Saves are siblings of RetroRewind6, inside the directory being replaced.
+  // Copy and verify them before moving the active install; failure leaves it intact.
+  if (workError == nil &&
+      !KartPadPreserveRetroRewindSaves(installedParent, stageParent, &workError) &&
+      workError == nil) {
+    workError = KartPadRetroRewindError(36, @"The Retro Rewind saves could not be preserved.");
+  }
   NSString *rollback = [supportRoot stringByAppendingPathComponent:
       [NSString stringWithFormat:@"RetroRewind.rollback-%@",
                                  NSUUID.UUID.UUIDString]];

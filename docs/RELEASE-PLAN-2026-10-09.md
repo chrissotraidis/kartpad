@@ -249,3 +249,27 @@ Proceed in this order when the required inputs are available:
 
 No release, merge or issue closure has occurred. The candidate is ready for
 these acceptance steps, not yet approved as a working public online release.
+
+- Follow-up, 10:56 JST: physical iPad became accessible. Backed up Documents and
+  Library (9,397 files, 9,682,622,210 bytes), hashed the full backup, and independently
+  read back 34 save/Mii/identity/settings/retained-backup files. Installed the signed
+  0.7.15/build 260 candidate over private 0.8.0/build 257 without uninstalling;
+  all 34 critical hashes matched after install. Actual gameplay remains pending.
+- The attempted launch-argument shortcut was rejected by the runtime's existing
+  no-command-line-options guard. Relaunched normally; this was a test invocation
+  error, not evidence of a game crash. QuickTime screen mirroring is available;
+  device taps were requested for the physical update path.
+- Found a real Apple pack-upgrade defect during preservation review: activation
+  replaced the entire RetroRewind parent, including `riivolution/save`. Android
+  already preserves that directory. Added equivalent Apple copy-and-verify before
+  activation; a copy error leaves the active installation intact. The exact old
+  activation reproduced save loss in an isolated native fixture. The fixed path
+  passed preservation of RetroWFC/RetroWFC2 saves, ghosts, unrelated NAND/backups,
+  destination-conflict rejection, symlink rejection and fresh installation. This
+  is required release scope. Earlier Apple binaries are superseded and must not
+  be used to update an existing Retro pack; rebuilt Apple candidates are required.
+- A separate owned emulator with public 0.7.14 imported game data and reached the
+  title, but injected controls did not advance reliably into its menus. Therefore
+  the menu-band comparison is inconclusive; no baseline-equivalence claim was
+  made. That emulator was stopped, retaining its private state. Preparing a fresh
+  iPad simulator for direct UI validation while physical interaction is pending.
