@@ -17,6 +17,8 @@
 #import "SunPadInputMixer.h"
 #import "SunPadSettings.h"
 #include "audio_backend.h"
+#include "music_attenuation.h"
+#include "runtime_config.h"
 
 #import <SDL3/SDL_properties.h>
 #import <SDL3/SDL_video.h>
@@ -1441,7 +1443,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
           @"Retro Rewind %@ Required",
           KartPadRetroRewindInstaller.requiredVersion]
                        message:[NSString stringWithFormat:
-          @"Retro Rewind is optional community content used for its extra tracks, characters, and Retro WFC online play. This KartPad build requires the matching official %.2f GiB full download.",
+          @"Retro Rewind is optional community content used for its extra tracks, characters, and Retro WFC online play. This KartPad build requires the matching official %.2f GiB base download plus a small update. The update downloads automatically, including when you choose a ZIP.",
           gib]
                 preferredStyle:UIAlertControllerStyleAlert];
   [options addAction:[UIAlertAction actionWithTitle:@"Download Official Pack"
@@ -1858,6 +1860,132 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   self.window.hidden = YES;
   self.window = nil;
   return self.succeeded;
+}
+
+@end
+
+// Music and game-sound levels (#411). Off by default: everything plays at full volume. When on,
+// music and game sounds (effects, voices, menus) each have a level. Applied live through the
+// runtime's sound categories and saved in Config.toml, which the runtime applies at every start.
+static NSString *const kKartPadSoundCustomKey = @"KartPadSoundCustomLevels";
+static NSString *const kKartPadSoundMusicKey = @"KartPadSoundMusicPercent";
+static NSString *const kKartPadSoundGameKey = @"KartPadSoundGamePercent";
+
+static NSInteger KartPadSoundPercent(NSString *key) {
+  NSNumber *saved = [NSUserDefaults.standardUserDefaults objectForKey:key];
+  return saved == nil ? 100 : std::clamp<NSInteger>(saved.integerValue, 0, 100);
+}
+
+static void KartPadApplySoundLevels(BOOL persist) {
+  const BOOL custom = [NSUserDefaults.standardUserDefaults boolForKey:kKartPadSoundCustomKey];
+  const float music = custom ? KartPadSoundPercent(kKartPadSoundMusicKey) / 100.0f : 1.0f;
+  const float sounds = custom ? KartPadSoundPercent(kKartPadSoundGameKey) / 100.0f : 1.0f;
+  MusicAttenuation::SetMusicVolume(music);
+  MusicAttenuation::SetSoundEffectsVolume(sounds);
+  MusicAttenuation::SetVoicesVolume(sounds);
+  MusicAttenuation::SetUiVolume(sounds);
+  if (persist) {
+    RuntimeConfigFile::SetMusicVolume(music);
+    RuntimeConfigFile::SetSoundEffectsVolume(sounds);
+    RuntimeConfigFile::SetVoicesVolume(sounds);
+    RuntimeConfigFile::SetUiVolume(sounds);
+  }
+  NSLog(@"[KartPadSound] music=%.2f sounds=%.2f", music, sounds);
+}
+
+@interface KartPadSoundSettingsController : UIViewController
+@end
+
+@implementation KartPadSoundSettingsController {
+  UISwitch *_custom;
+  UILabel *_musicLabel, *_gameLabel;
+  UISlider *_music, *_game;
+}
+
+- (void)viewDidLoad {
+  [super viewDidLoad];
+  self.title = @"Sound";
+  self.view.backgroundColor = UIColor.systemBackgroundColor;
+  self.navigationItem.rightBarButtonItem =
+      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done)];
+  UILabel *toggleLabel = [UILabel new];
+  toggleLabel.text = @"Adjust music and game sounds";
+  _custom = [UISwitch new];
+  _custom.on = [NSUserDefaults.standardUserDefaults boolForKey:kKartPadSoundCustomKey];
+  _custom.accessibilityLabel = @"Adjust music and game sounds separately";
+  [_custom addTarget:self action:@selector(changed) forControlEvents:UIControlEventValueChanged];
+  UIStackView *toggleRow = [[UIStackView alloc] initWithArrangedSubviews:@[ toggleLabel, _custom ]];
+  toggleRow.alignment = UIStackViewAlignmentCenter;
+  UILabel *hint = [UILabel new];
+  hint.text = @"When this is off, everything plays at full volume. Turn it on to lower or mute the music, the game sounds, or both.";
+  hint.numberOfLines = 0;
+  hint.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+  hint.textColor = UIColor.secondaryLabelColor;
+  _musicLabel = [UILabel new];
+  _gameLabel = [UILabel new];
+  _music = [UISlider new];
+  _game = [UISlider new];
+  _music.accessibilityLabel = @"Music volume";
+  _game.accessibilityLabel = @"Game sounds volume: effects, voices and menus";
+  for (UISlider *slider in @[ _music, _game ]) {
+    slider.minimumValue = 0;
+    slider.maximumValue = 100;
+    [slider addTarget:self action:@selector(changed) forControlEvents:UIControlEventValueChanged];
+  }
+  _music.value = KartPadSoundPercent(kKartPadSoundMusicKey);
+  _game.value = KartPadSoundPercent(kKartPadSoundGameKey);
+  UIStackView *stack = [[UIStackView alloc]
+      initWithArrangedSubviews:@[ toggleRow, hint, _musicLabel, _music, _gameLabel, _game ]];
+  stack.axis = UILayoutConstraintAxisVertical;
+  stack.spacing = 12;
+  [stack setCustomSpacing:24 afterView:hint];
+  [stack setCustomSpacing:20 afterView:_music];
+  stack.translatesAutoresizingMaskIntoConstraints = NO;
+  UIScrollView *scroll = [UIScrollView new];
+  scroll.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view addSubview:scroll];
+  [scroll addSubview:stack];
+  UILayoutGuide *safe = self.view.safeAreaLayoutGuide;
+  [NSLayoutConstraint activateConstraints:@[
+    [scroll.topAnchor constraintEqualToAnchor:safe.topAnchor],
+    [scroll.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor],
+    [scroll.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor],
+    [scroll.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor],
+    [stack.topAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.topAnchor constant:20],
+    [stack.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor constant:-20],
+    [stack.leadingAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.leadingAnchor constant:20],
+    [stack.trailingAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.trailingAnchor constant:-20],
+  ]];
+  [self refresh];
+}
+
+- (void)refresh {
+  const NSInteger music = std::lround(_music.value);
+  const NSInteger game = std::lround(_game.value);
+  _musicLabel.text = music == 0 ? @"Music: off" : [NSString stringWithFormat:@"Music: %ld%%", (long)music];
+  _gameLabel.text = game == 0 ? @"Game sounds: off" : [NSString stringWithFormat:@"Game sounds: %ld%%", (long)game];
+  for (UIView *view in @[ _musicLabel, _music, _gameLabel, _game ]) {
+    view.alpha = _custom.on ? 1.0 : 0.4;
+    if ([view isKindOfClass:UIControl.class]) ((UIControl *)view).enabled = _custom.on;
+  }
+}
+
+- (void)changed {
+  NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  [defaults setBool:_custom.on forKey:kKartPadSoundCustomKey];
+  [defaults setInteger:std::lround(_music.value) forKey:kKartPadSoundMusicKey];
+  [defaults setInteger:std::lround(_game.value) forKey:kKartPadSoundGameKey];
+  KartPadApplySoundLevels(NO);
+  [self refresh];
+}
+
+- (void)done {
+  [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+  [super viewDidDisappear:animated];
+  KartPadApplySoundLevels(YES);  // saved once, when the sheet closes
 }
 
 @end
@@ -2584,6 +2712,16 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   if (fpsCounter != nil) [children addObject:fpsCounter];
   [children addObject:controls];
   [children addObject:display];
+  [children addObject:[UIAction actionWithTitle:@"Sound…"
+      image:[UIImage systemImageNamed:@"speaker.wave.2"] identifier:@"dev.kartpad.sound"
+      handler:^(__kindof UIAction *action) {
+    UIViewController *presenter = KartPadVisibleViewController(weakSelf.window);
+    if (presenter == nil) return;
+    UINavigationController *navigation =
+        [[UINavigationController alloc] initWithRootViewController:[KartPadSoundSettingsController new]];
+    navigation.modalPresentationStyle = UIModalPresentationFormSheet;
+    [presenter presentViewController:navigation animated:YES completion:nil];
+  }]];
   if (gameData != nil) [children addObject:gameData];
   if (reportProblem != nil) [children addObject:reportProblem];
   if (KartPadSystemDiagnosticsIsCandidate()) {
@@ -3323,6 +3461,10 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 
 - (void)applicationWillResignActive:(NSNotification *)notification {
   (void)notification;
+  // The sound sheet can stay open while iOS suspends or terminates the app.
+  if ([NSUserDefaults.standardUserDefaults objectForKey:kKartPadSoundCustomKey] != nil) {
+    KartPadApplySoundLevels(YES);
+  }
   [[SunPadInputMixer sharedMixer] clearInputFromTouch:YES];
   if ([_overlay isKindOfClass:KartPadGameOverlay.class]) {
     [(KartPadGameOverlay *)_overlay resetKartPadControlAppearance];

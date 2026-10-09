@@ -15,6 +15,7 @@ def render_android_release_contract(profile_data: dict) -> str:
     validate_profile(profile_data, "release profile")
     config = profile_data["retroRewind"]
     archive = config["archive"]
+    update = config.get("updateArchive", {})
     code = config["codePul"]
     xml = config["riivolutionXml"]
     payload = config["payload"]
@@ -23,6 +24,8 @@ def render_android_release_contract(profile_data: dict) -> str:
         "VERSION_MANIFEST_URL": config["versionManifestUrl"],
         "ROOT": config["root"],
         "ARCHIVE_URL": archive["url"],
+        "UPDATE_URL": update.get("url", ""),
+        "UPDATE_SHA256": update.get("sha256", ""),
         "ARCHIVE_SHA256": archive["sha256"],
         "CODE_PUL_PATH": code["path"],
         "CODE_PUL_SHA256": code["sha256"],
@@ -33,6 +36,8 @@ def render_android_release_contract(profile_data: dict) -> str:
     }
     numbers = {
         "ARCHIVE_BYTES": archive["bytes"],
+        "UPDATE_BYTES": update.get("bytes", 0),
+        "UPDATE_MAXIMUM_EXPANDED_BYTES": update.get("maximumExpandedBytes", 0),
         "MAXIMUM_EXPANDED_BYTES": archive["maximumExpandedBytes"],
         "CODE_PUL_BYTES": code["bytes"],
         "XML_BYTES": xml["bytes"],

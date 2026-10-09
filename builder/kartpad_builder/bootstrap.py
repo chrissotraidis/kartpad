@@ -22,9 +22,10 @@ REQUIRED_COMMANDS = {
 }
 # Source checkouts each target reads; the iPhone build uses the profile's full list.
 ANDROID_PACK_SOURCES = ("WiiCompiled",)
-ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", "vendor/wiicompiled")
+TRANSLATOR_GITLINK = "vendor/wiicompiled"
+ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", TRANSLATOR_GITLINK)
 PACK_GITLINKS = {"android-pack": ANDROID_PACK_GITLINKS,
-                 "ios-pack": ("vendor/runtimes/ios", "vendor/wiicompiled")}
+                 "ios-pack": ("vendor/runtimes/ios", TRANSLATOR_GITLINK)}
 
 
 def load_lock(repo: Path) -> dict[str, Any]:
@@ -134,6 +135,9 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
         runtime = dependencies.get("KartPad WiiCompiled runtime fork")
         if runtime is not None:
             _prepare_runtime_sources(repo, runtime, install)
+            # The translate stage (scripts/stage-maintained-translator.py) reads
+            # this gitlink, so a clean Mac or IPA build needs it like the packs do.
+            _prepare_gitlinks(repo, [TRANSLATOR_GITLINK], install)
         required = profile.data["sourceDependencies"]
     for name in required:
         if name not in dependencies:

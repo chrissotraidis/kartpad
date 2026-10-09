@@ -31,9 +31,12 @@ Advance one upstream at a time on a dedicated branch.
    watcher runs the same check and opens one deduplicated compatibility issue
    when the official feed advances beyond KartPad's pinned profile.
 2. Run `python3 scripts/update-retro-rewind-profile.py --latest`. The helper
-   resumes or reuses the official full archive in ignored private storage, then
-   validates the official archive layout and writes the version, URL, byte
-   counts, and SHA-256 values for the archive, `Code.pul`, and Riivolution XML.
+   reads the official installation manifest and reuses or downloads its full
+   archive in ignored private storage. If the version feed requires one newer
+   update, it pins that archive too. Multiple updates or content deletions stop
+   for review. Final version, executable/XML hashes, archive identities and
+   separate expansion limits remain required; neither app activates the base
+   before the update and final validation complete.
    An already-downloaded archive can still be supplied explicitly with
    `python3 scripts/update-retro-rewind-profile.py PATH_TO_ARCHIVE OFFICIAL_URL`.
 3. Update the relevant lock entry and replace only its detached reference

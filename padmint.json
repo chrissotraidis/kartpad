@@ -98,7 +98,7 @@
           "command": [
             "/bin/bash",
             "{repo}/scripts/build-user-ipa.sh",
-            "doctor"
+            "bootstrap"
           ]
         },
         {
@@ -109,7 +109,7 @@
             "--image",
             "{disc}",
             "--retro-root",
-            "{repo}/private/builder/retro-rewind-downloads/6.12.8-extracted/RetroRewind6",
+            "{repo}/private/builder/retro-rewind-downloads/6.13.1-extracted/RetroRewind6",
             "--payload",
             "{repo}/private/builder/retro-rewind-downloads/payload.RMCPD00.bin"
           ],
@@ -263,6 +263,6 @@
   ],
   "publication": {
     "public_binaries": false,
-    "reason": "Personal builds contain translated game code; public releases are source only."
+    "reason": "PadMint outputs are personal builds. Maintainer releases provide an Android APK and game-code-free iOS inputs for PadMint, plus source and notices."
   }
 }

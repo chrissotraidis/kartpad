@@ -106,7 +106,7 @@ class TvOSContractTests(unittest.TestCase):
         profile = json.loads(
             (ROOT / "builder/profiles/mkwii-rmcp01-rev0.json").read_text()
         )
-        self.assertEqual(profile["retroRewind"]["version"], "6.12.8")
+        self.assertEqual(profile["retroRewind"]["version"], "6.13.1")
         host = (ROOT / "apple/tvos/KartPadTVRuntimeHost.mm").read_text()
         self.assertIn("installArchiveAtURL", host)
         self.assertIn("officialArchiveURL", host)

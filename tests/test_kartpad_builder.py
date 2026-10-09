@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import re
 import plistlib
 import stat
 import tempfile
@@ -140,11 +141,10 @@ class ProfileTests(unittest.TestCase):
         self.assertIn(retro["archive"]["sha256"], header)
         self.assertIn(retro["codePul"]["sha256"], header)
         self.assertIn(retro["riivolutionXml"]["sha256"], header)
-        self.assertIn(
-            f'/zip/{retro["version"]}-',
-            retro["archive"]["url"],
-            "the visible version and immutable archive URL must advance together",
-        )
+        final_archive = retro.get("updateArchive", retro["archive"])
+        self.assertRegex(final_archive["url"], rf'/zip/{re.escape(retro["version"])}(?:-full)?\.zip$')
+        if "updateArchive" in retro:
+            self.assertIn(retro["updateArchive"]["sha256"], header)
 
     def test_android_release_contract_matches_profile(self) -> None:
         profile = load_profiles(PROFILES)[0]
@@ -189,7 +189,7 @@ class ProfileTests(unittest.TestCase):
         self.assertIn('parser.add_argument("--json"', checker)
         self.assertIn("return 2 if update_required else 0", checker)
         self.assertIn('"--latest"', updater)
-        self.assertIn("-full.zip", updater)
+        self.assertIn('"RetroRewindInstall.txt"', updater)
 
     def test_newer_retro_rewind_message_explains_the_aot_boundary(self) -> None:
         source = (REPO / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()
@@ -271,6 +271,41 @@ class RetroRewindTests(unittest.TestCase):
             validate_pack(destination, config)
             self.assertFalse((root / "apps").exists())
             self.assertFalse((root / "RetroRewind.wad").exists())
+
+    def test_base_and_update_are_validated_before_activation(self) -> None:
+        for failure in (None, "missing", "hash", "traversal", "duplicate", "version", "limit"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                archive, config = self.make_archive(root)
+                destination = root / "installed"
+                # A prior installation is never touched by a rejected staged update.
+                destination.mkdir()
+                (destination / "player-data").write_bytes(b"preserve")
+                update = root / "patch.zip"
+                with zipfile.ZipFile(update, "w") as bundle:
+                    bundle.writestr("RetroRewind6/version.txt", "6.12.4" if failure == "version" else "6.12.5")
+                    bundle.writestr("RetroRewind6/new-track", b"track")
+                    if failure == "traversal": bundle.writestr("../escape", b"bad")
+                    if failure == "duplicate": bundle.writestr("RetroRewind6/version.txt", "6.12.5")
+                config["version"] = "6.12.5"
+                config["updateArchive"] = dict(bytes=update.stat().st_size,
+                    sha256=hashlib.sha256(update.read_bytes()).hexdigest(), maximumExpandedBytes=1024)
+                if failure == "hash": config["updateArchive"]["sha256"] = "0" * 64
+                if failure == "limit": config["updateArchive"]["maximumExpandedBytes"] = 1
+                if failure:
+                    with self.assertRaises(Exception):
+                        extract_archive(archive, destination, config, None if failure == "missing" else update)
+                    self.assertEqual((destination / "player-data").read_bytes(), b"preserve")
+                    self.assertEqual(list(destination.iterdir()), [destination / "player-data"])
+                else:
+                    # Activate into a fresh destination; existing invalid caches must not be replaced.
+                    target = root / "accepted"
+                    extract_archive(archive, target, config, update)
+                    validate_pack(target, config)
+                    self.assertEqual((target / "new-track").read_bytes(), b"track")
+                    self.assertEqual((target / "Binaries/Code.pul").read_bytes(), b"code-pul-fixture")
+                self.assertFalse(list(root.glob("*.partial.*")))
+                self.assertFalse((root / "escape").exists())
 
     def test_archive_traversal_is_rejected_before_extraction(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -473,6 +508,29 @@ class BootstrapTests(unittest.TestCase):
             dependency = {"name": "partial", "path": "ref/upstream/partial", "commit": "0" * 40, "tree": "0" * 40}
             with self.assertRaisesRegex(BuildError, "incomplete .*bootstrap again"):
                 _verify_checkout(root, dependency)
+
+    def test_app_bootstrap_initializes_the_translator_gitlink(self) -> None:
+        # The Mac/IPA translate step stages vendor/wiicompiled; a clean
+        # PadMint checkout failed when bootstrap prepared only the runtimes.
+        from unittest.mock import patch
+        from kartpad_builder import bootstrap
+        profile = next(item for item in load_profiles(REPO / "builder/profiles") if item.id == "mkwii-rmcp01-rev0")
+        prepared = []
+
+        class Stop(Exception):
+            pass
+
+        def record(_repo, paths, _install):
+            prepared.extend(paths)
+            if "vendor/wiicompiled" in paths:
+                raise Stop
+
+        with patch.object(bootstrap, "_has_command", return_value=True), \
+                patch.object(bootstrap, "_prepare_gitlinks", side_effect=record):
+            with self.assertRaises(Stop):
+                bootstrap.prepare_dependencies(REPO, profile, install=False, target="ios")
+        self.assertIn("vendor/runtimes/macos", prepared)
+        self.assertIn("vendor/wiicompiled", prepared)
 
 
 if __name__ == "__main__":
