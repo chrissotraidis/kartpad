@@ -1,0 +1,53 @@
+name: Intel Mac iPhone build
+on:
+  pull_request:
+    paths:
+      - 'padmint.json'
+      - 'builder/**'
+      - 'vendor/runtimes/ios'
+      - 'vendor/wiicompiled'
+      - 'scripts/probe-ios-pack.py'
+      - 'scripts/check-game-pack-state.py'
+      - '.github/workflows/intel-ios-pack.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pack:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init --depth 1 vendor/runtimes/ios vendor/wiicompiled
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/checkout@v4
+        with:
+          repository: chrissotraidis/padmint
+          ref: 885b8926200019caea0a9864824d96ee17ebc9b7
+          path: .intel-padmint
+      - name: Build translator and production iPhone pack with synthetic inputs
+        env:
+          PYTHONPATH: .intel-padmint
+          PADMINT_HOME: ${{ runner.temp }}/intel-padmint
+        run: |
+          python - <<'PY'
+          import os, platform, subprocess, sys
+          from pathlib import Path
+          from padmint import tools
+          from padmint.manifest import host_id
+          assert host_id() == "macos-x86_64", host_id()
+          subprocess.run(["xcodebuild", "-version"], check=True)
+          subprocess.run(["xcrun", "--sdk", "iphoneos", "--show-sdk-version"], check=True)
+          names = ["dotnet", "cmake", "ninja", "nodtool"]
+          tools.install(names, host_id())
+          env = tools.environment(names, host_id())
+          subprocess.run(["dotnet", "--info"], env=env, check=True)
+          subprocess.run(["nodtool", "--version"], env=env, check=True)
+          subprocess.run(["dotnet", "test",
+              "vendor/wiicompiled/translator/tests/Translator.Tests/Translator.Tests.csproj",
+              "--filter", "FullyQualifiedName~CodeGenExpressionCoverageTests"], env=env, check=True)
+          subprocess.run([sys.executable, "scripts/probe-ios-pack.py",
+              str(Path(os.environ["RUNNER_TEMP"]) / "ios-pack-probe")], env=env, check=True)
+          PY

@@ -9,6 +9,13 @@ each version is on the
 
 ## What you need
 
+- A computer to build the IPA with PadMint. The candidate Intel Mac route
+  uses full Xcode and its iOS platform to build an ARM64 iPhone/iPad app.
+  It does not make KartPad playable on an Intel Mac. Intel support needs
+  both a PadMint version that offers the target and a published KartPad
+  recipe that declares it; the 0.7.15 release recipe does not yet do so.
+  Older Macs must use an Xcode version supported by their macOS.
+
 - iOS or iPadOS 16 or newer.
 - A sideloading tool with your own Apple ID:
   [Sideloadly](https://sideloadly.io), [AltStore](https://altstore.io) Classic
