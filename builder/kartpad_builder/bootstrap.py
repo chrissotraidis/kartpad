@@ -58,7 +58,9 @@ def _verify_checkout(repo: Path, dependency: dict[str, Any]) -> None:
 
 
 def _prepare_runtime_sources(repo: Path, dependency: dict[str, Any], install: bool) -> None:
-    _prepare_gitlinks(repo, list(dependency["platformPaths"].values()), install)
+    # The translator stage (scripts/stage-maintained-translator.py) reads the
+    # maintained WiiCompiled gitlink, so a clean app build needs it too.
+    _prepare_gitlinks(repo, list(dependency["platformPaths"].values()) + ["vendor/wiicompiled"], install)
 
 
 def _prepare_gitlinks(repo: Path, relatives: list[str], install: bool) -> None:

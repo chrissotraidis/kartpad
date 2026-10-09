@@ -509,6 +509,16 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaisesRegex(BuildError, "incomplete .*bootstrap again"):
                 _verify_checkout(root, dependency)
 
+    def test_app_bootstrap_initializes_the_translator_gitlink(self) -> None:
+        # The Mac/IPA translate step stages vendor/wiicompiled; a clean
+        # PadMint checkout failed when bootstrap prepared only the runtimes.
+        from unittest.mock import patch
+        from kartpad_builder import bootstrap
+        runtime = {"platformPaths": {"macos": "vendor/runtimes/macos"}}
+        with patch.object(bootstrap, "_prepare_gitlinks") as prepare:
+            bootstrap._prepare_runtime_sources(REPO, runtime, True)
+        self.assertIn("vendor/wiicompiled", prepare.call_args.args[1])
+
 
 if __name__ == "__main__":
     unittest.main()
