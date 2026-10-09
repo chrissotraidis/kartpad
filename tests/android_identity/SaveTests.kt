@@ -112,8 +112,13 @@ fun testSaveProfiles(fixtures: File) {
         ghostRequest.writeBytes(ghostRequest.readBytes().apply { this[30] = (this[30].toInt() xor 1).toByte() })
         check(KartPadSaveStorage.applyPending(root) != null)
         check(KartPadSaveStorage.readActive(root).contentEquals(ghostApplied))
+        val retainedBackups = backups().associateWith { it.readBytes() }
         KartPadSaveStorage.cancelPendingGhost(root)
         check(!KartPadSaveStorage.hasPendingGhost(root))
+        check(KartPadSaveStorage.applyPending(root) == null)
+        check(KartPadSaveStorage.readActive(root).contentEquals(ghostApplied))
+        check(backups().toSet() == retainedBackups.keys)
+        check(retainedBackups.all { (file, bytes) -> file.readBytes().contentEquals(bytes) })
         println("Android save profiles passed: all three targets, isolated export/restore, backups, legacy pending, invalid inputs, identity conflicts, interrupted publication, first import")
     } finally {
         AtomicFile.failSuffix = null

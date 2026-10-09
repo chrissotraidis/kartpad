@@ -740,6 +740,24 @@ open class KartPadLaunchActivity : Activity() {
             }
         }, layout(0))
 
+        if (pausedProfile() == null && KartPadSaveStorage.hasPendingGhost(filesDir)) {
+            column.addView(Button(this).apply {
+                text = "Cancel Pending Ghost Import…"
+                setOnClickListener {
+                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                        .setTitle("Cancel Pending Ghost Import?")
+                        .setMessage("Remove the pending request so you can start the game again. Current saves and retained backups stay as they are; this does not undo an import that already completed.")
+                        .setNegativeButton("Keep Import", null)
+                        .setPositiveButton("Cancel Import") { _, _ ->
+                            if (pausedProfile() == null) runCatching {
+                                KartPadSaveStorage.cancelPendingGhost(filesDir)
+                            }.onSuccess { visibility = View.GONE }
+                                .onFailure { showStatus("The pending ghost import could not be cancelled.") }
+                        }.show()
+                }
+            }, layout(0))
+        }
+
         if (pausedProfile() == null && KartPadRatingStorage.hasPending(filesDir)) {
             column.addView(Button(this).apply {
                 text = "Cancel Staged Rating Restore…"

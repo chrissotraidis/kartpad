@@ -136,7 +136,7 @@ internal object KartPadSaveStorage {
             // Confirm publication before consuming the request even when no rewrite is needed.
             syncDirectory(checkNotNull(active(files).parentFile))
             check(file.delete()) { "Pending ghost could not be finalized." }
-        }.exceptionOrNull()?.let { "The ghost import could not be applied safely. Existing progress is retained. Cancel the pending ghost in Original save settings and choose it again." }
+        }.exceptionOrNull()?.let { "The ghost import could not be applied safely. Existing progress is retained. Return to the game chooser and use Help → Cancel Pending Ghost Import, then choose the ghost again." }
     }
 
     fun validate(data: ByteArray) {
