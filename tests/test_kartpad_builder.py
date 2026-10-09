@@ -514,13 +514,20 @@ class BootstrapTests(unittest.TestCase):
         # PadMint checkout failed when bootstrap prepared only the runtimes.
         from unittest.mock import patch
         from kartpad_builder import bootstrap
-        from kartpad_builder.errors import BuildError
         profile = next(item for item in load_profiles(REPO / "builder/profiles") if item.id == "mkwii-rmcp01-rev0")
         prepared = []
+
+        class Stop(Exception):
+            pass
+
+        def record(_repo, paths, _install):
+            prepared.extend(paths)
+            if "vendor/wiicompiled" in paths:
+                raise Stop
+
         with patch.object(bootstrap, "_has_command", return_value=True), \
-                patch.object(bootstrap, "_prepare_gitlinks", side_effect=lambda _r, paths, _i: prepared.extend(paths)), \
-                patch.object(bootstrap, "_verify_checkout", side_effect=BuildError("stop after gitlinks")):
-            with self.assertRaisesRegex(BuildError, "stop after gitlinks"):
+                patch.object(bootstrap, "_prepare_gitlinks", side_effect=record):
+            with self.assertRaises(Stop):
                 bootstrap.prepare_dependencies(REPO, profile, install=False, target="ios")
         self.assertIn("vendor/runtimes/macos", prepared)
         self.assertIn("vendor/wiicompiled", prepared)
