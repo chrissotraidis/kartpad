@@ -16,6 +16,16 @@ each version is on the
   recipe that declares it; the 0.7.15 release recipe does not yet do so.
   Older Macs must use an Xcode version supported by their macOS.
 
+  Candidate verification: a native Intel Mac running macOS 15 and Xcode 16.4
+  passed translator code-generation tests and the production pack compiler,
+  symbol checks and IPA insertion with synthetic inputs
+  ([CI run](https://github.com/chrissotraidis/kartpad/actions/runs/37945644981)).
+  A complete private-disc build also passed locally with Intel x64 tools under
+  Rosetta and Xcode 27: 350.53 seconds, an ARM64 iOS 16 library, matching app/pack
+  interface fingerprints, and IPA structure validation. Rosetta is additional
+  build evidence, not a physical Intel Mac or device gameplay test. The produced
+  IPA has not been installed and played on a device.
+
 - iOS or iPadOS 16 or newer.
 - A sideloading tool with your own Apple ID:
   [Sideloadly](https://sideloadly.io), [AltStore](https://altstore.io) Classic
