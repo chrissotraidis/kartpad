@@ -3,7 +3,7 @@
 Owner: Chris. Working date: 9 October 2026, Japan time.
 Target: KartPad 0.7.15, build 260, subject to a final version check.
 Baseline: main `91c208ef9b98467b3f5e3ba92324c0446daac6f1`; public 0.7.14/build 258.
-Status: plan finalized and double-checked; implementation in progress.
+Status: implementation and candidate builds complete; draft PR #440; release acceptance pending.
 
 Restore compatibility with Retro Rewind 6.13.1 and include small corrections
 with reproduced defects. Release today only if the exact packages preserve
@@ -175,3 +175,77 @@ code in ignored private/build directories, not this document.
   and supplying the dependency, all affected tests passed in a 23-test rerun.
   Kotlin compilation and an initial Android app build passed. Full Android pack
   and iOS app builds are running; physical and production-online gates remain.
+
+
+- 10:28 JST: Android and iOS application and matching game-pack builds completed
+  from clean source `daf662ec704fec7700326e80d72f01b225822036`. Both game packs
+  passed their state checks. The app manifests record that exact source revision
+  with `source_dirty: false`. Documentation updates after that revision do not
+  change the built product. Draft PR: https://github.com/chrissotraidis/kartpad/pull/440.
+- GitHub regression CI passed on that source. Repository Android APK/AAB and
+  private iOS candidate audits passed. The game-code-free iOS IPA passed PadMint
+  audit with zero address-named functions. Android PadMint audit reports 29,064
+  address-named symbols and the embedded-program-section marker. The verified
+  public 0.7.14 APK produces the same two findings. This is **not** a clean PadMint
+  pass: reconcile the second finding with the repository's ready-to-play exception
+  before publication. No signing key, disc-file or private-path finding occurred.
+  The historical `audit-public-unsigned-ipa.py` is tied to the 0.5.3 release record
+  and is not evidence for this candidate; it was not weakened to accept it.
+- Fresh owned Android emulator: installed the test APK, imported game data through
+  the actual Files picker, created a license, entered Original Luigi Circuit and
+  accelerated. No player device or existing app was reset. Emulator audio was
+  disabled, so this supplies no audio acceptance.
+- Android ghost recovery: injected a synthetic invalid request only into this
+  disposable test installation, confirmed launch was blocked, confirmed Keep
+  Import retained it, then cancelled through Help. Save SHA-256 values before
+  and after matched; the request and recovery button disappeared. Retained-backup
+  preservation is covered by host fault tests, not this fresh emulator fixture.
+- Android Retro worker: reused the fully verified official base archive in its
+  cache, downloaded the actual 6.13.1 update over the network, extracted/merged
+  both and passed final installation validation. This checks a cached-base install,
+  not an end-to-end 1.94 GB network download or a 6.12.8 replacement. Retro reached
+  SNES Mario Circuit 1 and responded to acceleration. After force-stop and explicit
+  cold launch, the chooser retained both ready states and 6.13.1; Retro reached its
+  title again. Neither test completed a race/results. Horizontal menu bands were
+  visible in both modes, while race scenes rendered; comparison against the prior
+  build on this emulator remains necessary before classifying that observation.
+- Saved local screenshots, checksums and logs under `build/release-0715/`.
+  Stopped only the task-owned emulator (`emulator-5580`) after testing. Its private
+  AVD and candidate artifacts remain for follow-up. The dirty primary checkout
+  was untouched. The managed `kartpad-0715` worktree remains attached to this
+  chat and contains the branch plus needed ignored build inputs/artifacts.
+
+## Candidate artifacts and next actions
+
+These are private test/build outputs, **not published release assets**. Paths are
+relative to this worktree. Complete SHA-256 values are retained in
+`build/release-0715/candidate-sha256.txt`.
+
+| Artifact | Location | Current use |
+| --- | --- | --- |
+| Android test APK | `private/release-0715/KartPad-v0.7.15-test-only.apk` | Debug signer; fresh owned emulator only; never publish or install over a player's release |
+| Android unsigned bundle | `private/release-0715/KartPad-v0.7.15-unsigned.aab` | Input to the established release signing path |
+| iOS PadMint IPA | `build/ios-app/20261009-094516/out/KartPad-v0.7.15-ios-unsigned.ipa` | Game-code-free; audit passed |
+| Private iOS device candidate | `private/release-0715/KartPad-v0.7.15-ios-device-candidate.ipa` | Matching game pack included; needs device signing/install/acceptance |
+
+Proceed in this order when the required inputs are available:
+
+1. Obtain the existing Android Community Release keystore path, password-file
+   path and alias. Never create a replacement key. Sign, re-audit, then exercise
+   an actual update over public 0.7.14 and a fresh import with the final package.
+2. Unlock the attached iPad. Back up and read back Documents and Library before
+   signing/installing in place. Verify identity/saves and test motion, controller
+   takeover, sound/background/relaunch and compressed ghost import/replay/export.
+   The connected physical Android device is currently unauthorized; no physical
+   acceptance was claimed. The request to unlock/provide signing paths is pending.
+3. Test old Retro pack replacement and complete offline races/results/relaunch.
+   Compare the emulator menu rendering observation with 0.7.14 or real hardware.
+4. With a second current Retro client, complete production WFC login, matchmaking,
+   race, results and reconnect. Peer availability was requested and is pending.
+5. Drop any optional correction whose acceptance cannot be completed, rebuild
+   the changed platforms and repeat the affected gates. Resolve the delivery
+   instruction and Android audit-exception questions above; then review exact
+   assets and release notes, publish, and verify hosted downloads and updater.
+
+No release, merge or issue closure has occurred. The candidate is ready for
+these acceptance steps, not yet approved as a working public online release.
