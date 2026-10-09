@@ -264,9 +264,10 @@ Android targets ARM64/Vulkan on Android 9+. Device-specific graphics corruption,
 
 Retro WFC works with Retro Rewind 6.13.1. On the Android emulator, KartPad
 0.7.15 signed in, joined a worldwide room and raced against other players. In
-that test the room disconnected once during a race; the app recovered to the
-menu and could sign in again. It isn't verified on every device or network.
-Native room hosting and Original Wiimmfi compatibility remain unfinished. See [online status](docs/ONLINE.md) and
+those tests the room disconnected twice during a race; each time the app
+returned to the menu and could sign in again. It isn't verified on every device
+or network. Native room hosting and Original Wiimmfi compatibility remain
+unfinished. See [online status](docs/ONLINE.md) and
 [friend-room guidance](docs/MULTIPLAYER.md#private-friend-rooms).
 
 If finding a room fails on mobile data but works on Wi-Fi, your carrier is
