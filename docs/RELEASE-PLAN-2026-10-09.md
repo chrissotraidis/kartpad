@@ -409,3 +409,28 @@ The draft is not ready to publish simply by pressing Publish. Before finalizing:
 
 This review refreshes the draft recipe, notices, source archive and checksums;
 the already-tested APK and game-code-free iOS IPA retain their exact hashes.
+
+## Sanity check before publication (9 October, 15:35 JST)
+
+- Production Retro WFC: the exact release-signed APK, on the fresh emulator with
+  verified Retro Rewind 6.13.1, connected and showed "Welcome to Retro WFC",
+  server status and the VS/Other/Battle Worldwide menu with about 80 players
+  online. Login is verified; matchmaking, an online race, results and reconnect
+  were not exercised (no second client). Disconnected and stopped the emulator.
+  Evidence: online-c4.png and online-wfc-menu.png in the ignored evidence folder.
+- Claims versus binaries: every release-note item is new since 0.7.14 and is in
+  the binary that ships it. The APK (daf662ec) contains the Android save/ghost
+  changes and the shared compressed-ghost fix (Android reaches it through
+  `nativeGhostTransfer`). The PadMint IPA (d97eadfc) contains the Apple installer,
+  sound, motion and ghost changes. Android build inputs are identical from
+  daf662ec through the release branch head.
+- 0.7.14's updater looks up `releases/latest`, skips drafts and prereleases,
+  expects `KartPad-v0.7.15-android.apk` and `download/v0.7.15/SHA256SUMS`, and
+  requires a higher versionCode and the same signer. The staged release meets each.
+- Mac recipe: `bootstrap` matches `scripts/self-build-macos.sh`. A local run in
+  this managed worktree fails before any download because `ref/upstream/WiiCompiled`
+  is a development symlink to the newer vendored fork; 0.7.14's `doctor` fails
+  identically here. The pin is unchanged since 0.7.14. A PadMint Mac build remains
+  untested end to end.
+- Still hands-off only: Apple sound, motion and compressed-ghost replay on a
+  physical device. The release notes say so.
