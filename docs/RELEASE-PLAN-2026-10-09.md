@@ -1,9 +1,10 @@
 # KartPad compatibility release plan
 
 Owner: Chris. Working date: 9 October 2026, Japan time.
-Target: KartPad 0.7.15, build 260, subject to a final version check.
+Released: KartPad 0.7.15, build 260.
 Baseline: main `91c208ef9b98467b3f5e3ba92324c0446daac6f1`; public 0.7.14/build 258.
-Status: implementation and candidate builds complete; draft PR #440; release acceptance pending.
+Status: published and latest; PR #440 merged; public Android updater verified.
+Remaining acceptance limits are recorded below and in the published release notes.
 
 Restore compatibility with Retro Rewind 6.13.1 and include small corrections
 with reproduced defects. Release today only if the exact packages preserve
@@ -460,3 +461,54 @@ the already-tested APK and game-code-free iOS IPA retain their exact hashes.
   on the final branch head. Android and Apple app inputs are unchanged since the
   tested APK (daf662ec) and PadMint IPA (d97eadfc), so both binaries are final.
 - Still hands-off only: Apple sound and motion on a physical device.
+
+## Publication and public updater verification (9 October, 18:32 JST)
+
+- Published v0.7.15 as the latest stable release after the owner's instruction.
+  PR #440 is merged; main and the release tag point to
+  `c4aa79ea9dd7a51c06b6451408d9475c33583889`. The tested branch and merge trees
+  match. The six expected assets follow the Android APK / Apple PadMint model.
+- All six assets were downloaded anonymously after publication. The five
+  SHA256SUMS entries match both the downloaded files and final local assets;
+  hosted digests agree. The published APK retains the existing Community Release
+  signer and passes the repository package audit. Apple test packages, game data,
+  player backups and signing material remain private.
+- Actual updater: installed the public 0.7.14 APK on the owned Android 16 emulator
+  `KartPad_0715_Updater_20261009`, imported the game-data ZIP through the system
+  picker and created a real Original licence/save. Backed up files/shared_prefs
+  before updating. **Update available → Update Now** led through Android's
+  first-use install permission, downloaded and verified the public APK, then
+  showed Android's update confirmation. No adb install or uninstall was used
+  for this upgrade.
+- After Android accepted the update, the app reports 0.7.15/build 260. Its
+  installed base.apk SHA-256 equals the published APK:
+  `0b8fc9cca8929379fbcaff0570c4dfe59aa1d038a5e760a26a49198277267f56`.
+  All 2,077 files under files/shared_prefs remain byte-identical immediately
+  after installation, including rksys.dat, NAND, configuration and settings.
+  The update notice disappears on 0.7.15 and Retro setup shows 6.13.1.
+- The updated app loads the preserved licence, reaches Original Luigi Circuit
+  and accepts acceleration at about 60 FPS on the emulator. This is upgrade,
+  race-start and control evidence; it is not a completed race or physical-phone
+  result. Evidence: ignored build/release-0715/updater-android-confirm.png,
+  updater-license-preserved.png and updater-race-after-start.png. The private
+  before/after manifests and backup are under private/release-0715/updater/.
+- Acceptance limits remain: no completed production-online results screen;
+  two observed emulator disconnects with recovery; Apple sound/motion still
+  require hands-on hardware testing; device-specific GPU/performance and full
+  identity/Retro ghost-transfer requests remain open. Publication does not
+  turn those into verified fixes. The public notes state these boundaries.
+- The release tag and binaries stay at the tested merge. This documentation
+  follow-up records publication and updater evidence without changing them.
+- Posted release follow-ups in the maintainer's voice. Open reports stay open
+  where device/reporter acceptance or remaining scope is outstanding:
+  [#439](https://github.com/chrissotraidis/kartpad/issues/439#issuecomment-6078273009)
+  [#438](https://github.com/chrissotraidis/kartpad/issues/438#issuecomment-6078273351)
+  [#411](https://github.com/chrissotraidis/kartpad/issues/411#issuecomment-6078274025)
+  [#430](https://github.com/chrissotraidis/kartpad/issues/430#issuecomment-6078274335)
+  [#437](https://github.com/chrissotraidis/kartpad/issues/437#issuecomment-6078274667)
+  [#441](https://github.com/chrissotraidis/kartpad/issues/441#issuecomment-6078275060)
+  [#377](https://github.com/chrissotraidis/kartpad/issues/377#issuecomment-6078275353)
+- Stopped only the owned updater emulator after the bounded check. Its app,
+  game data and private backup remain available for follow-up. The managed
+  release worktree is retained because it holds the unique build/evidence files;
+  the original dirty project checkout is untouched.
