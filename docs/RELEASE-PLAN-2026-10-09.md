@@ -225,21 +225,23 @@ relative to this worktree. Complete SHA-256 values are retained in
 | --- | --- | --- |
 | Android test APK | `private/release-0715/KartPad-v0.7.15-test-only.apk` | Debug signer; fresh owned emulator only; never publish or install over a player's release |
 | Android unsigned bundle | `private/release-0715/KartPad-v0.7.15-unsigned.aab` | Input to the established release signing path |
-| iOS PadMint IPA | `build/ios-app/20261009-094516/out/KartPad-v0.7.15-ios-unsigned.ipa` | Game-code-free; audit passed |
-| Private iOS device candidate | `private/release-0715/KartPad-v0.7.15-ios-device-candidate.ipa` | Matching game pack included; needs device signing/install/acceptance |
+| iOS PadMint IPA | `private/release-0715/save-fix/KartPad-v0.7.15-ios-unsigned.ipa` | Corrected Apple installer; game-code-free; audit passed |
+| Private iOS device candidate | `private/release-0715/save-fix/KartPad-v0.7.15-ios-device-candidate.ipa` | Corrected installer; signed copy installed in place; gameplay acceptance pending |
 
 Proceed in this order when the required inputs are available:
 
 1. Obtain the existing Android Community Release keystore path, password-file
    path and alias. Never create a replacement key. Sign, re-audit, then exercise
    an actual update over public 0.7.14 and a fresh import with the final package.
-2. Unlock the attached iPad. Back up and read back Documents and Library before
-   signing/installing in place. Verify identity/saves and test motion, controller
-   takeover, sound/background/relaunch and compressed ghost import/replay/export.
-   The connected physical Android device is currently unauthorized; no physical
-   acceptance was claimed. The request to unlock/provide signing paths is pending.
-3. Test old Retro pack replacement and complete offline races/results/relaunch.
-   Compare the emulator menu rendering observation with 0.7.14 or real hardware.
+2. Complete physical iPad gameplay acceptance on the corrected candidate now
+   installed. Documents/Library backup, independent critical-file readback and
+   in-place installation are complete. Verify motion/controller takeover,
+   sound/background/relaunch and compressed ghost import/replay/export. The
+   connected physical Android device remains unauthorized; no physical Android
+   acceptance was claimed. Physical iPad interaction was requested and is pending.
+3. Complete offline races/results/relaunch. Actual 6.12.8 pack replacement and
+   save-marker preservation passed in the iPad simulator; physical replacement
+   remains open. Android menu-band comparison against 0.7.14 was inconclusive.
 4. With a second current Retro client, complete production WFC login, matchmaking,
    race, results and reconnect. Peer availability was requested and is pending.
 5. Drop any optional correction whose acceptance cannot be completed, rebuild
@@ -273,3 +275,40 @@ these acceptance steps, not yet approved as a working public online release.
   the menu-band comparison is inconclusive; no baseline-equivalence claim was
   made. That emulator was stopped, retaining its private state. Preparing a fresh
   iPad simulator for direct UI validation while physical interaction is pending.
+
+- 11:03 JST: corrected Apple product source is `d97eadfc4110be38cce1aca0387c8516cca06a28`.
+  Rebuilt the physical app, rechecked the existing game's pack state against it,
+  repackaged and passed repository and game-code-free PadMint audits. The native
+  full installer accepted the real official base and live-downloaded patch over
+  a synthetic 6.12.8 installation and preserved its save bytes. Installed the
+  corrected signed copy on the iPad; 34 critical hashes matched both immediately
+  before and after that install. CI passed on d97eadfc. Android binaries are
+  unchanged by this Apple-only correction.
+- Corrected iOS PadMint IPA SHA-256:
+  `bba58a5a579c3a82ffa2b0ec01bb2cf6610d72c13ba513424982061c97ace71f`.
+  Corrected private iOS IPA SHA-256:
+  `b7ada9f062869d262b5e92014a8f4cc150b6cc6e2d774b03e108c131b9828d45`.
+  Both reside under `private/release-0715/save-fix/`. Earlier iOS packages are
+  retained as superseded evidence only. Full backup and readback manifests are
+  private under `private/release-0715/`; nothing containing player data was pushed.
+
+- 11:10 JST: fresh iPad simulator build passed its application audit. Seeded only
+  game assets plus an actual old 6.12.8 pack (no player identity), added a synthetic
+  save marker, and invoked the existing simulator installer entry point with the
+  pinned base ZIP. The real iOS installer downloaded the patch, completed upgrade
+  and final validation, reported 6.13.1, and retained identical save-marker bytes.
+  Logs/screenshots are in `build/release-0715/`. The local Xcode installation has
+  simulator CLI/runtime support but no Simulator.app UI, limiting interactive
+  simulator control; do not count this as touch, motion or audio acceptance.
+
+- 11:13 JST: the iPad simulator reached the Retro title after upgrade using its
+  ordinary preferred-game setting. No command-line arguments or synthetic game
+  input were used for that launch. The historical simulator build target retains
+  old default version metadata, so the private simulator test copy was stamped
+  from current version.json before continued testing. This does not affect the
+  physical or PadMint candidates, already verified as 0.7.15/build 260.
+
+- Original also launched into its opening/attract presentation on the iPad
+  simulator. This is launch/rendering evidence, not a driven race. Stopped only
+  the owned simulator after the bounded checks; its installed app/data remain.
+  Corrected physical iPad candidate remains installed for hands-on acceptance.
