@@ -434,3 +434,29 @@ the already-tested APK and game-code-free iOS IPA retain their exact hashes.
   untested end to end.
 - Still hands-off only: Apple sound, motion and compressed-ghost replay on a
   physical device. The release notes say so.
+
+## Final acceptance before publication (9 October, 16:00–17:05 JST)
+
+- Online: the release-signed APK signed in to Retro WFC twice (second after a
+  cold relaunch), joined VS Worldwide rooms of 10–11 players, spectated a
+  running race, then started and raced in a new one at about 60 FPS. Twice the
+  room dropped mid-race with "You were disconnected from the other players";
+  KartPad returned to the Retro menu cleanly and signed in again. No completed
+  online results screen was captured. Recorded in KNOWN-ISSUES and README.
+- Compressed Original ghost: a real compressed Luigi Circuit `.rkg` from the
+  Chadsoft leaderboard (1:03.147) was imported through the release APK's
+  Time Trial Ghosts flow. The next Original launch applied it with a save backup,
+  cleared the pending request and stored an uncompressed, CRC-valid slot. It
+  appears as ghost 2/2 in Time Trials and replays around the track.
+- Mac: a clean PadMint build from the release branch first failed at
+  `stage-maintained-translator.py` because app bootstrap never initialized the
+  `vendor/wiicompiled` gitlink (pre-existing; the old `doctor` preflight hid it
+  by failing earlier). Bootstrap now prepares that gitlink for app targets as it
+  already did for packs, with a regression test. A second clean build passed
+  every stage and the macOS package audit; the app ran the game at 60 FPS on
+  Metal. The maintainer's Mac Application Support was backed up first; saves,
+  NAND and configuration were byte-identical afterward.
+- Repository: 349 Python tests passed locally; CI regression and receipts pass
+  on the final branch head. Android and Apple app inputs are unchanged since the
+  tested APK (daf662ec) and PadMint IPA (d97eadfc), so both binaries are final.
+- Still hands-off only: Apple sound and motion on a physical device.

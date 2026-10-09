@@ -78,6 +78,7 @@ the [archive](archive/known-issues-through-2026-09.md).
 - **Finding a room fails on mobile data** (error 86420) while Wi-Fi works. Many
   carriers block the direct player-to-player connections the game uses; use
   Wi-Fi or a VPN. [#405](https://github.com/chrissotraidis/kartpad/issues/405)
+- **An online race can drop with "You were disconnected from the other players."** Seen once in a 0.7.15 emulator test on Retro WFC; KartPad returned to the menu and signed in again. Not yet seen on a phone.
 - **Moving an online identity or rating** between devices doesn't fully work.
   [#234](https://github.com/chrissotraidis/kartpad/issues/234) More in [online status](ONLINE.md).
 
