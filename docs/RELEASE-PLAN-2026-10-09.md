@@ -1,0 +1,150 @@
+# KartPad compatibility release plan
+
+Owner: Chris. Working date: 9 October 2026, Japan time.
+Target: KartPad 0.7.15, build 260, subject to a final version check.
+Baseline: main `91c208ef9b98467b3f5e3ba92324c0446daac6f1`; public 0.7.14/build 258.
+Status: plan finalized and double-checked; implementation in progress.
+
+Restore compatibility with Retro Rewind 6.13.1 and include small corrections
+with reproduced defects. Release today only if the exact packages preserve
+player data and complete the gameplay and production-online checks. Optional
+changes must not displace those checks.
+
+## Selected scope
+
+| Work | Exact boundary | Acceptance |
+| --- | --- | --- |
+| Retro Rewind 6.13.1 | Verified official full pack plus required official update; pins, updater, builder, mobile installers and matching translation/pack metadata | Fresh installation and 6.12.8 replacement; exact final code/XML/version; Original and Retro race/relaunch; production login, matchmaking, race, results and reconnect |
+| Android save and ghost writes | Isolated correction from `9f82633d`, not the later identity/Mii refactor | Staging/backup/active-write failures reject success, retain recovery and preserve other profiles; retry succeeds |
+| Android ghost recovery | Chooser action calling existing `cancelPendingGhost`, only with no paused game; explicit confirmation | Failed import blocks launch; chooser cancellation clears only its pending request; save/backup bytes survive; launch works again |
+| Apple motion correction | Existing callback correction from `4ac13dc7`: neutral steering when flat, continue shake sampling; rearm after settling | Production callback before/after control, native motion checks and physical tilt/shake/resume/controller takeover |
+| Original compressed ghost repair | PR #436 / `9810a1f0`; no Retro ghost transfer | Valid expanded replay table, checksums and unrelated-save preservation; exact new pack import/restart/replay/export and a normal race |
+| iOS Sound controls | PR #420, `439f2902` plus persistence correction `e279e6d5` | Actual music/effects controls, default behavior, background/Done/relaunch and other-app audio on hardware |
+
+Every non-Retro item can be excluded if its required check fails or cannot be
+completed. Sound and Original ghost repair are the first optional scope to drop.
+Keep a separate commit per correction so a failing optional change can be
+removed without dropping Retro compatibility. Do not remove it by rewriting
+another task's branch.
+
+## Deliberately separate work
+
+Do not merge draft #416 wholesale: it includes an upstream runtime/translator
+sync and broader identity/Mii recovery changes. Keep new Android shake UI,
+custom icons, Retro ghost transfer (#375/#295), graphics experiments and CPU
+optimizations separate. #437 already contains a next-build commitment; flag
+its rescheduling in the release decision rather than silently claiming it done.
+No fix here establishes complete identity migration (#234), affected-GPU
+resolution, or a performance improvement.
+
+## Retro inputs and implementation boundaries
+
+The official version feed reports 6.13.1. At 09:27 JST the official install
+manifest points to `6.13.0-full.zip`; `6.13.1-full.zip` returns HTTP 404. The
+6.13.1 incremental ZIP is available. The current updater invents the full URL
+from the latest version and therefore cannot complete this update unchanged.
+
+Read the official install/version/deletion manifests. Pin complete archive
+bytes and SHA-256 values, final `Code.pul`, XML and version, and verify the
+production WFC payload signature. The reviewed full pack's Code.pul differs
+from 6.12.8; the 6.13.1 patch contains no Code.pul. Recheck all downloaded bytes.
+Do not relabel 6.13.0 as 6.13.1, disable version checks, or publish a repack of
+the third-party asset archive.
+
+Prefer an official complete 6.13.1 archive if one appears. Otherwise add only
+the pinned base-plus-update support required for this release, with ordered
+staging and one final validation/activation. A rejected update must not replace
+the working pack or its saves. Downloads remain official; runtime acceptance
+is tied to the release profile rather than arbitrary future updates.
+
+Review these consumers together:
+
+- `scripts/update-retro-rewind-profile.py` and `builder/profiles/mkwii-rmcp01-rev0.json`.
+- `builder/kartpad_builder/retro_rewind.py`, release-header and Android-contract generators.
+- Android Retro download, worker, extraction, pipeline, validation and storage classes.
+- `apple/ios/KartPadRetroRewindInstaller.mm` and other users of generated constants.
+- Translation scripts, measured function/dispatch gates, dependency source provenance.
+- `padmint.json`, including the hard-coded Mac extracted Retro version path.
+
+Do not advance unrelated dependency pins. If the new code requires a translator
+correction, reproduce the failure and port the smallest supported fix. Preserve
+strict archive/path/expanded-size bounds and payload signatures.
+
+## Execution order
+
+1. Finalize and review this plan against current source, release instructions
+   and upstream input availability. Record corrections in the log before edits.
+2. Obtain and inspect inputs in ignored private storage. Review new executable
+   content and implement the smallest matching install contract. Initial
+   decision checkpoint: 60–90 minutes. If a broad redesign is necessary, record
+   it and remove optional scope before reconsidering the release schedule.
+3. Integrate the narrow corrections as separate commits. Reproduce before/after
+   behavior where feasible; reuse existing regression suites. Do not repeat
+   passing tests unless code changes or a new risk warrants it.
+4. Run focused and repository checks, verify maintained source pins, regenerate
+   translation and matching packs. New counts must be measured and reviewed,
+   never accepted just to make a check green.
+5. Build final Android and Apple/PadMint artifacts from clean exact source.
+   Validate app/pack fingerprints. Use current signing identities and forward
+   version/build numbers. Preserve public source/license/provenance boundaries.
+6. Validate exact fresh and upgrade paths. Android: 0.7.14 update and fresh data
+   import both reach a race. Apple: back up/read back Documents and Library
+   before any in-place physical install; verify save/identity/settings afterward.
+   Never uninstall or reset a player app to make an update pass.
+7. Exercise Original and Retro, a completed race/results and cold relaunch,
+   touch/controller handoff and each included correction. Test production
+   Retro WFC login, matchmaking, race, results and reconnect with another client.
+   A login or emulator-only pass is insufficient for the online release claim.
+8. Review final diff, tests, source/package provenance and release copy. Publish
+   only after the required acceptance gates; download hosted assets afresh,
+   compare checksums/signature, re-audit and verify the actual Android updater.
+
+## Release delivery and unresolved gates
+
+Latest 0.7.14 delivers an Android APK, a game-code-free iOS IPA for PadMint,
+recipe, source, notices and checksums. Current `AGENTS.md` still lists additional
+ready-to-play Apple artifacts under an older 4 October decision, while the
+5 October release/README says Apple builds use PadMint. Reconcile the stale
+release instruction before publication; do not silently broaden public assets.
+Prepare the established 0.7.14 delivery set first. Preserve the existing Android
+ready-to-play exception and never publish disc files, private keys or saves.
+
+Source tests, compilation, package audits, emulator gameplay, physical gameplay,
+production online and reporter acceptance are separate results. Missing hardware
+or peer/service availability does not turn a candidate into a verified release.
+Do useful source/package work first and identify the exact remaining gate.
+
+No issue is closed merely because code was included. #411 can close after the
+requested audio behavior is accepted; #377 needs the real upgrade path. Original
+ghost repair does not close #295, and storage hardening does not close #234.
+
+## Plan review checklist
+
+- [x] Every selected change has a concrete source boundary and regression gate.
+- [x] Official input layout and every version/profile consumer are accounted for.
+- [x] New recovery actions preserve live state and cannot run over a paused game.
+- [x] Optional fixes can be excluded without an upstream-wide merge.
+- [x] Exact package, physical and online requirements remain explicit.
+- [x] Dirty and concurrent work is preserved; no new sibling clone under GitHub.
+
+## Execution log
+
+Append dated decisions and results here. Keep raw logs, game inputs and generated
+code in ignored private/build directories, not this document.
+
+- 09:27 JST: confirmed main unchanged, new full 6.13.1 archive still unavailable,
+  official install manifest still 6.13.0. Created an isolated managed worktree
+  because the primary checkout is dirty and other candidates have broader scope.
+- Earlier focused review: save/ghost and identity/Mii host/JNI suites passed with
+  synthetic data. Apple callback probe reproduced flat-device steering/shake
+  failure before the existing correction and passed afterward. These are
+  starting evidence, not validation of a future combined release.
+
+- 09:33 JST: plan double-check complete. Verified the save correction can be
+  taken without the identity/Mii refactor; verified the chooser recovery gap
+  exists in main and must recheck paused state at confirmation. Found the Mac
+  PadMint recipe also hard-codes 6.12.8 and added it to the update boundary.
+  Reviewed the generated Apple/Android contracts and installer staging paths.
+  Corrected the plan so any unaccepted non-Retro item can be dropped. The
+  older ready-to-play Apple instruction conflicts with current release delivery;
+  that publication decision remains explicit, without blocking implementation.
