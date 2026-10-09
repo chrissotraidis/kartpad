@@ -39,6 +39,19 @@ public final class RetroRewindInstallPipelineTestMain {
                     List.of(new RetroRewindInstallValidator.ArtifactRequirement(
                             "Binaries/Code.pul", artifact.length, sha256(artifact))));
 
+            Path patchTree = Files.createDirectory(temporary.resolve("patch"));
+            Path baseTree = Files.createDirectory(temporary.resolve("base"));
+            Files.writeString(baseTree.resolve("version.txt"), "old");
+            Files.writeString(baseTree.resolve("preserved"), "keep");
+            Files.writeString(patchTree.resolve("version.txt"), "new");
+            Files.createDirectory(patchTree.resolve("nested"));
+            Files.writeString(patchTree.resolve("nested/new"), "added");
+            RetroRewindArchiveExtractor.mergeUpdate(patchTree, baseTree, () -> false);
+            expect(Files.readString(baseTree.resolve("version.txt")).equals("new"), "update did not replace base");
+            expect(Files.readString(baseTree.resolve("preserved")).equals("keep"), "update lost base content");
+            expect(Files.readString(baseTree.resolve("nested/new")).equals("added"), "update lost new content");
+            expect(!Files.exists(patchTree), "update staging was not removed");
+
             var success = RetroRewindInstallPipeline.install(
                     files.toFile(), archive, "success", () -> false, (done, total) -> {},
                     path -> RetroRewindArchiveDownload.Error.NONE,

@@ -1443,7 +1443,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
           @"Retro Rewind %@ Required",
           KartPadRetroRewindInstaller.requiredVersion]
                        message:[NSString stringWithFormat:
-          @"Retro Rewind is optional community content used for its extra tracks, characters, and Retro WFC online play. This KartPad build requires the matching official %.2f GiB full download.",
+          @"Retro Rewind is optional community content used for its extra tracks, characters, and Retro WFC online play. This KartPad build requires the matching official %.2f GiB base download plus a small update. The update downloads automatically, including when you choose a ZIP.",
           gib]
                 preferredStyle:UIAlertControllerStyleAlert];
   [options addAction:[UIAlertAction actionWithTitle:@"Download Official Pack"

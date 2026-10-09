@@ -148,3 +148,30 @@ code in ignored private/build directories, not this document.
   Corrected the plan so any unaccepted non-Retro item can be dropped. The
   older ready-to-play Apple instruction conflicts with current release delivery;
   that publication decision remains explicit, without blocking implementation.
+
+- 09:48 JST: the candidate includes the five narrow corrections as independent
+  commits. Android save/ghost JNI fault tests, Original compressed ghost tests,
+  sound persistence and native Apple motion checks passed. The current chooser
+  compiles and exposes recovery from Help while no game is paused.
+- Verified both official archives completely (ZIP CRCs and SHA-256). Full pack:
+  1,938,862,721 bytes, SHA-256
+  `2d6fa8bce76ee056d3d1e4370296a89af71685b57909978c52ff167d4c6248c2`;
+  patch: 29,403,976 bytes, SHA-256
+  `ee32da6fde457700cb60ad173e163ecd05a9ed61b41e39bea6b003406be3e6ce`.
+  Selected expansion is 2,189,509,451 plus 35,908,480 bytes; the base keeps its
+  existing 2.2 GB limit and the update is bounded separately to 36 MB.
+- Implemented one pinned base plus one pinned update in the builder and mobile
+  installers. Each archive retains verification and extraction bounds. Final
+  version/code/XML validation precedes activation. Updater reads the official
+  installation manifest and stops for multi-update chains or content deletions.
+  Both builder and native Apple extraction accepted the actual official pair.
+  Android download, extraction, pipeline, space and worker-policy tests passed.
+- Fresh translation passed without changing dependency pins: 29,637 generated
+  base functions, 29,065 retained base functions, 4,124 Retro functions, zero
+  translation failures. Both native-overridden mod patches match the prior
+  build; no new override was accepted. Production payload signature passed.
+- The 347-test Python suite exposed two old-version assertions and one absent
+  local JSON test JAR. After updating the assertions to measured release pins
+  and supplying the dependency, all affected tests passed in a 23-test rerun.
+  Kotlin compilation and an initial Android app build passed. Full Android pack
+  and iOS app builds are running; physical and production-online gates remain.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update KartPad's Retro Rewind pins from an official full archive."""
+"""Update KartPad's Retro Rewind pins from the official full archive and optional update."""
 
 from __future__ import annotations
 
@@ -35,12 +35,15 @@ def version_key(version: str) -> tuple[int, ...]:
     return tuple(int(part) for part in version.split("."))
 
 
-def latest_version() -> str:
-    request = urllib.request.Request(
-        VERSION_FEED, headers={"User-Agent": "KartPad-Retro-Rewind-Updater/1"}
-    )
+def read_manifest(name: str) -> str:
+    url = VERSION_FEED.replace("RetroRewindVersion.txt", name)
+    request = urllib.request.Request(url, headers={"User-Agent": "KartPad-Retro-Rewind-Updater/1"})
     with urllib.request.urlopen(request, timeout=30) as response:
-        lines = response.read().decode("utf-8").splitlines()
+        return response.read().decode("utf-8")
+
+
+def latest_version() -> str:
+    lines = read_manifest("RetroRewindVersion.txt").splitlines()
     versions = [line.split()[0] for line in lines if line.strip()]
     if not versions:
         raise ValueError("official Retro Rewind feed is empty")
@@ -50,6 +53,9 @@ def latest_version() -> str:
 
 
 def download(url: str, output: Path) -> None:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https" or parsed.netloc != "cdn.update.rwfc.net":
+        raise ValueError("archive URL must use the official HTTPS Retro Rewind CDN")
     if output.is_file() and zipfile.is_zipfile(output):
         return
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -78,7 +84,7 @@ def main() -> int:
     parser.add_argument(
         "--latest",
         action="store_true",
-        help="download and pin the latest official full archive",
+        help="pin the official full pack and its required update",
     )
     parser.add_argument(
         "--download-dir",
@@ -86,23 +92,40 @@ def main() -> int:
         default=ROOT / "private/builder/retro-rewind-downloads",
     )
     parser.add_argument("--profile", type=Path, default=DEFAULT_PROFILE)
+    parser.add_argument("--update-archive", type=Path)
+    parser.add_argument("--update-url")
     args = parser.parse_args()
 
+    expected_version = None
     if args.latest:
-        if args.archive is not None or args.archive_url is not None:
+        if any((args.archive, args.archive_url, args.update_archive, args.update_url)):
             parser.error("--latest does not accept archive arguments")
         try:
             version = latest_version()
+            expected_version = version
         except (OSError, UnicodeError, ValueError) as exc:
             parser.error(str(exc))
-        args.archive_url = (
-            f"https://cdn.update.rwfc.net/RetroRewind/zip/{version}-full.zip"
-        )
-        args.archive = args.download_dir / f"{version}-full.zip"
+        args.archive_url = read_manifest("RetroRewindInstall.txt").strip()
+        args.archive = args.download_dir / Path(urllib.parse.urlparse(args.archive_url).path).name
         try:
             download(args.archive_url, args.archive)
         except OSError as exc:
             parser.error(f"download failed: {exc}")
+        with zipfile.ZipFile(args.archive) as bundle:
+            base_version = bundle.read("RetroRewind6/version.txt").decode().strip()
+        if base_version != version:
+            pending = [line.split() for line in read_manifest("RetroRewindVersion.txt").splitlines()
+                       if line.strip() and version_key(line.split()[0]) > version_key(base_version)]
+            if len(pending) != 1 or pending[0][0] != version:
+                parser.error("full pack requires multiple updates; review the update chain before pinning")
+            for line in read_manifest("RetroRewindDelete.txt").splitlines():
+                fields = line.split()
+                if len(fields) >= 2 and version_key(base_version) < version_key(fields[0]) <= version_key(version):
+                    if fields[1].rstrip("/") == "/RetroRewind6" or fields[1].startswith("/RetroRewind6/"):
+                        parser.error("update requires content deletions; review before pinning")
+            args.update_url = pending[0][1]
+            args.update_archive = args.download_dir / Path(urllib.parse.urlparse(args.update_url).path).name
+            download(args.update_url, args.update_archive)
     elif args.archive is None or args.archive_url is None:
         parser.error("provide ARCHIVE OFFICIAL_URL or use --latest")
 
@@ -126,12 +149,43 @@ def main() -> int:
         code_bytes, code_hash = member_digest(bundle, code_path)
         xml_bytes, xml_hash = member_digest(bundle, xml_path)
 
+    update_pin = None
+    if bool(args.update_archive) != bool(args.update_url):
+        parser.error("--update-archive and --update-url are required together")
+    if args.update_archive:
+        parsed_update = urllib.parse.urlparse(args.update_url)
+        if parsed_update.scheme != "https" or parsed_update.netloc != "cdn.update.rwfc.net":
+            parser.error("update URL must use the official HTTPS Retro Rewind CDN")
+        with zipfile.ZipFile(args.update_archive) as update:
+            next_version = update.read(version_path).decode().strip()
+            if version_key(next_version) <= version_key(version):
+                parser.error("update must advance the base version")
+            version = next_version
+            if code_path in update.namelist():
+                code_bytes, code_hash = member_digest(update, code_path)
+            if xml_path in update.namelist():
+                xml_bytes, xml_hash = member_digest(update, xml_path)
+            expanded = sum(i.file_size for i in update.infolist() if i.filename.startswith(root + "/"))
+        update_hash = hashlib.sha256()
+        with args.update_archive.open("rb") as handle:
+            while chunk := handle.read(1024 * 1024):
+                update_hash.update(chunk)
+        digest = update_hash.hexdigest()
+        update_pin = dict(url=args.update_url, bytes=args.update_archive.stat().st_size,
+                          sha256=digest, maximumExpandedBytes=((expanded // 1000000) + 1) * 1000000)
+
     archive_hash = hashlib.sha256()
     with archive.open("rb") as source:
         while chunk := source.read(1024 * 1024):
             archive_hash.update(chunk)
 
+    if expected_version is not None and version != expected_version:
+        parser.error("downloaded pack version differs from the official version feed")
     config["version"] = version
+    if update_pin:
+        config["updateArchive"] = update_pin
+    else:
+        config.pop("updateArchive", None)
     config["archive"].update(
         url=args.archive_url,
         bytes=archive.stat().st_size,

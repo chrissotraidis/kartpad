@@ -122,7 +122,7 @@ internal class RetroRewindInstallActivity : Activity() {
         column.addView(
             label(
                 "Optional community content for extra tracks, characters, and Retro WFC. " +
-                    "KartPad downloads the pinned official full pack and verifies it before use.",
+                    "KartPad downloads the pinned official pack and update and verifies them before use.",
                 16f,
                 Color.rgb(220, 211, 218),
             ),
@@ -283,7 +283,7 @@ internal class RetroRewindInstallActivity : Activity() {
     private fun renderNotInstalled() {
         logState("not-installed")
         status.text = "Retro Rewind is not installed"
-        detail.text = "The download is 1.73 GiB. Installation requires about 4.03 GiB free on shared app storage."
+        detail.text = "The download is about 1.84 GiB. Installation requires about 4.2 GiB free on shared app storage."
         progress.visibility = View.GONE
         primary.text = "Download official pack"
         primary.contentDescription = primary.text

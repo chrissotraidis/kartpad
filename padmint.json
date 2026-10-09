@@ -109,7 +109,7 @@
             "--image",
             "{disc}",
             "--retro-root",
-            "{repo}/private/builder/retro-rewind-downloads/6.12.8-extracted/RetroRewind6",
+            "{repo}/private/builder/retro-rewind-downloads/6.13.1-extracted/RetroRewind6",
             "--payload",
             "{repo}/private/builder/retro-rewind-downloads/payload.RMCPD00.bin"
           ],

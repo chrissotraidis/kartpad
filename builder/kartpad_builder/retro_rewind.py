@@ -82,14 +82,16 @@ def validate_config(config: dict[str, Any], location: str = "retroRewind") -> No
         raise BuildError(
             f"{location}.versionManifestUrl must be the official HTTPS Retro Rewind version feed"
         )
-    archive = config["archive"]
-    if not isinstance(archive, dict) or not isinstance(archive.get("url"), str):
-        raise BuildError(f"{location}.archive must define url")
-    _require_digest(archive.get("sha256"), f"{location}.archive.sha256")
-    if not isinstance(archive.get("bytes"), int) or archive["bytes"] <= 0:
-        raise BuildError(f"{location}.archive.bytes must be positive")
-    if not isinstance(archive.get("maximumExpandedBytes"), int) or archive["maximumExpandedBytes"] <= 0:
-        raise BuildError(f"{location}.archive.maximumExpandedBytes must be positive")
+    for key in ("archive", "updateArchive"):
+        if key == "updateArchive" and key not in config:
+            continue
+        archive = config[key]
+        if not isinstance(archive, dict) or not isinstance(archive.get("url"), str):
+            raise BuildError(f"{location}.{key} must define url")
+        _require_digest(archive.get("sha256"), f"{location}.{key}.sha256")
+        for field in ("bytes", "maximumExpandedBytes"):
+            if not isinstance(archive.get(field), int) or archive[field] <= 0:
+                raise BuildError(f"{location}.{key}.{field} must be positive")
     if not isinstance(config["root"], str) or PurePosixPath(config["root"]).name != config["root"]:
         raise BuildError(f"{location}.root must be one directory name")
     for key in ("codePul", "riivolutionXml", "payload"):
@@ -147,44 +149,58 @@ def _validated_member_path(name: str) -> PurePosixPath:
     return path
 
 
-def extract_archive(archive: Path, destination: Path, config: dict[str, Any]) -> Path:
-    if archive.stat().st_size != config["archive"]["bytes"] or sha256_file(archive) != config["archive"]["sha256"]:
-        raise BuildError("Retro Rewind archive does not match the pinned profile")
+def extract_archive(archive: Path, destination: Path, config: dict[str, Any],
+                    update: Path | None = None) -> Path:
+    archives = [(archive, config["archive"])]
+    if "updateArchive" in config:
+        if update is None:
+            raise BuildError("Retro Rewind requires its pinned update archive")
+        archives.append((update, config["updateArchive"]))
+    elif update is not None:
+        raise BuildError("Retro Rewind profile does not allow an update archive")
+    for path, pin in archives:
+        if path.stat().st_size != pin["bytes"] or sha256_file(path) != pin["sha256"]:
+            raise BuildError("Retro Rewind archive does not match the pinned profile")
     root_name = config["root"]
     stage = destination.with_name(destination.name + f".partial.{os.getpid()}")
     if stage.exists():
         shutil.rmtree(stage)
-    expanded = 0
     try:
-        with zipfile.ZipFile(archive) as bundle:
-            selected: list[tuple[zipfile.ZipInfo, PurePosixPath]] = []
-            for info in bundle.infolist():
-                path = _validated_member_path(info.filename)
-                unix_mode = info.external_attr >> 16
-                if stat.S_ISLNK(unix_mode):
-                    raise BuildError(f"Retro Rewind archive contains a symbolic link: {info.filename}")
-                if path.parts[0] != root_name:
-                    continue
-                expanded += info.file_size
-                if expanded > config["archive"]["maximumExpandedBytes"]:
-                    raise BuildError("Retro Rewind archive expands beyond the pinned safety limit")
-                selected.append((info, path))
-            if not selected:
-                raise BuildError(f"Retro Rewind archive does not contain {root_name}")
-            for info, path in selected:
-                relative = Path(*path.parts[1:])
-                output = stage / relative
-                if info.is_dir():
-                    output.mkdir(parents=True, exist_ok=True)
-                    continue
-                output.parent.mkdir(parents=True, exist_ok=True)
-                with bundle.open(info) as source, output.open("xb") as target:
-                    shutil.copyfileobj(source, target, 1024 * 1024)
+        for index, (archive_path, pin) in enumerate(archives):
+            with zipfile.ZipFile(archive_path) as bundle:
+                selected: list[tuple[zipfile.ZipInfo, PurePosixPath]] = []
+                seen: set[PurePosixPath] = set()
+                expanded = 0
+                for info in bundle.infolist():
+                    path = _validated_member_path(info.filename)
+                    if stat.S_ISLNK(info.external_attr >> 16) or info.flag_bits & 1:
+                        raise BuildError(f"Retro Rewind archive contains an unsupported entry: {info.filename}")
+                    if path in seen:
+                        raise BuildError("Retro Rewind archive contains duplicate entries")
+                    seen.add(path)
+                    if len(seen) > 10000:
+                        raise BuildError("Retro Rewind archive contains too many entries")
+                    if path.parts[0] != root_name:
+                        continue
+                    expanded += info.file_size
+                    if expanded > pin["maximumExpandedBytes"]:
+                        raise BuildError("Retro Rewind archive expands beyond the pinned safety limit")
+                    selected.append((info, path))
+                if not selected:
+                    raise BuildError(f"Retro Rewind archive does not contain {root_name}")
+                for info, path in selected:
+                    output = stage / Path(*path.parts[1:])
+                    if info.is_dir():
+                        output.mkdir(parents=True, exist_ok=True)
+                        continue
+                    output.parent.mkdir(parents=True, exist_ok=True)
+                    # Replacement is permitted only between independently verified archives.
+                    with bundle.open(info) as source, output.open("wb" if index else "xb") as target:
+                        shutil.copyfileobj(source, target, 1024 * 1024)
         validate_pack(stage, config)
         destination.parent.mkdir(parents=True, exist_ok=True)
         if destination.exists():
             validate_pack(destination, config)
-            shutil.rmtree(stage)
             return destination
         os.replace(stage, destination)
         return destination
@@ -267,20 +283,26 @@ def prepare_inputs(profile: Profile, work_root: Path, install: bool) -> RetroRew
     config = profile.data["retroRewind"]
     validate_config(config)
     cache = work_root / "retro-rewind-downloads"
-    archive = cache / Path(urllib.parse.urlparse(config["archive"]["url"]).path).name
     root = cache / f"{config['version']}-extracted" / config["root"]
     payload = cache / "payload.RMCPD00.bin"
 
     try:
         validate_pack(root, config)
     except (BuildError, OSError):
-        if not archive.is_file() or archive.stat().st_size != config["archive"]["bytes"] or sha256_file(archive) != config["archive"]["sha256"]:
-            if not install:
-                raise BuildError("missing pinned Retro Rewind pack; run ./scripts/build-user-ipa.sh bootstrap")
-            if not _reuse_shared(archive, config["archive"]["bytes"], config["archive"]["sha256"]):
-                _download(config["archive"]["url"], archive, config["archive"]["bytes"], config["archive"]["sha256"])
-                _share(archive)
-        extract_archive(archive, root, config)
+        paths = []
+        for key in ("archive", "updateArchive"):
+            if key not in config:
+                continue
+            pin = config[key]
+            path = cache / Path(urllib.parse.urlparse(pin["url"]).path).name
+            if not path.is_file() or path.stat().st_size != pin["bytes"] or sha256_file(path) != pin["sha256"]:
+                if not install:
+                    raise BuildError("missing pinned Retro Rewind pack; run ./scripts/build-user-ipa.sh bootstrap")
+                if not _reuse_shared(path, pin["bytes"], pin["sha256"]):
+                    _download(pin["url"], path, pin["bytes"], pin["sha256"])
+                    _share(path)
+            paths.append(path)
+        extract_archive(paths[0], root, config, paths[1] if len(paths) > 1 else None)
 
     try:
         validate_rwfc_payload(payload, config["payload"])

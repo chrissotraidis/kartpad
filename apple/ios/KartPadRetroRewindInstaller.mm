@@ -186,6 +186,195 @@ BOOL KartPadFileMatches(NSString *path, uint64_t expectedBytes,
 
 }  // namespace
 
+// Each archive is scanned independently, so duplicates within either archive remain errors.
+// Replacements are allowed only in this installation's private staging tree.
+static BOOL KartPadExtractRetroArchive(NSString *archivePath, NSString *stageRoot,
+    uint64_t maximumBytes, BOOL allowReplacement,
+    KartPadRetroRewindInstallProgress progress, NSError **error) {
+  NSFileManager *files = NSFileManager.defaultManager;
+  NSError *workError = nil;
+  void *reader = nullptr;
+  kartpad::retro_rewind::ArchiveScan archiveScan{
+      KARTPAD_RR_ROOT, 10000, maximumBytes};
+  if (workError == nil) {
+    reader = mz_zip_reader_create();
+    if (reader == nullptr ||
+        mz_zip_reader_open_file(reader, archivePath.fileSystemRepresentation) != MZ_OK) {
+      workError = KartPadRetroRewindError(23,
+                                          @"The Retro Rewind ZIP could not be opened.");
+    }
+  }
+
+  int32_t status = workError == nil ? mz_zip_reader_goto_first_entry(reader)
+                                    : MZ_END_OF_LIST;
+  while (workError == nil && status == MZ_OK) {
+    mz_zip_file *info = nullptr;
+    if (mz_zip_reader_entry_get_info(reader, &info) != MZ_OK ||
+        info == nullptr || info->filename == nullptr) {
+      workError = KartPadRetroRewindError(24,
+                                          @"The ZIP directory is malformed.");
+      break;
+    }
+    NSString *name = nil;
+    kartpad::retro_rewind::ArchiveMemberPath portablePath;
+    NSArray<NSString *> *parts = KartPadSafeArchiveComponents(
+        info->filename, info->filename_size, &name, &portablePath, &workError);
+    if (parts == nil) break;
+    const auto observation = archiveScan.Observe(
+        portablePath, info->uncompressed_size,
+        mz_zip_attrib_is_symlink(info->external_fa,
+                                 info->version_madeby) == MZ_OK,
+        (info->flag & MZ_ZIP_FLAG_ENCRYPTED) != 0);
+    if (!observation) {
+      if (observation.error ==
+          kartpad::retro_rewind::ArchiveScanError::UnsupportedEntry) {
+        workError = KartPadRetroRewindError(25,
+            [NSString stringWithFormat:
+                @"The ZIP contains an unsupported entry: %@", name]);
+      } else if (observation.error ==
+                 kartpad::retro_rewind::ArchiveScanError::DuplicateEntry) {
+        workError = KartPadRetroRewindError(31,
+                                            @"The ZIP contains duplicate files.");
+      } else {
+        workError = KartPadRetroRewindError(26,
+            @"The ZIP expands beyond this build's safety limits.");
+      }
+      break;
+    }
+    status = mz_zip_reader_goto_next_entry(reader);
+  }
+  if (workError == nil && status != MZ_END_OF_LIST) {
+    workError = KartPadRetroRewindError(27,
+                                        @"The ZIP directory could not be read.");
+  }
+  if (workError == nil && archiveScan.selected_entries() == 0) {
+    workError = KartPadRetroRewindError(28,
+        [NSString stringWithFormat:@"The ZIP does not contain %@.",
+            [NSString stringWithUTF8String:KARTPAD_RR_ROOT]]);
+  }
+
+  uint64_t extractedBytes = 0;
+  int lastExtractionPercent = -1;
+  if (workError == nil) status = mz_zip_reader_goto_first_entry(reader);
+  while (workError == nil && status == MZ_OK) {
+    mz_zip_file *info = nullptr;
+    if (mz_zip_reader_entry_get_info(reader, &info) != MZ_OK ||
+        info == nullptr || info->filename == nullptr) {
+      workError = KartPadRetroRewindError(29, @"A ZIP entry could not be read.");
+      break;
+    }
+    NSString *name = nil;
+    NSArray<NSString *> *parts = KartPadSafeArchiveComponents(
+        info->filename, info->filename_size, &name, nullptr, &workError);
+    if (parts == nil) break;
+    if ([parts.firstObject isEqualToString:
+            [NSString stringWithUTF8String:KARTPAD_RR_ROOT]]) {
+      NSArray<NSString *> *relative =
+          parts.count > 1 ? [parts subarrayWithRange:NSMakeRange(1, parts.count - 1)]
+                          : @[];
+      if (relative.count > 0) {
+        NSString *output = stageRoot;
+        for (NSString *part in relative) {
+          output = [output stringByAppendingPathComponent:part];
+        }
+        output = output.stringByStandardizingPath;
+        NSString *safePrefix = [stageRoot.stringByStandardizingPath
+            stringByAppendingString:@"/"];
+        if (![output hasPrefix:safePrefix]) {
+          workError = KartPadRetroRewindError(30,
+                                              @"The ZIP escaped its staging folder.");
+          break;
+        }
+        const BOOL isDirectory =
+            mz_zip_attrib_is_dir(info->external_fa, info->version_madeby) == MZ_OK;
+        if (isDirectory) {
+          [files createDirectoryAtPath:output withIntermediateDirectories:YES
+                            attributes:nil error:&workError];
+        } else {
+          NSString *parent = output.stringByDeletingLastPathComponent;
+          [files createDirectoryAtPath:parent withIntermediateDirectories:YES
+                            attributes:nil error:&workError];
+          if (workError == nil && [files fileExistsAtPath:output]) {
+            NSDictionary *existing = [files attributesOfItemAtPath:output error:&workError];
+            if (allowReplacement && [existing[NSFileType] isEqual:NSFileTypeRegular]) {
+              [files removeItemAtPath:output error:&workError];
+            } else if (workError == nil) {
+              workError = KartPadRetroRewindError(31, @"The ZIP conflicts with an existing entry.");
+            }
+          }
+          if (workError == nil &&
+              mz_zip_reader_entry_save_file(reader,
+                  output.fileSystemRepresentation) != MZ_OK) {
+            workError = KartPadRetroRewindError(32,
+                [NSString stringWithFormat:@"Could not extract %@.", name]);
+          }
+        }
+      }
+      extractedBytes += (uint64_t)info->uncompressed_size;
+      if (progress != nil && archiveScan.selected_bytes() > 0) {
+        const double fraction =
+            0.18 + 0.77 * ((double)extractedBytes /
+                           (double)archiveScan.selected_bytes());
+        const int percent = (int)(fraction * 100.0);
+        if (percent != lastExtractionPercent) {
+          lastExtractionPercent = percent;
+          progress(@"Installing Retro Rewind content…", fraction);
+        }
+      }
+    }
+    status = mz_zip_reader_goto_next_entry(reader);
+  }
+  if (reader != nullptr) {
+    mz_zip_reader_close(reader);
+    mz_zip_reader_delete(&reader);
+  }
+  if (workError == nil && status != MZ_END_OF_LIST) {
+    workError = KartPadRetroRewindError(33,
+                                        @"The ZIP extraction stopped early.");
+  }
+  if (workError != nil && error != nullptr) *error = workError;
+  return workError == nil;
+}
+
+static BOOL KartPadDownloadRetroUpdate(NSString *destination,
+    KartPadRetroRewindInstallProgress progress, NSError **error) {
+  if (progress != nil) progress(@"Downloading the official Retro Rewind update…", 0.18);
+  NSURL *url = [NSURL URLWithString:@KARTPAD_RR_UPDATE_URL];
+  __block NSError *downloadError = nil;
+  dispatch_semaphore_t completed = dispatch_semaphore_create(0);
+  NSURLSessionConfiguration *configuration = NSURLSessionConfiguration.ephemeralSessionConfiguration;
+  configuration.timeoutIntervalForRequest = 60;
+  configuration.timeoutIntervalForResource = 600;
+  NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
+  NSURLSessionDownloadTask *task = [session downloadTaskWithURL:url
+      completionHandler:^(NSURL *temporary, NSURLResponse *response, NSError *failure) {
+    downloadError = failure;
+    if (downloadError == nil && (temporary == nil ||
+        ![response.URL isEqual:url] || ![response isKindOfClass:NSHTTPURLResponse.class] ||
+        ((NSHTTPURLResponse *)response).statusCode != 200)) {
+      downloadError = KartPadRetroRewindError(35, @"The official update download failed.");
+    }
+    if (downloadError == nil) {
+      [NSFileManager.defaultManager moveItemAtURL:temporary
+          toURL:[NSURL fileURLWithPath:destination] error:&downloadError];
+    }
+    dispatch_semaphore_signal(completed);
+  }];
+  [task resume];
+  dispatch_semaphore_wait(completed, DISPATCH_TIME_FOREVER);
+  [session finishTasksAndInvalidate];
+  NSDictionary *attributes = downloadError == nil ?
+      [NSFileManager.defaultManager attributesOfItemAtPath:destination error:&downloadError] : nil;
+  if (downloadError == nil && [attributes fileSize] != KARTPAD_RR_UPDATE_BYTES)
+    downloadError = KartPadRetroRewindError(36, @"The update size does not match this build.");
+  NSString *digest = downloadError == nil ?
+      KartPadSHA256ForLargeFile(destination, progress, 0.18, 0.20, &downloadError) : nil;
+  if (downloadError == nil && ![digest isEqualToString:@KARTPAD_RR_UPDATE_SHA256])
+    downloadError = KartPadRetroRewindError(37, @"The update failed its pinned SHA-256 check.");
+  if (downloadError != nil && error != nullptr) *error = downloadError;
+  return downloadError == nil;
+}
+
 @implementation KartPadRetroRewindInstaller
 
 + (NSString *)requiredVersion {
@@ -296,7 +485,7 @@ BOOL KartPadFileMatches(NSString *path, uint64_t expectedBytes,
     if (securityScoped) [archiveURL stopAccessingSecurityScopedResource];
     return KartPadRetroRewindFail(error, 21,
         [NSString stringWithFormat:
-            @"This ZIP is not the official Retro Rewind %@ full download.",
+            @"This ZIP is not the official base download required for Retro Rewind %@.",
             self.requiredVersion]);
   }
   NSString *archiveHash = KartPadSHA256ForLargeFile(
@@ -332,141 +521,19 @@ BOOL KartPadFileMatches(NSString *path, uint64_t expectedBytes,
                            error:&workError];
   }
 
-  void *reader = nullptr;
-  kartpad::retro_rewind::ArchiveScan archiveScan{
-      KARTPAD_RR_ROOT, 10000, KARTPAD_RR_MAXIMUM_EXPANDED_BYTES};
+  NSString *updatePath = [stageParent stringByAppendingPathComponent:@".update.zip"];
+  if (workError == nil && KARTPAD_RR_UPDATE_BYTES > 0) {
+    KartPadDownloadRetroUpdate(updatePath, progress, &workError);
+  }
   if (workError == nil) {
-    reader = mz_zip_reader_create();
-    if (reader == nullptr ||
-        mz_zip_reader_open_file(reader, archivePath.fileSystemRepresentation) != MZ_OK) {
-      workError = KartPadRetroRewindError(23,
-                                          @"The Retro Rewind ZIP could not be opened.");
-    }
+    KartPadExtractRetroArchive(archivePath, stageRoot,
+        KARTPAD_RR_MAXIMUM_EXPANDED_BYTES, NO, progress, &workError);
   }
   if (securityScoped) [archiveURL stopAccessingSecurityScopedResource];
-
-  int32_t status = workError == nil ? mz_zip_reader_goto_first_entry(reader)
-                                    : MZ_END_OF_LIST;
-  while (workError == nil && status == MZ_OK) {
-    mz_zip_file *info = nullptr;
-    if (mz_zip_reader_entry_get_info(reader, &info) != MZ_OK ||
-        info == nullptr || info->filename == nullptr) {
-      workError = KartPadRetroRewindError(24,
-                                          @"The ZIP directory is malformed.");
-      break;
-    }
-    NSString *name = nil;
-    kartpad::retro_rewind::ArchiveMemberPath portablePath;
-    NSArray<NSString *> *parts = KartPadSafeArchiveComponents(
-        info->filename, info->filename_size, &name, &portablePath, &workError);
-    if (parts == nil) break;
-    const auto observation = archiveScan.Observe(
-        portablePath, info->uncompressed_size,
-        mz_zip_attrib_is_symlink(info->external_fa,
-                                 info->version_madeby) == MZ_OK,
-        (info->flag & MZ_ZIP_FLAG_ENCRYPTED) != 0);
-    if (!observation) {
-      if (observation.error ==
-          kartpad::retro_rewind::ArchiveScanError::UnsupportedEntry) {
-        workError = KartPadRetroRewindError(25,
-            [NSString stringWithFormat:
-                @"The ZIP contains an unsupported entry: %@", name]);
-      } else if (observation.error ==
-                 kartpad::retro_rewind::ArchiveScanError::DuplicateEntry) {
-        workError = KartPadRetroRewindError(31,
-                                            @"The ZIP contains duplicate files.");
-      } else {
-        workError = KartPadRetroRewindError(26,
-            @"The ZIP expands beyond this build's safety limits.");
-      }
-      break;
-    }
-    status = mz_zip_reader_goto_next_entry(reader);
-  }
-  if (workError == nil && status != MZ_END_OF_LIST) {
-    workError = KartPadRetroRewindError(27,
-                                        @"The ZIP directory could not be read.");
-  }
-  if (workError == nil && archiveScan.selected_entries() == 0) {
-    workError = KartPadRetroRewindError(28,
-        [NSString stringWithFormat:@"The ZIP does not contain %@.",
-            [NSString stringWithUTF8String:KARTPAD_RR_ROOT]]);
-  }
-
-  uint64_t extractedBytes = 0;
-  int lastExtractionPercent = -1;
-  if (workError == nil) status = mz_zip_reader_goto_first_entry(reader);
-  while (workError == nil && status == MZ_OK) {
-    mz_zip_file *info = nullptr;
-    if (mz_zip_reader_entry_get_info(reader, &info) != MZ_OK ||
-        info == nullptr || info->filename == nullptr) {
-      workError = KartPadRetroRewindError(29, @"A ZIP entry could not be read.");
-      break;
-    }
-    NSString *name = nil;
-    NSArray<NSString *> *parts = KartPadSafeArchiveComponents(
-        info->filename, info->filename_size, &name, nullptr, &workError);
-    if (parts == nil) break;
-    if ([parts.firstObject isEqualToString:
-            [NSString stringWithUTF8String:KARTPAD_RR_ROOT]]) {
-      NSArray<NSString *> *relative =
-          parts.count > 1 ? [parts subarrayWithRange:NSMakeRange(1, parts.count - 1)]
-                          : @[];
-      if (relative.count > 0) {
-        NSString *output = stageRoot;
-        for (NSString *part in relative) {
-          output = [output stringByAppendingPathComponent:part];
-        }
-        output = output.stringByStandardizingPath;
-        NSString *safePrefix = [stageRoot.stringByStandardizingPath
-            stringByAppendingString:@"/"];
-        if (![output hasPrefix:safePrefix]) {
-          workError = KartPadRetroRewindError(30,
-                                              @"The ZIP escaped its staging folder.");
-          break;
-        }
-        const BOOL isDirectory =
-            mz_zip_attrib_is_dir(info->external_fa, info->version_madeby) == MZ_OK;
-        if (isDirectory) {
-          [files createDirectoryAtPath:output withIntermediateDirectories:YES
-                            attributes:nil error:&workError];
-        } else {
-          NSString *parent = output.stringByDeletingLastPathComponent;
-          [files createDirectoryAtPath:parent withIntermediateDirectories:YES
-                            attributes:nil error:&workError];
-          if (workError == nil && [files fileExistsAtPath:output]) {
-            workError = KartPadRetroRewindError(31,
-                                                @"The ZIP contains duplicate files.");
-          }
-          if (workError == nil &&
-              mz_zip_reader_entry_save_file(reader,
-                  output.fileSystemRepresentation) != MZ_OK) {
-            workError = KartPadRetroRewindError(32,
-                [NSString stringWithFormat:@"Could not extract %@.", name]);
-          }
-        }
-      }
-      extractedBytes += (uint64_t)info->uncompressed_size;
-      if (progress != nil && archiveScan.selected_bytes() > 0) {
-        const double fraction =
-            0.18 + 0.77 * ((double)extractedBytes /
-                           (double)archiveScan.selected_bytes());
-        const int percent = (int)(fraction * 100.0);
-        if (percent != lastExtractionPercent) {
-          lastExtractionPercent = percent;
-          progress(@"Installing Retro Rewind content…", fraction);
-        }
-      }
-    }
-    status = mz_zip_reader_goto_next_entry(reader);
-  }
-  if (reader != nullptr) {
-    mz_zip_reader_close(reader);
-    mz_zip_reader_delete(&reader);
-  }
-  if (workError == nil && status != MZ_END_OF_LIST) {
-    workError = KartPadRetroRewindError(33,
-                                        @"The ZIP extraction stopped early.");
+  if (workError == nil && KARTPAD_RR_UPDATE_BYTES > 0) {
+    KartPadExtractRetroArchive(updatePath, stageRoot,
+        KARTPAD_RR_UPDATE_MAXIMUM_EXPANDED_BYTES, YES, progress, &workError);
+    if (workError == nil) [files removeItemAtPath:updatePath error:&workError];
   }
   if (workError == nil &&
       ![self validateInstalledRoot:stageRoot error:&workError]) {
