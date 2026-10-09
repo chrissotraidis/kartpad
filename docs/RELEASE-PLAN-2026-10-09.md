@@ -312,3 +312,60 @@ these acceptance steps, not yet approved as a working public online release.
   simulator. This is launch/rendering evidence, not a driven race. Stopped only
   the owned simulator after the bounded checks; its installed app/data remain.
   Corrected physical iPad candidate remains installed for hands-on acceptance.
+
+- 12:34 JST, release preparation: located the existing Community Release identity
+  in the maintainer's private Android signing directory. Its certificate matches
+  published 0.7.14 (`c1dbe0a0d72d830a5779476b346a750d0a37515adef992cad2f3863058f7f2f2`).
+  No key was created or rotated. Derived the final universal APK twice from the
+  audited AAB; both are byte-identical, 65,329,029 bytes, SHA-256
+  `0b8fc9cca8929379fbcaff0570c4dfe59aa1d038a5e760a26a49198277267f56`.
+- Installed this APK over the verified public 0.7.14 APK on the owned baseline
+  emulator. All 2,077 existing files in files/shared_prefs matched SHA-256 before
+  and immediately after installation, including rksys.dat, configuration and
+  controller settings. No uninstall was used for this upgrade. A separate fresh
+  owned emulator imported the extracted-game-data ZIP through Android's picker.
+  The fresh emulator had one system_server/WifiHandlerThread crash during initial
+  boot; Android recovered and import completed. This was not a KartPad crash.
+  A cold application relaunch resolved the earlier inconclusive title-input test;
+  both signed-APK fixtures then accepted controls and created a licence normally.
+- Assembled the established six-file delivery set under ignored
+  `build/release-0715/publish/`: release APK, corrected game-code-free PadMint IPA,
+  recipe, deterministic tracked-source snapshot, notices and SHA256SUMS. Source
+  snapshot uses d97eadfc plus every exact runtime/translator gitlink; it includes
+  both platform app sources, with Android's binary still built at daf662ec before
+  the Apple-only preservation correction. Final merge/source reconciliation is
+  still required before publication.
+- Audits: repository APK audit passed on local and downloaded draft copies.
+  PadMint IPA, notices and recipe passed. APK has only the two translated-code
+  findings explicitly accepted in RELEASE-CHECKLIST step 6. Source findings were
+  reviewed: the data-section marker is the translator's source string, and
+  address-named definitions are small synthetic translator test fixtures in
+  BaseManifestBuilderTests.cs and TranslatedBuildShardEmitterTests.cs. The latter
+  has two pinned-source variants differing in test assertions and direct-call
+  lowering expectations; no generated game source was added. No private/ref/
+  bootstrap members exist in the source archive. Preserve raw audit findings;
+  do not describe this as a blanket PadMint PASS or weaken the scanner.
+- Created GitHub **draft** release v0.7.15 with all six assets and explicit open
+  acceptance gates. Downloaded every draft asset with maintainer authentication:
+  all five SHA256SUMS entries matched, and GitHub asset digests match local files.
+  Anonymous download verification must follow actual publication. Public latest
+  remains v0.7.14. Draft URL:
+  https://github.com/chrissotraidis/kartpad/releases/tag/untagged-75cebedb4218bd623e96
+  Nothing has been published, merged or closed.
+
+- 12:40 JST: both exact release-signed APK fixtures reached Original Luigi Circuit
+  (50cc Mushroom Cup), accepted acceleration and rendered the race. Fresh install
+  used the real system-picker ZIP import; upgrade used the public 0.7.14 app and
+  preserved its existing rksys.dat/configuration before launch. Screenshots are
+  public-5584-race.png and public-upgrade-race.png in the ignored evidence folder.
+  This satisfies the Android fresh/upgrade race-start gate, not completed-race,
+  production online or physical-device acceptance. No source change was needed
+  to recover input after the cold relaunch. Retained both emulator data sets.
+
+- 12:49 JST: final signed APK also passed the real Retro installer and reached
+  SNES Mario Circuit 1, accepting acceleration. Only the verified official base
+  archive was pre-positioned in the owned emulator cache; the actual release
+  worker downloaded the patch, extracted, validated and activated 6.13.1. No game
+  code or installer behavior was substituted. Evidence: public-retro-race.png
+  and public-fresh-install.log. Completed races/results, production online and
+  the physical Apple motion/audio/ghost checks remain pending.
