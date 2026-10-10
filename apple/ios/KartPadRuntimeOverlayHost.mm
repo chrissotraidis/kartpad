@@ -16,6 +16,7 @@
 #import "SunPadGameOverlay.h"
 #import "SunPadInputMixer.h"
 #import "SunPadSettings.h"
+#include "KartPadUpdateCheck.inc.mm"
 #include "audio_backend.h"
 #include "music_attenuation.h"
 #include "runtime_config.h"
@@ -741,6 +742,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 @property(nonatomic, strong) NSMutableArray<UIView *> *dividers;
 @property(nonatomic, strong) NSMutableArray<UIButton *> *actionButtons;
 @property(nonatomic, strong) UIButton *themeButton;
+@property(nonatomic, strong) UIButton *updateButton;
 @property(nonatomic) BOOL darkMode;
 @property(nonatomic, strong) UIButton *preferenceButton;
 @property(nonatomic, strong) UIImageView *checker;
@@ -797,6 +799,25 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 
 - (void)closeSetupHelp {
   [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)showUpdate {
+  NSDictionary<NSString *, NSString *> *update = KartPadKnownUpdate();
+  if (update == nil) {
+    self.updateButton.hidden = YES;
+    return;
+  }
+  UIAlertController *alert = [UIAlertController
+      alertControllerWithTitle:[NSString stringWithFormat:@"KartPad %@ Is Available", update[@"version"]]
+      message:@"Build it with PadMint on your computer, then install it over this KartPad with the same sideloading tool and Apple ID. Your saves and game data stay."
+      preferredStyle:UIAlertControllerStyleAlert];
+  NSURL *page = [NSURL URLWithString:update[@"page"]];
+  [alert addAction:[UIAlertAction actionWithTitle:@"What's New" style:UIAlertActionStyleDefault
+      handler:^(UIAlertAction *action) {
+    if (page != nil) [UIApplication.sharedApplication openURL:page options:@{} completionHandler:nil];
+  }]];
+  [alert addAction:[UIAlertAction actionWithTitle:@"Not Now" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)showSetupHelp {
@@ -1056,8 +1077,16 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   UIButton *help = [self link:@"Help" symbol:nil action:^{ [weakSelf showSetupHelp]; }];
   help.accessibilityIdentifier = @"kartpad.setup.help";
   [help setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+  self.updateButton = [self link:@"Update available" symbol:@"arrow.down.circle" action:^{ [weakSelf showUpdate]; }];
+  self.updateButton.accessibilityIdentifier = @"kartpad.setup.update";
+  self.updateButton.hidden = KartPadKnownUpdate() == nil;
+  [self.updateButton setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+  KartPadRefreshUpdate(NO, ^(NSDictionary<NSString *, NSString *> *update, BOOL checked) {
+    (void)checked;
+    weakSelf.updateButton.hidden = update == nil;
+  });
   [identity setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-  self.header = [[UIStackView alloc] initWithArrangedSubviews:@[identity, [UIView new], self.themeButton, help]];
+  self.header = [[UIStackView alloc] initWithArrangedSubviews:@[identity, [UIView new], self.updateButton, self.themeButton, help]];
   self.header.axis = UILayoutConstraintAxisHorizontal;
   self.header.alignment = UIStackViewAlignmentCenter;
   self.header.spacing = 20;
