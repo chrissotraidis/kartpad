@@ -13,7 +13,7 @@ iPhone/iPad.
    your disc image and **Mac**, and move the **KartPad** app it makes to
    Applications. To update, build the new version with PadMint, quit KartPad
    and replace the app; your settings and saves stay.
-   The Mac build needs PadMint 0.4.12 or newer and Xcode (install it from the
+   The Mac build needs PadMint 0.4.13 or newer and Xcode (install it from the
    App Store and open it once). PadMint supplies the other build tools.
 2. If macOS says it can't check the app, choose **Done**, then
    open **System Settings → Privacy & Security** and choose **Open Anyway**.
