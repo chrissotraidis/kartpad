@@ -23,10 +23,13 @@ translator="${repo_root}/build/wiicompiled-fpscr/translator/src/Translator.Cli/b
 translation_jobs="${KARTPAD_TRANSLATION_JOBS:-2}"
 
 [[ -f "${payload}" ]] || { echo "ERROR: missing WFC payload: ${payload}" >&2; exit 66; }
-[[ "${translation_jobs}" =~ ^[1-8]$ ]] || {
-  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be an integer from 1 through 8" >&2
+[[ "${translation_jobs}" =~ ^[1-9][0-9]*$ ]] || {
+  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be a positive integer" >&2
   exit 64
 }
+# PadMint passes its compile job count, which can exceed the translator's
+# useful parallelism on large Macs; use at most 8 rather than stopping.
+(( translation_jobs <= 8 )) || translation_jobs=8
 payload="$(cd "$(dirname "${payload}")" && pwd)/$(basename "${payload}")"
 
 "${repo_root}/scripts/prepare-disc.sh"

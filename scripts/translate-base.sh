@@ -12,10 +12,13 @@ dotnet_bin="/opt/homebrew/opt/dotnet@8/bin/dotnet"
 translator="${repo_root}/build/wiicompiled-fpscr/translator/src/Translator.Cli/bin/Release/net8.0/Translator.Cli.dll"
 translation_jobs="${KARTPAD_TRANSLATION_JOBS:-2}"
 
-[[ "${translation_jobs}" =~ ^[1-8]$ ]] || {
-  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be an integer from 1 through 8" >&2
+[[ "${translation_jobs}" =~ ^[1-9][0-9]*$ ]] || {
+  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be a positive integer" >&2
   exit 64
 }
+# PadMint passes its compile job count, which can exceed the translator's
+# useful parallelism on large Macs; use at most 8 rather than stopping.
+(( translation_jobs <= 8 )) || translation_jobs=8
 "${repo_root}/scripts/prepare-disc.sh" "${image}"
 "${repo_root}/scripts/prepare-patched-translator.sh"
 

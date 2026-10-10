@@ -72,10 +72,13 @@ if [[ -z "${payload}" && "${skip_retro_wfc}" == false ]]; then
   usage
   exit 64
 fi
-[[ "${translation_jobs}" =~ ^[1-8]$ ]] || {
-  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be an integer from 1 through 8" >&2
+[[ "${translation_jobs}" =~ ^[1-9][0-9]*$ ]] || {
+  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be a positive integer" >&2
   exit 64
 }
+# PadMint passes its compile job count, which can exceed the translator's
+# useful parallelism on large Macs; use at most 8 rather than stopping.
+(( translation_jobs <= 8 )) || translation_jobs=8
 
 retro_root="$(cd "${retro_root}" && pwd)"
 image="$(cd "$(dirname "${image}")" && pwd)/$(basename "${image}")"
