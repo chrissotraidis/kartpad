@@ -49,8 +49,9 @@ the [archive](archive/known-issues-through-2026-09.md).
 - **Moto G75:** crashes while loading the game; we need a diagnostic log.
   [#332](https://github.com/chrissotraidis/kartpad/issues/332)
 - **AYN Thor:** black bars even with full screen. From 0.8.0, **Fill Screen**
-  also uses the display's cutout area, which should remove the top band; not
-  yet confirmed on a Thor. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
+  draws races under the display's cutout area (checked on a Pixel 9 Pro XL),
+  which may remove the band; menus keep their own width. Not yet confirmed on a
+  Thor. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
 
 ## Graphics (Apple)
 
