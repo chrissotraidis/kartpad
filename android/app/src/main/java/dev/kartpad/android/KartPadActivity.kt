@@ -33,7 +33,6 @@ import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
-import android.widget.Toast
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -984,12 +983,19 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun showAppIconSettings() {
+        val current = KartPadAppIcon.current(this)
         AlertDialog.Builder(this)
             .setTitle("App Icon")
-            .setSingleChoiceItems(KartPadAppIcon.titles, KartPadAppIcon.current(this)) { dialog, which ->
-                KartPadAppIcon.select(this, which)
+            .setSingleChoiceItems(KartPadAppIcon.titles, current) { dialog, which ->
                 dialog.dismiss()
-                Toast.makeText(this, "Your home screen may take a moment to show the new icon.", Toast.LENGTH_LONG).show()
+                if (which == current) return@setSingleChoiceItems
+                // Android closes the app when its launcher entry changes, so ask first.
+                AlertDialog.Builder(this)
+                    .setTitle("Change the App Icon?")
+                    .setMessage("KartPad closes to apply the new icon, so finish your race first. Your saves and settings stay.")
+                    .setPositiveButton("Change Icon") { _, _ -> KartPadAppIcon.select(this, which) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
             .setNegativeButton("Back", null)
             .show()
