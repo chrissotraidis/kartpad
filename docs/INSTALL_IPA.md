@@ -45,9 +45,10 @@ install it over your current KartPad **with the same tool and the same Apple
 ID**; that keeps your saves and game data. A free Apple ID's signature lasts 7
 days, so refresh it in your tool before it runs out.
 
-KartPad doesn't check for updates itself on iPhone and iPad. Watch the
-[releases page](https://github.com/chrissotraidis/kartpad/releases) or the
-Discord.
+From 0.8.0, KartPad shows **Update available** next to **Help** on the game
+chooser when a new release is out. It can't install the update itself:
+iPhone and iPad only run apps signed by your sideloading tool, so build the
+new version with PadMint and install it over KartPad as above.
 
 ## 2. Make your game data folder
 
