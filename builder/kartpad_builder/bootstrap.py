@@ -29,6 +29,9 @@ TRANSLATOR_GITLINK = "vendor/wiicompiled"
 ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", TRANSLATOR_GITLINK)
 PACK_GITLINKS = {"android-pack": ANDROID_PACK_GITLINKS,
                  "ios-pack": ("vendor/runtimes/ios", TRANSLATOR_GITLINK)}
+# The Mac app reads only its own runtime and the translator: no reference
+# checkouts (SunPad, Dolphin and their nested repositories run to several GB).
+MACOS_GITLINKS = ("vendor/runtimes/macos", TRANSLATOR_GITLINK)
 
 
 def load_lock(repo: Path) -> dict[str, Any]:
@@ -134,6 +137,9 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
     if target in PACK_GITLINKS:
         _prepare_gitlinks(repo, list(PACK_GITLINKS[target]), install)
         required = list(ANDROID_PACK_SOURCES)
+    elif target == "macos":
+        _prepare_gitlinks(repo, list(MACOS_GITLINKS), install)
+        required = []
     else:
         runtime = dependencies.get("KartPad WiiCompiled runtime fork")
         if runtime is not None:
@@ -164,7 +170,8 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
         return required + [f"Retro Rewind {inputs.version}", "Retro-WFC production payload"]
     dawn = dependencies["Dawn prebuilt"]
     dawn_output = repo / "build/dependency-cache" / f"dawn-ios-arm64-{dawn['version']}.tar.gz"
-    if not dawn_output.is_file() or hashlib.sha256(dawn_output.read_bytes()).hexdigest() != dawn["iosArm64Sha256"]:
+    if target != "macos" and (not dawn_output.is_file() or
+                              hashlib.sha256(dawn_output.read_bytes()).hexdigest() != dawn["iosArm64Sha256"]):
         if not install:
             raise BuildError("missing pinned physical-iOS Dawn archive; run ./scripts/build-user-ipa.sh bootstrap")
         _download(dawn["iosArm64Url"], dawn["iosArm64Sha256"], dawn_output)
