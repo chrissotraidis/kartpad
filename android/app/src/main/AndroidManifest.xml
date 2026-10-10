@@ -61,14 +61,45 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
         <activity
-            android:name=".KartPadLaunchActivity"
+            android:name=".KartPadChooserActivity"
             android:exported="true"
             android:process=":launcher"
-            android:screenOrientation="sensorLandscape">
+            android:screenOrientation="sensorLandscape" />
+        <!-- Launcher entries. The default keeps the component name players'
+             home-screen icons already point to; Display → App Icon enables one
+             entry at a time (#437). -->
+        <activity-alias
+            android:name=".KartPadLaunchActivity"
+            android:exported="true"
+            android:targetActivity=".KartPadChooserActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".KartPadIconCircuit"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_circuit"
+            android:roundIcon="@mipmap/ic_launcher_circuit"
+            android:targetActivity=".KartPadChooserActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".KartPadIconMono"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_mono"
+            android:roundIcon="@mipmap/ic_launcher_mono"
+            android:targetActivity=".KartPadChooserActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>

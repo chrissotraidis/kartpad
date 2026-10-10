@@ -33,6 +33,7 @@ import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
+import android.widget.Toast
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -699,6 +700,7 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
             MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
             MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true) { closeKartPadMenu(::showFpsSizeSettings) },
+            MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAppIconSettings) },
             MenuRow("Android Graphics Diagnostics…", R.drawable.ic_kartpad_display) { closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) } },
         ), showBack = true,
     )
@@ -938,8 +940,8 @@ class KartPadActivity : SDLActivity() {
 
     private fun restartToGameSelector() {
         kartPadOverlay.clearTouchInput()
-        val chooser = Intent(this, KartPadLaunchActivity::class.java).apply {
-            putExtra(KartPadLaunchActivity.EXTRA_SKIP_PREFERRED_GAME, true)
+        val chooser = Intent(this, KartPadChooserActivity::class.java).apply {
+            putExtra(KartPadChooserActivity.EXTRA_SKIP_PREFERRED_GAME, true)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         startActivity(chooser)
@@ -976,6 +978,18 @@ class KartPadActivity : SDLActivity() {
                 applyDisplaySettings()
                 hideGameSystemBars()
                 dialog.dismiss()
+            }
+            .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showAppIconSettings() {
+        AlertDialog.Builder(this)
+            .setTitle("App Icon")
+            .setSingleChoiceItems(KartPadAppIcon.titles, KartPadAppIcon.current(this)) { dialog, which ->
+                KartPadAppIcon.select(this, which)
+                dialog.dismiss()
+                Toast.makeText(this, "Your home screen may take a moment to show the new icon.", Toast.LENGTH_LONG).show()
             }
             .setNegativeButton("Back", null)
             .show()
