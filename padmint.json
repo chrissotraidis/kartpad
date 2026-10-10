@@ -258,13 +258,6 @@
         "version_args": [
           "-version"
         ],
-        "note": "Mac only: install Xcode and its iOS platform (Windows and Linux use PadMint's LLVM)"
-      },
-      {
-        "name": "xcodebuild",
-        "version_args": [
-          "-version"
-        ],
         "player": true,
         "hosts": [
           "macos-arm64",
@@ -274,7 +267,7 @@
           "ios",
           "macos"
         ],
-        "note": "Install Xcode from the App Store, open it once (add the iOS platform for iPhone and iPad builds), then run PadMint again"
+        "note": "Install Xcode from the App Store, open it once, then run PadMint again"
       }
     ]
   },
