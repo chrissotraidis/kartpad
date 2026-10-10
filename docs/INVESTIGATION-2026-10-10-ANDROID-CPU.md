@@ -66,3 +66,83 @@ September 23 Pixel results. Further FP/TLS micro-work is not the next priority.
 Each needs a lower-noise gate than whole-frame CPU on this emulator: more
 rounds, or per-component sample counts per frame on the same build pair.
 
+
+## Second round, same day
+
+### Bench corrections
+
+- **The emulator degrades over a session.** After about 5 hours and many app
+  restarts, qemu held 30 GB of host memory and took more than 12 host cores.
+  Races fell to 30 FPS and game-thread time doubled. The A/B script now
+  cold-boots the emulator before every run and records qemu's resident size.
+- **User and kernel time are now reported separately.** Kernel time on the game
+  thread (mostly futex wakeups and the emulator transport) is about 0.7–0.8 ms
+  per frame.
+- **Run-to-run spread stays about ±0.4 ms (±5%) on cold boots.** The window is
+  time-based, so it covers slightly different race segments. On this bench a
+  change needs roughly a 10% effect to be resolved.
+- **The emulator runs on M3 Max cores**, which hide dependent-load and
+  branch costs that phone cores, especially in-order little cores, do not.
+  Changes that remove instructions can therefore look smaller here than on
+  phones.
+
+### Where translated code spends its time
+
+The sampled instructions inside `func_8…` code break down as:
+
+| Share | Instructions |
+|---:|---|
+| 43% | Immediate-offset loads/stores (context, globals, structs) |
+| 12% | Stack loads/stores |
+| 7% | Register-offset (guest RAM) accesses |
+| 11% | `ldrb` alone |
+| 10% | `sub` |
+
+The profile is flat: 887 functions, with the top 40 adding up to 10%.
+
+On Android (and iOS), every flat guest access first reloads the
+`g_requiresCheckedAccess` byte and the `gFlatGuestBase` pointer. Each needs an
+`adrp`+`ldr` of the GOT entry, then the value, then a compare and branch. Guest
+stores are byte copies that may alias any global, so the compiler cannot keep
+either value in a register. Desktop builds use a compile-time base and pay none
+of this.
+
+### Flat-memory locals (not adopted yet)
+
+`KARTPAD_FLAT_FUNCTION_LOCALS` reads both globals once into locals at function
+entry (29,065 functions), and the `Flat*` helpers use them through macros. Code
+without the locals falls back to the globals. Semantics are unchanged: both
+values are fixed before translated code runs.
+
+- **Code size:** pack `.text` fell from 116.4 MB to 109.0 MB (−6.4%).
+- **Timing:** game-thread user time was 8.63 ms (base) against 8.50 ms (flat),
+  a −1.4% difference over 8 cold-boot pairs, inside the ±0.4 ms spread.
+- **Patches:** `build/perf/flat-locals-*` (local).
+- **Status:** a candidate for a phone A/B. Do not ship it on emulator evidence.
+
+### Smaller items found
+
+| Item | Game-thread share | Where |
+|---|---:|---|
+| Vertex-layout hash recompute | ≈1.7% | `gx_dl.cpp` `HashScanLayoutState`, 650 multiplies whenever the dirty flag is set |
+| Display-list scan cache misses in `unordered_map::find` | ≈1% | front-cache misses |
+| Audio worker wake per AX frame | 1.9% | `notify_one` in `DispatchCommandList` (worth keeping off-thread) |
+| Binder call from the performance hint | 0.6% | — |
+
+
+### PGO experiment (pipeline works; not yet measured)
+
+- **Instrumented pack:** `-fprofile-generate` must go in through
+  `CMAKE_CXX_FLAGS` and `CMAKE_SHARED_LINKER_FLAGS`. The Android toolchain
+  ignores `CXXFLAGS`/`LDFLAGS`. The 11 `retro_mod` shards ran over 45 minutes
+  under instrumentation (normally under 30 s each), so they are compiled
+  without it.
+- **Collection:** the dump thread (`build/perf/pgo/pgo_dump.cpp`) resets the
+  counters 75 s after load and writes 90 s later. One Luigi Circuit race gave a
+  30 MB profile covering 38,570 functions.
+- **Profile-use pack:** `.text` 126.8 MB, against 116.4 MB for base.
+- **A/B:** invalid. Other jobs on the same Mac (BlueWake PGO and a SunPad perf
+  loop) pushed the load average to 184 and the emulator to 10–20 FPS. Repeat
+  on a quiet machine, and check a second track before trusting a
+  single-track profile.
+
