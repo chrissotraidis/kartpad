@@ -182,8 +182,8 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   for blob_asm in \
       "${output}/data_sections_init_blobs.S" \
       "${mod_output}/cpp/mod_data_patches_blobs.S"; do
-    if [[ -f "${blob_asm}" ]] && rg -q '^\.globl k' "${blob_asm}" &&
-       ! rg -q '^\.globl _k' "${blob_asm}"; then
+    if [[ -f "${blob_asm}" ]] && grep -q '^\.globl k' "${blob_asm}" &&
+       ! grep -q '^\.globl _k' "${blob_asm}"; then
       perl -0pi -e 's/^\.globl (k[^\n]+)\n\1:/\.globl $1\n.globl _$1\n$1:\n_$1:/mg' "${blob_asm}"
     fi
   done
@@ -191,9 +191,9 @@ fi
 
 [[ -f "${mod_output}/resolved_dispatch_profile.json" ]] || { echo "translate-retro-rewind.sh: check failed (line 192)" >&2; exit 1; }
 [[ -f "${shards}/shards.cmake" ]] || { echo "translate-retro-rewind.sh: check failed (line 193)" >&2; exit 1; }
-rg -q '^set\(MKW_RETRO_REWIND_FUNCTION_COUNT [1-9][0-9]*\)$' \
+grep -Eq '^set\(MKW_RETRO_REWIND_FUNCTION_COUNT [1-9][0-9]*\)$' \
   "${shards}/shards.cmake"
-rg -q '^set\(MKW_HAVE_RETRO_REWIND_SHARDS ON\)$' "${shards}/shards.cmake"
+grep -Eq '^set\(MKW_HAVE_RETRO_REWIND_SHARDS ON\)$' "${shards}/shards.cmake"
 
 echo "Generated validated private Retro Rewind native graph"
 if [[ "${skip_retro_wfc}" == true ]]; then

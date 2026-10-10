@@ -13,6 +13,8 @@ iPhone/iPad.
    your disc image and **Mac**, and move the **KartPad** app it makes to
    Applications. To update, build the new version with PadMint, quit KartPad
    and replace the app; your settings and saves stay.
+   The Mac build needs PadMint 0.4.12 or newer and Xcode (install it from the
+   App Store and open it once). PadMint supplies the other build tools.
 2. If macOS says it can't check the app, choose **Done**, then
    open **System Settings → Privacy & Security** and choose **Open Anyway**.
    The app isn't notarized by Apple, which is why macOS asks. Don't turn off
@@ -27,7 +29,8 @@ iPhone/iPad.
 ## Retro Rewind
 
 The Mac app doesn't download Retro Rewind. Download the official Retro Rewind
-6.12.8 full pack, then choose **Data → Choose Retro Rewind Data…** and select
+6.13.0 full pack and the 6.13.1 update, extract the update over the full pack,
+then choose **Data → Choose Retro Rewind Data…** and select
 its `RetroRewind6` folder. Choose **Game → Retro Rewind**, quit and reopen
 KartPad. **Game → Original Mario Kart Wii** and reopening switches back.
 

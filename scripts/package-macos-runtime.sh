@@ -144,7 +144,7 @@ while (( queue_index < ${#queue[@]} )); do
   done < <(otool -L "${target}" | tail -n +2 | awk '{print $1}')
 done
 
-if ! otool -l "${macos}/KartPad" | rg -q '^\s*path @executable_path/\.\./Frameworks '; then
+if ! otool -l "${macos}/KartPad" | grep -Eq '^[[:space:]]*path @executable_path/\.\./Frameworks '; then
   install_name_tool -add_rpath '@executable_path/../Frameworks' "${macos}/KartPad"
 fi
 
@@ -172,7 +172,7 @@ printf '{\n  "SetupVersion": "%s",\n  "SourceCommit": "%s",\n  "UnsignedRuntimeS
   "${KARTPAD_VERSION:-${release_version}}" "${source_commit}" "${unsigned_runtime_hash}" > "${fingerprint}"
 ln -s ../Resources/Runtime/build-fingerprint.json "${macos}/build-fingerprint.json"
 
-if find "${staged_app}" \( -name portable.txt -o -name UserData -o -name Config.toml \) -print -quit | rg -q .; then
+if find "${staged_app}" \( -name portable.txt -o -name UserData -o -name Config.toml \) -print -quit | grep -q .; then
   echo "package contains writable or developer-only runtime state" >&2
   exit 70
 fi
@@ -181,7 +181,7 @@ codesign --force --deep --sign - \
   --entitlements "${repo_root}/apple/macos/KartPad.entitlements" "${staged_app}"
 codesign --verify --deep --strict --verbose=2 "${staged_app}"
 codesign -d --entitlements - "${staged_app}" 2>/dev/null | \
-  rg -A2 -F '[Key] com.apple.security.device.bluetooth' | rg -q '\[Bool\] true'
+  grep -A2 -F '[Key] com.apple.security.device.bluetooth' | grep -q '\[Bool\] true'
 plutil -lint "${plist}"
 mv "${staged_app}" "${output_app}"
 

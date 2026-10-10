@@ -73,8 +73,8 @@ fi
 for blob_asm in \
     "${translation_root}/data_sections_init_blobs.S" \
     "${translation_root}/../mod/cpp/mod_data_patches_blobs.S"; do
-  if [[ -f "${blob_asm}" ]] && rg -q '^\.globl k' "${blob_asm}" &&
-     ! rg -q '^\.globl _k' "${blob_asm}"; then
+  if [[ -f "${blob_asm}" ]] && grep -q '^\.globl k' "${blob_asm}" &&
+     ! grep -q '^\.globl _k' "${blob_asm}"; then
     perl -0pi -e 's/^\.globl (k[^\n]+)\n\1:/\.globl $1\n.globl _$1\n$1:\n_$1:/mg' "${blob_asm}"
   fi
 done

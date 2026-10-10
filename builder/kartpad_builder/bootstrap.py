@@ -16,6 +16,9 @@ from .profiles import Profile
 
 REQUIRED_COMMANDS = {
     "ios": ("cmake", "ninja", "git", "rg", "python3", "dotnet", "nodtool", "xcrun"),
+    # PadMint's Mac app recipe: PadMint supplies dotnet, cmake, ninja and nodtool;
+    # Xcode supplies git, python3 and xcrun. No Homebrew tools are required.
+    "macos": ("cmake", "ninja", "git", "python3", "dotnet", "nodtool", "xcrun"),
     # The game pack builds on Windows, Linux and macOS (PadMint supplies the tools).
     "android-pack": ("cmake", "ninja", "git", "dotnet", "nodtool"),
     "ios-pack": ("cmake", "ninja", "git", "dotnet", "nodtool", "xcrun"),

@@ -91,6 +91,12 @@
       "hosts": {
         "macos-arm64": "experimental"
       },
+      "tools": [
+        "dotnet",
+        "cmake",
+        "ninja",
+        "nodtool"
+      ],
       "output": "zip",
       "check": "none",
       "steps": [
@@ -99,7 +105,9 @@
           "command": [
             "/bin/bash",
             "{repo}/scripts/build-user-ipa.sh",
-            "bootstrap"
+            "bootstrap",
+            "--target",
+            "macos"
           ]
         },
         {
@@ -251,6 +259,20 @@
           "-version"
         ],
         "note": "Mac only: install Xcode and its iOS platform (Windows and Linux use PadMint's LLVM)"
+      },
+      {
+        "name": "xcodebuild",
+        "version_args": [
+          "-version"
+        ],
+        "player": true,
+        "hosts": [
+          "macos-arm64"
+        ],
+        "targets": [
+          "macos"
+        ],
+        "note": "Install Xcode from the App Store, open it once, then run PadMint again"
       }
     ]
   },
