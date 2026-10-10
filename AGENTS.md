@@ -2,8 +2,9 @@
 
 ## Where to start
 
-Current state: [docs/STATUS.md](docs/STATUS.md) and the
-[current goal loop](docs/CURRENT-LOOP.md). Performance work (#339, slow
+**What we're doing next:** [docs/CURRENT-LOOP.md](docs/CURRENT-LOOP.md), whose
+first section answers it in three lines. Released state:
+[docs/STATUS.md](docs/STATUS.md). Performance work (#339, slow
 phones): [docs/ANDROID-PERFORMANCE-HANDOFF.md](docs/ANDROID-PERFORMANCE-HANDOFF.md).
 
 ## Releases

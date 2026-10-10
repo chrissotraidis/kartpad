@@ -56,7 +56,7 @@ in PadMint.
     changes together drew bodies on the S24 (white, about 24 FPS, the
     "fix invisible characters" test option). The self-check has answered what
     it can; the next step is a different way of handing the bone matrices to
-    the GPU, a decision for Chris (see [the loop](CURRENT-LOOP.md), B2).
+    the GPU, a decision for Chris (see [the loop](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.
@@ -98,7 +98,7 @@ in PadMint.
   iPhone/iPad/Mac, Shake to Trick, app icons. Publish, then PadMint 0.4.14.
 - **After 0.8.0:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
   (PGO measurement, then a phone A/B for flat-memory locals); Adreno
-  bone-matrix decision (loop B2).
+  bone-matrix decision ([loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
 
 Status through 29 September (source-only period, 0.5.x packages and earlier
 acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before
