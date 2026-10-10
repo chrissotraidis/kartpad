@@ -2,7 +2,10 @@
 
 ## Current status: 10 October 2026
 
-**Latest release: [KartPad 0.8.0](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.0) (build 261).**
+**Latest release: [KartPad 0.7.15](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.15) (build 260), 9 October.**
+**KartPad 0.8.0 (build 261) is merged and staged as a draft release** with all
+six files checked; it goes out when Chris says publish, and PadMint 0.4.14
+(KartPad 0.8.0 support) follows it.
 Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
 build KartPad with PadMint (the release carries the PadMint inputs) and, from
 0.8.0, say when a new version is out. 0.8.0 moves to the latest WiiCompiled
@@ -29,7 +32,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | 0.7.13 | The self-check draws a third copy with the other bone-matrix lookup (`result=indexing` when only that copy draws); Retro Rewind starts on the first Play after downloading it (it used to say "No DVD root is configured"). Same pack interface | Emulator: `indexing` with both layout copies deliberately emptied, `match` on normal runs; Retro Rewind download then Play reaches the game. iPad Pro: installed in place and launched. All files checked by anonymous download against `SHA256SUMS` |
 | 0.7.14 | Android updates itself (#377): download, check against `SHA256SUMS` and the signing key, Android confirms. Every game file is checked at import and on the chooser, so an incomplete copy names the missing file before Play (all platforms). Android music and game-sound sliders (#411). Android APK plus PadMint inputs only; no ready-to-play IPA or Mac zip. Same pack interface | Emulator: a 0.7.12-labelled build updated itself to the published 0.7.13 twice (permission page, download, verify, install), save unchanged, game data intact; cancel keeps the old version; full file check on complete and broken data. 344 repo tests |
 | 0.7.15 | Retro Rewind 6.13.1 (official pack plus update), required for Retro WFC. iPhone/iPad keep Retro saves and ghosts when replacing the pack. Android save/ghost writes verified before completing; **Help → Cancel Pending Ghost Import**. Compressed Original ghosts imported in replayable form. iPhone/iPad music and game-sound controls. Apple motion: flat device steers straight, shake still works. PadMint Mac bootstrap fetches Retro Rewind and the translator source. Same pack interface | Emulator: the signed APK installs over 0.7.14 with all app data unchanged and reaches a race; fresh zip import reaches a race; Retro 6.13.1 install, Retro race, Retro WFC sign-in, worldwide room and online races (two mid-race room disconnects on the emulator, each recovered); a real compressed Chadsoft ghost imported and replayed. iPad Pro: installed in place with saves/settings unchanged. iPad Simulator: 6.12.8 to 6.13.1 upgrade kept a save. Mac: clean PadMint build. Sound and motion not yet hands-on on an iPhone/iPad |
-| 0.8.0 | WiiCompiled upstream sync (display lists that overflow the staging batch now draw instead of dropping models; TLS sessions stop cleanly after a failed write). Update notices on iPhone, iPad and Mac. Shake to Trick on Android and iPhone/iPad. App icon choice (red K, Circuit, Mono). Android Fill Screen draws under display cutouts. Android identity/Mii writes keep their recovery request on failure. PadMint: Intel Mac iPhone builds; Mac builds without Homebrew tools, with a much smaller first download. New pack interface | Emulator: the signed APK installs over public 0.7.15 with all 2,079 app data files unchanged and reaches a race; a fresh install imports game data and reaches a race; app icon switching. Pixel 9 Pro XL: updated in place from 0.7.12 with saves and licences kept; Original race at 60 FPS; Retro Rewind 6.13.1 downloaded and installed in the app, booted and signed in to Retro WFC. iPad Pro: installed in place with 34 critical files unchanged; Original runs at 60 FPS. Mac: full PadMint build with only system tools on the path; game runs at 60 FPS. Shake to Trick and the icon picker not yet hands-on on a device |
+| 0.8.0 (draft) | WiiCompiled upstream sync (display lists that overflow the staging batch now draw instead of dropping models; TLS sessions stop cleanly after a failed write). Update notices on iPhone, iPad and Mac. Shake to Trick on Android and iPhone/iPad. App icon choice (red K, Circuit, Mono). Android Fill Screen draws under display cutouts. Android identity/Mii writes keep their recovery request on failure. PadMint: Intel Mac iPhone builds; Mac builds without Homebrew tools, with a much smaller first download. New pack interface | Emulator: the signed APK installs over public 0.7.15 with all 2,079 app data files unchanged and reaches a race; a fresh install imports game data and reaches a race; app icon switching. Pixel 9 Pro XL: updated in place from 0.7.12 with saves and licences kept; Original race at 60 FPS; Retro Rewind 6.13.1 downloaded and installed in the app, booted and signed in to Retro WFC. iPad Pro: installed in place with 34 critical files unchanged; Original runs at 60 FPS. Mac: full PadMint build with only system tools on the path; game runs at 60 FPS. Shake to Trick and the icon picker not yet hands-on on a device |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
@@ -64,10 +67,10 @@ in PadMint.
   checked). Needs a real 60 Hz device to reproduce.
 - **Online over mobile data (#405):** carriers block direct player-to-player
   connections; Wi-Fi or a VPN works. Not fixable in KartPad without a relay.
-- **Sound levels (#411):** in progress. Android has ••• → **Sound…** (merged,
-  #419); iPhone/iPad is in #420 and needs a tap-through on the iPad; the Mac
-  already has Game → Game Settings… → Audio. Ships in the next 0.7.x release
-  once heard on a device.
+- **Sound levels (#411):** music and game-sound controls are on Android
+  (0.7.14), iPhone/iPad (0.7.15) and Mac. The iPhone/iPad audio session mixes
+  with other apps, so Spotify keeps playing; a hands-on check on an iPad is
+  still outstanding.
 - **Controllers:** ipega and similar fixed in 0.7.6 to 0.7.8, awaiting
   confirmation (#378); single Joy-Cons (#324); Mac Wii Remote with Classic
   Controller Pro (#306).
@@ -76,30 +79,26 @@ in PadMint.
   ([record](artifacts/2026-10-04/android/131-cup-ceremony-harness.md)); awaiting
   a player retest. AYN Thor screen area (#202); identity and rating transfer
   (#234); Mac two-player rendering (#127).
-- **Performance (#339, patchzyy's request).**
-  - Runtime: candidate 203 (skip unobserved FP status capture, game-thread
-    Performance Hint) cut game-thread CPU in a 12-player Cookie Land battle on
-    the Pixel 9 Pro XL from 14.70–14.79 ms to 12.65 ms and shipped in 0.5.1
-    ([ledger](artifacts/2026-09-23/android-copy-stream-loop.md)); candidate 205
-    was rejected.
-  - Compile: the `-g0` change cut compile CPU from 2,232 s to 1,404 s (0.7.5).
-  - Next: same-machine baselines, then one candidate at a time (Track C).
-- **WiiCompiled.** KartPad's runtime is based on upstream `8346376`; upstream
-  has since merged macOS support, PSQ fallback fixes and a shader wait screen.
-  Draft #384 is the start of the sync, which changes the pack interface and
-  ships as **0.8.0**. Earlier KartPad fixes reached upstream through
+- **Performance (#339, patchzyy's request).** Slow phones are limited by one
+  CPU core running the game; lowering resolution barely helps. Shipped so far:
+  about 14% less game-thread CPU (0.5.1) and 37% less compile CPU (0.7.5).
+  The 10 October investigation found where the rest goes and two unmeasured
+  candidates (flat-memory locals, PGO). **Start at the
+  [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md)** for findings,
+  the bench and the next steps.
+- **WiiCompiled.** 0.8.0 syncs the translator and all four runtimes to
+  upstream `bd219e3`; the fork's `kartpad-*` branches point at the 0.8.0 pins.
+  Earlier KartPad fixes reached upstream through
   [#244](https://github.com/patchzyy/Wiicompiled/pull/244) and
-  [#251](https://github.com/patchzyy/Wiicompiled/pull/251); the next candidates
-  are in Track D.
+  [#251](https://github.com/patchzyy/Wiicompiled/pull/251).
 
 ### Next versions
 
-- **0.7.11** (released 5 October): clearer game data screens and zip import on
-  Android.
-- **0.7.12** (released 5 October): the Android draw self-check (Track B1).
-  Next is reading the reporters' self-check lines (B2).
-- **0.8.0** (pack interface change): WiiCompiled sync plus measured speed work
-  from #339.
+- **0.8.0** (draft, pack interface change): WiiCompiled sync, update notices on
+  iPhone/iPad/Mac, Shake to Trick, app icons. Publish, then PadMint 0.4.14.
+- **After 0.8.0:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
+  (PGO measurement, then a phone A/B for flat-memory locals); Adreno
+  bone-matrix decision (loop B2).
 
 Status through 29 September (source-only period, 0.5.x packages and earlier
 acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before

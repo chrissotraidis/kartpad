@@ -4,6 +4,17 @@ Written 5 October 2026, after 0.7.10. It replaces the next actions in the
 [1 October loop](FOCUSED-LOOP-2026-10-01.md); the
 [original August loop](GOAL-LOOP.md) stays as history.
 
+## State on 10 October
+
+- **Done:** Tracks A, F and G shipped in 0.7.11 to 0.7.15. C1 (the WiiCompiled
+  sync) is merged as **0.8.0**, which is a draft release awaiting Chris's
+  publish.
+- **Track C (speed):** C2 and C3 have run. The findings, the bench in
+  `tools/android-perf` and the ranked next steps are in the
+  [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md). Nothing measured has
+  shipped since 0.7.5.
+- **Parked:** B2 (Adreno) waits on Chris's bone-matrix decision.
+
 ## Goal
 
 Make KartPad fail less often for new players and run better for everyone,
@@ -165,6 +176,11 @@ macOS support, PSQ fallback fixes and a shader wait screen.
 - **C4. First-time pauses:** measure menu and pre-race stalls in the replay
   scene, and compare upstream's shader wait screen with KartPad's pipeline
   cache.
+
+**Status, 10 October:** C1 is done (0.8.0, draft). C2 and C3 ran on the
+emulator: the profile and the rejected and candidate changes are in the
+[performance handoff](ANDROID-PERFORMANCE-HANDOFF.md). C4 is not started.
+No before/after numbers are posted on #339 yet.
 
 **Done when:** 0.8.0 reaches a race on the emulator as an update over 0.7.x
 with saves kept, on the iPad and on the Mac, with Retro Rewind booting; and

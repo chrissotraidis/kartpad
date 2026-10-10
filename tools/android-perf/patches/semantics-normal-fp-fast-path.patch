@@ -1,0 +1,76 @@
+diff --git a/runtime/include/kartpad/semantics/ppc_semantics.h b/runtime/include/kartpad/semantics/ppc_semantics.h
+index 417bd897..0964ed82 100644
+--- a/runtime/include/kartpad/semantics/ppc_semantics.h
++++ b/runtime/include/kartpad/semantics/ppc_semantics.h
+@@ -233,12 +233,57 @@ inline ScalarFpResult FinishScalarFp(std::uint32_t fpscr_value, double value,
+   return {value, fpscr_value, exception, true};
+ }
+ 
++// FinishScalarFp for its most common input: no exception and a finite, normal
++// result. Then no exception or summary bit changes, the destination is always
++// written, and FPRF is +/- normal. Single precision rounds once to float (the
++// same conversion ForceSingle makes) and must still be normal; with NI set, a
++// value below the single normal range takes the exact path, which flushes it.
++// Returns false for every other case, which callers send to FinishScalarFp.
++inline bool TryFinishNormalScalarFp(std::uint32_t fpscr_value, double value,
++                                    bool single_precision,
++                                    ScalarFpResult& result) noexcept {
++  if (single_precision) {
++    if ((fpscr_value & fpscr::NI) != 0 && !(std::abs(value) >= 0x1p-126))
++      return false;
++    const float rounded = static_cast<float>(value);
++    const auto bits = std::bit_cast<std::uint32_t>(rounded);
++    const auto exponent = bits & 0x7f800000u;
++    if (exponent == 0 || exponent == 0x7f800000u)
++      return false;
++    result = {static_cast<double>(rounded),
++              SetFprf(fpscr_value, (bits & 0x80000000u) != 0 ? 0x08u : 0x04u),
++              0, true};
++    return true;
++  }
++  const auto bits = std::bit_cast<std::uint64_t>(value);
++  const auto exponent = bits & 0x7ff0000000000000ULL;
++  if (exponent == 0 || exponent == 0x7ff0000000000000ULL)
++    return false;
++  result = {value,
++            SetFprf(fpscr_value, (bits >> 63) != 0 ? 0x08u : 0x04u), 0, true};
++  return true;
++}
++
+ enum class ScalarFpBinaryOperation { Add, Subtract, Multiply, Divide };
+ 
+ inline ScalarFpResult EvaluatePpcScalarBinary(
+     std::uint32_t fpscr_value, ScalarFpBinaryOperation operation, double a,
+     double b, bool single_precision) noexcept {
+   const bool track_status = TrackHostFpStatus(fpscr_value);
++  if (!track_status) {
++    // Host flags are not read, so no ordering fence is needed; a NaN, an
++    // infinity, a zero, a denormal or a divide by zero takes the exact path.
++    double quick = 0.0;
++    switch (operation) {
++    case ScalarFpBinaryOperation::Add: quick = a + b; break;
++    case ScalarFpBinaryOperation::Subtract: quick = a - b; break;
++    case ScalarFpBinaryOperation::Multiply: quick = a * b; break;
++    case ScalarFpBinaryOperation::Divide: quick = a / b; break;
++    }
++    ScalarFpResult fast;
++    if (TryFinishNormalScalarFp(fpscr_value, quick, single_precision, fast))
++      return fast;
++  }
+   if (track_status)
+     ClearScalarFlags();
+   volatile double computed = 0.0;
+@@ -382,6 +427,13 @@ inline ScalarFpResult EvaluatePpcFused(std::uint32_t fpscr_value, double a,
+                                        bool negate_result) noexcept {
+   const double effective_c = single_precision ? Force25Bit(c) : c;
+   const bool track_status = TrackHostFpStatus(fpscr_value);
++  if (!track_status) {
++    const double fused = std::fma(a, effective_c, subtract ? -b : b);
++    ScalarFpResult fast;
++    if (TryFinishNormalScalarFp(fpscr_value, negate_result ? -fused : fused,
++                                single_precision, fast))
++      return fast;
++  }
+   if (track_status)
+     ClearScalarFlags();
+   volatile double computed = std::fma(a, effective_c, subtract ? -b : b);

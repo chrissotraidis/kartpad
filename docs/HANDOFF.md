@@ -8,6 +8,10 @@ next, then [STATUS.md](STATUS.md) for the released state and
 [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md#ready-to-play-release-from-079)
 for how a ready-to-play release is built.
 
+**Performance work (#339, slow phones):** start at the
+[performance handoff](ANDROID-PERFORMANCE-HANDOFF.md). It holds the current
+findings, the bench in `tools/android-perf` and the ranked next steps.
+
 Use the [maintenance board](MAINTENANCE-BOARD.md) for current ownership,
 candidates and next actions. [STATUS.md](STATUS.md) summarizes published
 packages and acceptance; [KNOWN-ISSUES.md](KNOWN-ISSUES.md) links investigations.

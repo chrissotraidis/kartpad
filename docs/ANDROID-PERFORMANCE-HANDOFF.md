@@ -1,136 +1,177 @@
-# Android investigation handoff
+# Android performance: where we stand
 
-Refreshed September 23, 2026. Current public baseline: **Android 0.5.0/code135**. Apple 0.5.1-experimental.1/build60 is a separate diagnostic-overhead mitigation and does not update Android. See the [current issue inventory](artifacts/2026-09-21/open-issue-inventory.md), [evening evidence](artifacts/2026-09-21/evening-goal-loop.md) and [maintenance board](MAINTENANCE-BOARD.md). Older code63/code73/code83 assignments are historical.
+Updated 10 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+behind every number is in the
+[10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
+The September Pixel experiments are in the
+[archived handoff](archive/android-performance-handoff-2026-09-23.md).
 
-## September 23 overnight investigation
+## Release context
 
-The [current comparison](artifacts/2026-09-23/android-candidate-comparison.md) and
-[optimization ledger](artifacts/2026-09-23/android-optimization-loop.md) supersede
-the explicit-context proposal below. That experiment, larger front-cache size,
-borrowed metadata arrays and startup CPU affinity did not establish a reliable
-gameplay gain and have been removed. DriftDroid's source was refreshed against
-its previously audited commit; already-integrated work is not counted again.
+- Public: **0.7.15** (9 October).
+- **0.8.0** (WiiCompiled sync, update notices, Shake to Trick, app icons) is
+  merged at `c0056a6f` and staged as a **draft** release with all six files.
+  It waits for Chris to publish it, and PadMint 0.4.14 waits on it.
+- 0.8.0 contains no speed work. Nothing on this page has shipped yet.
 
-On the attached Pixel, guarded Vulkan FIFO improves displayed cadence in repeated
-stationary Cookie Land battles, with additional compositor buffering. This is
-not input-to-photon latency, driven-race acceptance or proof for another GPU.
-The inlined exact-input arithmetic candidate reduces sampled flag-capture work
-but has not improved total CPU timing. Outlining did not reduce native text size;
-the original-arithmetic helper calling-convention candidate also failed to establish
-a reliable whole-game benefit. All are excluded from the final private build 195.
-See the [arithmetic proof and tests](artifacts/2026-09-23/android-scalar-exactness.md).
-Private normal build 195 is installed with matching artifact hash. Original and
-Retro offline battles plus bounded lifecycle checks completed. A 133 ms displayed
-hitch coincides with a 123 ms persistent pipeline wait; stutter is not fixed.
-The [morning report](artifacts/2026-09-23/android-morning-report.md) records final
-source/artifact identity, measured benefit, buffering cost and remaining gates.
-No public release or issue closure follows from these private observations.
+## What we know
 
-Later on September 23 the [copy-stream ledger](artifacts/2026-09-23/android-copy-stream-loop.md)
-added private candidates 196 to 205: copy-texture pool release, unobserved FP
-status skip, course-scoped pipeline replay, a system-bar fix, a game-thread
-Performance Hint and (205) a game-thread CPU-context slot that removes emulated
-TLS lookups. 203 is the current candidate; 205 removes the TLS samples but
-showed no timing change on the emulator and awaits a Pixel comparison. The
-replay and FP skip are also in Apple build 65, installed on the iPad with data
-verified but not yet launched. None of 196 to 205 has been measured on the Pixel.
+**The slowness is CPU-bound, on one thread.** The game runs on a single
+thread, so speed follows one core's speed. Players' reports agree:
 
-## First: sustained frame time
+- **Resolution doesn't help:** lowering it does nothing (#167 at 1×/0.75×/0.5×;
+  #198 at minimum).
+- **Fewer racers do help:** #313 sees more FPS with fewer racers on screen.
+- **The game thread is saturated:** on #198's Helio G85 it is 94–97% busy, and
+  presenting a frame takes only 2.3–2.6 ms.
+- **The Honor X7c needs 36–40 ms** of game-thread time per race frame (#313).
 
-#198 already supplied three captures and agreed to a profiler handoff. Its Helio G85 report is 25–29 FPS after the pipeline queue reaches zero, with 94–97% main-thread occupancy and 2.3–2.6 ms measured presentation. This supports CPU sampling; it does not identify the expensive function. GX CPU work outside the presentation timer remains a possibility.
+| Phone | Game thread per 12-racer frame | Result |
+|---|---|---|
+| Pixel 9 Pro XL | about 14.5 ms | 60 FPS |
+| Dimensity 7300 (POCO X7, #438), about half the single-core speed | about 29 ms | 30–40 FPS reported |
+| Helio G85, about a third | about 45 ms | 20–25 FPS reported |
 
-Prepare a current, non-debuggable, shell-profileable diagnostic with exact native symbols and a compatible signer. The release signing key location is resolved. The retained code73 Debug-signed profiler cannot update a Community-signed installation. Confirm the recipient's installed version/signer and concrete private delivery route before handing off a diagnostic. Keep credentials, symbols and private game inputs out of public artifacts.
+**What that means for targets:**
 
-Capture a bounded approximately 20-second, 99-Hz symbolized sample during a warmed driven slowdown. Separate guest execution, GX CPU preparation and waits before choosing one correction. Use the owner's phone for a local baseline when available; it cannot establish Helio acceptance. Do not repeat #198's willingness/log requests, #167's completed resolution/aspect sweep or #103's already supplied build/settings questions. #204 is Cookie Land **battle**, not time trial. #135 A10X performance is an Apple comparison with no proven shared cause.
+- **Mid-range phones need about 2× less game-thread work** to hold 60 FPS.
+- **Helio-class phones would need about 3×,** so a steady 30 FPS is the
+  realistic goal there.
+- **Small tweaks won't close this gap.** Earlier tuning gained 10–14%; this
+  needs structural changes.
 
-For baseline/candidate, hold scene, settings, normal power mode and thermal range comparable. Record frame-time tails and gaps, effective cadence, audio and health; separate cold shader compilation. Prefer three matched runs per artifact. Improvement must exceed baseline variation without graphics, audio, save or lifecycle regressions. Finish with profiling disabled.
+**Where the game thread goes** (emulator, Luigi Circuit, 12 racers; the shares
+match the September Pixel profiles):
 
-## Local candidate evidence, September22
+| Share | What | Lever |
+|---:|---|---|
+| 40% | Translated game code, spread over about 890 functions (the top 40 are only 10%) | Translator code quality; memory-access cost below |
+| 21% | GX/graphics work on the game thread (FIFO decode, display lists, vertex formats, texture lookups, uniforms) | Move it to another core |
+| 11–14% | Scalar floating-point semantics (`EvaluatePpcScalarBinary`, `FinishScalarFp`) | Removing it measured nothing |
+| 10% | Android 9 emulated TLS (`__emutls_get_address`), from FP adapters, dispatch and caches | Pass context, or require Android 10 |
+| 6.5% | Indirect-call dispatch | Small |
+| 6% | Kernel (futex wakeups, partly the emulator) | Small |
 
-The evening candidate retains three measured CPU-path reductions: avoid unused
-vertex-format construction, cache validated display-list CP-write effects, and
-skip clock reads for zero-expiry synthetic keys. State restoration and input
-expiry contract tests run under ASan/UBSan in CI. Code160's physical Pixel staff
-replay removes all57 keyboard-related clock samples observed in code159; CPU
-medians are9.397 versus9.535ms/present. Earlier snapshot candidate/control/repeat
-medians were9.828/10.070/9.947ms. These small observations are bounded to one
-device/course with unsynchronized phase and variable clocks, not general FPS or
-reporter-device acceptance. See the linked evening ledger for hashes and tails.
+**Every guest memory access pays a tax on Android and iOS.** Before each
+access, translated code reloads two globals:
 
-API28/API29 replay comparisons have not isolated a useful native-TLS benefit
-from within-build variation. KeepAPI28 as default. Do not combine these CPU
-changes with a claim to fix Adreno vertex explosions.
+1. `g_requiresCheckedAccess`, a fallback for 16 KiB-page phones;
+2. `gFlatGuestBase`, where game memory starts.
 
-A private code163 CPU-driver fixture has now completed Original100cc Luigi
-Circuit with all12 racers in the results table. Video verifies movement,
-items, position changes and laps; the camera alternates cinematic angles.
-This is an offline twelve-CPU workload, not human/player-camera gameplay.
-A separate29.95-second sample (4,447 samples,0lost, thermal status3) has median
-CPU14.544ms and FPS56.8 across five steady intervals. Scalar flag clear/capture
-account for7.79%/5.90% of sampled self cycles, and emulatedTLS/pthread_getspecific
-for3.62%/2.12%. Preserve floating-point semantics; this profile does not justify
-dropping exception handling. Subsequent API29/API28 CPU-fixture captures
-also failed to isolate a useful native-TLS benefit from thermal/run variation.
-The earlier162 stationary-grid attempt is explicitly rejected.
+Each reload is a GOT load, a value load and a compare-and-branch. The compiler
+can't keep them in registers because guest stores are byte copies that might
+alias them. Desktop builds use a compile-time base and pay none of this.
 
-The retained audio change resolves the existing per-thread ARAM window once per
-voice instead of per sample byte. The same bounds, mapping generation and
-fallback checks remain. 786,432 sanitizer-checked sample/state comparisons pass.
-In API28 CPU-fixture captures, per-sample audio TLS samples fall from172 in the
-control to0 in each of two candidate runs, matching ARM disassembly. Candidate
-CPU medians14.7135/14.466ms bracket the control14.649ms; FPS medians54.195/57.865
-versus58.02 do not establish an overall speedup. Keep the claim to removal of
-specific audio overhead, with broader profile/device acceptance outstanding.
+## What has been tried
 
-A private profile-derived512-function layout experiment preserved dynamic exports
-and reduced the selected functions' occupied4KiB pages from1,139 to760.
-A same-course, thermal0 control/ordered replay pair measured12.673/12.684ms
-CPU per present, both near60FPS. This proves changed placement, not a benefit;
-no function-ordering default is retained. See the ledger for exact artifacts
-and the rejected stale-package audit caught before installation.
+| Change | Result | State |
+|---|---|---|
+| Skip unobserved FP status capture, plus an Android Performance Hint on the game thread (candidate 203) | Game-thread CPU 14.7 → 12.65 ms on the Pixel | Shipped in 0.5.1 |
+| Android game packs without debug info (`-g0`) | Compile CPU 2,232 → 1,404 s | Shipped in 0.7.5 |
+| Audio ARAM window resolved once per voice | Removes the per-sample TLS cost | Shipped |
+| CPU-context slot (205), native TLS (API 29), 512-function layout | No reliable gain (September, Pixel) | Rejected |
+| Pass `ctx` to the FP adapters instead of a TLS lookup | TLS samples 10.4% → 2.5%; no measurable frame-time change | Rejected; patch kept |
+| Exact fast path for normal FP results | Inlined: `.text` +12%, about 10% **slower**. Out of line: no change | Rejected; patch kept |
+| Flat-memory locals (read both globals once per function) | `.text` −6.4% (116.4 → 109.0 MB); −1.4% user time over 8 pairs, inside the noise | **Candidate:** needs a phone A/B |
+| Profile-guided optimization (PGO) of the game pack | Pipeline works (see the investigation); A/B spoiled by host load | **Candidate:** measure on a quiet machine |
 
-### Next narrow CPU experiment: explicit scalar context
+Patches and the PGO dump source are in [`tools/android-perf`](../tools/android-perf/README.md).
 
-In the exact166 Moo repeat trace, sampled TLS callers include63 multiply,
-34 add and22 subtract scalar adapters. Generated functions already receive
-`CpuContext* ctx`, but `CxxLinearCodeGenerator.Inlines.cs` emits stateful arithmetic
-calls without that argument, so `ppc_runtime.h` resolves the context again.
-The runtime already reuses one resolved pointer within each operation; simply
-adding another local variable does not remove this remaining cost.
+## The test bed and its limits
 
-A coordinated generator/runtime overload could pass the existing context while
-preserving null/guest-stack validation, FPSCR destination suppression and host
-rounding/exception ordering. Keep old signatures for already-generated graphs,
-test generated call sites and context-scope nesting, rebuild the actual graph,
-and compare the same heavy workload before adopting it. This is a candidate
-boundary change, not a proven speedup or permission to drop scalar semantics.
-The normal170 candidate does not include it.
+[`tools/android-perf`](../tools/android-perf/README.md) builds variants,
+deploys them over an emulator install (game data kept), drives the menus into a
+race and reports game-thread CPU per frame, alternating base and candidate.
 
-## Second: actual failing character draw
+Rules learned the hard way:
 
-Use the current maintained runtime and retained PNMTX evidence, rather than reconstructing the obsolete code83 candidate. #104 reports corrupt characters on code135 at1x/Normal with empty sampled shader queues. #211 independently reports failure on S24 Ultra while characters appear on Galaxy A32. Preserve selected-draw and pipeline identity, disable diagnostic draw merging when capturing, and compile the actual generated vertex shaders. Finite CPU matrices and generic passing probes do not validate the failing shader. Do not request another ISO replacement, mode sweep or duplicate log.
+- **Never use emulator FPS.** The emulator's host graphics transport caps races
+  near 40 FPS.
+- **Cold-boot the emulator for every run.** It leaks host memory with each app
+  restart, reaching 30 GB after a few hours, and slows down. `ab.sh` does this.
+- **Use a quiet machine.** Other chats' builds (BlueWake PGO, SunPad loops)
+  pushed the load average to 184 and invalidated a whole A/B. Check
+  `sysctl -n vm.loadavg` before trusting a run.
+- **Resolution is about ±5%** (±0.4 ms) between cold-boot runs, so only changes
+  around 10% or more are resolvable here.
+- **The emulator runs on M3 Max cores,** which hide load and branch costs that
+  phone cores, especially little in-order cores, do not. Changes that remove
+  instructions look smaller here than they will on phones.
+- **Physical confirmation still needs a phone that reproduces the slowness.**
+  The current loop's ground rule is that no test phones get bought; that is
+  Chris's call to revisit.
 
-Use an affected device for dynamic → selected literal → dynamic comparison on the same observed character draw. A Pixel pass cannot accept corruption on affected Adreno devices. Only after the comparison discriminates the cause should a narrow correction be tested on affected and known-working hardware.
+## Next steps, in order
 
-## Native TLS experiment
+1. **Measure PGO on a quiet machine** (about an hour).
+   - Recipe: the investigation's PGO section.
+   - Before trusting a gain, collect the profile on a different track from
+     the bench and include a Retro Rewind race.
+   - If the gain is 10% or more, decide how it ships: the APK can be built with
+     a profile, but PadMint builds would need a published `.profdata`
+     (function names and counts derived from running the game; Chris to decide).
+2. **Phone A/B for flat-memory locals** (and optionally the explicit-context
+   change). If it gains, implement it properly:
+   - **Translator:** emit an entry macro before `goto <entry>` in
+     `CxxLinearCodeGenerator.cs` (beside `EmitHoistedGqrPrologue`).
+   - **Runtimes:** define the locals in the Android and iOS runtimes, both of
+     which use a launch-time base. Other runtimes define the macro empty.
+   - **Upstream:** offer it to WiiCompiled through patchzyy (#339).
+3. **Move GX FIFO decode off the game thread** (the 21%). Design first:
+   - which GX calls must stay synchronous (draw sync, EFB/texture copies the CPU
+     reads, peeks);
+   - guest memory lifetime: display lists and vertex arrays live in guest RAM,
+     which the game can change after the call.
+   Aurora already has a frame worker (`aurora.cpp`). This is multi-day work
+   with a risk of garbled geometry.
+4. **Small items, each under 2%:**
+   - make the vertex-layout hash incremental (`gx_dl.cpp` `HashScanLayoutState`, about 1.7%);
+   - display-list cache front-cache misses (about 1%);
+   - the TLS check in `DispatchKnownTranslatedCpuTargetStatic` on every translated call.
+5. **Product decision:** requiring Android 10 (API 29) gives native TLS across
+   the whole runtime. The September native-TLS trial was inconclusive on the
+   Pixel; re-measure with the current bench before deciding.
 
-Ordinary builds retain Android API28. Set `KARTPAD_ANDROID_NATIVE_TLS_EXPERIMENT=1`
-and an explicit `KARTPAD_ANDROID_VERSION_NAME` containing `-native-tls` to build
-an API29-only candidate. Gradle uses that minimum for both the manifest and NDK
-target; changing `targetSdk` alone does not enable native TLS. Use a fresh native
-configuration and retain the API28 control and exact native symbols.
+## Open issues
 
-Package/bundle audits default to API28. Set `KARTPAD_ANDROID_EXPECTED_MIN_SDK=29`
-only when auditing this experiment. Also inspect the actual native Android note,
-TLS sections and `R_AARCH64_TLSDESC` relocations before attributing a result to TLS.
-Use matching scene/settings and thermal range, with both profiles and lifecycle
-checks. This option is not a decision to drop Android9 from the public release,
-and build or relocation evidence alone is not a performance improvement.
+- **Performance:**
+  - #339 (patchzyy's request; slow-phone reports are folded into it).
+  - #438 (POCO X7, Mali, Dimensity 7300; also a Retro WFC 61070 error).
+  - #444 (Honor, Snapdragon 6s Gen 3; no reply yet).
+- **Not performance, so don't mix them in:**
+  - Adreno 6xx/7xx invisible characters (#104, #301; next step is a different
+    way to hand bone matrices to the GPU, Chris's decision, [loop B2](CURRENT-LOOP.md));
+  - PowerVR (#304);
+  - Honor textures (#431);
+  - 60 Hz launch flicker (#390);
+  - Moto G75 crash (#332);
+  - games that open briefly (#370);
+  - cup-end crash (#131).
+- **Mac input lag:** Wii Remote with Classic Controller Pro (#306) is input
+  latency, not frame time.
 
-## Ownership and release gate
+When replying on #339, post measured before/after numbers only, and keep
+emulator, Pixel and reporter results separate.
 
-Refresh issue comments and current build/device ownership before acting. One operator owns native builds and the device session. Preserve saves, profiles, identities and signing; never uninstall or clear data to cross a signer mismatch. Keep source-only experiments isolated from concurrent work.
+## Needs Chris
 
-Every handoff identifies source, version/code, APK hash, native payload, signer, exact operation and completion condition. Host checks, installation, startup, driven gameplay and online endurance are distinct evidence. Build a new public release only for a verified correction; a diagnostic is not a performance-fix release.
+- Publish 0.8.0 (then PadMint 0.4.14 can ship).
+- A quiet machine window for benchmarks, or pausing other chats' long builds.
+- Whether a slow test phone is worth buying, and which: a Dimensity 7300 or
+  Snapdragon 6-series phone covers most reports. A Moto G-series phone with an
+  Adreno 6xx GPU would also reproduce #301 and #332.
+- Android 9 support, if native TLS proves worth it.
+- Whether a PGO profile may be published for PadMint builds.
 
-[Build instructions](../android/README.md) · [Physical procedures](ANDROID-PHYSICAL-HANDOFF.md) · [Performance notes](PERF.md)
+## Resuming
+
+1. Fetch main. Check `gh release list` and open issues for new performance
+   reports.
+2. Read this page, then the
+   [investigation](artifacts/2026-10-10/android-cpu-investigation.md).
+3. **Set up the bench:** [`tools/android-perf/README.md`](../tools/android-perf/README.md).
+   It needs the private game pack and translation from a self-build, and the
+   phone AVD with imported game data.
+4. Confirm the machine is quiet, run base three times to see today's spread,
+   then pick the next step above.
+
