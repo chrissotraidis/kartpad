@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.7.13** (5 October 2026). Each item links its GitHub
+Current for **KartPad 0.8.0** (October 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).
@@ -48,7 +48,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   not found yet; 0.7.10's log ruled out the GPU's shader limit. [#304](https://github.com/chrissotraidis/kartpad/issues/304)
 - **Moto G75:** crashes while loading the game; we need a diagnostic log.
   [#332](https://github.com/chrissotraidis/kartpad/issues/332)
-- **AYN Thor:** black bars even with full screen. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
+- **AYN Thor:** black bars even with full screen. From 0.8.0, **Fill Screen**
+  also uses the display's cutout area, which should remove the top band; not
+  yet confirmed on a Thor. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
 
 ## Graphics (Apple)
 
@@ -87,14 +89,18 @@ the [archive](archive/known-issues-through-2026-09.md).
 These have a fix or explanation and are open until someone affected confirms
 it: the crash after the last race of a cup ([#131](https://github.com/chrissotraidis/kartpad/issues/131), no crash in automated
 full cups on 0.7.10), the hourly update notice ([#377](https://github.com/chrissotraidis/kartpad/issues/377)), the iPad folder
-picker ([#380](https://github.com/chrissotraidis/kartpad/issues/380)) and auto-hiding the ⋯ button ([#402](https://github.com/chrissotraidis/kartpad/issues/402)).
+picker ([#380](https://github.com/chrissotraidis/kartpad/issues/380)), auto-hiding the ⋯ button ([#402](https://github.com/chrissotraidis/kartpad/issues/402)), and from 0.8.0 Shake to Trick
+([#430](https://github.com/chrissotraidis/kartpad/issues/430)) and the app icon choice ([#437](https://github.com/chrissotraidis/kartpad/issues/437)).
 
 ## Feature requests
 
-Separate music and game-sound volume, including muting the game to play your
-own music ([#411](https://github.com/chrissotraidis/kartpad/issues/411)), is in
-progress: ••• → **Sound…** on Android and iPhone/iPad, in the next release. On
-the Mac it's already in **Game → Game Settings… → Audio**.
+Separate music and game-sound volume ([#411](https://github.com/chrissotraidis/kartpad/issues/411)) is in ••• → **Sound…** on
+Android (0.7.14) and iPhone/iPad (0.7.15), and in **Game → Game Settings… →
+Audio** on Mac.
+
+iPhone, iPad and Mac can't update themselves: each new KartPad, and almost
+every Retro Rewind update, needs a new build from PadMint. From 0.8.0 the apps
+say when an update is out.
 
 Ghost import/export ([#295](https://github.com/chrissotraidis/kartpad/issues/295)), older iOS and macOS versions ([#300](https://github.com/chrissotraidis/kartpad/issues/300)),
 AirPlay and external displays ([#100](https://github.com/chrissotraidis/kartpad/issues/100)), DSU controller apps ([#91](https://github.com/chrissotraidis/kartpad/issues/91)) and
