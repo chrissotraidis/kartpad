@@ -140,7 +140,7 @@ Rules learned the hard way:
   - #444 (Honor, Snapdragon 6s Gen 3; no reply yet).
 - **Not performance, so don't mix them in:**
   - Adreno 6xx/7xx invisible characters (#104, #301; next step is a different
-    way to hand bone matrices to the GPU, Chris's decision, [loop B2](CURRENT-LOOP.md));
+    way to hand bone matrices to the GPU, Chris's decision, [loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability));
   - PowerVR (#304);
   - Honor textures (#431);
   - 60 Hz launch flicker (#390);
