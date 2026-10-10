@@ -453,6 +453,19 @@ class KartPadActivity : SDLActivity() {
         // reserved on devices without enforced edge-to-edge (Android 14 and
         // earlier), showing a black band where the status bar was.
         window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN)
+        // Fill Screen also draws into display cutouts. Some handhelds (the AYN
+        // Thor, #202) report one along a long edge, which otherwise stays a
+        // black band; other aspect modes keep phones' camera cutouts clear.
+        val cutoutMode = when {
+            KartPadTouchSettings.aspectMode(this) != 2 ->
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+            Build.VERSION.SDK_INT >= 30 ->
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            else -> android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        if (window.attributes.layoutInDisplayCutoutMode != cutoutMode) {
+            window.attributes = window.attributes.also { it.layoutInDisplayCutoutMode = cutoutMode }
+        }
         if (Build.VERSION.SDK_INT >= 30) {
             window.insetsController?.let { controller ->
                 controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -961,6 +974,7 @@ class KartPadActivity : SDLActivity() {
             .setSingleChoiceItems(labels, KartPadTouchSettings.aspectMode(this)) { dialog, which ->
                 KartPadTouchSettings.setAspectMode(this, which)
                 applyDisplaySettings()
+                hideGameSystemBars()
                 dialog.dismiss()
             }
             .setNegativeButton("Back", null)
