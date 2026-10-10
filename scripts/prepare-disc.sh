@@ -27,9 +27,12 @@ fi
   echo "ERROR: nodtool 2.0.0-alpha.9 is required (cargo install nodtool --version 2.0.0-alpha.9 --locked)" >&2
   exit 69
 }
-[[ "$(${nodtool} --version)" == "nodtool 2.0.0-alpha.9 " ||
-   "$(${nodtool} --version)" == "nodtool 2.0.0-alpha.9" ]] || {
-  echo "ERROR: expected nodtool 2.0.0-alpha.9" >&2
+# Builds report "nodtool 2.0.0-alpha.9", optionally followed by a commit
+# (PadMint's copy does); compare the name and version, as the builder does.
+nodtool_reported="$("${nodtool}" --version)"
+read -r nodtool_name nodtool_version _ <<<"${nodtool_reported}"
+[[ "${nodtool_name}" == nodtool && "${nodtool_version}" == 2.0.0-alpha.9 ]] || {
+  echo "ERROR: expected nodtool 2.0.0-alpha.9, found ${nodtool_reported}" >&2
   exit 65
 }
 
