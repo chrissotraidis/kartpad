@@ -7,6 +7,10 @@ The [current goal loop](CURRENT-LOOP.md) sets the order of work for 0.7.11 and
 current with each release. Everything below on this board is a dated snapshot:
 useful evidence, not current next actions.
 
+Performance (#339) is resumed from the
+[performance handoff](ANDROID-PERFORMANCE-HANDOFF.md), not from the
+`warmed-performance` rows below.
+
 ## 1 October focused execution
 
 The [67-issue review](FOCUSED-REVIEW-2026-10-01.md) and

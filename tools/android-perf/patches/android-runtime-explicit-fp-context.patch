@@ -1,0 +1,125 @@
+diff --git a/runtime/include/ppc_runtime.h b/runtime/include/ppc_runtime.h
+index 33547e5..3d47dd5 100644
+--- a/runtime/include/ppc_runtime.h
++++ b/runtime/include/ppc_runtime.h
+@@ -44,9 +44,8 @@ inline bool PpcCommitScalarFpInline(
+     return PpcCommitScalarFpInline(CurrentCpuContext(), destination, result);
+ }
+ 
+-inline uint32_t PpcCompareStateInline(bool ordered, double a, double b)
++[[gnu::noinline]] inline uint32_t PpcCompareStateCtxInline(CpuContext* cpu, bool ordered, double a, double b)
+ {
+-    CpuContext* cpu = CurrentCpuContext();
+     const auto result = kartpad::semantics::EvaluatePpcFloatCompare(
+         cpu->fpscr, a, b, ordered);
+     const bool niChanged = ((cpu->fpscr ^ result.fpscr) &
+@@ -57,24 +56,37 @@ inline uint32_t PpcCompareStateInline(bool ordered, double a, double b)
+     return result.condition;
+ }
+ 
+-inline bool PpcFaddsStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Add, a, b, true)); }
+-inline bool PpcFsubsStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Subtract, a, b, true)); }
+-inline bool PpcFmulsStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Multiply, a, kartpad::semantics::Force25Bit(b), true)); }
+-inline bool PpcFdivsStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Divide, a, b, true)); }
+-inline bool PpcFaddStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Add, a, b, false)); }
+-inline bool PpcFsubStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Subtract, a, b, false)); }
+-inline bool PpcFmulStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Multiply, a, b, false)); }
+-inline bool PpcFdivStateInline(double& d, double a, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Divide, a, b, false)); }
+-inline bool PpcFctiwzStateInline(double& d, double value) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcConvertToInteger(cpu->fpscr, value, FE_TOWARDZERO)); }
+-inline bool PpcFmaddsStateInline(double& d, double a, double c, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, false, true, false)); }
+-inline bool PpcFmsubsStateInline(double& d, double a, double c, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, true, true, false)); }
+-inline bool PpcFnmsubStateInline(double& d, double a, double c, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, true, false, true)); }
+-inline bool PpcFnmsubsStateInline(double& d, double a, double c, double b) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, true, true, true)); }
+-inline bool PpcFrsqrteStateInline(double& d, double value) { CpuContext* cpu = CurrentCpuContext(); return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcEstimate(cpu->fpscr, value, true)); }
++[[gnu::noinline]] inline bool PpcFaddsStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Add, a, b, true)); }
++inline bool PpcFaddsStateInline(double& d, double a, double b) { return PpcFaddsStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFsubsStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Subtract, a, b, true)); }
++inline bool PpcFsubsStateInline(double& d, double a, double b) { return PpcFsubsStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFmulsStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Multiply, a, kartpad::semantics::Force25Bit(b), true)); }
++inline bool PpcFmulsStateInline(double& d, double a, double b) { return PpcFmulsStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFdivsStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Divide, a, b, true)); }
++inline bool PpcFdivsStateInline(double& d, double a, double b) { return PpcFdivsStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFaddStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Add, a, b, false)); }
++inline bool PpcFaddStateInline(double& d, double a, double b) { return PpcFaddStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFsubStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Subtract, a, b, false)); }
++inline bool PpcFsubStateInline(double& d, double a, double b) { return PpcFsubStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFmulStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Multiply, a, b, false)); }
++inline bool PpcFmulStateInline(double& d, double a, double b) { return PpcFmulStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFdivStateCtxInline(CpuContext* cpu, double& d, double a, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcScalarBinary(cpu->fpscr, kartpad::semantics::ScalarFpBinaryOperation::Divide, a, b, false)); }
++inline bool PpcFdivStateInline(double& d, double a, double b) { return PpcFdivStateCtxInline(CurrentCpuContext(), d, a, b); }
++[[gnu::noinline]] inline bool PpcFctiwzStateCtxInline(CpuContext* cpu, double& d, double value) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcConvertToInteger(cpu->fpscr, value, FE_TOWARDZERO)); }
++inline bool PpcFctiwzStateInline(double& d, double value) { return PpcFctiwzStateCtxInline(CurrentCpuContext(), d, value); }
++[[gnu::noinline]] inline bool PpcFmaddsStateCtxInline(CpuContext* cpu, double& d, double a, double c, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, false, true, false)); }
++inline bool PpcFmaddsStateInline(double& d, double a, double c, double b) { return PpcFmaddsStateCtxInline(CurrentCpuContext(), d, a, c, b); }
++[[gnu::noinline]] inline bool PpcFmsubsStateCtxInline(CpuContext* cpu, double& d, double a, double c, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, true, true, false)); }
++inline bool PpcFmsubsStateInline(double& d, double a, double c, double b) { return PpcFmsubsStateCtxInline(CurrentCpuContext(), d, a, c, b); }
++[[gnu::noinline]] inline bool PpcFnmsubStateCtxInline(CpuContext* cpu, double& d, double a, double c, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, true, false, true)); }
++inline bool PpcFnmsubStateInline(double& d, double a, double c, double b) { return PpcFnmsubStateCtxInline(CurrentCpuContext(), d, a, c, b); }
++[[gnu::noinline]] inline bool PpcFnmsubsStateCtxInline(CpuContext* cpu, double& d, double a, double c, double b) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcFused(cpu->fpscr, a, c, b, true, true, true)); }
++inline bool PpcFnmsubsStateInline(double& d, double a, double c, double b) { return PpcFnmsubsStateCtxInline(CurrentCpuContext(), d, a, c, b); }
++[[gnu::noinline]] inline bool PpcFrsqrteStateCtxInline(CpuContext* cpu, double& d, double value) { return PpcCommitScalarFpInline(cpu, d, kartpad::semantics::EvaluatePpcEstimate(cpu->fpscr, value, true)); }
++inline bool PpcFrsqrteStateInline(double& d, double value) { return PpcFrsqrteStateCtxInline(CurrentCpuContext(), d, value); }
+ 
+-inline double PpcFresValueStateInline(double current, double value)
++[[gnu::noinline]] inline double PpcFresValueStateCtxInline(CpuContext* cpu, double current, double value)
+ {
+-    CpuContext* cpu = CurrentCpuContext();
+     const auto result = kartpad::semantics::EvaluatePpcEstimate(
+         cpu->fpscr, value, false);
+     const bool niChanged = ((cpu->fpscr ^ result.fpscr) &
+@@ -87,3 +99,55 @@ inline double PpcFresValueStateInline(double current, double value)
+     const float lane = static_cast<float>(result.value);
+     return PpcPackPairedInline(lane, lane);
+ }
++
++inline uint32_t PpcCompareStateInline(bool ordered, double a, double b)
++{
++    return PpcCompareStateCtxInline(CurrentCpuContext(), ordered, a, b);
++}
++
++inline double PpcFresValueStateInline(double current, double value)
++{
++    return PpcFresValueStateCtxInline(CurrentCpuContext(), current, value);
++}
++
++// Translated functions already receive the executing guest CPU as \`ctx\`.
++// In the game pack, the scalar adapters use it directly instead of reading
++// g_currentCpuContext, which the pack reaches through Android/API 28 emulated
++// TLS (__emutls_get_address + pthread_getspecific on every FP instruction).
++// A null context or a null guest stack still takes CurrentCpuContext() and its
++// fatal diagnostics. KARTPAD_SCALAR_CONTEXT_CHECK aborts if the passed context
++// ever differs from the thread's current one; KARTPAD_SCALAR_TLS_CONTEXT keeps
++// the previous lookup.
++#if defined(MKW_GAME_PACK_MODULE) && !defined(KARTPAD_SCALAR_TLS_CONTEXT)
++inline CpuContext* KartPadScalarCpu(CpuContext* local)
++{
++#if defined(KARTPAD_SCALAR_CONTEXT_CHECK)
++    if (local != g_currentCpuContext)
++        std::abort();
++#endif
++    if (__builtin_expect(local == nullptr || local->gpr[1] == 0, 0))
++        return CurrentCpuContext();
++    return local;
++}
++// State-free leaf functions (RECOMP_STATE_FREE_ABI) have no ctx parameter; there
++// the name finds this placeholder and the adapters keep the TLS lookup.
++struct KartPadNoLocalCpuContext {};
++inline constexpr KartPadNoLocalCpuContext ctx{};
++inline CpuContext* KartPadScalarCpu(KartPadNoLocalCpuContext) { return CurrentCpuContext(); }
++#define PpcFaddsStateInline(...) PpcFaddsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFsubsStateInline(...) PpcFsubsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFmulsStateInline(...) PpcFmulsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFdivsStateInline(...) PpcFdivsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFaddStateInline(...) PpcFaddStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFsubStateInline(...) PpcFsubStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFmulStateInline(...) PpcFmulStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFdivStateInline(...) PpcFdivStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFctiwzStateInline(...) PpcFctiwzStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFmaddsStateInline(...) PpcFmaddsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFmsubsStateInline(...) PpcFmsubsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFnmsubStateInline(...) PpcFnmsubStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFnmsubsStateInline(...) PpcFnmsubsStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFrsqrteStateInline(...) PpcFrsqrteStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcCompareStateInline(...) PpcCompareStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#define PpcFresValueStateInline(...) PpcFresValueStateCtxInline(KartPadScalarCpu(ctx), __VA_ARGS__)
++#endif

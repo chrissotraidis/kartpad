@@ -1,0 +1,126 @@
+diff --git a/runtime/include/memory_access.h b/runtime/include/memory_access.h
+index 677b21b..aa7183a 100644
+--- a/runtime/include/memory_access.h
++++ b/runtime/include/memory_access.h
+@@ -640,6 +640,121 @@ MKW_MEMORY_FORCE_INLINE void FlatWriteRamFloat64(uint32_t address, double value)
+ 
+ } // namespace MemoryInline
+ 
++// Game pack, Android/iOS: the flat guest base and the 16 KiB-page check are
++// process globals (gFlatGuestBase, g_requiresCheckedAccess). Guest stores are
++// byte copies, so the compiler must reload both globals after every store. A
++// translated function that declares KARTPAD_FLAT_FUNCTION_LOCALS reads them
++// once into locals no store can alias; everywhere else the placeholders below
++// keep the global reads. Both globals are fixed before translated code runs.
++#if defined(MKW_GAME_PACK_MODULE) && !defined(MKW_GUEST_FLAT_FIXED_PAGE_SIZE) && \
++    !defined(KARTPAD_FLAT_GLOBAL_RELOAD)
++namespace MemoryInline {
++struct FlatNoLocal {};
++#define KP_FLAT_INLINE __attribute__((always_inline)) inline
++KP_FLAT_INLINE uint8_t* FlatBaseOf(uint8_t* base) { return base; }
++KP_FLAT_INLINE uint8_t* FlatBaseOf(FlatNoLocal) { return MKW_FLAT_GUEST_BASE; }
++KP_FLAT_INLINE bool FlatCheckedOf(bool checked) { return checked; }
++KP_FLAT_INLINE bool FlatCheckedOf(FlatNoLocal) { return GuestFlat::RequiresCheckedAccess(); }
++template <typename T> KP_FLAT_INLINE T FlatLoadAt(uint8_t* base, uint32_t address) {
++    T value{};
++    std::memcpy(&value, base + address, sizeof(T));
++    return MaybeByteSwap(value);
++}
++template <typename T> KP_FLAT_INLINE void FlatStoreAt(uint8_t* base, uint32_t address, T value) {
++    const T swapped = MaybeByteSwap(value);
++    std::memcpy(base + address, &swapped, sizeof(T));
++}
++template <class B, class C> KP_FLAT_INLINE uint8_t FlatRead8L(B b, C c, uint32_t a) {
++    if (FlatCheckedOf(c)) return Memory::Read8(a);
++    return FlatLoadAt<uint8_t>(FlatBaseOf(b), a);
++}
++template <class B, class C> KP_FLAT_INLINE uint16_t FlatRead16L(B b, C c, uint32_t a) {
++    if (FlatCheckedOf(c)) return Memory::Read16(a);
++    return FlatLoadAt<uint16_t>(FlatBaseOf(b), a);
++}
++template <class B, class C> KP_FLAT_INLINE uint32_t FlatRead32L(B b, C c, uint32_t a) {
++    if (FlatCheckedOf(c)) return Memory::Read32(a);
++    return FlatLoadAt<uint32_t>(FlatBaseOf(b), a);
++}
++template <class B, class C> KP_FLAT_INLINE float FlatReadFloat32L(B b, C c, uint32_t a) {
++    const uint32_t bits = FlatRead32L(b, c, a);
++    float value = 0.0f;
++    std::memcpy(&value, &bits, sizeof(value));
++    return value;
++}
++template <class B, class C> KP_FLAT_INLINE double FlatReadFloat64L(B b, C c, uint32_t a) {
++    const uint64_t bits = FlatCheckedOf(c) ? Memory::Read64(a) : FlatLoadAt<uint64_t>(FlatBaseOf(b), a);
++    double value = 0.0;
++    std::memcpy(&value, &bits, sizeof(value));
++    return value;
++}
++template <class B, class C> KP_FLAT_INLINE void FlatWrite8L(B b, C c, uint32_t a, uint8_t v) {
++    if (FlatCheckedOf(c)) { Memory::Write8(a, v); return; }
++    if (FlatWriteNeedsPolicy(a)) [[unlikely]] { Write8Slow(a, v); return; }
++    FlatStoreAt<uint8_t>(FlatBaseOf(b), a, v);
++}
++template <class B, class C> KP_FLAT_INLINE void FlatWrite16L(B b, C c, uint32_t a, uint16_t v) {
++    if (FlatCheckedOf(c)) { Memory::Write16(a, v); return; }
++    if (FlatWriteNeedsPolicy(a)) [[unlikely]] { Write16Slow(a, v); return; }
++    FlatStoreAt<uint16_t>(FlatBaseOf(b), a, v);
++}
++template <class B, class C> KP_FLAT_INLINE void FlatWrite32L(B b, C c, uint32_t a, uint32_t v) {
++    if (FlatCheckedOf(c)) { Memory::Write32(a, v); return; }
++    if (FlatWriteNeedsPolicy(a)) [[unlikely]] { Write32Slow(a, v); return; }
++    FlatStoreAt<uint32_t>(FlatBaseOf(b), a, v);
++}
++template <class B, class C> KP_FLAT_INLINE void FlatWriteFloat32L(B b, C c, uint32_t a, double v) {
++    if (FlatCheckedOf(c)) { Memory::WriteFloat32(a, v); return; }
++    const uint32_t bits = ConvertPpcDoubleToSingleBits(v);
++    if (FlatWriteNeedsPolicy(a)) [[unlikely]] { WriteFloat32Slow(a, v); return; }
++    FlatStoreAt<uint32_t>(FlatBaseOf(b), a, bits);
++}
++template <class B, class C> KP_FLAT_INLINE void FlatWriteFloat64L(B b, C c, uint32_t a, double v) {
++    if (FlatCheckedOf(c)) { Memory::WriteFloat64(a, v); return; }
++    uint64_t bits = 0;
++    std::memcpy(&bits, &v, sizeof(bits));
++    if (FlatWriteNeedsPolicy(a)) [[unlikely]] { WriteFloat64Slow(a, v); return; }
++    FlatStoreAt<uint64_t>(FlatBaseOf(b), a, bits);
++}
++template <class B> KP_FLAT_INLINE void FlatWriteRam8L(B b, uint32_t a, uint8_t v) { FlatStoreAt<uint8_t>(FlatBaseOf(b), a, v); }
++template <class B> KP_FLAT_INLINE void FlatWriteRam16L(B b, uint32_t a, uint16_t v) { FlatStoreAt<uint16_t>(FlatBaseOf(b), a, v); }
++template <class B> KP_FLAT_INLINE void FlatWriteRam32L(B b, uint32_t a, uint32_t v) { FlatStoreAt<uint32_t>(FlatBaseOf(b), a, v); }
++template <class B> KP_FLAT_INLINE void FlatWriteRamFloat32L(B b, uint32_t a, double v) {
++    FlatStoreAt<uint32_t>(FlatBaseOf(b), a, ConvertPpcDoubleToSingleBits(v));
++}
++template <class B> KP_FLAT_INLINE void FlatWriteRamFloat64L(B b, uint32_t a, double v) {
++    uint64_t bits = 0;
++    std::memcpy(&bits, &v, sizeof(bits));
++    FlatStoreAt<uint64_t>(FlatBaseOf(b), a, bits);
++}
++#undef KP_FLAT_INLINE
++} // namespace MemoryInline
++inline constexpr MemoryInline::FlatNoLocal mkw_flat_base{};
++inline constexpr MemoryInline::FlatNoLocal mkw_flat_checked{};
++#define KARTPAD_FLAT_FUNCTION_LOCALS \
++    [[maybe_unused]] uint8_t* const mkw_flat_base = MKW_FLAT_GUEST_BASE; \
++    [[maybe_unused]] const bool mkw_flat_checked = GuestFlat::RequiresCheckedAccess();
++#define FlatRead8(a) FlatRead8L(mkw_flat_base, mkw_flat_checked, a)
++#define FlatRead16(a) FlatRead16L(mkw_flat_base, mkw_flat_checked, a)
++#define FlatRead32(a) FlatRead32L(mkw_flat_base, mkw_flat_checked, a)
++#define FlatReadFloat32(a) FlatReadFloat32L(mkw_flat_base, mkw_flat_checked, a)
++#define FlatReadFloat64(a) FlatReadFloat64L(mkw_flat_base, mkw_flat_checked, a)
++#define FlatWrite8(a, v) FlatWrite8L(mkw_flat_base, mkw_flat_checked, a, v)
++#define FlatWrite16(a, v) FlatWrite16L(mkw_flat_base, mkw_flat_checked, a, v)
++#define FlatWrite32(a, v) FlatWrite32L(mkw_flat_base, mkw_flat_checked, a, v)
++#define FlatWriteFloat32(a, v) FlatWriteFloat32L(mkw_flat_base, mkw_flat_checked, a, v)
++#define FlatWriteFloat64(a, v) FlatWriteFloat64L(mkw_flat_base, mkw_flat_checked, a, v)
++#define FlatWriteRam8(a, v) FlatWriteRam8L(mkw_flat_base, a, v)
++#define FlatWriteRam16(a, v) FlatWriteRam16L(mkw_flat_base, a, v)
++#define FlatWriteRam32(a, v) FlatWriteRam32L(mkw_flat_base, a, v)
++#define FlatWriteRamFloat32(a, v) FlatWriteRamFloat32L(mkw_flat_base, a, v)
++#define FlatWriteRamFloat64(a, v) FlatWriteRamFloat64L(mkw_flat_base, a, v)
++#endif
++#ifndef KARTPAD_FLAT_FUNCTION_LOCALS
++#define KARTPAD_FLAT_FUNCTION_LOCALS
++#endif
++
++
+ #undef MKW_MEMORY_FORCE_INLINE
+ #undef MKW_MEMORY_NO_INLINE
+ #undef MKW_MEMORY_COLD

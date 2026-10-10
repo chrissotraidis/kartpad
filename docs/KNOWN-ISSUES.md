@@ -64,8 +64,10 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 - **Short pauses** the first time a menu or course appears, while KartPad
   prepares its graphics. They get rarer the more you play.
-- **Slow on mid-range and older phones**, and higher render resolutions cost a
-  lot. Start at **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
+- **Slow on mid-range and older phones.** The game runs on one processor core,
+  so its speed follows that core's speed. Lowering the render resolution
+  usually helps little; resolutions above 1× still cost GPU time, so start at
+  **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
 
 ## Controllers
 

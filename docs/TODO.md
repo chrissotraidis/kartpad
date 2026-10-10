@@ -18,6 +18,10 @@ iPad and Mac can't do that:
 
 Today these players get no notice at all that a new version is out.
 
+**Status, 10 October:** step 1 is built and merged for 0.8.0 (update notices
+on the iPhone/iPad game chooser and **Help → Check for Updates…** on Mac). It
+reaches players when 0.8.0 is published. Step 2 belongs to PadMint.
+
 **What to do, in order:**
 
 1. **An "Update available" notice in KartPad on iPhone, iPad and Mac.** Use the
