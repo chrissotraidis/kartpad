@@ -2736,6 +2736,28 @@ static void KartPadApplySoundLevels(BOOL persist) {
     [sizes addObject:size];
   }
   [displayItems addObject:[UIMenu menuWithTitle:@"FPS Counter Size" children:sizes]];
+  if (UIApplication.sharedApplication.supportsAlternateIcons) {
+    // Original KartPad artwork only (see branding/PROVENANCE.md). nil is the default icon.
+    NSArray<NSString *> *iconTitles = @[@"Red K", @"Circuit", @"Mono"];
+    NSArray *iconNames = @[NSNull.null, @"AppIcon-Circuit", @"AppIcon-Mono"];
+    NSString *currentIcon = UIApplication.sharedApplication.alternateIconName;
+    NSMutableArray<UIMenuElement *> *icons = [NSMutableArray array];
+    for (NSUInteger index = 0; index < iconTitles.count; ++index) {
+      NSString *iconName = iconNames[index] == NSNull.null ? nil : iconNames[index];
+      UIAction *icon = [UIAction actionWithTitle:iconTitles[index] image:nil identifier:nil
+          handler:^(__kindof UIAction *action) {
+        [UIApplication.sharedApplication setAlternateIconName:iconName completionHandler:^(NSError *error) {
+          dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf refreshMenuButton]; });
+        }];
+      }];
+      icon.state = (iconName == nil ? currentIcon == nil : [iconName isEqualToString:currentIcon])
+          ? UIMenuElementStateOn : UIMenuElementStateOff;
+      [icons addObject:icon];
+    }
+    [displayItems addObject:[UIMenu menuWithTitle:@"App Icon"
+        image:[UIImage systemImageNamed:@"app.badge"] identifier:@"dev.kartpad.app-icon"
+        options:0 children:icons]];
+  }
   UIMenu *display =
       [UIMenu menuWithTitle:@"Display"
                       image:[UIImage systemImageNamed:@"display"]
