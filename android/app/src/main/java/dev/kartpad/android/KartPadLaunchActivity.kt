@@ -32,7 +32,7 @@ import java.io.File
 import java.util.concurrent.Executors
 
 /** Production owner for choosing the immutable runtime profile before SDL starts. */
-open class KartPadLaunchActivity : Activity() {
+open class KartPadChooserActivity : Activity() {
     protected open fun pausedProfile(): String? = null
     private fun requestedProfileFile() = java.io.File(filesDir, "KartPad/RequestedRuntimeProfile")
     private lateinit var status: TextView
@@ -542,7 +542,7 @@ open class KartPadLaunchActivity : Activity() {
         val brand = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            addView(ImageView(this@KartPadLaunchActivity).apply {
+            addView(ImageView(this@KartPadChooserActivity).apply {
                 setImageResource(R.drawable.kartpad_racing_mark)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -570,7 +570,7 @@ open class KartPadLaunchActivity : Activity() {
         }
         header.addView(theme, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(16) })
         updateLink = link("Update available") { showUpdate() }.apply {
-            visibility = if (KartPadUpdateCheck.known(this@KartPadLaunchActivity) != null) View.VISIBLE else View.GONE
+            visibility = if (KartPadUpdateCheck.known(this@KartPadChooserActivity) != null) View.VISIBLE else View.GONE
         }
         header.addView(updateLink)
         header.addView(link("Help") { showSetupHelp() })
@@ -620,7 +620,7 @@ open class KartPadLaunchActivity : Activity() {
         }
         return FrameLayout(this).apply {
             setBackgroundColor(if (darkMode) Color.rgb(17, 17, 17) else Color.rgb(251, 249, 242))
-            addView(ImageView(this@KartPadLaunchActivity).apply {
+            addView(ImageView(this@KartPadChooserActivity).apply {
                 setImageResource(R.drawable.kartpad_checker)
                 imageTintList = ColorStateList.valueOf(if (darkMode) Color.WHITE else Color.BLACK)
                 alpha = if (darkMode) 1f else 0.65f
@@ -686,7 +686,7 @@ open class KartPadLaunchActivity : Activity() {
                 setTextColor(secondaryForeground)
                 setBackgroundColor(Color.TRANSPARENT)
                 setOnClickListener {
-                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                    AlertDialog.Builder(this@KartPadChooserActivity)
                         .setTitle("Replace Game Pack")
                         .setMessage(
                             "Choose a game pack PadMint made for this version of KartPad. " +
@@ -712,12 +712,12 @@ open class KartPadLaunchActivity : Activity() {
             setTextColor(secondaryForeground)
             setBackgroundColor(Color.TRANSPARENT)
             setOnClickListener {
-                AlertDialog.Builder(this@KartPadLaunchActivity)
+                AlertDialog.Builder(this@KartPadChooserActivity)
                     .setTitle("Export Private Diagnostics")
                     .setMessage("Save recent runtime logs and any retained app crash/hang traces to a location you choose. Traces may contain local paths, network information or other personal details. No game images, saves, profiles, or signing material are copied. Keep this file private and review it before sharing.")
                     .setNegativeButton("Cancel", null)
                     .setPositiveButton("Save Locally…") { _, _ ->
-                        val sessions = runCatching { KartPadDiagnosticExport.sessions(this@KartPadLaunchActivity) }.getOrDefault(emptyList())
+                        val sessions = runCatching { KartPadDiagnosticExport.sessions(this@KartPadChooserActivity) }.getOrDefault(emptyList())
                         if (sessions.isEmpty()) {
                             // Early startup failures still have OS exit history, even without console.log.
                             exportSession = null
@@ -727,7 +727,7 @@ open class KartPadLaunchActivity : Activity() {
                                 putExtra(Intent.EXTRA_TITLE, "KartPad-private-diagnostics.zip")
                             }, REQUEST_DIAGNOSTICS)
                         }
-                        else AlertDialog.Builder(this@KartPadLaunchActivity).setTitle("Choose the game session")
+                        else AlertDialog.Builder(this@KartPadChooserActivity).setTitle("Choose the game session")
                             .setItems(sessions.map { "${it.id}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
                                 exportSession = sessions[index].id
                                 startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -744,7 +744,7 @@ open class KartPadLaunchActivity : Activity() {
             column.addView(Button(this).apply {
                 text = "Cancel Pending Ghost Import…"
                 setOnClickListener {
-                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                    AlertDialog.Builder(this@KartPadChooserActivity)
                         .setTitle("Cancel Pending Ghost Import?")
                         .setMessage("Remove the pending request so you can start the game again. Current saves and retained backups stay as they are; this does not undo an import that already completed.")
                         .setNegativeButton("Keep Import", null)
@@ -762,7 +762,7 @@ open class KartPadLaunchActivity : Activity() {
             column.addView(Button(this).apply {
                 text = "Cancel Staged Rating Restore…"
                 setOnClickListener {
-                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                    AlertDialog.Builder(this@KartPadChooserActivity)
                         .setTitle("Cancel Staged Rating Restore?")
                         .setMessage("Remove the pending request so you can start the game again. Current ratings and retained backups will stay as they are; this does not undo a restore that already completed.")
                         .setNegativeButton("Keep Restore", null)
@@ -786,7 +786,7 @@ open class KartPadLaunchActivity : Activity() {
             setBackgroundColor(Color.TRANSPARENT)
             setOnClickListener {
                 val enable = !KartPadRendererDiagnostics.enabled(context)
-                AlertDialog.Builder(this@KartPadLaunchActivity)
+                AlertDialog.Builder(this@KartPadChooserActivity)
                     .setTitle("Renderer Validation")
                     .setMessage("Checks the actual game renderer and enables buffer bounds protection. This may slow the game down; it is a diagnostic mode, not a graphics fix. Applies when you next open a game. After reproducing once, close KartPad, reopen this chooser and export private diagnostics. Turn it off here for normal play.")
                     .setNegativeButton("Cancel", null)
@@ -805,7 +805,7 @@ open class KartPadLaunchActivity : Activity() {
             isAllCaps = false
             setTextColor(secondaryForeground)
             setBackgroundColor(Color.TRANSPARENT)
-            setOnClickListener { KartPadCharacterGraphicsTestDialog.show(this@KartPadLaunchActivity) }
+            setOnClickListener { KartPadCharacterGraphicsTestDialog.show(this@KartPadChooserActivity) }
         }, layout(0))
 
         val scroll = ScrollView(this).apply { addView(column) }

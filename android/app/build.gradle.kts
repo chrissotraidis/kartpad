@@ -55,6 +55,8 @@ val prepareKartpadBuildProvenance by tasks.registering(Exec::class) {
 val kartpadIconResources = layout.buildDirectory.dir("generated/res/kartpadIcon")
 val prepareKartpadIcon by tasks.registering(Copy::class) {
     from(rootProject.file("../apple/ios/Assets.xcassets/AppIcon.appiconset/KartPadIcon-1024.png")) { rename { "kartpad_app_icon.png" } }
+    from(rootProject.file("../apple/ios/Assets.xcassets/AppIcon-Circuit.appiconset/KartPadIcon-Circuit-1024.png")) { rename { "kartpad_app_icon_circuit.png" } }
+    from(rootProject.file("../apple/ios/Assets.xcassets/AppIcon-Mono.appiconset/KartPadIcon-Mono-1024.png")) { rename { "kartpad_app_icon_mono.png" } }
     from(rootProject.file("../apple/ios/Assets.xcassets/KartPadLogo.imageset/KartPadIcon-1024.png")) { rename { "kartpad_racing_mark.png" } }
     from(rootProject.file("../apple/ios/Assets.xcassets/KartPadChecker.imageset/checker.png")) { rename { "kartpad_checker.png" } }
     into(kartpadIconResources.map { it.dir("drawable-nodpi") })

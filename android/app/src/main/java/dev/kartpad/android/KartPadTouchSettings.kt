@@ -24,6 +24,7 @@ internal object KartPadTouchSettings {
     private const val FPS_SIZE = "fps_size"
     private const val ASPECT_MODE = "aspect_mode"
     private const val RESOLUTION_SCALE = "resolution_scale"
+    private const val SHAKE_TRICKS = "shake_tricks_enabled"
     private const val MOTION_ENABLED = "motion_steering_enabled"
     private const val MOTION_INVERTED = "motion_steering_inverted"
     private const val MOTION_SENSITIVITY = "motion_steering_sensitivity"
@@ -108,6 +109,13 @@ internal object KartPadTouchSettings {
         preferences(context).edit().putFloat(
             RESOLUTION_SCALE, if (value.isFinite()) value.coerceIn(0.5f, 4f) else 1f,
         ).apply()
+    }
+
+    fun shakeTricksEnabled(context: Context): Boolean = preferences(context)
+        .getBoolean(SHAKE_TRICKS, false)
+
+    fun setShakeTricksEnabled(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(SHAKE_TRICKS, value).apply()
     }
 
     fun motionEnabled(context: Context): Boolean = preferences(context)

@@ -124,7 +124,7 @@ class KartPadActivity : SDLActivity() {
             RetroRewindInstallStorage.recoverForLaunch(filesDir, requestedRuntimeProfile())
             if (!identityStartupChecked) {
                 saveRestoreStartupError = KartPadSaveStorage.applyPending(filesDir)
-                KartPadMiiStorage.applyPending(filesDir)?.let { error -> Log.e(TAG, error) }
+                saveRestoreStartupError = saveRestoreStartupError ?: KartPadMiiStorage.applyPending(filesDir)
             }
             KartPadRuntimeResources.install(this)
             configureRuntimeProfile()
@@ -154,9 +154,11 @@ class KartPadActivity : SDLActivity() {
         } else {
             null
         }
-        motionSteering = KartPadMotionSteering(this) { value ->
+        motionSteering = KartPadMotionSteering(this, onShakeTrick = {
+            kartPadOverlay.triggerShakeTrick()
+        }) { value ->
             kartPadOverlay.post {
-                kartPadOverlay.setMotionSteering(value)
+                if (kartPadOverlay.hasWindowFocus()) kartPadOverlay.setMotionSteering(value)
                 if (debugMotionSensorMode != null) {
                     Log.i(
                         TAG,
@@ -438,6 +440,9 @@ class KartPadActivity : SDLActivity() {
             verifyDebugLifecycleClear("focus-loss")
         }
         super.onWindowFocusChanged(hasFocus)
+        if (::motionSteering.isInitialized) {
+            if (hasFocus) motionSteering.start() else motionSteering.stop()
+        }
         if (hasFocus) hideGameSystemBars()
     }
 
@@ -448,6 +453,19 @@ class KartPadActivity : SDLActivity() {
         // reserved on devices without enforced edge-to-edge (Android 14 and
         // earlier), showing a black band where the status bar was.
         window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN)
+        // Fill Screen also draws into display cutouts. Some handhelds (the AYN
+        // Thor, #202) report one along a long edge, which otherwise stays a
+        // black band; other aspect modes keep phones' camera cutouts clear.
+        val cutoutMode = when {
+            KartPadTouchSettings.aspectMode(this) != 2 ->
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+            Build.VERSION.SDK_INT >= 30 ->
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            else -> android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        if (window.attributes.layoutInDisplayCutoutMode != cutoutMode) {
+            window.attributes = window.attributes.also { it.layoutInDisplayCutoutMode = cutoutMode }
+        }
         if (Build.VERSION.SDK_INT >= 30) {
             window.insetsController?.let { controller ->
                 controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -658,6 +676,9 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Controller Player Setup…", R.drawable.ic_kartpad_gamecontroller) {
                 closeKartPadMenu(::showControllerPlayers)
             },
+            MenuRow("Shake to Trick…", R.drawable.ic_kartpad_gyroscope) {
+                closeKartPadMenu(::showShakeTricks)
+            },
             MenuRow("Motion Steering…", R.drawable.ic_kartpad_gyroscope) {
                 closeKartPadMenu(::showMotionSteering)
             },
@@ -678,6 +699,7 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
             MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
             MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true) { closeKartPadMenu(::showFpsSizeSettings) },
+            MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAppIconSettings) },
             MenuRow("Android Graphics Diagnostics…", R.drawable.ic_kartpad_display) { closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) } },
         ), showBack = true,
     )
@@ -917,8 +939,8 @@ class KartPadActivity : SDLActivity() {
 
     private fun restartToGameSelector() {
         kartPadOverlay.clearTouchInput()
-        val chooser = Intent(this, KartPadLaunchActivity::class.java).apply {
-            putExtra(KartPadLaunchActivity.EXTRA_SKIP_PREFERRED_GAME, true)
+        val chooser = Intent(this, KartPadChooserActivity::class.java).apply {
+            putExtra(KartPadChooserActivity.EXTRA_SKIP_PREFERRED_GAME, true)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         startActivity(chooser)
@@ -953,7 +975,27 @@ class KartPadActivity : SDLActivity() {
             .setSingleChoiceItems(labels, KartPadTouchSettings.aspectMode(this)) { dialog, which ->
                 KartPadTouchSettings.setAspectMode(this, which)
                 applyDisplaySettings()
+                hideGameSystemBars()
                 dialog.dismiss()
+            }
+            .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showAppIconSettings() {
+        val current = KartPadAppIcon.current(this)
+        AlertDialog.Builder(this)
+            .setTitle("App Icon")
+            .setSingleChoiceItems(KartPadAppIcon.titles, current) { dialog, which ->
+                dialog.dismiss()
+                if (which == current) return@setSingleChoiceItems
+                // Android closes the app when its launcher entry changes, so ask first.
+                AlertDialog.Builder(this)
+                    .setTitle("Change the App Icon?")
+                    .setMessage("KartPad closes to apply the new icon, so finish your race first. Your saves and settings stay.")
+                    .setPositiveButton("Change Icon") { _, _ -> KartPadAppIcon.select(this, which) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
             .setNegativeButton("Back", null)
             .show()
@@ -1204,6 +1246,32 @@ class KartPadActivity : SDLActivity() {
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
         nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
+    }
+
+    private fun showShakeTricks() {
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(4), dp(24), dp(8))
+            addView(settingsLabel(if (motionSteering.shakeSensorAvailable) {
+                "Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. " +
+                    "Works without tilt steering. Physical controllers take priority."
+            } else {
+                "Shake input is unavailable on this device. You can still use D-pad Up."
+            }))
+            addView(Switch(this@KartPadActivity).apply {
+                text = "Shake to Trick"
+                isChecked = motionSteering.shakeTricksEnabled
+                isEnabled = motionSteering.shakeSensorAvailable
+                setOnCheckedChangeListener { _, checked ->
+                    kartPadOverlay.clearTouchInput()
+                    motionSteering.setShakeTricksEnabled(checked)
+                    // The dialog owns focus; sampling resumes when gameplay regains it.
+                    motionSteering.stop()
+                }
+            })
+        }
+        AlertDialog.Builder(this).setTitle("Shake to Trick").setView(content)
+            .setPositiveButton("Continue Playing", null).show()
     }
 
     private fun showMotionSteering() {

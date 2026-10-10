@@ -168,6 +168,7 @@ int main() {
 #include <cassert>
 #include <cstdint>
 using u32=uint32_t;
+constexpr u32 PAD_MAX_CONTROLLERS=4;
 struct Controller {uint32_t m_index;};
 Controller selected{73};
 const Controller* __PADGetControllerForIndex(u32 index) {return index==2?&selected:nullptr;}

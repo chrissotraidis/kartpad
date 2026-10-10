@@ -29,6 +29,7 @@
     "ios": {
       "hosts": {
         "macos-arm64": "experimental",
+        "macos-x86_64": "experimental",
         "windows-arm64": "experimental",
         "windows-x86_64": "experimental",
         "linux-x86_64": "experimental",
@@ -90,6 +91,12 @@
       "hosts": {
         "macos-arm64": "experimental"
       },
+      "tools": [
+        "dotnet",
+        "cmake",
+        "ninja",
+        "nodtool"
+      ],
       "output": "zip",
       "check": "none",
       "steps": [
@@ -98,7 +105,9 @@
           "command": [
             "/bin/bash",
             "{repo}/scripts/build-user-ipa.sh",
-            "bootstrap"
+            "bootstrap",
+            "--target",
+            "macos"
           ]
         },
         {
@@ -249,7 +258,16 @@
         "version_args": [
           "-version"
         ],
-        "note": "Mac only: install Xcode and its iOS platform (Windows and Linux use PadMint's LLVM)"
+        "player": true,
+        "hosts": [
+          "macos-arm64",
+          "macos-x86_64"
+        ],
+        "targets": [
+          "ios",
+          "macos"
+        ],
+        "note": "Install Xcode from the App Store, open it once, then run PadMint again"
       }
     ]
   },

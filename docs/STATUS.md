@@ -1,11 +1,12 @@
 # KartPad status
 
-## Current status: 9 October 2026
+## Current status: 10 October 2026
 
-**Latest release: [KartPad 0.7.15](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.15) (build 260).**
+**Latest release: [KartPad 0.8.0](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.0) (build 261).**
 Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
-build KartPad with PadMint (the release carries the PadMint inputs). 0.7.15
-moves Retro Rewind to 6.13.1, which Retro WFC needs for online play.
+build KartPad with PadMint (the release carries the PadMint inputs) and, from
+0.8.0, say when a new version is out. 0.8.0 moves to the latest WiiCompiled
+engine and adds Shake to Trick and a choice of app icons.
 Players add their own game data the first time. Work in progress follows
 the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 [known issues](KNOWN-ISSUES.md).
@@ -17,7 +18,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | Apple Silicon Mac | Built with PadMint, or `scripts/self-build-macos.sh` | Experimental |
 | Apple TV | Experimental source build | Experimental |
 
-### 0.7.9 to 0.7.15
+### 0.7.9 to 0.8.0
 
 | Version | What changed | Checked |
 | --- | --- | --- |
@@ -28,6 +29,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | 0.7.13 | The self-check draws a third copy with the other bone-matrix lookup (`result=indexing` when only that copy draws); Retro Rewind starts on the first Play after downloading it (it used to say "No DVD root is configured"). Same pack interface | Emulator: `indexing` with both layout copies deliberately emptied, `match` on normal runs; Retro Rewind download then Play reaches the game. iPad Pro: installed in place and launched. All files checked by anonymous download against `SHA256SUMS` |
 | 0.7.14 | Android updates itself (#377): download, check against `SHA256SUMS` and the signing key, Android confirms. Every game file is checked at import and on the chooser, so an incomplete copy names the missing file before Play (all platforms). Android music and game-sound sliders (#411). Android APK plus PadMint inputs only; no ready-to-play IPA or Mac zip. Same pack interface | Emulator: a 0.7.12-labelled build updated itself to the published 0.7.13 twice (permission page, download, verify, install), save unchanged, game data intact; cancel keeps the old version; full file check on complete and broken data. 344 repo tests |
 | 0.7.15 | Retro Rewind 6.13.1 (official pack plus update), required for Retro WFC. iPhone/iPad keep Retro saves and ghosts when replacing the pack. Android save/ghost writes verified before completing; **Help → Cancel Pending Ghost Import**. Compressed Original ghosts imported in replayable form. iPhone/iPad music and game-sound controls. Apple motion: flat device steers straight, shake still works. PadMint Mac bootstrap fetches Retro Rewind and the translator source. Same pack interface | Emulator: the signed APK installs over 0.7.14 with all app data unchanged and reaches a race; fresh zip import reaches a race; Retro 6.13.1 install, Retro race, Retro WFC sign-in, worldwide room and online races (two mid-race room disconnects on the emulator, each recovered); a real compressed Chadsoft ghost imported and replayed. iPad Pro: installed in place with saves/settings unchanged. iPad Simulator: 6.12.8 to 6.13.1 upgrade kept a save. Mac: clean PadMint build. Sound and motion not yet hands-on on an iPhone/iPad |
+| 0.8.0 | WiiCompiled upstream sync (display lists that overflow the staging batch now draw instead of dropping models; TLS sessions stop cleanly after a failed write). Update notices on iPhone, iPad and Mac. Shake to Trick on Android and iPhone/iPad. App icon choice (red K, Circuit, Mono). Android Fill Screen draws under display cutouts. Android identity/Mii writes keep their recovery request on failure. PadMint: Intel Mac iPhone builds; Mac builds without Homebrew tools, with a much smaller first download. New pack interface | Emulator: the signed APK installs over public 0.7.15 with all 2,079 app data files unchanged and reaches a race; a fresh install imports game data and reaches a race; app icon switching. Pixel 9 Pro XL: updated in place from 0.7.12 with saves and licences kept; Original race at 60 FPS; Retro Rewind 6.13.1 downloaded and installed in the app, booted and signed in to Retro WFC. iPad Pro: installed in place with 34 critical files unchanged; Original runs at 60 FPS. Mac: full PadMint build with only system tools on the path; game runs at 60 FPS. Shake to Trick and the icon picker not yet hands-on on a device |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
@@ -35,8 +37,10 @@ iPad (#310, closed).
 
 ### What remains
 
-Things decided for later are in the [to-do list](TODO.md), starting with
-updates on iPhone, iPad and Mac (only Android updates itself).
+Things decided for later are in the [to-do list](TODO.md). iPhone, iPad and
+Mac show update notices from 0.8.0 but still need a PadMint rebuild for each
+KartPad release and almost every Retro Rewind update; automatic rebuilds belong
+in PadMint.
 
 - **Setup.** 0.7.11 addresses the 4 October Discord confusion: the extracted
   folder comes first, the key requirement is stated up front, and Android takes

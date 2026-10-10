@@ -13,7 +13,7 @@ These instructions describe the Apple touch interface. Android has its own
 - **Acceleration lock:** hold A continuously for one second until it turns cyan.
   Release your finger to keep accelerating; tap A to unlock. Opening a modal,
   hiding touch or handing Player 1 to a controller clears the lock.
-- **Layout:** open **••• → Touch Control Settings** to move, resize, hide or
+- **Layout:** open **••• → Controls → Touch Control Settings** to move, resize, hide or
   restore controls. The D-pad is hidden by default and can be enabled for tricks
   and wheelies. Existing custom visibility choices are preserved. Phone and
   tablet layouts are stored separately; **Back** returns to touch settings.
@@ -22,9 +22,14 @@ These instructions describe the Apple touch interface. Android has its own
 - **Controller handoff:** the first extended gamepad takes Player 1, clears held
   touch input and hides touch controls by default. Disconnecting restores touch;
   additional controllers retain their Player 2–4 slots.
-- **Motion steering:** **••• → Motion Steering…** is off by default. It provides
+- **Motion steering:** **••• → Controls → Motion Steering…** is off by default. It provides
   recenter, inversion and 0.5×/1×/2× sensitivity. Touch can override motion;
   physical controllers take priority, and backgrounding clears live motion state.
+
+The next version puts **Shake to Trick…** directly under **Controls** on both
+Android and iPhone/iPad. It is off by default, works without tilt steering, and
+sends D-pad Up for tricks and bike wheelies. In 0.7.14 it is still inside Motion
+Steering on iPhone/iPad and is not available on Android.
 
 Motion tuning, full race coverage and reconnect behavior still need physical
 acceptance on the exact build; the existence of a setting does not prove them.

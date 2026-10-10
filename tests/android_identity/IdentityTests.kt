@@ -64,6 +64,15 @@ private fun testConsoleIdentityRecovery(fixtures: File) {
         save.writeBytes(progress)
         KartPadIdentityStorage.stageConsoleRecovery(root)
         check(settings.readBytes().contentEquals(wrong))
+        AtomicFile.silentFailSuffix = "/original.before"
+        check(KartPadIdentityStorage.applyConsoleRecovery(root) != null) { "console/backup: failed backup reported success" }
+        check(settings.readBytes().contentEquals(wrong) && save.readBytes().contentEquals(progress))
+        check(File(app, "PendingConsoleIdentityRecovery.json").isFile)
+        AtomicFile.silentFailSuffix = "/verified.json"
+        check(KartPadIdentityStorage.applyConsoleRecovery(root) != null) { "console/completion: failed marker reported success" }
+        check(settings.readBytes().contentEquals(right) && save.readBytes().contentEquals(progress))
+        check(File(app, "PendingConsoleIdentityRecovery.json").isFile)
+        AtomicFile.silentFailSuffix = null
         check(KartPadIdentityStorage.applyConsoleRecovery(root) == null)
         check(settings.readBytes().contentEquals(right))
         check(save.readBytes().contentEquals(progress))
@@ -82,7 +91,7 @@ private fun testConsoleIdentityRecovery(fixtures: File) {
         settings.writeBytes(wrong.copyOf().apply { this[200] = 1 })
         check(runCatching { KartPadIdentityStorage.stageConsoleRecovery(root) }.isFailure)
         println("Console recovery passed: registered serial, backup, exact save preservation, idempotence and changed-settings rejection")
-    } finally { root.deleteRecursively() }
+    } finally { AtomicFile.silentFailSuffix = null; root.deleteRecursively() }
 }
 
 fun main(args: Array<String>) {
@@ -91,6 +100,7 @@ fun main(args: Array<String>) {
     System.load(args[0])
     testConsoleIdentityRecovery(File(args[1]))
     val fixtures = File(args[1])
+    testIdentityMiiPublication(fixtures)
     testExportedMiiImport(fixtures)
     testSaveProfiles(fixtures)
     val root = Files.createTempDirectory("kartpad-identity-test-").toFile()

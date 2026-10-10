@@ -532,6 +532,32 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn("vendor/runtimes/macos", prepared)
         self.assertIn("vendor/wiicompiled", prepared)
 
+    def test_mac_bootstrap_skips_reference_checkouts(self) -> None:
+        # PadMint's Mac recipe needs only the macOS runtime, the translator and
+        # its function map, the macOS Dawn archive and Retro Rewind; SunPad and
+        # Dolphin are GBs.
+        from unittest.mock import patch
+        from kartpad_builder import bootstrap
+        profile = next(item for item in load_profiles(REPO / "builder/profiles") if item.id == "mkwii-rmcp01-rev0")
+        prepared, verified = [], []
+
+        class Stop(Exception):
+            pass
+
+        def prepare_inputs(*_args):
+            raise Stop
+
+        with patch.object(bootstrap, "_has_command", return_value=True), \
+                patch.object(bootstrap, "_prepare_gitlinks", side_effect=lambda _r, paths, _i: prepared.extend(paths)), \
+                patch.object(bootstrap, "_verify_checkout", side_effect=lambda _r, dep: verified.append(dep["name"])), \
+                patch.object(bootstrap, "_download") as download, \
+                patch("kartpad_builder.retro_rewind.prepare_inputs", side_effect=prepare_inputs):
+            with self.assertRaises(Stop):
+                bootstrap.prepare_dependencies(REPO, profile, install=True, target="macos")
+        self.assertEqual(prepared, ["vendor/runtimes/macos", "vendor/wiicompiled"])
+        self.assertEqual(verified, ["WiiCompiled"])
+        self.assertTrue(all("darwin" in call.args[2].name for call in download.call_args_list))
+
 
 if __name__ == "__main__":
     unittest.main()

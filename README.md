@@ -151,7 +151,9 @@ on those release pages but won't get updates; build newer versions with PadMint.
 - **Android:** from 0.7.14, KartPad updates itself (**Update available →
   Update Now**). You can also install the new APK over your current KartPad.
 - **iPhone, iPad and Mac:** build the new version with PadMint and install it
-  over your current KartPad.
+  over your current KartPad. From 0.8.0, KartPad tells you when a new version
+  is out: **Update available** on the iPhone/iPad game chooser, or
+  **Help → Check for Updates…** on Mac.
 
 Your saves and game data stay.
 
@@ -262,10 +264,10 @@ Android targets ARM64/Vulkan on Android 9+. Device-specific graphics corruption,
 <details>
 <summary>Does online multiplayer work?</summary>
 
-Retro WFC works with Retro Rewind 6.13.1. On the Android emulator, KartPad
-0.7.15 signed in, joined a worldwide room and raced against other players. In
-those tests the room disconnected twice during a race; each time the app
-returned to the menu and could sign in again. It isn't verified on every device
+Retro WFC works with Retro Rewind 6.13.1. KartPad 0.8.0 signed in on a Pixel 9
+Pro XL. On the Android emulator, 0.7.15 signed in, joined a worldwide room and
+raced against other players; the room disconnected twice during a race, and
+each time the app returned to the menu and could sign in again. It isn't verified on every device
 or network. Native room hosting and Original Wiimmfi compatibility remain
 unfinished. See [online status](docs/ONLINE.md) and
 [friend-room guidance](docs/MULTIPLAYER.md#private-friend-rooms).
@@ -279,7 +281,7 @@ VPN ([#405](https://github.com/chrissotraidis/kartpad/issues/405)).
 <details>
 <summary>Does KartPad support Retro Rewind, and what if it updates?</summary>
 
-Yes, with the separately installed **6.13.1** content and matching compiled profile. A newer Retro pack can require a new KartPad build; replacing files alone does not update translated game code. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch. Follow your [platform setup guide](#get-kartpad) if a compatibility update is requested.
+Yes, with the separately installed **6.13.1** content and matching compiled profile. Almost every Retro Rewind update changes the mod's game code (`Code.pul`): 22 of its last 24 updates did. KartPad compiles that code into the app ahead of time, so a Retro Rewind update needs a new KartPad build; replacing files alone does not update the compiled game code. On Android the new build arrives through **Update available → Update Now**. On iPhone, iPad and Mac, build it with PadMint and install it over your current KartPad; iOS doesn't let a sideloaded app compile new code on the device. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch.
 
 </details>
 
