@@ -29,8 +29,9 @@ TRANSLATOR_GITLINK = "vendor/wiicompiled"
 ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", TRANSLATOR_GITLINK)
 PACK_GITLINKS = {"android-pack": ANDROID_PACK_GITLINKS,
                  "ios-pack": ("vendor/runtimes/ios", TRANSLATOR_GITLINK)}
-# The Mac app reads only its own runtime and the translator: no reference
-# checkouts (SunPad, Dolphin and their nested repositories run to several GB).
+# The Mac app reads only its own runtime, the translator and the WiiCompiled
+# function map, like the packs: not SunPad or Dolphin, whose nested
+# repositories run to several GB.
 MACOS_GITLINKS = ("vendor/runtimes/macos", TRANSLATOR_GITLINK)
 
 
@@ -139,7 +140,7 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
         required = list(ANDROID_PACK_SOURCES)
     elif target == "macos":
         _prepare_gitlinks(repo, list(MACOS_GITLINKS), install)
-        required = []
+        required = list(ANDROID_PACK_SOURCES)
     else:
         runtime = dependencies.get("KartPad WiiCompiled runtime fork")
         if runtime is not None:
