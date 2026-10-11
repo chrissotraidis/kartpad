@@ -56,7 +56,8 @@ in PadMint.
     changes together drew bodies on the S24 (white, about 24 FPS, the
     "fix invisible characters" test option). The self-check has answered what
     it can; the next step is a different way of handing the bone matrices to
-    the GPU, a decision for Chris (see [the loop](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
+    the GPU. The proposed first try copies Dolphin's matrix access (see the
+    [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-adreno-invisible-characters)).
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.

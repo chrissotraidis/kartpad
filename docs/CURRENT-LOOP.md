@@ -7,8 +7,14 @@ for 0.8.0.
 
 ## What we're doing next
 
-1. **Ship 0.8.0.** It is merged and staged as a draft. Publishing waits only on
-   Chris's word.
+**Paused on 11 October.** Start from the
+[11 October handoff](RESEARCH-HANDOFF-2026-10-11.md): it records Chris's
+decisions (0.8.0 stays a draft, no test phone) and the proposed plan, which
+puts the Adreno character fix first.
+
+1. **Hold 0.8.0.** It is merged and staged as a draft. Chris decided on
+   11 October to keep it unpublished and ship its changes with the next
+   release that fixes something.
 2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
    Measure the two ready candidates first, then take on the large structural
    change.
@@ -24,8 +30,9 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
 - **Devices:**
   - Use the Android emulator on this Mac, the iPad Pro, the iPhone 14 and this
     Mac, plus Chris's Pixel 9 Pro XL when he connects it.
-  - No test phones get bought unless Chris decides otherwise. A slow phone is
-    the main thing that would let speed work prove itself (see P2).
+  - No test phones get bought (Chris confirmed this on 11 October). Remote
+    device labs are the proposed substitute; see the
+    [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-remote-device-labs).
 - **Benchmarks:**
   - Only when the Mac is quiet (`sysctl -n vm.loadavg` low).
   - Use the bench in [`tools/android-perf`](../tools/android-perf/README.md).
@@ -48,7 +55,10 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
   - The PadMint chat owns the PadMint repository. Its next release (0.4.14)
     waits on KartPad 0.8.0.
 
-## Phase 0: publish 0.8.0 (on Chris's word)
+## Phase 0: publish 0.8.0 (held)
+
+On hold since 11 October: 0.8.0 ships together with the next fix. When it does,
+these steps still apply.
 
 - **Publish:** `gh release create`/publish the existing draft at `c0056a6f`,
   marked as latest.
@@ -112,7 +122,7 @@ Act when evidence exists; don't chase reporters.
 
 | Issue | State | Next step |
 |---|---|---|
-| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | A different way to hand bone matrices to the GPU. **Chris decides** whether to try it |
+| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Proposed first: Dolphin-style matrix access, see the [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-adreno-invisible-characters) |
 | #304 PowerVR exploding characters | Vertex layout and shader limit ruled out | Waiting for a 0.7.13+ log |
 | #431 Honor textures | One screenshot and log requested | Waiting |
 | #390 launch flicker on 60 Hz iPhones/iPads | The FPS panel vanishes with the game image while touch buttons stay, so presentation timing is suspect | Needs a 60 Hz Apple device to reproduce; no fix yet |

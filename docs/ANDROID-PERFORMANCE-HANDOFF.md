@@ -155,11 +155,12 @@ emulator, Pixel and reporter results separate.
 
 ## Needs Chris
 
-- Publish 0.8.0 (then PadMint 0.4.14 can ship).
+- 0.8.0 stays a draft until the next fix ships with it (decided 11 October);
+  PadMint 0.4.14 waits on it.
 - A quiet machine window for benchmarks, or pausing other chats' long builds.
-- Whether a slow test phone is worth buying, and which: a Dimensity 7300 or
-  Snapdragon 6-series phone covers most reports. A Moto G-series phone with an
-  Adreno 6xx GPU would also reproduce #301 and #332.
+- No slow test phone gets bought (decided 11 October). Remote device labs are
+  the proposed substitute; see the
+  [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-remote-device-labs).
 - Android 9 support, if native TLS proves worth it.
 - Whether a PGO profile may be published for PadMint builds.
 
