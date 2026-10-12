@@ -16,7 +16,17 @@ retro_root="${default_retro_root}"
 payload=""
 image="${repo_root}/ref/Mario Kart Wii.wbfs"
 skip_retro_wfc=false
-dotnet_bin="/opt/homebrew/opt/dotnet@8/bin/dotnet"
+# .NET 8 in the order KartPad's builder looks (kartpad_builder.pipeline.find_dotnet):
+# DOTNET_ROOT, Homebrew's dotnet@8, then PATH, where PadMint puts its own copy on a
+# Mac without Homebrew.
+dotnet_bin=""
+for candidate in "${DOTNET_ROOT:+${DOTNET_ROOT}/dotnet}" \
+    /opt/homebrew/opt/dotnet@8/bin/dotnet "$(command -v dotnet || true)"; do
+  if [[ -n "${candidate}" && -x "${candidate}" ]]; then
+    dotnet_bin="${candidate}"
+    break
+  fi
+done
 translator="${repo_root}/build/wiicompiled-fpscr/translator/src/Translator.Cli/bin/Release/net8.0/Translator.Cli.dll"
 translation_jobs="${KARTPAD_TRANSLATION_JOBS:-2}"
 
@@ -119,6 +129,10 @@ cmp -s "${code_pul}" "${staged_code_partial}" || {
 mv -f "${staged_code_partial}" "${staged_code}"
 trap - EXIT
 
+[[ -n "${dotnet_bin}" ]] || {
+  echo "ERROR: missing .NET 8 SDK (dotnet)" >&2
+  exit 69
+}
 "${repo_root}/scripts/prepare-disc.sh" "${image}"
 "${repo_root}/scripts/prepare-patched-translator.sh"
 mkdir -p "${output}" "${base_manifest_dir}"
