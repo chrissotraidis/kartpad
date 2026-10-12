@@ -79,11 +79,21 @@ the [archive](archive/known-issues-through-2026-09.md).
   fixed several cases (ipega and other "keyboard" gamepads, a controller left
   with no player). Still waiting on confirmation. [#378](https://github.com/chrissotraidis/kartpad/issues/378)
 - **Single Joy-Cons** aren't supported. [#324](https://github.com/chrissotraidis/kartpad/issues/324)
+- **Mac, fixed in 0.8.0: a controller that shows as connected does nothing.**
+  Xbox, PlayStation and Switch Pro controllers assigned to Player 1 were
+  ignored because the keyboard was also active for Player 1. From 0.8.0 the
+  keyboard and the controller both work.
 - **Mac: Wii Remote with Classic Controller Pro** has input lag and no D-pad.
   [#306](https://github.com/chrissotraidis/kartpad/issues/306)
 
 ## Online
 
+- **Retro Rewind online says "Invalid pack version! Please update or reinstall
+  your pack to log in. Error Code: 22010".** Retro WFC accepts only the current
+  Retro Rewind. Android updates Retro Rewind inside the app. iPhone, iPad and
+  Mac have it built in, so they need a new build: KartPad 0.8.0 with PadMint
+  0.5.1 or newer for Retro Rewind 6.13.1. Retro Rewind updates almost always
+  change its game code, so this repeats with each one.
 - **Finding a room fails on mobile data** (error 86420) while Wi-Fi works. Many
   carriers block the direct player-to-player connections the game uses; use
   Wi-Fi or a VPN. [#405](https://github.com/chrissotraidis/kartpad/issues/405)
