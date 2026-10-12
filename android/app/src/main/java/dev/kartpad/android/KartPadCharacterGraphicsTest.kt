@@ -13,10 +13,13 @@ internal object KartPadCharacterGraphicsTest {
         val environment: String?,
         val repack: String = "0",
         val uniforms: String = "0",
+        val rows: String = "",
     ) {
         // Empty repack/uniforms = let the renderer decide: every draw repacked on Adreno 8xx;
         // native uniform buffers plus character repack on Adreno 6xx/7xx; off elsewhere.
+        // rows = "1" reads bone matrices as three float rows, the way Dolphin does (#104, #301).
         NORMAL("normal", "Automatic (recommended)", null, repack = "", uniforms = ""),
+        MATRIX_ROWS("matrix_rows", "Experimental: matrix rows like Dolphin (Snapdragon 8 Gen 3 and older)", null, repack = "1", uniforms = "1", rows = "1"),
         NATIVE_UNIFORMS("native_uniforms", "Experimental: native uniform buffers (Snapdragon 8 Gen 3 and older)", null, repack = "1", uniforms = "1"),
         CHARACTER_FIX("repack", "Experimental: fix broken characters (Snapdragon)", null, repack = "1"),
         FULL_FIX("repack_all", "Experimental: fix characters and track textures (Snapdragon, may be slower)", null, repack = "2"),
@@ -74,6 +77,8 @@ internal object KartPadCharacterGraphicsTest {
         else Os.setenv("KARTPAD_RENDERER_VERTEX_REPACK", active.repack, true)
         if (active.uniforms.isEmpty()) Os.unsetenv("KARTPAD_RENDERER_NATIVE_UNIFORMS")
         else Os.setenv("KARTPAD_RENDERER_NATIVE_UNIFORMS", active.uniforms, true)
+        if (active.rows.isEmpty()) Os.unsetenv("KARTPAD_RENDERER_MATRIX_ROWS")
+        else Os.setenv("KARTPAD_RENDERER_MATRIX_ROWS", active.rows, true)
         configured = true
     }
 }
