@@ -33,7 +33,7 @@ the [archive](archive/known-issues-through-2026-09.md).
 - **Snapdragon 8 Gen 3 and older Adreno GPUs** (Adreno 6xx and 7xx, for example
   Galaxy S24 Ultra and Moto G85): characters missing, white or washed out while
   tracks look fine. **Help → Character Graphics Test…** has workarounds that
-  help on some phones; there's no automatic fix yet. [#104](https://github.com/chrissotraidis/kartpad/issues/104), [#301](https://github.com/chrissotraidis/kartpad/issues/301)
+  help on some phones; there's no working automatic fix yet. [#104](https://github.com/chrissotraidis/kartpad/issues/104), [#301](https://github.com/chrissotraidis/kartpad/issues/301)
   From 0.7.12, **Report a Problem** logs include a one-line draw self-check
   that tells us whether this phone draws characters differently from the
   CPU path, without changing anything on screen. On the Galaxy S24 Ultra it
@@ -41,10 +41,11 @@ the [archive](archive/known-issues-through-2026-09.md).
   matrix lookup alone isn't either: on these GPUs only both workarounds
   together draw bodies, and then white. A real fix needs a renderer change;
   you don't need to send more logs for this.
-  The release after 0.8.0 tries one: on these GPUs **Automatic** reads the
-  game's matrices the standard way instead of through Dawn's integer rewrite,
-  together with the character fix. It draws correctly on the emulator but
-  hasn't been confirmed on an affected phone yet.
+  0.8.0 tried one: on these GPUs **Automatic** reads the game's matrices the
+  standard way instead of through Dawn's integer rewrite, together with the
+  character fix. On the Galaxy S24 Ultra (Adreno 750) the characters are still
+  invisible with it; the rest of the race draws normally at 60 FPS. The next
+  attempt reads the bone matrices as plain rows, the way Dolphin does.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
@@ -56,6 +57,15 @@ the [archive](archive/known-issues-through-2026-09.md).
   draws races under the display's cutout area (checked on a Pixel 9 Pro XL),
   which may remove the band; menus keep their own width. Not yet confirmed on a
   Thor. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
+
+## Setup on iPhone and iPad
+
+- **Choosing the extracted folder in Files: Open does nothing.** Two players
+  (an iPad and an iPhone) report it on real devices. 0.7.4 fixed the greyed-out
+  Open button, but only in the Simulator. Workaround: put the folder (with
+  `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
+  **Import from Extracted Folder…**. A fix that uses a folder-only picker is in
+  progress. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
 
 ## Graphics (Apple)
 
@@ -105,8 +115,7 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 These have a fix or explanation and are open until someone affected confirms
 it: the crash after the last race of a cup ([#131](https://github.com/chrissotraidis/kartpad/issues/131), no crash in automated
-full cups on 0.7.10), the hourly update notice ([#377](https://github.com/chrissotraidis/kartpad/issues/377)), the iPad folder
-picker ([#380](https://github.com/chrissotraidis/kartpad/issues/380)), auto-hiding the ⋯ button ([#402](https://github.com/chrissotraidis/kartpad/issues/402)), and from 0.8.0 Shake to Trick
+full cups on 0.7.10), the hourly update notice ([#377](https://github.com/chrissotraidis/kartpad/issues/377)), auto-hiding the ⋯ button ([#402](https://github.com/chrissotraidis/kartpad/issues/402)), and from 0.8.0 Shake to Trick
 ([#430](https://github.com/chrissotraidis/kartpad/issues/430)) and the app icon choice ([#437](https://github.com/chrissotraidis/kartpad/issues/437)).
 
 ## Feature requests
