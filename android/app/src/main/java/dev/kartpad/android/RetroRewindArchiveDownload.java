@@ -68,27 +68,41 @@ final class RetroRewindArchiveDownload {
 
     static Result downloadRelease(
             Path cacheDirectory, Cancellation cancellation, Progress progress) {
+        long total = RetroRewindRelease.ARCHIVE_BYTES + RetroRewindRelease.UPDATE_BYTES;
+        Result base = downloadArchive(cacheDirectory, archivePath(cacheDirectory),
+                partialPath(cacheDirectory), RetroRewindRelease.ARCHIVE_URL,
+                RetroRewindRelease.ARCHIVE_BYTES, RetroRewindRelease.ARCHIVE_SHA256,
+                cancellation, (done, ignored) -> progress.onProgress(done, total));
+        if (!base.isReady() || RetroRewindRelease.UPDATE_BYTES == 0) return base;
+        return downloadArchive(cacheDirectory, updatePath(cacheDirectory),
+                cacheDirectory.resolve(".RetroRewind-" + RetroRewindRelease.VERSION + "-update.part"),
+                RetroRewindRelease.UPDATE_URL, RetroRewindRelease.UPDATE_BYTES,
+                RetroRewindRelease.UPDATE_SHA256, cancellation,
+                (done, ignored) -> progress.onProgress(RetroRewindRelease.ARCHIVE_BYTES + done, total));
+    }
+
+    private static Result downloadArchive(Path cacheDirectory, Path archive, Path partial,
+            String url, long expectedBytes, String expectedSha256,
+            Cancellation cancellation, Progress progress) {
         if (!isRealDirectory(cacheDirectory)) {
             return result(Error.INVALID_CACHE, false);
         }
 
-        Path archive = archivePath(cacheDirectory);
-        if (verifyFile(archive, RetroRewindRelease.ARCHIVE_BYTES,
-                RetroRewindRelease.ARCHIVE_SHA256) == Error.NONE) {
-            deletePartial(partialPath(cacheDirectory));
+        if (verifyFile(archive, expectedBytes,
+                expectedSha256) == Error.NONE) {
+            deletePartial(partial);
             return result(Error.NONE, true);
         }
 
-        Path partial = partialPath(cacheDirectory);
         long existingBytes;
         try {
-            existingBytes = preparePartial(partial, RetroRewindRelease.ARCHIVE_BYTES,
-                    RetroRewindRelease.ARCHIVE_SHA256);
+            existingBytes = preparePartial(partial, expectedBytes,
+                    expectedSha256);
         } catch (IOException exception) {
             return result(Error.STORAGE_FAILURE, false);
         }
 
-        if (existingBytes == RetroRewindRelease.ARCHIVE_BYTES) {
+        if (existingBytes == expectedBytes) {
             try {
                 Files.move(partial, archive, StandardCopyOption.ATOMIC_MOVE,
                         StandardCopyOption.REPLACE_EXISTING);
@@ -98,7 +112,7 @@ final class RetroRewindArchiveDownload {
             }
         }
 
-        Result transfer = downloadPinned(partial, existingBytes, cancellation, progress);
+        Result transfer = downloadPinned(url, partial, existingBytes, expectedBytes, expectedSha256, cancellation, progress);
         if (!transfer.isReady()) {
             if (transfer.error != Error.CANCELLED &&
                     transfer.error != Error.NETWORK_FAILURE &&
@@ -108,8 +122,8 @@ final class RetroRewindArchiveDownload {
             return transfer;
         }
         try {
-            if (verifyFile(partial, RetroRewindRelease.ARCHIVE_BYTES,
-                    RetroRewindRelease.ARCHIVE_SHA256) != Error.NONE) {
+            if (verifyFile(partial, expectedBytes,
+                    expectedSha256) != Error.NONE) {
                 deletePartial(partial);
                 return result(Error.HASH_MISMATCH, false);
             }
@@ -124,6 +138,10 @@ final class RetroRewindArchiveDownload {
             deletePartial(partial);
             return result(Error.STORAGE_FAILURE, false);
         }
+    }
+
+    static Path updatePath(Path cacheDirectory) {
+        return cacheDirectory.resolve("RetroRewind-" + RetroRewindRelease.VERSION + "-update.zip");
     }
 
     static Path archivePath(Path cacheDirectory) {
@@ -156,16 +174,16 @@ final class RetroRewindArchiveDownload {
     }
 
     private static Result downloadPinned(
-            Path partial, long resumeOffset, Cancellation cancellation, Progress progress) {
+            String url, Path partial, long resumeOffset, long expectedBytes,
+            String expectedSha256, Cancellation cancellation, Progress progress) {
         URL initial;
         try {
-            initial = new URL(RetroRewindRelease.ARCHIVE_URL);
+            initial = new URL(url);
         } catch (IOException exception) {
             return result(Error.NETWORK_FAILURE, false);
         }
         return downloadFrom(initial, partial, resumeOffset,
-                RetroRewindRelease.ARCHIVE_BYTES, RetroRewindRelease.ARCHIVE_SHA256,
-                cancellation, progress);
+                expectedBytes, expectedSha256, cancellation, progress);
     }
 
     static Result downloadFrom(

@@ -1,6 +1,5 @@
 package dev.kartpad.android
 
-import android.util.AtomicFile
 import org.json.JSONObject
 import org.json.JSONArray
 import java.io.File
@@ -28,13 +27,7 @@ internal object KartPadIdentityStorage {
         }
         return file.readBytes()
     }
-    private fun write(file: File, bytes: ByteArray) {
-        file.parentFile?.mkdirs()
-        val atomic = AtomicFile(file)
-        val stream = atomic.startWrite()
-        try { stream.write(bytes); atomic.finishWrite(stream) }
-        catch (error: Throwable) { atomic.failWrite(stream); throw error }
-    }
+    private fun write(file: File, bytes: ByteArray) = KartPadAtomicFile.write(file, bytes)
     private fun hash(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes)
     fun hasPending(files: File) = journal(files).isFile || pointer(files).isFile
     data class Record(val profile: String, val slot: Int, val name: String, val createId: String, val missingLinkedMii: Boolean = false)

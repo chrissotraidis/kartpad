@@ -58,47 +58,11 @@ identities, personal paths and network/account identifiers. The private Android
 archive is for local inspection, not automatic public upload. Keep your
 installation and saves intact while troubleshooting.
 
-## Reporting test builds
-
-Direct reporting changes are available as prereleases:
-
-- Android code 90 (retired)
-- iPhone/iPad build 42 (retired)
-
-These leave stable downloads in place. Build/package checks passed; physical
-reporting-flow acceptance remains pending. Android retains the public code85
-runtime libraries; the Apple candidate was freshly prepared and compiled.
-macOS reporting source is merged, but no new Mac package is announced here.
-Older installed builds may still open only a KartPad draft.
-
-In the **Android reporting candidate**, describe the problem, choose the visible
-KartPad/WiiCompiled destination, then tap **Open GitHub Draft**. Both projects remain visible, and
-**Search reports in both projects** opens a combined issue search. You do not need
-to select a local file or explain missing logs first. Attach reviewed evidence
-on GitHub. **Share Report…** is separate and still checks any selected file
-before sharing it. **Save Diagnostic Log…** lets you choose the failed session and saves one
-attachable text file. The saved file is selected automatically for review;
-there is no archive to unpack.
-
-In the **iPhone/iPad reporting candidate**, **Continue to GitHub…** shows
-**Preparing Report…**, then a review screen. Choose **Choose Project — I’ll
-Attach the Log** after review, or **Continue Without a Log**, then select
-KartPad or WiiCompiled; the chooser also offers **Search Both Trackers**.
-WiiCompiled reports have explicit Crash, Bug and Performance choices instead
-of sending every report to the non-crash form. The draft opens in an embedded Safari view. Returning
-from the destination choice or browser preserves the review; a loading failure
-offers retry, copying the draft link, or returning to the report. Nothing is
-submitted automatically. Apple still uses the existing current/previous-session
-exporter rather than Android's session picker.
-
-The [support guide](SUPPORT.md#collect-a-useful-report) describes logs and older
-builds. These reporting changes do not establish gameplay stability or announce
-a public release.
-
 Repository migration is a separate decision; see
 [Fork connection options](FORK-OPTIONS.md).
 
-In macOS source, **Help → Report a Problem…** offers both destinations and
-combined search. The upstream option opens its issue-template chooser. Saved
-diagnostics preserve bounded runtime startup headers and failure tails. This
-is source availability, not an announcement of a new Mac download.
+On Android and iPhone/iPad, **⋯ → Report a Problem…** lets you choose KartPad
+or WiiCompiled and search both projects; on Mac it's **Help → Report a
+Problem…**. Nothing is submitted automatically. The
+[support guide](SUPPORT.md#collect-a-useful-report) explains which logs to
+save on each platform.

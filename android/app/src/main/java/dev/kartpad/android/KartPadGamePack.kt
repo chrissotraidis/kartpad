@@ -27,28 +27,41 @@ object KartPadGamePack {
 
     val required: Boolean get() = BuildConfig.GAME_PACK_APP
 
+    /** The ready-to-play app carries its game pack, installed with its other native libraries. */
+    val bundled: Boolean get() = BuildConfig.BUNDLED_GAME_PACK
+
     // One pack, kept across updates. The fingerprint recorded beside it at import
     // decides whether this app version can load it.
-    fun file(context: Context) = File(context.filesDir, "gamepack/libkartpad_game.so")
+    fun file(context: Context) =
+        if (bundled) File(context.applicationInfo.nativeLibraryDir, "libkartpad_game.so")
+        else File(context.filesDir, "gamepack/libkartpad_game.so")
 
     private fun fingerprintFile(pack: File) = File(pack.path + ".fingerprint")
 
     fun isInstalled(context: Context): Boolean {
         val pack = file(context)
         if (!pack.isFile) return false
+        if (bundled) return true // built with this app, from the same pack interface
         val recorded = runCatching { fingerprintFile(pack).readText().trim() }.getOrNull()
         return recorded == BuildConfig.PACK_FINGERPRINT
     }
 
     /** A pack from an earlier KartPad is present but this version cannot load it. */
     fun hasOlderPack(context: Context): Boolean =
-        !isInstalled(context) &&
+        !bundled && !isInstalled(context) &&
             file(context).parentFile?.listFiles()?.any { it.isFile && it.name.endsWith(".so") } == true
 
     /** Imports on a background thread and reports the result (an error message, or null). */
     fun importInBackground(context: Context, source: Uri, done: (String?) -> Unit) {
         val app = context.applicationContext
         importer.execute { done(import(app, source)) }
+    }
+
+    /** The ready-to-play app needs no imported pack: free the space an earlier one took. */
+    fun removeImportedPack(context: Context) {
+        if (!bundled) return
+        val folder = File(context.applicationContext.filesDir, "gamepack")
+        if (folder.isDirectory) importer.execute { folder.deleteRecursively() }
     }
 
     /** Copies the chosen file into app storage. Returns an error message, or null on success. */

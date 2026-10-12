@@ -35,7 +35,9 @@ if [[ "$platform" == android ]]; then
   ndk="$sdk_root/ndk/$KARTPAD_ANDROID_NDK"
   [[ -f "$ndk/build/cmake/android.toolchain.cmake" ]] || { echo "ERROR: Android NDK $KARTPAD_ANDROID_NDK not found under $sdk_root" >&2; exit 1; }
   toolchain=(-DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake"
-    -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM="android-$KARTPAD_ANDROID_MIN_SDK" -DANDROID_STL=c++_shared)
+    -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM="android-$KARTPAD_ANDROID_MIN_SDK" -DANDROID_STL=c++_shared
+    # The pack is stripped, so skip the NDK's default -g (about half the compile time).
+    "-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -g0" "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -g0")
   built="libkartpad_game.so"
 else
   definitions="KARTPAD_UNOBSERVED_FP_STATUS=1"
@@ -48,6 +50,8 @@ fi
 stage="$work/$(date +%Y%m%d-%H%M%S)"
 KARTPAD_PREPARE_PLATFORM="$platform" KARTPAD_PREPARE_ONLY=1 KARTPAD_PREPARE_WITHOUT_TRANSLATION=1 \
   "$repo_root/scripts/prepare-ios-game-runtime.sh" none "$stage/runtime" "$stage/runtime-build" dual
+# The pack project refuses to configure without the app's pack interface fingerprint.
+fingerprint="$(PYTHONPATH="$repo_root/builder" python3 -m kartpad_builder.pack_fingerprint "$platform" "$stage/runtime")"
 
 cmake -S "$stage/runtime/game_pack" -B "$stage/build" -G Ninja "${toolchain[@]}" \
   -DCMAKE_BUILD_TYPE=Release \
@@ -55,6 +59,7 @@ cmake -S "$stage/runtime/game_pack" -B "$stage/build" -G Ninja "${toolchain[@]}"
   -DMKW_GAME_PACK_RUNTIME="$runtime_lib" \
   -DMKW_KARTPAD_RUNTIME_INCLUDE="$repo_root/runtime/include" \
   -DKARTPAD_APP_VERSION="$version" \
+  -DKARTPAD_PACK_FINGERPRINT="$fingerprint" \
   -DMKW_GAME_PACK_DEFINITIONS="$definitions"
 cmake --build "$stage/build" --target kartpad_game --parallel "$jobs"
 if [[ "$platform" == android ]]; then

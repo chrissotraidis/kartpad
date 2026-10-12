@@ -16,15 +16,23 @@ from .profiles import Profile
 
 REQUIRED_COMMANDS = {
     "ios": ("cmake", "ninja", "git", "rg", "python3", "dotnet", "nodtool", "xcrun"),
+    # PadMint's Mac app recipe: PadMint supplies dotnet, cmake, ninja and nodtool;
+    # Xcode supplies git, python3 and xcrun. No Homebrew tools are required.
+    "macos": ("cmake", "ninja", "git", "python3", "dotnet", "nodtool", "xcrun"),
     # The game pack builds on Windows, Linux and macOS (PadMint supplies the tools).
     "android-pack": ("cmake", "ninja", "git", "dotnet", "nodtool"),
     "ios-pack": ("cmake", "ninja", "git", "dotnet", "nodtool", "xcrun"),
 }
 # Source checkouts each target reads; the iPhone build uses the profile's full list.
 ANDROID_PACK_SOURCES = ("WiiCompiled",)
-ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", "vendor/wiicompiled")
+TRANSLATOR_GITLINK = "vendor/wiicompiled"
+ANDROID_PACK_GITLINKS = ("vendor/runtimes/android", TRANSLATOR_GITLINK)
 PACK_GITLINKS = {"android-pack": ANDROID_PACK_GITLINKS,
-                 "ios-pack": ("vendor/runtimes/ios", "vendor/wiicompiled")}
+                 "ios-pack": ("vendor/runtimes/ios", TRANSLATOR_GITLINK)}
+# The Mac app reads only its own runtime, the translator and the WiiCompiled
+# function map, like the packs: not SunPad or Dolphin, whose nested
+# repositories run to several GB.
+MACOS_GITLINKS = ("vendor/runtimes/macos", TRANSLATOR_GITLINK)
 
 
 def load_lock(repo: Path) -> dict[str, Any]:
@@ -130,10 +138,16 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
     if target in PACK_GITLINKS:
         _prepare_gitlinks(repo, list(PACK_GITLINKS[target]), install)
         required = list(ANDROID_PACK_SOURCES)
+    elif target == "macos":
+        _prepare_gitlinks(repo, list(MACOS_GITLINKS), install)
+        required = list(ANDROID_PACK_SOURCES)
     else:
         runtime = dependencies.get("KartPad WiiCompiled runtime fork")
         if runtime is not None:
             _prepare_runtime_sources(repo, runtime, install)
+            # The translate stage (scripts/stage-maintained-translator.py) reads
+            # this gitlink, so a clean Mac or IPA build needs it like the packs do.
+            _prepare_gitlinks(repo, [TRANSLATOR_GITLINK], install)
         required = profile.data["sourceDependencies"]
     for name in required:
         if name not in dependencies:
@@ -157,7 +171,8 @@ def prepare_dependencies(repo: Path, profile: Profile, install: bool, target: st
         return required + [f"Retro Rewind {inputs.version}", "Retro-WFC production payload"]
     dawn = dependencies["Dawn prebuilt"]
     dawn_output = repo / "build/dependency-cache" / f"dawn-ios-arm64-{dawn['version']}.tar.gz"
-    if not dawn_output.is_file() or hashlib.sha256(dawn_output.read_bytes()).hexdigest() != dawn["iosArm64Sha256"]:
+    if target != "macos" and (not dawn_output.is_file() or
+                              hashlib.sha256(dawn_output.read_bytes()).hexdigest() != dawn["iosArm64Sha256"]):
         if not install:
             raise BuildError("missing pinned physical-iOS Dawn archive; run ./scripts/build-user-ipa.sh bootstrap")
         _download(dawn["iosArm64Url"], dawn["iosArm64Sha256"], dawn_output)

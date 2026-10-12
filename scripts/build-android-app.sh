@@ -63,12 +63,29 @@ export DAWN_ANDROID_ROOT="$dawn_root"
 export MINIZIP_ANDROID_ROOT="$minizip_root"
 export MBEDTLS_ANDROID_ROOT="$mbedtls_root"
 
+# Ready-to-play app: KARTPAD_ANDROID_BUNDLED_GAME_PACK names a game pack made for this
+# exact pack interface; it goes into the APK and the app needs no pack import.
+bundled_args=()
+bundled_pack="${KARTPAD_ANDROID_BUNDLED_GAME_PACK:-}"
+if [[ -n "$bundled_pack" ]]; then
+  [[ -f "$bundled_pack" ]] || { echo "ERROR: no game pack at $bundled_pack" >&2; exit 66; }
+  if ! LC_ALL=C grep -a -q -F "kartpad-pack-fingerprint:$pack_fingerprint" "$bundled_pack"; then
+    echo "ERROR: $bundled_pack was made for a different pack interface than $pack_fingerprint" >&2
+    exit 65
+  fi
+  mkdir -p "$stage/bundled-pack/arm64-v8a"
+  cp "$bundled_pack" "$stage/bundled-pack/arm64-v8a/libkartpad_game.so"
+  bundled_args=(-PkartpadBundledGamePack="$stage/bundled-pack")
+  echo "Built-in game pack: $bundled_pack"
+fi
+
 "$repo_root/android/gradlew" --project-dir "$repo_root/android" --no-daemon \
   -PkartpadGamePackApp=true \
   -PkartpadPackFingerprint="$pack_fingerprint" \
   -PkartpadGameRuntimeSource="$runtime_source" \
   -PkartpadAndroidNativeTarget=KartPadDual \
   -PkartpadDiscIoJniRoot="$discio_jni_root" \
+  ${bundled_args[@]+"${bundled_args[@]}"} \
   ":app:$package_task"
 
 [[ -f "$package_path" ]] || { echo "ERROR: Gradle did not produce $package_path" >&2; exit 1; }
@@ -81,4 +98,8 @@ else
   unzip -o -q -j "$package_path" 'lib/arm64-v8a/libmain.so' -d "$stage/out"
 fi
 echo "Runtime for game packs: $stage/out/libmain.so"
-echo "Publishable app (no game code): $stage/out/$(basename "$package_path")"
+if [[ -n "$bundled_pack" ]]; then
+  echo "Ready-to-play app (game code built in): $stage/out/$(basename "$package_path")"
+else
+  echo "Publishable app (no game code): $stage/out/$(basename "$package_path")"
+fi

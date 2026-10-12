@@ -38,12 +38,12 @@ fi
 if [[ "$manifest" == *'android:debuggable="true"'* ]]; then
   echo "ERROR: release AAB is debuggable" >&2; exit 1
 fi
-[[ "$manifest" == *'package="dev.kartpad.android"'* ]]
+[[ "$manifest" == *'package="dev.kartpad.android"'* ]] || { echo "audit-android-bundle.sh: check failed (line 41)" >&2; exit 1; }
 [[ "$manifest" == *"android:versionName=\"$expected_version_name\""* ]] || {
   echo "ERROR: AAB version name is not $expected_version_name" >&2
   exit 1
 }
-[[ "$manifest" == *'android:compileSdkVersion="36"'* ]]
+[[ "$manifest" == *'android:compileSdkVersion="36"'* ]] || { echo "audit-android-bundle.sh: check failed (line 46)" >&2; exit 1; }
 expected_min_sdk="${KARTPAD_ANDROID_EXPECTED_MIN_SDK:-28}"
 case "$expected_min_sdk" in
   28|29) ;;
@@ -61,6 +61,7 @@ expected_permission_names="$(printf '%s\n' \
   android.permission.INTERNET \
   android.permission.POST_NOTIFICATIONS \
   android.permission.RECEIVE_BOOT_COMPLETED \
+  android.permission.REQUEST_INSTALL_PACKAGES \
   android.permission.WAKE_LOCK \
   dev.kartpad.android.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | sort)"
 [[ "$permission_names" == "$expected_permission_names" ]] || {
@@ -100,6 +101,11 @@ expected_native_members="$(printf '%s\n' \
   base/lib/arm64-v8a/libc++_shared.so \
   base/lib/arm64-v8a/libkartpad_discio.so \
   base/lib/arm64-v8a/libmain.so | sort)"
+# The ready-to-play app (KARTPAD_ANDROID_ALLOW_GAME_PACK=1) also carries the game pack:
+# KartPad's translated game code. Every other check still applies to it.
+if [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" == 1 ]]; then
+  expected_native_members="$(printf '%s\n' "$expected_native_members" base/lib/arm64-v8a/libkartpad_game.so | sort)"
+fi
 [[ "$native_members" == "$expected_native_members" ]] || {
   echo "ERROR: AAB native-library set differs from the product allowlist" >&2
   exit 1
@@ -132,7 +138,9 @@ fi
 
 audit_root="$repo_root/.android-bootstrap/audit-aab"
 mkdir -p "$audit_root"
-for library in libSDL3.so libc++_shared.so libkartpad_discio.so libmain.so; do
+aab_libraries=(libSDL3.so libc++_shared.so libkartpad_discio.so libmain.so)
+[[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || aab_libraries+=(libkartpad_game.so)
+for library in "${aab_libraries[@]}"; do
   unzip -p "$bundle" "base/lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |
       awk '$1 == "LOAD" && $NF != "0x4000" { bad = 1 } END { exit bad ? 0 : 1 }'; then
@@ -151,7 +159,7 @@ expected_needed="$(printf '%s\n' \
   echo "ERROR: AAB libmain.so dependency set differs from the allowlist" >&2
   exit 1
 }
-[[ "$dynamic" == *"GNU_RELRO"* ]]
+[[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-bundle.sh: check failed (line 161)" >&2; exit 1; }
 printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$' || {
   echo "ERROR: AAB libmain.so does not have a non-executable stack" >&2
   exit 1

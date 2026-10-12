@@ -1,106 +1,107 @@
 # KartPad status
 
-**29 September 2026:** prebuilt downloads have been retired and all earlier
-releases are no longer available. KartPad publishes source only; users build
-their own app with the [Personal IPA Builder](BUILDER.md) (iPhone/iPad on an
-Apple Silicon Mac today; Mac and Android targets in progress). The checkpoint
-below is kept as a record of the last published version.
+## Current status: 10 October 2026
 
-**September 26 release checkpoint:** KartPad 0.5.1 (retired) is the latest stable release, with Android code 229 and iPhone/iPad/Mac build 85, all built cleanly from de3a99c. All six downloads were re-downloaded anonymously and match their checksums; the APK carries the 0.5.0 release signer. The owner accepted gameplay on private iPad build 84 (the iPad stutter regression is resolved) and Pixel code 227 (offline play, with Retro online joining). [Release notes](releases/v0.5.1.md) · [Final package record](artifacts/2026-09-26/release-051-final.md).
+**Latest release: [KartPad 0.7.15](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.15) (build 260), 9 October.**
+**KartPad 0.8.0 (build 261) is merged and staged as a draft release** with all
+six files checked; it goes out when Chris says publish, and PadMint 0.4.14
+(KartPad 0.8.0 support) follows it.
+Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
+build KartPad with PadMint (the release carries the PadMint inputs) and, from
+0.8.0, say when a new version is out. 0.8.0 moves to the latest WiiCompiled
+engine and adds Shake to Trick and a choice of app icons.
+Players add their own game data the first time. Work in progress follows
+the [current goal loop](CURRENT-LOOP.md); open problems by device are in
+[known issues](KNOWN-ISSUES.md).
 
-[Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
-[Canonical active queue](MAINTENANCE-BOARD.md).
-
-Updated: 26 September 2026. This page summarizes acceptance, not a full test log.
-Use the [maintenance board](MAINTENANCE-BOARD.md) for candidate ownership and
-next actions, and [known issues](KNOWN-ISSUES.md) for current reports.
-
-## Historical reporting prereleases — 14 September 2026
-
-[Android code90](releases/v0.4.20-android-reporting.1.md) and
-[iPhone/iPad build42](releases/v0.4.20-ios-reporting.1.md) are optional reporting
-test builds. Build/package checks passed; physical reporting-flow acceptance is
-pending. These older test builds are retained for historical comparison. Current stable downloads are below.
-
-## Published packages
-
-| Platform | Package | Acceptance boundary |
+| Platform | How players get it | State |
 | --- | --- | --- |
-| Android | [0.5.1, code 229](releases/v0.5.1.md) | Owner accepted offline play and Retro online joining on private code 227 (same fixes). Update in place over 0.5.0 verified on an emulator (2,044 game files preserved). The Adreno character fix is opt-in and unconfirmed on affected phones. |
-| iPhone / iPad | [0.5.1, build 85](releases/v0.5.1.md) | Owner accepted gameplay on private build 84; the exact build 85 is installed in place on the owner's iPad with saves preserved. A brief cup-select slowdown remains. |
-| Apple Silicon Mac | [0.5.1, build 85](releases/v0.5.1.md) | App/ZIP audited; launch and about two minutes of play in a host smoke check. Broad gameplay and controller acceptance remain separate. |
-| Apple TV experimental | [0.4.11, build 9](releases/v0.4.11-tvos.1.md) | Published identity-fix and compiler-hardened package; exact-build hardware acceptance remains open |
+| Android | Ready-to-play APK from Releases; updates itself from 0.7.14 | Main platform; most open reports |
+| iPhone / iPad | Built with PadMint, signed by the player's sideloading tool | Stable on tested devices |
+| Apple Silicon Mac | Built with PadMint, or `scripts/self-build-macos.sh` | Experimental |
+| Apple TV | Experimental source build | Experimental |
 
-[Download and install](../README.md#downloads). All listed packages include the
-issue #94 console-serial correction. Updating does not clear old server-side
-identity history or bans. Older affected packages should stay offline.
+### 0.7.9 to 0.8.0
 
-The September 10 releases include the [joint source delivery](artifacts/2026-09-10/android-source-delivery.md)
-and [verified download ledger](artifacts/2026-09-10/platform-release-verification.md).
-Historical local candidates are retained in their dated records.
+| Version | What changed | Checked |
+| --- | --- | --- |
+| 0.7.9 | Ready-to-play downloads (#403); hourly update check (#397) | Android 16 emulators (update and fresh install), iOS Simulator, Mac race |
+| 0.7.10 | Startup checks every game file and names missing ones (#370); fatal errors show a message instead of a black screen on iPhone/iPad; Automatic uses the full repack on Snapdragon 8xx (#316); PowerVR logs whether shaders exceed the GPU's inter-stage limit (#304); the ⋯ button hides with a controller (#402) | Emulator (data check, missing file, ⋯ hiding, update and fresh-import races); iPad Pro (fatal message, final IPA); Mac (game runs) |
+| 0.7.11 | Game data screens put the extracted folder first and say plainly that a disc image needs your Wii's key; Android imports a zip of the game data; Getting Started explains the Dolphin steps | Emulator: truncated zip refused with a clear message; the release APK reaches a race after a fresh zip import and as an update over 0.7.10 (0.7.3 → 0.7.10 → 0.7.11, data kept); Dolphin's parent folder imports. iPad Pro: release IPA installed in place. Mac: game runs at 60 FPS |
+| 0.7.12 | Android draw self-check: once per session one character draw is drawn two ways off screen and the log says `match`, `mismatch` or `inconclusive`; Report a Problem shows the result at the top. Same pack interface as 0.7.11 | Emulator: `match` on normal runs, `mismatch` with a deliberately broken copy (also in the exported log), `match` with the CPU repack on; release APK reaches a race over 0.7.11 (data kept) and after a fresh folder import. iPad Pro: release IPA installed in place and launched. Mac: game runs at 60 FPS. Not yet run on a physical Android phone |
+| 0.7.13 | The self-check draws a third copy with the other bone-matrix lookup (`result=indexing` when only that copy draws); Retro Rewind starts on the first Play after downloading it (it used to say "No DVD root is configured"). Same pack interface | Emulator: `indexing` with both layout copies deliberately emptied, `match` on normal runs; Retro Rewind download then Play reaches the game. iPad Pro: installed in place and launched. All files checked by anonymous download against `SHA256SUMS` |
+| 0.7.14 | Android updates itself (#377): download, check against `SHA256SUMS` and the signing key, Android confirms. Every game file is checked at import and on the chooser, so an incomplete copy names the missing file before Play (all platforms). Android music and game-sound sliders (#411). Android APK plus PadMint inputs only; no ready-to-play IPA or Mac zip. Same pack interface | Emulator: a 0.7.12-labelled build updated itself to the published 0.7.13 twice (permission page, download, verify, install), save unchanged, game data intact; cancel keeps the old version; full file check on complete and broken data. 344 repo tests |
+| 0.7.15 | Retro Rewind 6.13.1 (official pack plus update), required for Retro WFC. iPhone/iPad keep Retro saves and ghosts when replacing the pack. Android save/ghost writes verified before completing; **Help → Cancel Pending Ghost Import**. Compressed Original ghosts imported in replayable form. iPhone/iPad music and game-sound controls. Apple motion: flat device steers straight, shake still works. PadMint Mac bootstrap fetches Retro Rewind and the translator source. Same pack interface | Emulator: the signed APK installs over 0.7.14 with all app data unchanged and reaches a race; fresh zip import reaches a race; Retro 6.13.1 install, Retro race, Retro WFC sign-in, worldwide room and online races (two mid-race room disconnects on the emulator, each recovered); a real compressed Chadsoft ghost imported and replayed. iPad Pro: installed in place with saves/settings unchanged. iPad Simulator: 6.12.8 to 6.13.1 upgrade kept a save. Mac: clean PadMint build. Sound and motion not yet hands-on on an iPhone/iPad |
+| 0.8.0 (draft) | WiiCompiled upstream sync (display lists that overflow the staging batch now draw instead of dropping models; TLS sessions stop cleanly after a failed write). Update notices on iPhone, iPad and Mac. Shake to Trick on Android and iPhone/iPad. App icon choice (red K, Circuit, Mono). Android Fill Screen draws under display cutouts. Android identity/Mii writes keep their recovery request on failure. PadMint: Intel Mac iPhone builds; Mac builds without Homebrew tools, with a much smaller first download. New pack interface | Emulator: the signed APK installs over public 0.7.15 with all 2,079 app data files unchanged and reaches a race; a fresh install imports game data and reaches a race; app icon switching. Pixel 9 Pro XL: updated in place from 0.7.12 with saves and licences kept; Original race at 60 FPS; Retro Rewind 6.13.1 downloaded and installed in the app, booted and signed in to Retro WFC. iPad Pro: installed in place with 34 critical files unchanged; Original runs at 60 FPS. Mac: full PadMint build with only system tools on the path; game runs at 60 FPS. Shake to Trick and the icon picker not yet hands-on on a device |
 
-## Earlier device acceptance
+**Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
+(#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
+iPad (#310, closed).
 
-The owner accepted the source-migration candidates for loading, running and
-starting games on iPad and Android, and explicitly chose not to require a
-completed race as another release gate. iPad new-license Retro WFC login worked;
-the old license's 22005 serial mismatch reproduced on both builds. This does not
-claim a complete online race/reconnect sequence. See the
-[migration validation ledger](source-maintenance/VALIDATION.md).
+### What remains
 
-### Earlier device evidence
+Things decided for later are in the [to-do list](TODO.md). iPhone, iPad and
+Mac show update notices from 0.8.0 but still need a PadMint rebuild for each
+KartPad release and almost every Retro Rewind update; automatic rebuilds belong
+in PadMint.
 
-The owner accepted the bounded iPhone 14 trial of **0.4.17/build 39** on
-13 September. Saves, identity and configuration were preserved during the
-in-place upgrade. The unsigned IPA delivers that executable with the original compilation
-manifest retained. This does not close the iPhone 17 Pro Max/iOS 27 report. See the [candidate handoff](artifacts/2026-09-13/platform-candidate-handoff.md).
+- **Setup.** 0.7.11 addresses the 4 October Discord confusion: the extracted
+  folder comes first, the key requirement is stated up front, and Android takes
+  a zip so cloud transfers can't silently drop files.
+- **Android 3D drawing.**
+  - Adreno 8xx: fixed by Automatic in 0.7.10.
+  - Adreno 6xx/7xx (#104, #301): no automatic fix. The 0.7.12 and 0.7.13
+    self-check logs from both phones show character bodies drawing nothing with
+    either vertex layout and with either bone lookup on its own. Only the two
+    changes together drew bodies on the S24 (white, about 24 FPS, the
+    "fix invisible characters" test option). The self-check has answered what
+    it can. Merged for the release after 0.8.0: on Adreno 6xx/7xx, Automatic
+    turns off Dawn's uniform-buffer rewrite and repacks character vertices
+    (see the [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)).
+    Checked on the emulator only; an affected phone has to confirm it.
+  - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
+    vertex layouts, so the vertex layout isn't the cause; the shader limit was
+    ruled out on 4 October. A 0.7.13 log was requested.
+- **Startup:** Moto G75 crash (#332, no diagnostic yet); flicker while a game
+  opens on the iPhone 16 and iPad Air 4th gen (#390: the game draws one frame
+  in nine during the safety-screen fade). Both are 60 Hz screens; it isn't seen
+  on the 120 Hz iPad Pro or on a simulated iPhone 16 (0.5.1, 4,225 frames
+  checked). Needs a real 60 Hz device to reproduce.
+- **Online over mobile data (#405):** carriers block direct player-to-player
+  connections; Wi-Fi or a VPN works. Not fixable in KartPad without a relay.
+- **Sound levels (#411):** music and game-sound controls are on Android
+  (0.7.14), iPhone/iPad (0.7.15) and Mac. The iPhone/iPad audio session mixes
+  with other apps, so Spotify keeps playing; a hands-on check on an iPad is
+  still outstanding.
+- **Controllers:** ipega and similar fixed in 0.7.6 to 0.7.8, awaiting
+  confirmation (#378); single Joy-Cons (#324); Mac Wii Remote with Classic
+  Controller Pro (#306).
+- **Game flow and data:** the crash after a cup's last race (#131) doesn't
+  happen on 0.7.10 in automated full cups, including at 3x
+  ([record](artifacts/2026-10-04/android/131-cup-ceremony-harness.md)); awaiting
+  a player retest. AYN Thor screen area (#202); identity and rating transfer
+  (#234); Mac two-player rendering (#127).
+- **Performance (#339, patchzyy's request).** Slow phones are limited by one
+  CPU core running the game; lowering resolution barely helps. Shipped so far:
+  about 14% less game-thread CPU (0.5.1) and 37% less compile CPU (0.7.5).
+  The 10 October investigation found where the rest goes and two unmeasured
+  candidates (flat-memory locals, PGO). **Start at the
+  [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md)** for findings,
+  the bench and the next steps.
+- **WiiCompiled.** 0.8.0 syncs the translator and all four runtimes to
+  upstream `bd219e3`; the fork's `kartpad-*` branches point at the 0.8.0 pins.
+  Earlier KartPad fixes reached upstream through
+  [#244](https://github.com/patchzyy/Wiicompiled/pull/244) and
+  [#251](https://github.com/patchzyy/Wiicompiled/pull/251).
 
-The owner also considers iPad and Mac good to release. That is owner acceptance;
-this pass's recorded physical Apple trial was on iPhone 14. Android code 78
-passed the owner's random Retro single-player race and touch-settings trial.
-Code 79 adds FPS text sizing and a responsive touch editor; Large persistence
-and D-pad Hide/Show passed physical Pixel UI checks. Save and identity file
-hashes were unchanged during that trial; only the new FPS preference changed
-among touch settings. Two Android licenses are being preserved as requested;
-their presence does not prove that an update created an identity. Possible
-Retro WFC menu slowdown remains under investigation. See the
-[controls and acceptance audit](artifacts/2026-09-13/android-controls-request-audit.md).
+### Next versions
 
-## Established results and remaining limits
+- **0.8.0** (draft, pack interface change): WiiCompiled sync, update notices on
+  iPhone/iPad/Mac, Shake to Trick, app icons. Publish, then PadMint 0.4.14.
+- **After 0.8.0:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
+  (PGO measurement, then a phone A/B for flat-memory locals); Adreno
+  bone-matrix decision ([loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
 
-- **Android:** the owner accepted Original Grand Prix with Kishi and automatic
-  touch hiding, and reported Retro WFC login, worldwide matchmaking and live
-  racing. These apply to the tested runtime, not every later preview. Graphics
-  corruption, online-menu stalls, cup crashes and warm slowdown remain open.
-- **iPhone/iPad:** the owner accepted build 32 on the M2 iPad after controller
-  gameplay, reporting/menu and chooser checks. Build 33 publishes those app
-  changes with updated version metadata. All 32 protected save/settings files
-  were preserved across the build-32 update. The A10X reporter confirms build-29
-  startup and Original/Retro loading; their lower FPS remains a separate issue.
-  Touch gameplay, custom remapping, external displays and complete production
-  online behavior are not newly accepted by these results.
-- **Mac:** the original correctness and offline test program includes all 32
-  retail tracks, race/save cycles, two-player results and representative audio
-  continuity. New two-player rendering reports and controller changes need
-  their own regression evidence; see the maintenance board.
-- **tvOS:** the reporter accepted the 0.4.1 storage repair on Apple TV 4K
-  (3rd generation). That [specific result](artifacts/2026-09-04/tvos-v0.4.1-storage-acceptance.md)
-  does not establish A12 compatibility, purge recovery or current-build performance.
-- **Online:** isolated WFC race/results tests and Android owner reports have
-  different scopes. Complete distributed-build results/reconnect, Original
-  private-server gameplay and native room hosting remain open. See [ONLINE.md](ONLINE.md).
-- **Performance and peripherals:** sustained frame pacing, long soaks, full
-  three/four-player coverage, motion/audio refinements and external displays
-  remain incomplete. See [performance](PERF.md), [controllers](MULTIPLAYER.md)
-  and [external displays](EXTERNAL-DISPLAYS.md).
-
-## Evidence and requirements
-
-- [Release notes](releases/) and [dated artifacts](artifacts/) record exact
-  source revisions, checksums, procedures and observed outcomes.
-- [Product requirements](PRD.md) retain the engineering acceptance matrix.
-  A historical checked row does not accept a later package automatically.
-- [Release checklist](RELEASE-CHECKLIST.md) applies to new candidates.
-- [Historical status ledger](archive/status-through-2026-09-07.md),
-  [journal](archive/JOURNAL.md) and [iterations](iterations/) preserve earlier
-  results. Their machine state and next steps are not current work assignments.
+Status through 29 September (source-only period, 0.5.x packages and earlier
+acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before
+that, [status through 7 September](archive/status-through-2026-09-07.md).

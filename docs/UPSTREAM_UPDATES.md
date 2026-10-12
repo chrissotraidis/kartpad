@@ -31,9 +31,12 @@ Advance one upstream at a time on a dedicated branch.
    watcher runs the same check and opens one deduplicated compatibility issue
    when the official feed advances beyond KartPad's pinned profile.
 2. Run `python3 scripts/update-retro-rewind-profile.py --latest`. The helper
-   resumes or reuses the official full archive in ignored private storage, then
-   validates the official archive layout and writes the version, URL, byte
-   counts, and SHA-256 values for the archive, `Code.pul`, and Riivolution XML.
+   reads the official installation manifest and reuses or downloads its full
+   archive in ignored private storage. If the version feed requires one newer
+   update, it pins that archive too. Multiple updates or content deletions stop
+   for review. Final version, executable/XML hashes, archive identities and
+   separate expansion limits remain required; neither app activates the base
+   before the update and final validation complete.
    An already-downloaded archive can still be supplied explicitly with
    `python3 scripts/update-retro-rewind-profile.py PATH_TO_ARCHIVE OFFICIAL_URL`.
 3. Update the relevant lock entry and replace only its detached reference
@@ -97,6 +100,73 @@ The candidate now integrates upstream `83463764b8ac` in the translator and all
 four maintained runtimes, retaining KartPad platform adapters. The previous gap
 above describes the 19 September state. See the [current integration record](artifacts/2026-09-22/upstream-all-platforms.md) for tests, packages and remaining
 acceptance gates. Updating a source pin alone does not validate a release.
+
+## 5 October 2026 upstream audit
+
+Upstream main is [`279ce8328f17`](https://github.com/patchzyy/Wiicompiled/commit/279ce8328f17)
+(3 October). Since the 1 October audit it added
+[PSQ fallback splits and tests](https://github.com/patchzyy/Wiicompiled/pull/278)
+(`9d182f831618`, the base of draft #384) and
+[macOS support](https://github.com/patchzyy/Wiicompiled/pull/228)
+(`279ce8328f17`). The earlier `e164af9ff466` "Shader wait screen" is
+relevant to KartPad's first-time pauses. Open upstream PRs worth tracking:
+[#247](https://github.com/patchzyy/Wiicompiled/pull/247) (NTSC-U, NTSC-J and
+NTSC-K support; KartPad is PAL-only) and #252 (macOS guest memory, already
+noted below).
+
+Contribution candidates, to reproduce on upstream's own main before any PR
+(rules in the [current goal loop](CURRENT-LOOP.md#track-d-upstream-fixes-only-when-substantive)):
+
+| Candidate | KartPad source | Upstream state at `279ce8328f17` |
+| --- | --- | --- |
+| A saved Player 1 for a missing controller leaves a connected pad with no player | Android runtime `094b567` (#378) | `apply_port_preferences` in `aurora-main/lib/input.cpp` has the same structure and no free-port pass |
+| Fatal errors are invisible outside Windows | Runtime `3e13d6e`/`b0dee27` write the message for the app to show | Non-Windows `ShowRuntimeFatalPopup` only logs, and upstream now ships macOS |
+
+**Controller with no player: ready for Chris.** Upstream's own
+`apply_port_preferences`, compiled alone with the #378 scenarios, leaves the
+pad on Player 1 with no player both when Player 1 is saved for a missing
+controller and when Player 1 is left empty. The generic part of `094b567`
+(`port_reserved`, `assign_free_ports` and their two call sites) applies to
+upstream cleanly; the hunks for KartPad's standard-gamepad bridge don't exist
+upstream and were left out. With it, KartPad's
+`test_connected_controllers_never_stay_without_a_player` passes against
+upstream's file. Branch:
+[`codex/upstream-controller-free-port`](https://github.com/chrissotraidis/wiicompiled/tree/codex/upstream-controller-free-port)
+(`471db5c` on `279ce83`). It builds in a full upstream macOS build of
+`279ce83` (5 October). Not yet done: a test with real controllers (none is
+connected to the build Mac). Upstream has no unit test harness for
+`input.cpp` (it needs SDL), so the regression lives in the description. Chris
+writes the PR text.
+
+**Fatal errors outside Windows: ready for Chris.** Reproduced on a real
+upstream macOS build of `279ce83` (base game, built with upstream's own
+`docs/building-macos.md` steps, separate HOME so no real settings were
+touched). With one compressed file damaged (`Boot/Strap/eu/English.szs`,
+first Yaz0 flag byte zeroed) the game logs "fatal dialog: The game stopped
+because corrupt compressed file…" and exits about 7 seconds in with nothing
+on screen. Branch
+[`codex/upstream-fatal-dialog`](https://github.com/chrissotraidis/wiicompiled/tree/codex/upstream-fatal-dialog)
+(`45a9e78` on `279ce83`, one file, two commits to squash) shows the same
+message as Windows through `SDL_ShowSimpleMessageBox`, keeps the log line,
+and skips the dialog in two cases: inside the POSIX native-fault handler (UI
+isn't safe there, and the crash log must still be written), and on macOS off
+the main thread (SDL would `dispatch_sync` to the main thread, which may be
+waiting on the caller). Evidence with the branch built:
+
+| Case | Upstream `279ce83` | With the branch |
+| --- | --- | --- |
+| Damaged file (orderly fatal error, main thread) | Exits after ~7 s; log line only | Alert window shown (260×320, owned by WiiCompiled); the game waits for OK |
+| Native crash (`kill -SEGV` during boot) | Crash log | No dialog; exits within 4 s; `crash_sigsegv.txt` written |
+
+Not covered: Linux (the code path is the same SDL call), and fatal errors
+raised off the main thread on macOS, which keep today's log-only behavior.
+There's no automated test: upstream's tests have no UI seam. KartPad's own Mac
+runtime has the same silent path; adopting the change there is a separate
+KartPad step. Chris writes the PR text.
+
+KartPad's Adreno repack, the iOS fatal-error hook and the game-data
+completeness check are KartPad platform code and aren't candidates unless
+upstream is shown to have the same problem.
 
 ## 1 October 2026 upstream audit
 

@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- KartPad installs its own updates after the player confirms (#377). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -46,9 +48,11 @@
         <activity
             android:name=".KartPadActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
+            android:enableOnBackInvokedCallback="false"
             android:exported="${kartpadFrameCapture}"
             android:launchMode="singleTask"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="sensorLandscape"
+            tools:targetApi="34" />
         <activity
             android:name=".KartPadProblemReportActivity"
             android:exported="false"
@@ -58,14 +62,45 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
         <activity
-            android:name=".KartPadLaunchActivity"
+            android:name=".KartPadChooserActivity"
             android:exported="true"
             android:process=":launcher"
-            android:screenOrientation="sensorLandscape">
+            android:screenOrientation="sensorLandscape" />
+        <!-- Launcher entries. The default keeps the component name players'
+             home-screen icons already point to; Display → App Icon enables one
+             entry at a time (#437). -->
+        <activity-alias
+            android:name=".KartPadLaunchActivity"
+            android:exported="true"
+            android:targetActivity=".KartPadChooserActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".KartPadIconCircuit"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_circuit"
+            android:roundIcon="@mipmap/ic_launcher_circuit"
+            android:targetActivity=".KartPadChooserActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".KartPadIconMono"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_mono"
+            android:roundIcon="@mipmap/ic_launcher_mono"
+            android:targetActivity=".KartPadChooserActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>

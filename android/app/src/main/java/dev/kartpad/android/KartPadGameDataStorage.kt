@@ -6,8 +6,10 @@ import android.provider.DocumentsContract
 import android.util.AtomicFile
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.security.MessageDigest
 import java.util.UUID
+import java.util.zip.ZipInputStream
 
 /** Crash-safe storage transaction for user-selected extracted RMCP01 game data. */
 internal object KartPadGameDataStorage {
@@ -22,6 +24,8 @@ internal object KartPadGameDataStorage {
         "16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d"
     private const val MODIFIED_GAME_DATA =
         "This game data is modified (for example Wiimmfi-patched or pre-patched). Please use a clean RMCP01 dump."
+    private const val DAMAGED_ZIP =
+        "The zip is damaged or incomplete. Copy it to the phone again and retry."
 
     private val requiredPaths = listOf(
         "sys/boot.bin",
@@ -116,6 +120,87 @@ internal object KartPadGameDataStorage {
         }
     }
 
+    /**
+     * Imports one .zip of an extracted disc: files/ and sys/ at the top, or inside
+     * DATA/ or the folder Dolphin made. A zip moves through cloud drives and
+     * messaging apps as a single file, and a cut-off one fails here instead of
+     * leaving game files missing. Read as a stream: the picked document can't be
+     * reopened for random access.
+     */
+    fun importZip(
+        resolver: ContentResolver,
+        zipUri: Uri,
+        filesDir: File,
+        progress: (String) -> Unit,
+    ): ImportResult {
+        val support = root(filesDir)
+        check(support.isDirectory || support.mkdirs()) { "Game-data storage is unavailable." }
+        recoverInterruptedImport(support)
+        progress("Opening the zip…")
+        val staging = File(support, "GameData.import-${UUID.randomUUID()}")
+        check(staging.mkdir()) { "The game-data staging folder could not be created." }
+        try {
+            val counter = CopyCounter()
+            var gameRoot: File? = null
+            val input = resolver.openInputStream(zipUri)
+                ?: throw IllegalArgumentException("The selected zip could not be opened.")
+            try {
+                ZipInputStream(input.buffered()).use { zip ->
+                    while (true) {
+                        val entry = zip.nextEntry ?: break
+                        val parts = entry.name.trimEnd('/').split('/')
+                        require(parts.size <= MAX_DEPTH && parts.all {
+                            it.isNotBlank() && it != "." && it != ".." &&
+                                '\\' !in it && '\u0000' !in it
+                        }) { "The zip contains an unsafe file name." }
+                        // Dolphin's other partitions and macOS metadata aren't game data.
+                        val gameStart = parts.indexOfFirst { it == "files" || it == "sys" }
+                        val before = if (gameStart < 0) parts else parts.subList(0, gameStart)
+                        if (before.any { it == "UPDATE" || it == "CHANNEL" || it == "__MACOSX" }) continue
+                        counter.entries += 1
+                        require(counter.entries <= MAX_ENTRIES) { "The zip contains too many files." }
+                        val output = File(staging, parts.joinToString("/"))
+                        if (entry.isDirectory) {
+                            check(output.isDirectory || output.mkdirs()) { "A game-data directory could not be created." }
+                            continue
+                        }
+                        output.parentFile?.let { parent ->
+                            check(parent.isDirectory || parent.mkdirs()) { "A game-data directory could not be created." }
+                        }
+                        FileOutputStream(output).use { stream ->
+                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                            while (true) {
+                                val count = zip.read(buffer)
+                                if (count < 0) break
+                                stream.write(buffer, 0, count)
+                                counter.bytes += count
+                                require(counter.bytes <= MAX_BYTES) { "The zip exceeds KartPad's import limit." }
+                            }
+                        }
+                        if (parts.size >= 2 && parts.takeLast(2) == listOf("sys", "main.dol")) {
+                            gameRoot = output.parentFile?.parentFile
+                        }
+                        if (counter.entries % 64 == 0) {
+                            progress("Copying game data from the zip… ${counter.entries} items")
+                        }
+                    }
+                }
+            } catch (error: IOException) {
+                android.util.Log.w("KartPadGameData", "Zip import failed", error)
+                throw IllegalArgumentException(DAMAGED_ZIP)
+            }
+            val root = gameRoot ?: throw IllegalArgumentException(
+                "This zip doesn't contain Mario Kart Wii game data. Zip the folder Dolphin's Extract Entire Disc made.",
+            )
+            localValidationError(root)?.let { throw IllegalArgumentException(it) }
+            ensureRelativeDvdRoot(support)
+            activate(support, root)
+            File(support, REMOVAL_MARKER).delete()
+            return ImportResult(counter.entries, counter.bytes)
+        } finally {
+            staging.deleteRecursively()
+        }
+    }
     fun importDiscImage(
         resolver: ContentResolver,
         image: Uri,
@@ -219,7 +304,55 @@ internal object KartPadGameDataStorage {
         if (relHash != STATIC_R_SHA256) {
             return MODIFIED_GAME_DATA
         }
-        return null
+        return incompleteFilesError(root)
+    }
+
+    /**
+     * Every file the disc's own table (sys/fst.bin) lists must be present at its full size. The
+     * game checks the same rule when it starts (#370); checking here too means a copy that didn't
+     * finish is caught at import, and never shows as "Ready to play".
+     */
+    internal fun incompleteFilesError(root: File): String? {
+        val damaged = "The game data's file table (sys/fst.bin) is damaged. Import your game data again."
+        val fst = runCatching { File(root, "sys/fst.bin").readBytes() }
+            .getOrElse { return "KartPad could not read sys/fst.bin." }
+        fun be32(at: Int): Long = ((fst[at].toLong() and 0xff) shl 24) or ((fst[at + 1].toLong() and 0xff) shl 16) or
+            ((fst[at + 2].toLong() and 0xff) shl 8) or (fst[at + 3].toLong() and 0xff)
+        if (fst.size < 12) return damaged
+        val count = be32(8)
+        if (count < 1 || count * 12 > fst.size) return damaged
+        val names = count.toInt() * 12
+        // A directory entry stores the index just past its last child.
+        val directories = ArrayDeque<Pair<Long, String>>().apply { addLast(count to "") }
+        var listed = 0
+        var incomplete = 0
+        var example: String? = null
+        for (index in 1 until count.toInt()) {
+            while (directories.size > 1 && index >= directories.last().first) directories.removeLast()
+            val word = be32(index * 12)
+            val nameStart = names + (word and 0xffffff).toInt()
+            var nameEnd = nameStart
+            while (nameEnd < fst.size && fst[nameEnd] != 0.toByte()) nameEnd++
+            if (nameStart >= fst.size || nameEnd == nameStart) return damaged
+            val name = String(fst, nameStart, nameEnd - nameStart, Charsets.ISO_8859_1)
+            if (name == "." || name == ".." || '/' in name) return damaged
+            val path = directories.last().second + name
+            val size = be32(index * 12 + 8)
+            if ((word ushr 24) != 0L) {
+                directories.addLast(size to "$path/")
+            } else {
+                listed += 1
+                val file = File(root, "files/$path")
+                if (!file.isFile || file.length() < size) {
+                    incomplete += 1
+                    if (example == null) example = path
+                }
+            }
+        }
+        if (incomplete == 0) return null
+        return "The game data is incomplete: $incomplete of $listed game files are missing or cut short, " +
+            "for example files/$example. A copy probably didn't finish. Copy the complete folder (or zip) " +
+            "to this phone again, then import it again."
     }
 
     private fun copyTree(

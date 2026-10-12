@@ -19,12 +19,14 @@ clang++ -std=c++20 -I"$repo/runtime/include" "$repo/runtime/tests/android_identi
 "$jdk/bin/java" -cp "$compiler:$stdlib:$annotations:$coroutines:$reflect" org.jetbrains.kotlin.cli.jvm.K2JVMCompiler \
   -no-stdlib -no-reflect -jvm-target 17 -classpath "$stdlib:$json" -d "$out/tests.jar" \
   "$repo/tests/android_identity/AtomicFile.kt" "$repo/tests/android_identity/Os.kt" "$repo/tests/android_identity/IdentityTests.kt" \
+  "$repo/tests/android_identity/PublicationTests.kt" \
   "$repo/tests/android_identity/SaveTests.kt" \
   "$repo/tests/android_identity/RatingTests.kt" \
   "$repo/tests/android_identity/RatingStorageTests.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadRatingStorage.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadRatingCompanion.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadIdentityStorage.kt" \
+  "$repo/android/app/src/main/java/dev/kartpad/android/KartPadAtomicFile.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadSaveStorage.kt" \
   "$repo/android/app/src/main/java/dev/kartpad/android/KartPadMiiStorage.kt"
 "$jdk/bin/java" -cp "$out/tests.jar:$stdlib:$json" dev.kartpad.android.IdentityTestsKt "$out/libidentity-test.dylib" "$out"

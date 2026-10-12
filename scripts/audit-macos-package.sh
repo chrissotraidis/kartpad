@@ -57,13 +57,13 @@ if [[ "$(plutil -extract LSMinimumSystemVersion raw "${plist}")" != "14.0" ]] ||
 fi
 
 for forbidden in portable.txt UserData Config.toml '*.wbfs' '*.iso' '*.rvz' '*.wia' '*.gcz'; do
-  if find "${app}" -name "${forbidden}" -print -quit | rg -q .; then
+  if find "${app}" -name "${forbidden}" -print -quit | grep -q .; then
     echo "package contains forbidden private or writable state: ${forbidden}" >&2
     exit 70
   fi
 done
 
-if find "${app}" -name '*\\*' -print -quit | rg -q .; then
+if find "${app}" -name '*\\*' -print -quit | grep -q .; then
   echo "package contains a Windows-style path component" >&2
   exit 70
 fi
@@ -83,7 +83,7 @@ while IFS= read -r macho; do
   done < <(otool -L "${macho}" | tail -n +2 | awk '{print $1}')
 done < <(find "${contents}/MacOS" "${contents}/Frameworks" -type f -perm -111 -print)
 
-if rg -F -q "${HOME}/" < <(
+if grep -F -q "${HOME}/" < <(
   find "${contents}/MacOS" "${contents}/Frameworks" -type f -perm -111 -print0 | \
     xargs -0 strings
 ); then
@@ -96,7 +96,7 @@ fi
 # resolver behavior; these markers make the package audit reject an older
 # runtime that predates that contract.
 for runtime_marker in "Application Support" "Caches" "KartPad Startup"; do
-  if ! rg -F -x -q "${runtime_marker}" < <(strings "${executable}"); then
+  if ! grep -F -x -q "${runtime_marker}" < <(strings "${executable}"); then
     echo "package runtime lacks required product marker: ${runtime_marker}" >&2
     exit 70
   fi
@@ -149,7 +149,7 @@ for shell_contract in \
       "chooseRetroRewindData:"|"KartPadRuntimeProfile"|"Quit and reopen KartPad to switch games. Your saves and settings are preserved.") continue ;;
     esac
   fi
-  if ! rg -F -q "${shell_contract}" <<<"${executable_strings}"; then
+  if ! grep -F -q "${shell_contract}" <<<"${executable_strings}"; then
     echo "package runtime lacks native shell contract: ${shell_contract}" >&2
     exit 70
   fi
@@ -157,7 +157,7 @@ done
 
 codesign --verify --deep --strict --verbose=2 "${app}"
 codesign -d --entitlements - "${app}" 2>/dev/null | \
-  rg -A2 -F '[Key] com.apple.security.device.bluetooth' | rg -q '\[Bool\] true'
+  grep -A2 -F '[Key] com.apple.security.device.bluetooth' | grep -q '\[Bool\] true'
 app_hash="$(find "${app}" -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')"
 echo "macOS package audit passed: ${app}"
 echo "Bundle content hash: ${app_hash}"

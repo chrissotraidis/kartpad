@@ -26,7 +26,7 @@ if [[ "${1:-}" == devices ]]; then
   exit 0
 fi
 
-[[ "${1:-}" == -s && "${2:-}" == PRIVATE-SERIAL && "${3:-}" == shell ]]
+[[ "${1:-}" == -s && "${2:-}" == PRIVATE-SERIAL && "${3:-}" == shell ]] || { echo "test-android-physical-device-preflight.sh: check failed (line 29)" >&2; exit 1; }
 shift 3
 if [[ "$scenario" == disconnect ]]; then
   echo "error: device 'PRIVATE-SERIAL' not found" >&2

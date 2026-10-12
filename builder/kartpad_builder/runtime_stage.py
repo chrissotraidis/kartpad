@@ -8,13 +8,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from pathlib import Path
 
 from .release_header import render_retro_rewind_header
+from .errors import BuildError
 
 SSE2NEON_URL = "https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
 SSE2NEON_SHA256 = "44b9fa3dec3a52ea473246e04b9f692a4e5b0ed654299eef7fe7ec3049e223e0"
@@ -39,14 +40,35 @@ def _sse2neon(repo: Path) -> Path:
 
 
 def stage_extras(repo: Path, destination: Path) -> None:
-    """Files every staged runtime gets beside its maintained source."""
+    """Restore missing generated headers on retry; preserve and check existing ones."""
     profile = json.loads((repo / PROFILE).read_text())
     header = destination / "third_party/kartpad-profile/kartpad_retro_rewind_release.h"
-    header.parent.mkdir(parents=True, exist_ok=True)
-    header.write_text(render_retro_rewind_header(profile))
+    release = render_retro_rewind_header(profile).encode()
     target = destination / "third_party/sse2neon/sse2neon.h"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(_sse2neon(repo), target)
+    expected = {header: hashlib.sha256(release).hexdigest(), target: SSE2NEON_SHA256}
+    missing = []
+    for path, digest in expected.items():
+        # Never follow an edited generated path, including symlinked folders.
+        if any(p.is_symlink() for p in (destination, destination / "third_party", path.parent, path)):
+            raise BuildError(f"generated runtime header has a symlink: {path}; choose a fresh build workspace")
+        if path.exists():
+            # Earlier Windows builds wrote the generated profile with CRLF.
+            contents = path.read_bytes() if path.is_file() else b""
+            if path == header:
+                contents = contents.replace(b"\r\n", b"\n")
+            if not path.is_file() or hashlib.sha256(contents).hexdigest() != digest:
+                raise BuildError(f"generated runtime header differs from its pinned input: {path}; "
+                                 "your file was preserved; choose a fresh build workspace")
+        else:
+            missing.append(path)
+    # Finish the verified download before publishing either missing header.
+    dependency = _sse2neon(repo).read_bytes() if target in missing else None
+    for path in missing:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix=".padmint-", dir=path.parent) as temporary:
+            staged = Path(temporary) / path.name
+            staged.write_bytes(release if path == header else dependency)
+            staged.replace(path)
 
 
 def stage(repo: Path, platform: str, destination: Path) -> None:

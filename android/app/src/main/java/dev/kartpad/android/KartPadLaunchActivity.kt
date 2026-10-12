@@ -2,13 +2,20 @@ package dev.kartpad.android
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageInstaller
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -21,10 +28,11 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.ImageButton
 import android.graphics.drawable.RippleDrawable
+import java.io.File
 import java.util.concurrent.Executors
 
 /** Production owner for choosing the immutable runtime profile before SDL starts. */
-open class KartPadLaunchActivity : Activity() {
+open class KartPadChooserActivity : Activity() {
     protected open fun pausedProfile(): String? = null
     private fun requestedProfileFile() = java.io.File(filesDir, "KartPad/RequestedRuntimeProfile")
     private lateinit var status: TextView
@@ -40,6 +48,11 @@ open class KartPadLaunchActivity : Activity() {
     private lateinit var preferredLaunch: KartPadPreferredLaunch
     private var darkMode = true
     private lateinit var preferenceButton: Button
+    private var updateLink: Button? = null
+    private var updateAfterSettings: KartPadUpdateCheck.Update? = null
+    private var updateReceiver: BroadcastReceiver? = null
+    @Volatile private var updateCancelled = false
+    private var updateInstalling = false
     private val primaryTextColor get() = if (darkMode) Color.rgb(247, 247, 247) else Color.rgb(12, 17, 26)
     private val secondaryForeground get() = if (darkMode) Color.rgb(170, 170, 170) else Color.rgb(94, 94, 94)
     private val racingRed get() = if (darkMode) Color.rgb(255, 51, 66) else Color.rgb(204, 9, 31)
@@ -67,11 +80,39 @@ open class KartPadLaunchActivity : Activity() {
                 intent.getBooleanExtra(EXTRA_SKIP_PREFERRED_GAME, false) || pausedProfile() != null,
         )
         KartPadExitDiagnostics.mark(this, pausedProfile() ?: "chooser")
+        KartPadGamePack.removeImportedPack(this)
+        // A fatal game error is shown once here; don't start the game straight into it again.
+        if (savedInstanceState == null && showLastFatal()) preferredLaunch.consumed = true
         rebuildContent()
+        if (pausedProfile() == null) checkForUpdate()
+    }
+
+    /**
+     * The game runtime has no dialog of its own on Android, so a fatal error
+     * (for example incomplete game data) only closed the game. The runtime
+     * leaves its message in Logs/last_fatal.txt; show it once and remove it.
+     */
+    private fun showLastFatal(): Boolean {
+        val file = File(filesDir, "KartPad/Logs/last_fatal.txt")
+        if (!file.isFile) return false
+        val message = runCatching { file.readText().take(1500).trim() }.getOrDefault("")
+        file.delete()
+        if (message.isEmpty()) return false
+        AlertDialog.Builder(this)
+            .setTitle("The game stopped")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
+        return true
     }
 
     override fun onResume() {
         super.onResume()
+        // Back from Android's "Install unknown apps" page: continue the update if it was allowed.
+        updateAfterSettings?.let { update ->
+            updateAfterSettings = null
+            if (packageManager.canRequestPackageInstalls()) downloadUpdate(update)
+        }
         pausedProfile()?.let { current ->
             progress.visibility = View.GONE
             original.isEnabled = true
@@ -102,6 +143,9 @@ open class KartPadLaunchActivity : Activity() {
     override fun onDestroy() {
         validationGeneration += 1
         validator.shutdownNow()
+        updateCancelled = true
+        updateReceiver?.let { runCatching { unregisterReceiver(it) } }
+        updateReceiver = null
         super.onDestroy()
     }
 
@@ -287,15 +331,171 @@ open class KartPadLaunchActivity : Activity() {
     }
 
     private fun openGuide(path: String) {
+        openWeb("https://github.com/chrissotraidis/kartpad/blob/main/docs/$path")
+    }
+
+    private fun openWeb(url: String) {
         runCatching {
-            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(
-                "https://github.com/chrissotraidis/kartpad/blob/main/docs/$path",
-            )))
+            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)))
         }.onFailure {
             AlertDialog.Builder(this).setTitle("Could Not Open GitHub")
                 .setMessage("Please try again when a browser is available. Setup and troubleshooting guides are in the chrissotraidis/kartpad repository on GitHub.")
                 .setPositiveButton("OK", null).show()
         }
+    }
+
+    private fun checkForUpdate() {
+        val context = applicationContext
+        Thread {
+            KartPadUpdateCheck.refresh(context)
+            if (KartPadUpdateCheck.known(context) == null) KartPadUpdateInstaller.clear(context)
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed && KartPadUpdateCheck.known(context) != null) {
+                    updateLink?.visibility = View.VISIBLE
+                }
+            }
+        }.apply { isDaemon = true; name = "KartPadUpdateCheck" }.start()
+    }
+
+    private fun showUpdate() {
+        val update = KartPadUpdateCheck.known(this) ?: return
+        val paused = if (pausedProfile() != null) {
+            "\n\nThe game paused in the background will close, so save first."
+        } else ""
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("KartPad ${update.version} is out")
+            .setMessage("You have ${BuildConfig.VERSION_NAME}. KartPad can download the update and install it over this one. Your saves and game data stay.$paused")
+            .setNeutralButton("Release Notes") { _, _ -> openWeb(update.pageUrl) }
+            .setNegativeButton("Not Now", null)
+        if (update.apkUrl != null) dialog.setPositiveButton("Update Now") { _, _ -> startUpdate(update) }
+        dialog.show()
+    }
+
+    /** Android asks once before an app may install its own updates (#377). */
+    private fun startUpdate(update: KartPadUpdateCheck.Update) {
+        if (packageManager.canRequestPackageInstalls()) {
+            downloadUpdate(update)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Allow KartPad to Install Updates")
+            .setMessage("Android asks once before an app can install its own updates. On the next screen, turn on Allow from this source, then come back to KartPad.")
+            .setPositiveButton("Continue") { _, _ ->
+                updateAfterSettings = update
+                runCatching {
+                    startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                }.onFailure {
+                    updateAfterSettings = null
+                    showUpdateFailed(update, "Android's settings couldn't be opened.")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun downloadUpdate(update: KartPadUpdateCheck.Update) {
+        val label = TextView(this).apply {
+            text = "Connecting to GitHub…"
+            setPadding(0, 0, 0, dp(12))
+        }
+        val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 1000
+            isIndeterminate = true
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), 0)
+            addView(label)
+            addView(bar)
+        }
+        updateCancelled = false
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Updating to KartPad ${update.version}")
+            .setView(content)
+            .setNegativeButton("Cancel") { _, _ -> updateCancelled = true }
+            .setCancelable(false)
+            .show()
+        listenForInstall(update, dialog)
+        val context = applicationContext
+        Thread {
+            val result = runCatching {
+                val apk = KartPadUpdateInstaller.download(context, update, { done, total ->
+                    runOnUiThread {
+                        if (total > 0) {
+                            bar.isIndeterminate = false
+                            bar.progress = (done * 1000 / total).toInt()
+                            label.text = "Downloading: ${done / 1_048_576} of ${total / 1_048_576} MB"
+                        } else {
+                            label.text = "Downloading: ${done / 1_048_576} MB"
+                        }
+                    }
+                }) { updateCancelled }
+                runOnUiThread {
+                    label.text = "Download checked. Android will ask you to confirm the update. KartPad closes when it's done; open it again."
+                    bar.isIndeterminate = true
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.isEnabled = false
+                }
+                updateInstalling = true
+                KartPadUpdateInstaller.install(context, apk)
+            }
+            result.onFailure { error ->
+                updateInstalling = false
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    dialog.dismiss()
+                    if (error !is KartPadUpdateInstaller.Cancelled) showUpdateFailed(update, error.message)
+                }
+            }
+        }.apply { isDaemon = true; name = "KartPadUpdateDownload" }.start()
+    }
+
+    /** Android's installer reports here: ask the player to confirm, then it replaces KartPad. */
+    private fun listenForInstall(update: KartPadUpdateCheck.Update, dialog: AlertDialog) {
+        updateReceiver?.let { runCatching { unregisterReceiver(it) } }
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                if (!updateInstalling) return
+                when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
+                    PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                        val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                        } else {
+                            @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
+                        }
+                        // Only Android's own confirmation screen, never one of KartPad's.
+                        if (confirm != null && confirm.component?.packageName != packageName) {
+                            runCatching { startActivity(confirm) }
+                        }
+                    }
+                    PackageInstaller.STATUS_SUCCESS, PackageInstaller.STATUS_FAILURE_ABORTED -> {
+                        updateInstalling = false
+                        dialog.dismiss()
+                    }
+                    else -> {
+                        updateInstalling = false
+                        dialog.dismiss()
+                        showUpdateFailed(update, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE))
+                    }
+                }
+            }
+        }
+        updateReceiver = receiver
+        val filter = IntentFilter(KartPadUpdateInstaller.ACTION_STATUS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(receiver, filter)
+        }
+    }
+
+    private fun showUpdateFailed(update: KartPadUpdateCheck.Update, reason: String?) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("The Update Didn't Finish")
+            .setMessage((reason?.takeIf { it.isNotBlank() } ?: "Something went wrong.") +
+                "\n\nYou can also download the APK in your browser and install it over KartPad.")
+            .setNegativeButton("Close", null)
+        update.apkUrl?.let { url -> dialog.setPositiveButton("Download in Browser") { _, _ -> openWeb(url) } }
+        dialog.show()
     }
 
     private fun refreshModeCards() {
@@ -342,7 +542,7 @@ open class KartPadLaunchActivity : Activity() {
         val brand = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            addView(ImageView(this@KartPadLaunchActivity).apply {
+            addView(ImageView(this@KartPadChooserActivity).apply {
                 setImageResource(R.drawable.kartpad_racing_mark)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -369,6 +569,10 @@ open class KartPadLaunchActivity : Activity() {
             }
         }
         header.addView(theme, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(16) })
+        updateLink = link("Update available") { showUpdate() }.apply {
+            visibility = if (KartPadUpdateCheck.known(this@KartPadChooserActivity) != null) View.VISIBLE else View.GONE
+        }
+        header.addView(updateLink)
         header.addView(link("Help") { showSetupHelp() })
         column.addView(header, layout(dp(if (compact) 16 else 28)))
         original = ModeButton(this, "Mario Kart Wii", compact, false, darkMode).apply {
@@ -416,7 +620,7 @@ open class KartPadLaunchActivity : Activity() {
         }
         return FrameLayout(this).apply {
             setBackgroundColor(if (darkMode) Color.rgb(17, 17, 17) else Color.rgb(251, 249, 242))
-            addView(ImageView(this@KartPadLaunchActivity).apply {
+            addView(ImageView(this@KartPadChooserActivity).apply {
                 setImageResource(R.drawable.kartpad_checker)
                 imageTintList = ColorStateList.valueOf(if (darkMode) Color.WHITE else Color.BLACK)
                 alpha = if (darkMode) 1f else 0.65f
@@ -459,7 +663,9 @@ open class KartPadLaunchActivity : Activity() {
             column.addView(label(body, 16f, true), layout(dp(24)))
         }
         section("1. Import Mario Kart Wii",
-            "Use your own PAL (Europe) ISO, WBFS or RVZ: RMCP01, revision 0. An extracted DATA folder also works. Disc images are extracted into private storage.")
+            "Use your own PAL (Europe) Mario Kart Wii (RMCP01). Easiest: in Dolphin on a computer, right-click the game, " +
+                "choose Properties, Filesystem, then right-click the disc and choose Extract Entire Disc. Copy that folder " +
+                "(or a zip of it) to this phone and tap Import Game. A disc image also works if you have your own Wii's common key.")
         section("2. Add Retro Rewind, if you want it",
             "Import Mario Kart Wii first, then choose Retro Rewind. KartPad can download and install the official ${RetroRewindRelease.VERSION} pack. You do not need to import a second disc.")
         section("Stuck on a step?",
@@ -472,14 +678,15 @@ open class KartPadLaunchActivity : Activity() {
         column.addView(label("KartPad ${BuildConfig.VERSION_NAME} · Build ${BuildConfig.VERSION_CODE}", 13f, true), layout(dp(12)))
         // Only before a game starts in this process: a loaded pack stays in use
         // until KartPad restarts, and the new one is used from the next launch.
-        if (KartPadGamePack.required && KartPadGamePack.isInstalled(this) && pausedProfile() == null) {
+        if (KartPadGamePack.required && !KartPadGamePack.bundled && KartPadGamePack.isInstalled(this) &&
+            pausedProfile() == null) {
             column.addView(Button(this).apply {
                 text = "Replace Game Pack…"
                 isAllCaps = false
                 setTextColor(secondaryForeground)
                 setBackgroundColor(Color.TRANSPARENT)
                 setOnClickListener {
-                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                    AlertDialog.Builder(this@KartPadChooserActivity)
                         .setTitle("Replace Game Pack")
                         .setMessage(
                             "Choose a game pack PadMint made for this version of KartPad. " +
@@ -505,12 +712,12 @@ open class KartPadLaunchActivity : Activity() {
             setTextColor(secondaryForeground)
             setBackgroundColor(Color.TRANSPARENT)
             setOnClickListener {
-                AlertDialog.Builder(this@KartPadLaunchActivity)
+                AlertDialog.Builder(this@KartPadChooserActivity)
                     .setTitle("Export Private Diagnostics")
                     .setMessage("Save recent runtime logs and any retained app crash/hang traces to a location you choose. Traces may contain local paths, network information or other personal details. No game images, saves, profiles, or signing material are copied. Keep this file private and review it before sharing.")
                     .setNegativeButton("Cancel", null)
                     .setPositiveButton("Save Locally…") { _, _ ->
-                        val sessions = runCatching { KartPadDiagnosticExport.sessions(this@KartPadLaunchActivity) }.getOrDefault(emptyList())
+                        val sessions = runCatching { KartPadDiagnosticExport.sessions(this@KartPadChooserActivity) }.getOrDefault(emptyList())
                         if (sessions.isEmpty()) {
                             // Early startup failures still have OS exit history, even without console.log.
                             exportSession = null
@@ -520,7 +727,7 @@ open class KartPadLaunchActivity : Activity() {
                                 putExtra(Intent.EXTRA_TITLE, "KartPad-private-diagnostics.zip")
                             }, REQUEST_DIAGNOSTICS)
                         }
-                        else AlertDialog.Builder(this@KartPadLaunchActivity).setTitle("Choose the game session")
+                        else AlertDialog.Builder(this@KartPadChooserActivity).setTitle("Choose the game session")
                             .setItems(sessions.map { "${it.id}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
                                 exportSession = sessions[index].id
                                 startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -533,11 +740,29 @@ open class KartPadLaunchActivity : Activity() {
             }
         }, layout(0))
 
+        if (pausedProfile() == null && KartPadSaveStorage.hasPendingGhost(filesDir)) {
+            column.addView(Button(this).apply {
+                text = "Cancel Pending Ghost Import…"
+                setOnClickListener {
+                    AlertDialog.Builder(this@KartPadChooserActivity)
+                        .setTitle("Cancel Pending Ghost Import?")
+                        .setMessage("Remove the pending request so you can start the game again. Current saves and retained backups stay as they are; this does not undo an import that already completed.")
+                        .setNegativeButton("Keep Import", null)
+                        .setPositiveButton("Cancel Import") { _, _ ->
+                            if (pausedProfile() == null) runCatching {
+                                KartPadSaveStorage.cancelPendingGhost(filesDir)
+                            }.onSuccess { visibility = View.GONE }
+                                .onFailure { showStatus("The pending ghost import could not be cancelled.") }
+                        }.show()
+                }
+            }, layout(0))
+        }
+
         if (pausedProfile() == null && KartPadRatingStorage.hasPending(filesDir)) {
             column.addView(Button(this).apply {
                 text = "Cancel Staged Rating Restore…"
                 setOnClickListener {
-                    AlertDialog.Builder(this@KartPadLaunchActivity)
+                    AlertDialog.Builder(this@KartPadChooserActivity)
                         .setTitle("Cancel Staged Rating Restore?")
                         .setMessage("Remove the pending request so you can start the game again. Current ratings and retained backups will stay as they are; this does not undo a restore that already completed.")
                         .setNegativeButton("Keep Restore", null)
@@ -561,7 +786,7 @@ open class KartPadLaunchActivity : Activity() {
             setBackgroundColor(Color.TRANSPARENT)
             setOnClickListener {
                 val enable = !KartPadRendererDiagnostics.enabled(context)
-                AlertDialog.Builder(this@KartPadLaunchActivity)
+                AlertDialog.Builder(this@KartPadChooserActivity)
                     .setTitle("Renderer Validation")
                     .setMessage("Checks the actual game renderer and enables buffer bounds protection. This may slow the game down; it is a diagnostic mode, not a graphics fix. Applies when you next open a game. After reproducing once, close KartPad, reopen this chooser and export private diagnostics. Turn it off here for normal play.")
                     .setNegativeButton("Cancel", null)
@@ -580,7 +805,7 @@ open class KartPadLaunchActivity : Activity() {
             isAllCaps = false
             setTextColor(secondaryForeground)
             setBackgroundColor(Color.TRANSPARENT)
-            setOnClickListener { KartPadCharacterGraphicsTestDialog.show(this@KartPadLaunchActivity) }
+            setOnClickListener { KartPadCharacterGraphicsTestDialog.show(this@KartPadChooserActivity) }
         }, layout(0))
 
         val scroll = ScrollView(this).apply { addView(column) }

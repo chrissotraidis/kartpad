@@ -1,6 +1,5 @@
 package dev.kartpad.android
 
-import android.util.AtomicFile
 import java.io.File
 import java.util.UUID
 import java.util.zip.CRC32
@@ -52,7 +51,7 @@ internal object KartPadSaveStorage {
         check(file.parentFile?.let { it.isDirectory || it.mkdirs() } == true) {
             "Save staging is unavailable."
         }
-        writeAtomic(file, data)
+        KartPadAtomicFile.write(file, data)
     }
 
     /** Applies a validated restore before SDL starts and retains the prior save. */
@@ -80,9 +79,9 @@ internal object KartPadSaveStorage {
                 check(backups.isDirectory || backups.mkdirs()) { "Save backup storage is unavailable." }
                 val prefix = if (profile == "original") "rksys" else profile
                 val backup = File(backups, "$prefix-${System.currentTimeMillis()}-${UUID.randomUUID()}.dat")
-                writeAtomic(backup, current)
+                KartPadAtomicFile.write(backup, current)
             }
-            writeAtomic(active, replacement)
+            KartPadAtomicFile.write(active, replacement)
             check(pending.delete()) { "The pending save restore could not be finalized." }
             pending.parentFile?.delete()
         }.exceptionOrNull()?.let { "The pending ${title(profile)} save restore could not be applied safely. It remains staged; your existing save and any backups have been retained." }
@@ -103,7 +102,7 @@ internal object KartPadSaveStorage {
             .put(before, identity, 8).put(after, position, 0x2800).array()
         val crc = CRC32().apply { update(request, 0, request.size - 4) }.value
         java.nio.ByteBuffer.wrap(request).putInt(request.size - 4, crc.toInt())
-        val file = ghostPending(files); file.parentFile?.mkdirs(); writeAtomic(file, request)
+        val file = ghostPending(files); file.parentFile?.mkdirs(); KartPadAtomicFile.write(file, request)
     }
 
     private fun applyPendingGhost(files: File): String? {
@@ -129,11 +128,14 @@ internal object KartPadSaveStorage {
             validate(next)
             if (!current.contentEquals(next)) {
                 val backups = File(files, "KartPad/SaveBackups"); check(backups.isDirectory || backups.mkdirs())
-                writeAtomic(File(backups, "rksys-ghost-${System.currentTimeMillis()}-${UUID.randomUUID()}.dat"), current)
-                writeAtomic(active(files), next)
+                KartPadAtomicFile.write(File(backups, "rksys-ghost-${System.currentTimeMillis()}-${UUID.randomUUID()}.dat"), current)
+                KartPadAtomicFile.write(active(files), next)
             }
+            // A retry may find the complete slot after a prior directory-sync failure.
+            // Confirm publication before consuming the request even when no rewrite is needed.
+            KartPadAtomicFile.syncDirectory(checkNotNull(active(files).parentFile))
             check(file.delete()) { "Pending ghost could not be finalized." }
-        }.exceptionOrNull()?.let { "The ghost import could not be applied safely. Existing progress is retained. Cancel the pending ghost in Original save settings and choose it again." }
+        }.exceptionOrNull()?.let { "The ghost import could not be applied safely. Existing progress is retained. Return to the game chooser and use Help → Cancel Pending Ghost Import, then choose the ghost again." }
     }
 
     fun validate(data: ByteArray) {
@@ -156,15 +158,4 @@ internal object KartPadSaveStorage {
         return file.readBytes()
     }
 
-    private fun writeAtomic(file: File, data: ByteArray) {
-        val atomic = AtomicFile(file)
-        val output = atomic.startWrite()
-        try {
-            output.write(data)
-            atomic.finishWrite(output)
-        } catch (error: Throwable) {
-            atomic.failWrite(output)
-            throw error
-        }
-    }
 }

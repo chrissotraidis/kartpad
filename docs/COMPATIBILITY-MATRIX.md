@@ -34,8 +34,14 @@ pass; actual PowerVR Vulkan launch/race acceptance remains open.
 
 ## Current matrix
 
-Public stable releases remain macOS 0.4.22 and iOS/Android 0.4.24; latest public
-diagnostics are Android code 121 and iOS build 51. Local code 125 is unpublished.
+**These rows record evidence up to 22 September (0.4.x and early 0.5 builds).**
+The current release is 0.7.10; per-device state for it is in
+[KNOWN-ISSUES.md](KNOWN-ISSUES.md). Newer evidence: the OnePlus 15 (Adreno 8xx)
+draws correctly with Automatic on 0.7.10 (#316, reporter-confirmed), and the
+Moto G54 (PowerVR BXM-8-256) reaches a race on 0.7.10 with no shader over its
+inter-stage limit of 14, which rules that cause out (#304).
+At the time of these rows, public stable releases were macOS 0.4.22 and
+iOS/Android 0.4.24; public diagnostics were Android code 121 and iOS build 51.
 The [19 September build review](artifacts/2026-09-19/cross-platform-stabilization.md)
 records current scope and acceptance. Older rows retain their tested versions;
 old requests do not authorize more reporter testing during the current hold.

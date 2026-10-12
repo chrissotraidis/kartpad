@@ -1,5 +1,9 @@
 # KartPad performance ledger
 
+Android speed work (#339) is tracked in the
+[performance handoff](ANDROID-PERFORMANCE-HANDOFF.md). This page is the Apple
+measurement contract and its 30 August history.
+
 Historical Apple measurements: 30 August 2026. The measurement contract below
 applies to new comparisons; active Android and Apple investigations are on the
 [maintenance board](MAINTENANCE-BOARD.md).

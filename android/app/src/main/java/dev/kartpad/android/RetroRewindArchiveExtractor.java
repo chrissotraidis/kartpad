@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.stream.Stream;
 
 /** Android owner for bounded native Retro Rewind ZIP extraction. */
 final class RetroRewindArchiveExtractor {
@@ -67,11 +69,60 @@ final class RetroRewindArchiveExtractor {
 
     private RetroRewindArchiveExtractor() {}
 
+    static Result extractRelease(Path archive, Path stagingDirectory,
+            Cancellation cancellation, Progress progress) throws IOException {
+        Result base = extract(archive, stagingDirectory, cancellation, progress);
+        if (!base.isComplete() || RetroRewindRelease.UPDATE_BYTES == 0) return base;
+        Path patchStage = Files.createDirectory(stagingDirectory.resolve(".update"));
+        Result update = extractBounded(RetroRewindArchiveDownload.updatePath(archive.getParent()),
+                patchStage, cancellation, progress, RetroRewindRelease.UPDATE_MAXIMUM_EXPANDED_BYTES);
+        if (!update.isComplete()) return update;
+        try {
+            mergeUpdate(patchStage.resolve(RetroRewindRelease.ROOT),
+                    stagingDirectory.resolve(RetroRewindRelease.ROOT), cancellation);
+        } catch (IOException failure) {
+            if (cancellation.isCancelled()) return new Result(Error.CANCELLED, new long[3]);
+            throw failure;
+        }
+        Files.delete(patchStage);
+        return update;
+    }
+
+    // Both trees are private staging outputs from the bounded native extractor.
+    // Never merge into the active installation: final validation/activation owns that step.
+    static void mergeUpdate(Path source, Path target, Cancellation cancellation) throws IOException {
+        try (Stream<Path> entries = Files.list(source)) {
+            for (Path entry : (Iterable<Path>) entries::iterator) {
+                if (cancellation.isCancelled()) throw new IOException("Update cancelled");
+                Path output = target.resolve(entry.getFileName());
+                if (Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS)) {
+                    if (!Files.exists(output, LinkOption.NOFOLLOW_LINKS)) Files.createDirectory(output);
+                    if (!Files.isDirectory(output, LinkOption.NOFOLLOW_LINKS))
+                        throw new IOException("Update directory conflicts with a file");
+                    mergeUpdate(entry, output, cancellation);
+                } else {
+                    if (!Files.isRegularFile(entry, LinkOption.NOFOLLOW_LINKS) ||
+                            (Files.exists(output, LinkOption.NOFOLLOW_LINKS) &&
+                             !Files.isRegularFile(output, LinkOption.NOFOLLOW_LINKS)))
+                        throw new IOException("Update entry is not a regular file");
+                    Files.move(entry, output, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        }
+        Files.delete(source);
+    }
+
     static Result extract(
             Path archive,
             Path stagingDirectory,
             Cancellation cancellation,
             Progress progress) throws IOException {
+        return extractBounded(archive, stagingDirectory, cancellation, progress,
+                RetroRewindRelease.MAXIMUM_EXPANDED_BYTES);
+    }
+
+    private static Result extractBounded(Path archive, Path stagingDirectory,
+            Cancellation cancellation, Progress progress, long maximumBytes) throws IOException {
         if (!Files.isRegularFile(archive, LinkOption.NOFOLLOW_LINKS) ||
                 !Files.isDirectory(stagingDirectory, LinkOption.NOFOLLOW_LINKS) ||
                 cancellation == null || progress == null) {
@@ -89,7 +140,7 @@ final class RetroRewindArchiveExtractor {
                 stagingDirectory.toAbsolutePath().toString(),
                 RetroRewindRelease.ROOT,
                 MAXIMUM_ENTRIES,
-                RetroRewindRelease.MAXIMUM_EXPANDED_BYTES,
+                maximumBytes,
                 cancellation,
                 progress,
                 counts);

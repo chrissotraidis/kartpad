@@ -29,6 +29,7 @@
     "ios": {
       "hosts": {
         "macos-arm64": "experimental",
+        "macos-x86_64": "experimental",
         "windows-arm64": "experimental",
         "windows-x86_64": "experimental",
         "linux-x86_64": "experimental",
@@ -42,7 +43,7 @@
         "nodtool",
         "libcxx"
       ],
-      "published_app": "KartPad-v{version}-ios-unsigned.ipa",
+      "published_app": "KartPad-v{version}-ios-for-padmint.ipa",
       "output": "ipa",
       "check": "none",
       "steps": [
@@ -90,6 +91,12 @@
       "hosts": {
         "macos-arm64": "experimental"
       },
+      "tools": [
+        "dotnet",
+        "cmake",
+        "ninja",
+        "nodtool"
+      ],
       "output": "zip",
       "check": "none",
       "steps": [
@@ -98,7 +105,9 @@
           "command": [
             "/bin/bash",
             "{repo}/scripts/build-user-ipa.sh",
-            "doctor"
+            "bootstrap",
+            "--target",
+            "macos"
           ]
         },
         {
@@ -109,7 +118,7 @@
             "--image",
             "{disc}",
             "--retro-root",
-            "{repo}/private/builder/retro-rewind-downloads/6.12.8-extracted/RetroRewind6",
+            "{repo}/private/builder/retro-rewind-downloads/6.13.1-extracted/RetroRewind6",
             "--payload",
             "{repo}/private/builder/retro-rewind-downloads/payload.RMCPD00.bin"
           ],
@@ -249,7 +258,16 @@
         "version_args": [
           "-version"
         ],
-        "note": "Mac only: install Xcode and its iOS platform (Windows and Linux use PadMint's LLVM)"
+        "player": true,
+        "hosts": [
+          "macos-arm64",
+          "macos-x86_64"
+        ],
+        "targets": [
+          "ios",
+          "macos"
+        ],
+        "note": "Install Xcode from the App Store, open it once, then run PadMint again"
       }
     ]
   },
@@ -263,6 +281,6 @@
   ],
   "publication": {
     "public_binaries": false,
-    "reason": "Personal builds contain translated game code; public releases are source only."
+    "reason": "PadMint outputs are personal builds. Maintainer releases provide an Android APK and game-code-free iOS inputs for PadMint, plus source and notices."
   }
 }

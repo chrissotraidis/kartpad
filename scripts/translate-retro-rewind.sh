@@ -16,7 +16,17 @@ retro_root="${default_retro_root}"
 payload=""
 image="${repo_root}/ref/Mario Kart Wii.wbfs"
 skip_retro_wfc=false
-dotnet_bin="/opt/homebrew/opt/dotnet@8/bin/dotnet"
+# .NET 8 in the order KartPad's builder looks (kartpad_builder.pipeline.find_dotnet):
+# DOTNET_ROOT, Homebrew's dotnet@8, then PATH, where PadMint puts its own copy on a
+# Mac without Homebrew.
+dotnet_bin=""
+for candidate in "${DOTNET_ROOT:+${DOTNET_ROOT}/dotnet}" \
+    /opt/homebrew/opt/dotnet@8/bin/dotnet "$(command -v dotnet || true)"; do
+  if [[ -n "${candidate}" && -x "${candidate}" ]]; then
+    dotnet_bin="${candidate}"
+    break
+  fi
+done
 translator="${repo_root}/build/wiicompiled-fpscr/translator/src/Translator.Cli/bin/Release/net8.0/Translator.Cli.dll"
 translation_jobs="${KARTPAD_TRANSLATION_JOBS:-2}"
 
@@ -72,10 +82,13 @@ if [[ -z "${payload}" && "${skip_retro_wfc}" == false ]]; then
   usage
   exit 64
 fi
-[[ "${translation_jobs}" =~ ^[1-8]$ ]] || {
-  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be an integer from 1 through 8" >&2
+[[ "${translation_jobs}" =~ ^[1-9][0-9]*$ ]] || {
+  echo "ERROR: KARTPAD_TRANSLATION_JOBS must be a positive integer" >&2
   exit 64
 }
+# PadMint passes its compile job count, which can exceed the translator's
+# useful parallelism on large Macs; use at most 8 rather than stopping.
+(( translation_jobs <= 8 )) || translation_jobs=8
 
 retro_root="$(cd "${retro_root}" && pwd)"
 image="$(cd "$(dirname "${image}")" && pwd)/$(basename "${image}")"
@@ -116,6 +129,10 @@ cmp -s "${code_pul}" "${staged_code_partial}" || {
 mv -f "${staged_code_partial}" "${staged_code}"
 trap - EXIT
 
+[[ -n "${dotnet_bin}" ]] || {
+  echo "ERROR: missing .NET 8 SDK (dotnet)" >&2
+  exit 69
+}
 "${repo_root}/scripts/prepare-disc.sh" "${image}"
 "${repo_root}/scripts/prepare-patched-translator.sh"
 mkdir -p "${output}" "${base_manifest_dir}"
@@ -182,18 +199,18 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   for blob_asm in \
       "${output}/data_sections_init_blobs.S" \
       "${mod_output}/cpp/mod_data_patches_blobs.S"; do
-    if [[ -f "${blob_asm}" ]] && rg -q '^\.globl k' "${blob_asm}" &&
-       ! rg -q '^\.globl _k' "${blob_asm}"; then
+    if [[ -f "${blob_asm}" ]] && grep -q '^\.globl k' "${blob_asm}" &&
+       ! grep -q '^\.globl _k' "${blob_asm}"; then
       perl -0pi -e 's/^\.globl (k[^\n]+)\n\1:/\.globl $1\n.globl _$1\n$1:\n_$1:/mg' "${blob_asm}"
     fi
   done
 fi
 
-[[ -f "${mod_output}/resolved_dispatch_profile.json" ]]
-[[ -f "${shards}/shards.cmake" ]]
-rg -q '^set\(MKW_RETRO_REWIND_FUNCTION_COUNT [1-9][0-9]*\)$' \
+[[ -f "${mod_output}/resolved_dispatch_profile.json" ]] || { echo "translate-retro-rewind.sh: check failed (line 192)" >&2; exit 1; }
+[[ -f "${shards}/shards.cmake" ]] || { echo "translate-retro-rewind.sh: check failed (line 193)" >&2; exit 1; }
+grep -Eq '^set\(MKW_RETRO_REWIND_FUNCTION_COUNT [1-9][0-9]*\)$' \
   "${shards}/shards.cmake"
-rg -q '^set\(MKW_HAVE_RETRO_REWIND_SHARDS ON\)$' "${shards}/shards.cmake"
+grep -Eq '^set\(MKW_HAVE_RETRO_REWIND_SHARDS ON\)$' "${shards}/shards.cmake"
 
 echo "Generated validated private Retro Rewind native graph"
 if [[ "${skip_retro_wfc}" == true ]]; then

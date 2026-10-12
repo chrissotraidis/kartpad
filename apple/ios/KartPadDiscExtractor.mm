@@ -39,9 +39,10 @@ BOOL KartPadLoadUserCommonKey(NSError **error) {
   if (data.length != 16) {
     if (error != nullptr) {
       *error = KartPadExtractionError(
-          7, @"KartPad needs your Wii common key to read a disc image. Save your "
-             @"own 16-byte common-key.bin in On My iPhone/iPad > KartPad, then "
-             @"import the disc image again.");
+          7, @"Disc images need the common key from your own Wii (common-key.bin, "
+             @"saved in On My iPhone/iPad > KartPad). Without one, use Dolphin's "
+             @"Extract Entire Disc on a computer and import that folder instead; "
+             @"it needs no key.");
     }
     return NO;
   }

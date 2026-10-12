@@ -62,11 +62,16 @@ final class RetroRewindInstallPipeline {
                 token,
                 cancellation,
                 progress,
-                path -> RetroRewindArchiveDownload.verifyFile(
-                        path,
-                        RetroRewindRelease.ARCHIVE_BYTES,
-                        RetroRewindRelease.ARCHIVE_SHA256),
-                RetroRewindArchiveExtractor::extract,
+                path -> {
+                    RetroRewindArchiveDownload.Error base = RetroRewindArchiveDownload.verifyFile(
+                            path, RetroRewindRelease.ARCHIVE_BYTES, RetroRewindRelease.ARCHIVE_SHA256);
+                    if (base != RetroRewindArchiveDownload.Error.NONE || RetroRewindRelease.UPDATE_BYTES == 0)
+                        return base;
+                    return RetroRewindArchiveDownload.verifyFile(
+                            RetroRewindArchiveDownload.updatePath(path.getParent()),
+                            RetroRewindRelease.UPDATE_BYTES, RetroRewindRelease.UPDATE_SHA256);
+                },
+                RetroRewindArchiveExtractor::extractRelease,
                 RetroRewindInstallValidator.productionContract());
     }
 

@@ -17,6 +17,8 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -39,6 +41,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.math.ceil
 import kotlin.math.roundToInt
+import org.libsdl.app.KartPadJoystickHandler
 import org.libsdl.app.SDLActivity
 import org.libsdl.app.SDLSurface
 
@@ -55,6 +58,12 @@ class KartPadActivity : SDLActivity() {
     private var touchSettingsDialog: AlertDialog? = null
     private var resetTouchLayoutDialog: AlertDialog? = null
     private var kartPadMenu: PopupWindow? = null
+    private var routedControllerButtons = 0
+    // #402: with a controller connected and "hide touch controls" on, the ⋯ button
+    // fades out too; any touch or mouse click brings it back for a few seconds.
+    private var menuHiddenForController = false
+    private val rehideMenu = Runnable { if (menuHiddenForController) setMenuShown(false) }
+    private val loggedRoutedControllers = mutableSetOf<Int>()
     private var menuSafeInsetTop = 0
     private var menuSafeInsetEnd = 0
     private var menuSafeInsetBottom = 0
@@ -127,7 +136,7 @@ class KartPadActivity : SDLActivity() {
             RetroRewindInstallStorage.recoverForLaunch(filesDir, requestedRuntimeProfile())
             if (!identityStartupChecked) {
                 saveRestoreStartupError = KartPadSaveStorage.applyPending(filesDir)
-                KartPadMiiStorage.applyPending(filesDir)?.let { error -> Log.e(TAG, error) }
+                saveRestoreStartupError = saveRestoreStartupError ?: KartPadMiiStorage.applyPending(filesDir)
             }
             KartPadRuntimeResources.install(this)
             configureRuntimeProfile()
@@ -136,6 +145,7 @@ class KartPadActivity : SDLActivity() {
             configureDebugRkgInput()
             configureDebugStateTrace()
         }
+        KartPadJoystickHandler.install()
         super.onCreate(savedInstanceState)
         KartPadExitDiagnostics.mark(this, runtimeProfile)
         if (mBrokenLibraries) return
@@ -156,9 +166,11 @@ class KartPadActivity : SDLActivity() {
         } else {
             null
         }
-        motionSteering = KartPadMotionSteering(this) { value ->
+        motionSteering = KartPadMotionSteering(this, onShakeTrick = {
+            kartPadOverlay.triggerShakeTrick()
+        }) { value ->
             kartPadOverlay.post {
-                kartPadOverlay.setMotionSteering(value)
+                if (kartPadOverlay.hasWindowFocus()) kartPadOverlay.setMotionSteering(value)
                 if (debugMotionSensorMode != null) {
                     Log.i(
                         TAG,
@@ -354,6 +366,37 @@ class KartPadActivity : SDLActivity() {
         Log.i(TAG, "A0 SDLActivity shell created")
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val device = event.device
+        val external = device != null && !device.isVirtual &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && device.isExternal
+        val routed = KartPadControllerKeys.routes(
+                event.keyCode, event.source, event.deviceId, device != null,
+                device?.sources ?: 0, external,
+            )
+        KartPadControllerLog.record(
+            event, KartPadControllerKeys.sdlReadsDevice(event.deviceId, device != null, device?.sources ?: 0), routed,
+        )
+        if (device != null && KartPadControllerKeys.dropsKey(event.keyCode, device.sources, device.keyboardType)) {
+            return true
+        }
+        if (!routed) {
+            return super.dispatchKeyEvent(event)
+        }
+        val mask = KartPadControllerKeys.classicMask(event.keyCode)
+        routedControllerButtons = when (event.action) {
+            KeyEvent.ACTION_DOWN -> routedControllerButtons or mask
+            KeyEvent.ACTION_UP -> routedControllerButtons and mask.inv()
+            else -> routedControllerButtons
+        }
+        if (::kartPadOverlay.isInitialized) kartPadOverlay.setControllerKeyButtons(routedControllerButtons)
+        if (loggedRoutedControllers.add(event.deviceId)) {
+            Log.i(TAG, "Routing controller keys SDL does not read: device=${device?.name ?: "virtual"} " +
+                "sources=0x${Integer.toHexString(device?.sources ?: event.source)}")
+        }
+        return true
+    }
+
     override fun onResume() {
         super.onResume()
         if (mBrokenLibraries) return
@@ -368,6 +411,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     override fun onPause() {
+        routedControllerButtons = 0
         KartPadRuntimeHealth.stop()
         kartPadMenu?.dismiss()
         if (::editorBar.isInitialized && editorBar.visibility == View.VISIBLE) {
@@ -409,6 +453,9 @@ class KartPadActivity : SDLActivity() {
             verifyDebugLifecycleClear("focus-loss")
         }
         super.onWindowFocusChanged(hasFocus)
+        if (::motionSteering.isInitialized) {
+            if (hasFocus) motionSteering.start() else motionSteering.stop()
+        }
         if (hasFocus) hideGameSystemBars()
     }
 
@@ -419,6 +466,19 @@ class KartPadActivity : SDLActivity() {
         // reserved on devices without enforced edge-to-edge (Android 14 and
         // earlier), showing a black band where the status bar was.
         window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN)
+        // Fill Screen also draws into display cutouts. Some handhelds (the AYN
+        // Thor, #202) report one along a long edge, which otherwise stays a
+        // black band; other aspect modes keep phones' camera cutouts clear.
+        val cutoutMode = when {
+            KartPadTouchSettings.aspectMode(this) != 2 ->
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+            Build.VERSION.SDK_INT >= 30 ->
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            else -> android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        if (window.attributes.layoutInDisplayCutoutMode != cutoutMode) {
+            window.attributes = window.attributes.also { it.layoutInDisplayCutoutMode = cutoutMode }
+        }
         if (Build.VERSION.SDK_INT >= 30) {
             window.insetsController?.let { controller ->
                 controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -460,7 +520,29 @@ class KartPadActivity : SDLActivity() {
         kartPadOverlay.setHiddenForController(
             controllerCount > 0 && KartPadTouchSettings.hideOnController(this),
         )
+        menuHiddenForController = controllerCount > 0 && KartPadTouchSettings.hideOnController(this)
+        if (::menuButton.isInitialized) {
+            menuButton.removeCallbacks(rehideMenu)
+            setMenuShown(!menuHiddenForController)
+        }
         Log.i(TAG, "A4 controller handoff count=$controllerCount")
+    }
+
+    private fun setMenuShown(shown: Boolean) {
+        menuButton.animate().cancel()
+        menuButton.animate().alpha(if (shown) 1f else 0f).setDuration(200L).start()
+        menuButton.isEnabled = shown
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (menuHiddenForController && event.actionMasked == MotionEvent.ACTION_DOWN &&
+            ::menuButton.isInitialized
+        ) {
+            setMenuShown(true)
+            menuButton.removeCallbacks(rehideMenu)
+            menuButton.postDelayed(rehideMenu, 5_000L)
+        }
+        return super.dispatchTouchEvent(event)
     }
 
     private fun addMenuButton() {
@@ -573,6 +655,9 @@ class KartPadActivity : SDLActivity() {
                 MenuRow("Display", R.drawable.ic_kartpad_display, submenu = true) {
                     showDisplayMenu()
                 },
+                MenuRow("Sound…", R.drawable.ic_kartpad_speaker) {
+                    closeKartPadMenu(::showSoundSettings)
+                },
                 MenuRow("Game Data & Saves", R.drawable.ic_kartpad_folder, submenu = true) {
                     showGameDataMenu()
                 },
@@ -604,6 +689,9 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Controller Player Setup…", R.drawable.ic_kartpad_gamecontroller) {
                 closeKartPadMenu(::showControllerPlayers)
             },
+            MenuRow("Shake to Trick…", R.drawable.ic_kartpad_gyroscope) {
+                closeKartPadMenu(::showShakeTricks)
+            },
             MenuRow("Motion Steering…", R.drawable.ic_kartpad_gyroscope) {
                 closeKartPadMenu(::showMotionSteering)
             },
@@ -624,6 +712,7 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
             MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
             MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true) { closeKartPadMenu(::showFpsSizeSettings) },
+            MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAppIconSettings) },
             MenuRow("Android Graphics Diagnostics…", R.drawable.ic_kartpad_display) { closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) } },
         ), showBack = true,
     )
@@ -634,8 +723,8 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Time Trial Ghosts (.rkg)…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showGhostManager) },
             MenuRow("Manage Saves…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showSaveManager) },
             MenuRow("Manage Retro Rewind…", R.drawable.ic_kartpad_gobackward) { closeKartPadMenu { startActivity(Intent(this, RetroRewindInstallActivity::class.java)) } },
-            MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT) } },
             MenuRow("Import from Extracted Folder…", R.drawable.ic_kartpad_folder) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT_FOLDER) } },
+            MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT) } },
             MenuRow("Remove Stored Game Data…", R.drawable.ic_kartpad_trash) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_REMOVE) } },
         ), showBack = true,
     )
@@ -782,6 +871,74 @@ class KartPadActivity : SDLActivity() {
             .show()
     }
 
+    /** Music and game-sound levels (#411). Off by default: everything plays at full volume. */
+    private fun showSoundSettings() {
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(4), dp(18), dp(4))
+        }
+        val custom = Switch(this).apply {
+            text = "Adjust music and game sounds"
+            setTextColor(Color.WHITE)
+            isChecked = KartPadSoundSettings.enabled(this@KartPadActivity)
+            contentDescription = "Adjust music and game sounds separately"
+        }
+        val hint = settingsLabel(
+            "When this is off, everything plays at full volume. Turn it on to lower or mute the music, the game sounds, or both.",
+        ).apply { textSize = 14f }
+        val musicLabel = settingsLabel("")
+        val music = SeekBar(this).apply {
+            max = 100
+            progress = KartPadSoundSettings.musicPercent(this@KartPadActivity)
+            contentDescription = "Music volume"
+        }
+        val soundsLabel = settingsLabel("")
+        val sounds = SeekBar(this).apply {
+            max = 100
+            progress = KartPadSoundSettings.soundsPercent(this@KartPadActivity)
+            contentDescription = "Game sounds volume: effects, voices and menus"
+        }
+        fun refresh() {
+            musicLabel.text = if (music.progress == 0) "Music: off" else "Music: ${music.progress}%"
+            soundsLabel.text = if (sounds.progress == 0) "Game sounds: off" else "Game sounds: ${sounds.progress}%"
+            for (view in listOf(musicLabel, music, soundsLabel, sounds)) {
+                view.isEnabled = custom.isChecked
+                view.alpha = if (custom.isChecked) 1f else 0.4f
+            }
+        }
+        fun changed() {
+            KartPadSoundSettings.set(this, custom.isChecked, music.progress, sounds.progress)
+            applySoundLevels(persist = false)
+            refresh()
+        }
+        custom.setOnCheckedChangeListener { _, _ -> changed() }
+        music.setOnSeekBarChangeListener(simpleSeekListener { changed() })
+        sounds.setOnSeekBarChangeListener(simpleSeekListener { changed() })
+        refresh()
+        content.addView(custom)
+        content.addView(hint)
+        content.addView(musicLabel)
+        content.addView(music)
+        content.addView(soundsLabel)
+        content.addView(sounds)
+        AlertDialog.Builder(this)
+            .setTitle("Sound")
+            .setView(ScrollView(this).apply { addView(content) })
+            .setNegativeButton("Done", null)
+            // Saved once, when the dialog closes; the runtime applies the saved levels at every start.
+            .setOnDismissListener { applySoundLevels(persist = true) }
+            .show()
+    }
+
+    private fun applySoundLevels(persist: Boolean) {
+        val (music, sounds) = KartPadSoundSettings.effective(this)
+        nativeApplySoundLevels(music, sounds)
+        if (persist) {
+            runCatching { KartPadSoundSettings.persist(filesDir, music, sounds) }
+                .onFailure { Log.w("KartPadSound", "Sound levels were not saved", it) }
+        }
+    }
+
     private fun confirmSwitchGameVersion() {
         AlertDialog.Builder(this)
             .setTitle("Switch Game Version")
@@ -795,8 +952,8 @@ class KartPadActivity : SDLActivity() {
 
     private fun restartToGameSelector() {
         kartPadOverlay.clearTouchInput()
-        val chooser = Intent(this, KartPadLaunchActivity::class.java).apply {
-            putExtra(KartPadLaunchActivity.EXTRA_SKIP_PREFERRED_GAME, true)
+        val chooser = Intent(this, KartPadChooserActivity::class.java).apply {
+            putExtra(KartPadChooserActivity.EXTRA_SKIP_PREFERRED_GAME, true)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         startActivity(chooser)
@@ -831,7 +988,27 @@ class KartPadActivity : SDLActivity() {
             .setSingleChoiceItems(labels, KartPadTouchSettings.aspectMode(this)) { dialog, which ->
                 KartPadTouchSettings.setAspectMode(this, which)
                 applyDisplaySettings()
+                hideGameSystemBars()
                 dialog.dismiss()
+            }
+            .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showAppIconSettings() {
+        val current = KartPadAppIcon.current(this)
+        AlertDialog.Builder(this)
+            .setTitle("App Icon")
+            .setSingleChoiceItems(KartPadAppIcon.titles, current) { dialog, which ->
+                dialog.dismiss()
+                if (which == current) return@setSingleChoiceItems
+                // Android closes the app when its launcher entry changes, so ask first.
+                AlertDialog.Builder(this)
+                    .setTitle("Change the App Icon?")
+                    .setMessage("KartPad closes to apply the new icon, so finish your race first. Your saves and settings stay.")
+                    .setPositiveButton("Change Icon") { _, _ -> KartPadAppIcon.select(this, which) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
             .setNegativeButton("Back", null)
             .show()
@@ -967,7 +1144,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun playerEmptyLabel(player: Int): String = if (player == 0) {
-        "Automatic when one controller is connected"
+        "Automatic"
     } else {
         "No controller"
     }
@@ -1082,6 +1259,32 @@ class KartPadActivity : SDLActivity() {
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
         nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
+    }
+
+    private fun showShakeTricks() {
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(4), dp(24), dp(8))
+            addView(settingsLabel(if (motionSteering.shakeSensorAvailable) {
+                "Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. " +
+                    "Works without tilt steering. Physical controllers take priority."
+            } else {
+                "Shake input is unavailable on this device. You can still use D-pad Up."
+            }))
+            addView(Switch(this@KartPadActivity).apply {
+                text = "Shake to Trick"
+                isChecked = motionSteering.shakeTricksEnabled
+                isEnabled = motionSteering.shakeSensorAvailable
+                setOnCheckedChangeListener { _, checked ->
+                    kartPadOverlay.clearTouchInput()
+                    motionSteering.setShakeTricksEnabled(checked)
+                    // The dialog owns focus; sampling resumes when gameplay regains it.
+                    motionSteering.stop()
+                }
+            })
+        }
+        AlertDialog.Builder(this).setTitle("Shake to Trick").setView(content)
+            .setPositiveButton("Continue Playing", null).show()
     }
 
     private fun showMotionSteering() {
@@ -1879,6 +2082,7 @@ class KartPadActivity : SDLActivity() {
             appendLine("Retro version state: ${context.opt("retro_version_state")}")
             appendLine("KartPad source revision: ${provenance?.optString("source_revision") ?: "unknown"}")
             appendLine("Source dirty: ${provenance?.opt("source_dirty") ?: "unknown"}")
+            appendLine(KartPadControllerLog.summary())
             append("Source revision does not identify upstream dependencies or prove binary identity.")
         }
         startActivity(Intent(this, KartPadProblemReportActivity::class.java).apply {
@@ -2354,6 +2558,24 @@ class KartPadActivity : SDLActivity() {
                 Os.unsetenv("KARTPAD_RKG_KEYBOARD_STEER_V2")
                 Os.unsetenv("KARTPAD_FULL_SYNTHETIC_STICK_V2")
             }
+            // Cup harness (#131): finish every race after N frames so a whole Grand Prix,
+            // including the trophy ceremony, runs unattended on an emulator.
+            // File contents: a frame count, optionally followed by "first" to finish in 1st.
+            val finishSpec = File(filesDir, DEBUG_RKG_FORCE_FINISH_RELATIVE_PATH)
+                .takeIf { it.isFile }?.readText()?.trim()?.split(Regex("\\s+")).orEmpty()
+            val finishFrames = finishSpec.firstOrNull()?.toIntOrNull()
+            if (finishFrames != null && finishFrames > 0) {
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_V2", "1", true)
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_FRAME_V2", finishFrames.toString(), true)
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_EACH_RACE_V2", "1", true)
+                Os.setenv("KARTPAD_RKG_FORCE_FINISH_FIRST_V2", if ("first" in finishSpec) "1" else "0", true)
+                Os.unsetenv("KARTPAD_RKG_FORCE_METADATA_V2")
+            } else {
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_V2")
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_FRAME_V2")
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_EACH_RACE_V2")
+                Os.unsetenv("KARTPAD_RKG_FORCE_FINISH_FIRST_V2")
+            }
             Log.i(TAG, "Debug app-private RKG input enabled; keyboard steer=$keyboardSteer")
         } else {
             Os.unsetenv("KARTPAD_RKG_INPUT_V2")
@@ -2470,6 +2692,8 @@ class KartPadActivity : SDLActivity() {
         showFps: Boolean, fpsSize: Int, aspectMode: Int, resolutionScale: Float,
     )
 
+    private external fun nativeApplySoundLevels(music: Float, sounds: Float)
+
     private external fun nativeTestDiagnosticCrash()
     private external fun nativeEnableActivityRecreation()
 
@@ -2511,6 +2735,8 @@ class KartPadActivity : SDLActivity() {
         private const val DEBUG_RKG_RELATIVE_PATH = "KartPad/Diagnostics/TestInput.rkg"
         private const val DEBUG_RKG_KEYBOARD_STEER_RELATIVE_PATH =
             "KartPad/Diagnostics/TestInput.keyboard-steer"
+        private const val DEBUG_RKG_FORCE_FINISH_RELATIVE_PATH =
+            "KartPad/Diagnostics/TestInput.finish-frames"
         private const val DEBUG_STATE_TRACE_MARKER_RELATIVE_PATH =
             "KartPad/Diagnostics/StateTrace.enable"
         private const val DEBUG_STATE_TRACE_RELATIVE_PATH =

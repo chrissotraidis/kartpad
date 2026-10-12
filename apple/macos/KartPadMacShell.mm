@@ -1,7 +1,9 @@
 #import "../mobile/KartPadPrivateServerSettings.h"
 #import "KartPadMacShell.h"
 #import "KartPadMiiManager.h"
+#import "KartPadGameFiles.h"
 #import "KartPadWiimotePairing.h"
+#include "KartPadUpdateCheck.inc.mm"
 
 #import <AppKit/AppKit.h>
 #import <CommonCrypto/CommonDigest.h>
@@ -268,7 +270,9 @@ static NSString *ValidateExtractedRoot(NSString *root, NSError **error) {
       @"16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d"]) {
     return @"This game data is modified (for example Wiimmfi-patched or pre-patched). Please use a clean RMCP01 dump.";
   }
-  return nil;
+  return KartPadIncompleteGameFilesError(root,
+      @"If it's in iCloud Drive, Control-click the folder in Finder, choose Download Now and wait "
+      @"for it to finish. Then choose it again.");
 }
 
 static NSString *ConfiguredGameDataRoot() {
@@ -1068,6 +1072,40 @@ static bool KPFullscreenAcrossNotch() {
       @"https://github.com/patchzyy/Wiicompiled"]];
 }
 
+- (void)showUpdateAlert:(NSDictionary<NSString *, NSString *> *)update checked:(BOOL)checked {
+  NSAlert *alert = [NSAlert new];
+  if (update != nil) {
+    alert.messageText = [NSString stringWithFormat:@"KartPad %@ Is Available", update[@"version"]];
+    alert.informativeText = @"Build it with PadMint, quit KartPad and replace the app in Applications. Your settings and saves stay.";
+    [alert addButtonWithTitle:@"What's New"];
+    [alert addButtonWithTitle:@"Not Now"];
+    if ([alert runModal] == NSAlertFirstButtonReturn) {
+      NSURL *page = [NSURL URLWithString:update[@"page"]];
+      if (page != nil) [NSWorkspace.sharedWorkspace openURL:page];
+    }
+    return;
+  }
+  alert.messageText = checked ? @"KartPad Is Up to Date" : @"Could Not Check for Updates";
+  alert.informativeText = checked
+      ? [NSString stringWithFormat:@"KartPad %@ is the latest release.",
+          [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @""]
+      : @"Check your internet connection and try again, or see the releases page on GitHub.";
+  [alert addButtonWithTitle:@"OK"];
+  [alert runModal];
+}
+
+- (void)checkForUpdates:(id)sender {
+  (void)sender;
+  NSDictionary<NSString *, NSString *> *known = KartPadKnownUpdate();
+  if (known != nil) {
+    [self showUpdateAlert:known checked:YES];
+    return;
+  }
+  KartPadRefreshUpdate(YES, ^(NSDictionary<NSString *, NSString *> *update, BOOL checked) {
+    [self showUpdateAlert:update checked:checked];
+  });
+}
+
 - (void)saveDiagnostics:(id)sender {
   (void)sender;
   NSSavePanel *panel = NSSavePanel.savePanel;
@@ -1344,6 +1382,19 @@ static void InstallMenu() {
   NSMenuItem *guide = [helpMenu addItemWithTitle:@"Reporting and Existing Issues"
       action:@selector(showReportingGuide:) keyEquivalent:@""];
   guide.target = Controller();
+  NSMenuItem *updates = [helpMenu addItemWithTitle:@"Check for Updates…"
+      action:@selector(checkForUpdates:) keyEquivalent:@""];
+  updates.target = Controller();
+  void (^titleUpdates)(NSDictionary<NSString *, NSString *> *) = ^(NSDictionary<NSString *, NSString *> *update) {
+    updates.title = update != nil
+        ? [NSString stringWithFormat:@"KartPad %@ Is Available…", update[@"version"]]
+        : @"Check for Updates…";
+  };
+  titleUpdates(KartPadKnownUpdate());
+  KartPadRefreshUpdate(NO, ^(NSDictionary<NSString *, NSString *> *update, BOOL checked) {
+    (void)checked;
+    titleUpdates(update);
+  });
   [helpMenu addItem:NSMenuItem.separatorItem];
   NSMenuItem *upstream = [helpMenu addItemWithTitle:@"Built on WiiCompiled"
       action:@selector(showWiiCompiled:) keyEquivalent:@""];

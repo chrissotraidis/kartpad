@@ -15,8 +15,8 @@ internal object RetroRewindSpaceProbe {
                 filesDirectory.usableSpace,
                 cacheDirectory.usableSpace,
                 sameStore,
-                RetroRewindRelease.ARCHIVE_BYTES,
-                RetroRewindRelease.MAXIMUM_EXPANDED_BYTES,
+                RetroRewindRelease.ARCHIVE_BYTES + RetroRewindRelease.UPDATE_BYTES,
+                RetroRewindRelease.MAXIMUM_EXPANDED_BYTES + RetroRewindRelease.UPDATE_MAXIMUM_EXPANDED_BYTES,
                 RetroRewindArchiveDownload.reusableBytes(cacheDirectory.toPath()),
             )
         } catch (_: ErrnoException) {

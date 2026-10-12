@@ -1,9 +1,12 @@
 # KartPad documentation
 
+**[To-do: things we decided to do later](TODO.md)**
+
 [Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
 [Canonical active queue](MAINTENANCE-BOARD.md).
 
-For downloads, start with the [project README](../README.md#downloads).
+For downloads, start with [Get KartPad](../README.md#get-kartpad) in the
+project README.
 The [expandable FAQ](../README.md#frequently-asked-questions) answers common
 setup, controls, compatibility and troubleshooting questions.
 Guides below describe current workflows; dated records describe only the build
@@ -26,15 +29,15 @@ and observations named in them.
 | Build for Android | [Android source builds](../android/README.md), [architecture](ANDROID.md) |
 | Test hardware | [iPhone/iPad](PHYSICAL-ACCEPTANCE.md), [Android handoff](ANDROID-PHYSICAL-HANDOFF.md), [tvOS](TVOS-TESTING.md) |
 | Work on platform behavior | [tvOS architecture](TVOS.md), [external displays](EXTERNAL-DISPLAYS.md), [UIKit menu repair](IOS-THREE-DOT-MENU-FIX.md) |
-| Target Android FPS, stalls and geometry | [Investigation handoff](ANDROID-PERFORMANCE-HANDOFF.md) |
+| Android speed (#339): where we stand and what to try next | [Performance handoff](ANDROID-PERFORMANCE-HANDOFF.md), bench in [tools/android-perf](../tools/android-perf/README.md) |
 | Investigate runtime correctness | [Portability](PORTABILITY.md), [PPC semantics](SEMANTICS.md), [performance](PERF.md) |
 
 ## Maintain and release
 
 | Task | Guide |
 | --- | --- |
-| Resume current work | [Handoff](HANDOFF.md), [maintenance workflow](MAINTENANCE.md), [work/test board](MAINTENANCE-BOARD.md) |
-| Check requirements | [PRD](PRD.md), [engineering goal loop](GOAL-LOOP.md), [Android goal loop](ANDROID-GOAL-LOOP.md) |
+| Resume current work | [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md), [current goal loop](CURRENT-LOOP.md), [handoff](HANDOFF.md), [maintenance workflow](MAINTENANCE.md), [work/test board](MAINTENANCE-BOARD.md) |
+| Check requirements | [PRD](PRD.md); original [engineering](GOAL-LOOP.md) and [Android](ANDROID-GOAL-LOOP.md) goal loops (history) |
 | Prepare a release | [Release checklist](RELEASE-CHECKLIST.md), [Android publication](RELEASING_ANDROID.md), [upstream updates](UPSTREAM_UPDATES.md) |
 | Plan deferred work | [Technical debt](TECH-DEBT.md), [future features](FUTURE-FEATURES.md), [research](RESEARCH.md) |
 | Review attribution and rights | [Rights and licenses](../RIGHTS_AND_LICENSES.md), [third-party notices](../THIRD_PARTY_NOTICES.md), [artwork provenance](../branding/PROVENANCE.md) |

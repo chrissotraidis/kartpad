@@ -89,6 +89,7 @@ uint32_t process(const uint8_t* data, uint32_t size, bool) {
   while(count<size && gfx::used<2) {decoded.push_back(data[count++]);++gfx::used;}
   return count;
 }
+void process_all(const uint8_t* data, uint32_t size, bool bigEndian);
 ''' + function + r'''
 }
 }
@@ -100,6 +101,12 @@ int main() {
   drain();
   assert((decoded==std::vector<uint8_t>{1,2,3,4,5,6,7}));
   assert(gfx::splits==3 && detail::sBufferSize==0);
+  // A display list that overflows the staging batch submits it and draws the rest (#288).
+  gfx::splits=0;gfx::used=0;decoded.clear();
+  uint8_t list[]{8,9,10,11,12};
+  process_all(list, sizeof(list), true);
+  assert((decoded==std::vector<uint8_t>{8,9,10,11,12}));
+  assert(gfx::splits==2);
   gfx::splits=0;gfx::used=0;decoded.clear();failRetry=true;
   detail::sBufferSize=sizeof(commands);
   bool rejected=false;

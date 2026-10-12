@@ -13,6 +13,16 @@ matchmaking and live racing are recorded in the
 Complete public-service results/reconnect and broad physical-device coverage
 remain open; the historical service outage below is not a current blocker.
 
+## Mobile data
+
+On some mobile networks, signing in works but finding a room fails with error
+86420, while the same phone works on Wi-Fi or with a VPN
+([#405](https://github.com/chrissotraidis/kartpad/issues/405), earlier #206).
+Mario Kart Wii connects players directly to each other, and many carriers put
+customers behind shared addresses (carrier-grade NAT) that block those incoming
+connections. KartPad's network code is IPv4 only and has no relay server, so
+it can't work around this; use Wi-Fi or a VPN.
+
 ## Wiimmfi and console identity
 
 Wiimmfi for Original Mario Kart Wii is an open compatibility request
@@ -29,7 +39,7 @@ Issue [#94](https://github.com/chrissotraidis/kartpad/issues/94) exposed a separ
 numeric serial defect. The first corrected packages were Android `v0.4.10-android.1`,
 iPhone/iPad `v0.4.11`, Mac `v0.4.11-macos.1`, and experimental Apple TV
 `v0.4.11-tvos.1`; later previews retain the correction. See
-[current downloads](../README.md#downloads). Older affected packages should remain offline. The client correction
+[current downloads](../README.md#get-kartpad). Older affected packages should remain offline. The client correction
 preserves identities and saves; it cannot remove bad historical CSNums or
 reverse existing service bans. Affected histories require service-admin review,
 not save deletion or identity regeneration. See the

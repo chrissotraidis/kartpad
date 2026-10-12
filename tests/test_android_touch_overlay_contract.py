@@ -589,7 +589,8 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         storage = (REPO / "android/app/src/main/java/dev/kartpad/android/KartPadMiiStorage.kt").read_text()
         native = (REPO / "android/app/src/main/cpp/kartpad_mii_jni.cpp").read_text()
         cmake = (REPO / "android/app/src/main/cpp/CMakeLists.txt").read_text()
-        self.assertIn("KartPadMiiStorage.applyPending(filesDir)", activity)
+        self.assertIn("saveRestoreStartupError = saveRestoreStartupError ?: KartPadMiiStorage.applyPending(filesDir)", activity)
+        self.assertIn("saveRestoreStartupError?.let { throw IllegalStateException(it) }", activity)
         self.assertLess(
             activity.index("KartPadMiiStorage.applyPending(filesDir)"),
             activity.index("super.onCreate(savedInstanceState)"),

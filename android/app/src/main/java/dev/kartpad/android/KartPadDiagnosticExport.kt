@@ -11,6 +11,7 @@ import java.util.zip.ZipOutputStream
 internal object KartPadDiagnosticExport {
     private const val MAX_FILE_BYTES = 4L * 1024 * 1024
     private const val MAX_FILES = 12
+    private const val DRAW_SELF_CHECK = "KartPad draw self-check:"
 
     data class Session(val id: String, val modified: Long)
 
@@ -54,6 +55,15 @@ internal object KartPadDiagnosticExport {
         }
     }.getOrElse { "Health journal unavailable; session and OS evidence retained.\n".toByteArray() }
 
+    /** The session's last draw self-check line, shown first because a long console's middle is cut. */
+    private fun drawSelfCheck(directory: File?): String = runCatching {
+        val console = directory?.let { File(it, "console.log") }
+        if (console == null || !console.isFile || console.absoluteFile != console.canonicalFile) return@runCatching null
+        var last: String? = null
+        console.useLines { lines -> lines.forEach { if (it.contains(DRAW_SELF_CHECK)) last = it.substringAfter(DRAW_SELF_CHECK).trim() } }
+        last
+    }.getOrNull() ?: "not run in this session"
+
     /** Selected runtime session plus labelled OS/health history; never saves or identity files. */
     fun writeText(context: Context, destination: Uri, sessionId: String?) {
         val root = logsRoot(context)
@@ -74,6 +84,7 @@ internal object KartPadDiagnosticExport {
                 appendLine("Export-time app: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 appendLine("Export-time device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}; API ${android.os.Build.VERSION.SDK_INT}")
                 appendLine("Selected session: ${session?.id ?: "no runtime session"}; console last written (Unix ms): ${session?.modified ?: "unavailable"}")
+                appendLine("Draw self-check: ${drawSelfCheck(directory)}")
                 appendLine("Older session version must be read from its console header; otherwise unknown.")
                 appendLine("OS exit history below may cover other sessions; match timestamp and recorded build/profile. Session text is capped at 256 KiB per file.")
             }.toByteArray())
@@ -132,6 +143,7 @@ internal object KartPadDiagnosticExport {
                 appendLine("report-context.json describes export time, not the source/version of older logs.")
                 appendLine("The selected console.log header is retained. If it has no version, the session runtime version is unknown.")
                 appendLine("Selected game session: ${session?.id ?: "none available"}")
+                appendLine("Draw self-check: ${drawSelfCheck(directory)}")
                 appendLine("Session console last-written time (Unix ms): ${session?.modified ?: "unavailable"}")
                 appendLine("Read Logs/${session?.id ?: "<no session>"}/console.log and any crash text from the same folder.")
                 appendLine("Runtime logs are from this session. OS-exits separately contains up to three recent app ANR/native-crash traces and their timestamps, when Android retains them.")

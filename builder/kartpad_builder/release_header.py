@@ -15,6 +15,7 @@ def render_retro_rewind_header(profile_data: dict) -> str:
     validate_profile(profile_data, "release profile")
     config = profile_data["retroRewind"]
     archive = config["archive"]
+    update = config.get("updateArchive", {})
     code = config["codePul"]
     xml = config["riivolutionXml"]
     values = {
@@ -22,6 +23,8 @@ def render_retro_rewind_header(profile_data: dict) -> str:
         "KARTPAD_RR_VERSION_MANIFEST_URL": config["versionManifestUrl"],
         "KARTPAD_RR_ROOT": config["root"],
         "KARTPAD_RR_ARCHIVE_URL": archive["url"],
+        "KARTPAD_RR_UPDATE_URL": update.get("url", ""),
+        "KARTPAD_RR_UPDATE_SHA256": update.get("sha256", ""),
         "KARTPAD_RR_ARCHIVE_SHA256": archive["sha256"],
         "KARTPAD_RR_CODE_PUL_PATH": code["path"],
         "KARTPAD_RR_CODE_PUL_SHA256": code["sha256"],
@@ -30,6 +33,8 @@ def render_retro_rewind_header(profile_data: dict) -> str:
     }
     numbers = {
         "KARTPAD_RR_ARCHIVE_BYTES": archive["bytes"],
+        "KARTPAD_RR_UPDATE_BYTES": update.get("bytes", 0),
+        "KARTPAD_RR_UPDATE_MAXIMUM_EXPANDED_BYTES": update.get("maximumExpandedBytes", 0),
         "KARTPAD_RR_MAXIMUM_EXPANDED_BYTES": archive["maximumExpandedBytes"],
         "KARTPAD_RR_CODE_PUL_BYTES": code["bytes"],
         "KARTPAD_RR_XML_BYTES": xml["bytes"],

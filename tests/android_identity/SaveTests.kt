@@ -7,6 +7,7 @@ import java.util.zip.CRC32
 
 /** Exercises real save storage on synthetic files, including interrupted writes. */
 fun testSaveProfiles(fixtures: File) {
+    testSavePublicationFailures(fixtures)
     val root = Files.createTempDirectory("kartpad-save-profiles-").toFile()
     val sample = File(fixtures, "save.dat").readBytes()
     fun save(marker: Int) = sample.copyOf().apply saveBytes@{
@@ -111,11 +112,81 @@ fun testSaveProfiles(fixtures: File) {
         ghostRequest.writeBytes(ghostRequest.readBytes().apply { this[30] = (this[30].toInt() xor 1).toByte() })
         check(KartPadSaveStorage.applyPending(root) != null)
         check(KartPadSaveStorage.readActive(root).contentEquals(ghostApplied))
+        val retainedBackups = backups().associateWith { it.readBytes() }
         KartPadSaveStorage.cancelPendingGhost(root)
         check(!KartPadSaveStorage.hasPendingGhost(root))
+        check(KartPadSaveStorage.applyPending(root) == null)
+        check(KartPadSaveStorage.readActive(root).contentEquals(ghostApplied))
+        check(backups().toSet() == retainedBackups.keys)
+        check(retainedBackups.all { (file, bytes) -> file.readBytes().contentEquals(bytes) })
         println("Android save profiles passed: all three targets, isolated export/restore, backups, legacy pending, invalid inputs, identity conflicts, interrupted publication, first import")
     } finally {
         AtomicFile.failSuffix = null
         root.deleteRecursively()
     }
+}
+
+/** A logged AtomicFile failure must never count as a published save or backup. */
+private fun testSavePublicationFailures(fixtures: File) {
+    val sample = File(fixtures, "save.dat").readBytes()
+    fun marked(marker: Int) = sample.copyOf().apply bytes@{
+        this[0x100] = marker.toByte()
+        val crc = CRC32().apply { update(this@bytes, 0, 0x27ffc) }.value
+        repeat(4) { this[0x27ffc + it] = (crc shr (24 - it * 8)).toByte() }
+    }
+    for (ghost in listOf(true, false)) for (fault in listOf("backup", "publish", "stage", "stage-sync", "publish-sync", "backup-directory-sync", "publish-directory-sync")) {
+        val root = Files.createTempDirectory("kartpad-save-publication-").toFile()
+        val before = marked(91)
+        val replacement = if (ghost) before.copyOf().apply { this[0x78000] = 42 } else marked(92)
+        val active = KartPadSaveStorage.active(root)
+        val pending = File(root, if (ghost) "KartPad/PendingGhost.bin" else "KartPad/PendingSaves/rksys.dat")
+        fun stage() {
+            if (ghost) KartPadSaveStorage.writePendingGhost(root, before, replacement, 0, 0)
+            else KartPadSaveStorage.writePending(root, replacement)
+        }
+        try {
+            active.parentFile.mkdirs(); active.writeBytes(before)
+            val other = KartPadSaveStorage.active(root, "retro_rewind")
+            other.parentFile.mkdirs(); other.writeBytes(marked(93))
+            if (fault.startsWith("stage")) {
+                if (fault == "stage") AtomicFile.silentFailSuffix = pending.path
+                else android.system.Os.failSyncSuffix = pending.path
+                check(runCatching { stage() }.isFailure) { "$ghost/$fault: failed staging reported success" }
+                check(!pending.exists())
+                check(active.readBytes().contentEquals(before))
+                AtomicFile.silentFailSuffix = null; android.system.Os.failSyncSuffix = null
+                stage()
+            } else {
+                stage()
+                val staged = pending.readBytes()
+                if (fault == "backup") AtomicFile.silentBackupOnly = true
+                if (fault == "publish") AtomicFile.silentFailSuffix = active.path
+                if (fault == "publish-sync") android.system.Os.failSyncSuffix = active.path
+                if (fault == "backup-directory-sync") android.system.Os.failSyncSuffix = "/SaveBackups"
+                if (fault == "publish-directory-sync") android.system.Os.failSyncSuffix = active.parentFile.path
+                check(KartPadSaveStorage.applyPending(root) != null) { "$ghost/$fault: failed apply reported success" }
+                check(pending.readBytes().contentEquals(staged)) { "$ghost/$fault: pending request lost" }
+                if (fault == "publish-directory-sync") {
+                    // Rename succeeded but its directory barrier failed. Keep blocking on retry,
+                    // including a ghost slot that already contains the desired bytes.
+                    KartPadSaveStorage.validate(active.readBytes())
+                    check(KartPadSaveStorage.applyPending(root) != null)
+                    check(pending.readBytes().contentEquals(staged))
+                    check(File(root, "KartPad/SaveBackups").listFiles().orEmpty().any { it.readBytes().contentEquals(before) })
+                } else check(active.readBytes().contentEquals(before)) { "$ghost/$fault: existing progress replaced" }
+                AtomicFile.silentBackupOnly = false; AtomicFile.silentFailSuffix = null; android.system.Os.failSyncSuffix = null
+            }
+            check(KartPadSaveStorage.applyPending(root) == null) { "$ghost/$fault: retry failed" }
+            check(!pending.exists())
+            val after = KartPadSaveStorage.readActive(root)
+            if (ghost) check(after[0x100] == 91.toByte() && after[0x78000] == 42.toByte())
+            else check(after.contentEquals(replacement))
+            check(other.readBytes().contentEquals(marked(93)))
+            check(File(root, "KartPad/SaveBackups").listFiles().orEmpty().any { it.readBytes().contentEquals(before) })
+        } finally {
+            AtomicFile.silentBackupOnly = false; AtomicFile.silentFailSuffix = null; android.system.Os.failSyncSuffix = null
+            root.deleteRecursively()
+        }
+    }
+    println("Save/ghost publication passed: silent staging, backup and replacement failures; checked sync; exact progress/request preservation and successful retry")
 }
