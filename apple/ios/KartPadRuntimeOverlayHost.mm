@@ -224,6 +224,48 @@ UIViewController *KartPadVisibleViewController(UIWindow *window) {
   return controller;
 }
 
+// UIKit silently drops a presentation made while a document picker is still on screen
+// or closing. An import that waited on that alert then never reported back, so tapping
+// Open looked like it did nothing (#380). Present once the picker has gone, then run
+// `then` exactly once: after the alert appears, or without it if it can't be shown.
+void KartPadPresentAfterPickerCloses(UIViewController *base, UIViewController *alert,
+                                     NSInteger attemptsLeft, void (^then)(void)) {
+  UIViewController *top = base;
+  BOOL busy = NO;
+  while (top.presentedViewController != nil) {
+    top = top.presentedViewController;
+    busy = busy || top.isBeingDismissed || top.isBeingPresented ||
+        [top isKindOfClass:UIDocumentPickerViewController.class];
+  }
+  if (busy && attemptsLeft > 0) {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+      KartPadPresentAfterPickerCloses(base, alert, attemptsLeft - 1, then);
+    });
+    return;
+  }
+  __block BOOL ran = NO;
+  void (^once)(void) = ^{
+    if (ran) return;
+    ran = YES;
+    then();
+  };
+  if (!busy) {
+    [top presentViewController:alert animated:YES completion:once];
+  }
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
+                 dispatch_get_main_queue(), once);
+}
+
+// Run `completion` after the alert closes, or straight away if it was never shown.
+void KartPadDismissThen(UIViewController *alert, void (^completion)(void)) {
+  if (alert.presentingViewController != nil && !alert.isBeingDismissed) {
+    [alert dismissViewControllerAnimated:YES completion:completion];
+  } else {
+    completion();
+  }
+}
+
 UIScrollView *KartPadScrollableSettingsView(UIView *root) {
   if ([root isKindOfClass:UIScrollView.class]) {
     UIScrollView *scroll = (UIScrollView *)root;
@@ -1211,6 +1253,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 - (void)showOptions;
 - (void)showGamePackRequired;
 - (void)presentGameDataPicker;
+- (void)presentGameDataFolderPicker;
 - (void)showRetroRewindOptions;
 - (void)checkRetroRewindVersionAndContinue;
 - (void)showRetroVersionCheckFailure:(NSString *)detail;
@@ -1575,32 +1618,33 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
       [UIAlertController alertControllerWithTitle:@"Importing Game Data"
                                           message:@"Validating your selected game data…"
                                    preferredStyle:UIAlertControllerStyleAlert];
-  [self.root presentViewController:progress animated:YES completion:nil];
   __weak KartPadFirstLaunchHost *weakSelf = self;
-  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-    NSError *error = KartPadPerformGameDataImport(
-        url, ^(NSString *status, double fraction) {
-          progress.message = [NSString stringWithFormat:@"%@\n%.0f%%", status,
-                                                       fraction * 100.0];
-        });
-    if (deleteAfterwards) {
-      [NSFileManager.defaultManager removeItemAtURL:url error:nil];
-    }
-    dispatch_async(dispatch_get_main_queue(), ^{
-      KartPadFirstLaunchHost *strongSelf = weakSelf;
-      if (strongSelf == nil) {
-        return;
+  KartPadPresentAfterPickerCloses(self.root, progress, 50, ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+      NSError *error = KartPadPerformGameDataImport(
+          url, ^(NSString *status, double fraction) {
+            progress.message = [NSString stringWithFormat:@"%@\n%.0f%%", status,
+                                                         fraction * 100.0];
+          });
+      if (deleteAfterwards) {
+        [NSFileManager.defaultManager removeItemAtURL:url error:nil];
       }
-      [progress dismissViewControllerAnimated:YES completion:^{
-        if (error != nil) {
-          [strongSelf showMessage:@"Game Data Import Failed"
-                           detail:error.localizedDescription completion:^{
-            [strongSelf showOptions];
-          }];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        KartPadFirstLaunchHost *strongSelf = weakSelf;
+        if (strongSelf == nil) {
           return;
         }
-        [strongSelf completeSelectedMode];
-      }];
+        KartPadDismissThen(progress, ^{
+          if (error != nil) {
+            [strongSelf showMessage:@"Game Data Import Failed"
+                             detail:error.localizedDescription completion:^{
+              [strongSelf showOptions];
+            }];
+            return;
+          }
+          [strongSelf completeSelectedMode];
+        });
+      });
     });
   });
 }
@@ -1610,7 +1654,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   NSArray<NSURL *> *roots = KartPadGameDataRootsInDocuments(&error);
   if (roots.count == 0) {
     NSLog(@"[KartPad] %@", KartPadDocumentsFolderScanDetail(error));
-    [self presentGameDataPicker];
+    [self presentGameDataFolderPicker];
     return;
   }
   if (roots.count == 1) {
@@ -1650,6 +1694,19 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   UIDocumentPickerViewController *picker =
       [[UIDocumentPickerViewController alloc]
           initForOpeningContentTypes:KartPadGameDataContentTypes() asCopy:NO];
+  picker.delegate = self;
+  picker.allowsMultipleSelection = NO;
+  [self.root presentViewController:picker animated:YES completion:nil];
+}
+
+// Extracted folders get a picker that only chooses folders: on devices, a picker that
+// also accepts files can leave Open doing nothing inside the chosen folder (#380).
+- (void)presentGameDataFolderPicker {
+  self.choosingRetroArchive = NO;
+  self.choosingGameDataCopy = NO;
+  UIDocumentPickerViewController *picker =
+      [[UIDocumentPickerViewController alloc]
+          initForOpeningContentTypes:@[UTTypeFolder] asCopy:NO];
   picker.delegate = self;
   picker.allowsMultipleSelection = NO;
   [self.root presentViewController:picker animated:YES completion:nil];
@@ -4059,37 +4116,38 @@ static void KartPadApplySoundLevels(BOOL persist) {
                                           message:@"Validating the extracted disc…"
                                    preferredStyle:UIAlertControllerStyleAlert];
   _gameDataProgressAlert = progress;
-  [controller presentViewController:progress animated:YES completion:nil];
 
   __weak KartPadRuntimeOverlayHost *weakSelf = self;
-  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-    NSError *workError = KartPadPerformGameDataImport(
-        url, ^(NSString *status, double fraction) {
-          KartPadRuntimeOverlayHost *strongSelf = weakSelf;
-          if (strongSelf != nil && strongSelf->_gameDataProgressAlert != nil) {
-            strongSelf->_gameDataProgressAlert.message =
-                [NSString stringWithFormat:@"%@\n%.0f%%", status, fraction * 100.0];
-          }
-        });
-    if (deleteAfterwards) {
-      [NSFileManager.defaultManager removeItemAtURL:url error:nil];
-    }
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-      KartPadRuntimeOverlayHost *strongSelf = weakSelf;
-      if (strongSelf == nil) {
-        return;
+  KartPadPresentAfterPickerCloses(_window.rootViewController, progress, 50, ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+      NSError *workError = KartPadPerformGameDataImport(
+          url, ^(NSString *status, double fraction) {
+            KartPadRuntimeOverlayHost *strongSelf = weakSelf;
+            if (strongSelf != nil && strongSelf->_gameDataProgressAlert != nil) {
+              strongSelf->_gameDataProgressAlert.message =
+                  [NSString stringWithFormat:@"%@\n%.0f%%", status, fraction * 100.0];
+            }
+          });
+      if (deleteAfterwards) {
+        [NSFileManager.defaultManager removeItemAtURL:url error:nil];
       }
-      [strongSelf->_gameDataProgressAlert dismissViewControllerAnimated:YES completion:^{
-        strongSelf->_gameDataProgressAlert = nil;
-        if (workError != nil) {
-          [strongSelf showIntegrationAlert:@"Game Data Import Failed"
-                                   message:workError.localizedDescription];
+
+      dispatch_async(dispatch_get_main_queue(), ^{
+        KartPadRuntimeOverlayHost *strongSelf = weakSelf;
+        if (strongSelf == nil) {
           return;
         }
-        [strongSelf showIntegrationAlert:@"Game Data Imported"
-                                 message:@"The validated RMCP01 data is stored privately. Close and reopen KartPad to use the new copy."];
-      }];
+        KartPadDismissThen(progress, ^{
+          strongSelf->_gameDataProgressAlert = nil;
+          if (workError != nil) {
+            [strongSelf showIntegrationAlert:@"Game Data Import Failed"
+                                     message:workError.localizedDescription];
+            return;
+          }
+          [strongSelf showIntegrationAlert:@"Game Data Imported"
+                                   message:@"The validated RMCP01 data is stored privately. Close and reopen KartPad to use the new copy."];
+        });
+      });
     });
   });
 }
