@@ -10,11 +10,12 @@ for 0.8.0.
 **Paused on 11 October.** Start from the
 [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md): it records Chris's
 decisions (no test phone) and the proposed plan, which puts the Adreno
-character fix first. Chris approved publishing 0.8.0 on 12 October, so
-KartPad's Mac copy is back in PadMint (0.5.1).
+character fix first. 0.8.0 shipped on 12 October with that fix, and
+PadMint 0.5.1 brings KartPad's Mac copy back.
 
-1. **0.8.0 is out** (12 October), with PadMint 0.5.1. What's left of
-   [Phase 0](#phase-0-publish-080-done) is the hands-on iPad checks.
+1. **0.8.0 is out** (12 October, build 262). What's left of
+   [Phase 0](#phase-0-publish-080-done) is PadMint 0.5.1 and the hands-on
+   iPad checks.
 2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
    Measure the two ready candidates first, then take on the large structural
    change.
@@ -57,10 +58,11 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
 
 ## Phase 0: publish 0.8.0 (done)
 
-Published on 12 October with PadMint 0.5.1. These were the steps.
+Published on 12 October as build 262, tagged at `41c07740`. It added the Mac
+controller fix and the Adreno 6xx/7xx character fix to the build 261 draft.
+These were the steps.
 
-- **Publish:** `gh release create`/publish the existing draft at `c0056a6f`,
-  marked as latest.
+- **Publish:** done, marked as latest.
 - **Check the published files:**
   - download every file anonymously and check it against `SHA256SUMS`;
   - confirm the update path from 0.7.15 on the emulator once more if anything
@@ -120,8 +122,8 @@ Act when evidence exists; don't chase reporters.
 
 | Issue | State | Next step |
 |---|---|---|
-| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Native uniform buffers plus character repack is merged for the next release ([12 October update](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)); ask Deivmsr and PeriTheFrost once for the self-check line when it ships |
-| #304 PowerVR exploding characters | Vertex layout and shader limit ruled out; the matrix read is the remaining suspect, and Dawn decomposes it on every Vulkan GPU | When the native-uniforms build ships, ask Quiridel once to try **Character Graphics Test → Experimental: native uniform buffers** and send the self-check line |
+| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Native uniform buffers plus character repack shipped in 0.8.0 ([12 October update](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)); ask Deivmsr and PeriTheFrost once for the self-check line |
+| #304 PowerVR exploding characters | Vertex layout and shader limit ruled out; the matrix read is the remaining suspect, and Dawn decomposes it on every Vulkan GPU | 0.8.0 has the native-uniforms option: ask Quiridel once to try **Character Graphics Test → Experimental: native uniform buffers** and send the self-check line |
 | #431 Honor textures | One screenshot and log requested | Waiting |
 | #390 launch flicker on 60 Hz iPhones/iPads | The FPS panel vanishes with the game image while touch buttons stay, so presentation timing is suspect | Needs a 60 Hz Apple device to reproduce; no fix yet |
 | #332 Moto G75 crash at load | No diagnostic | Waiting for a log |
