@@ -55,9 +55,10 @@ in PadMint.
     either vertex layout and with either bone lookup on its own. Only the two
     changes together drew bodies on the S24 (white, about 24 FPS, the
     "fix invisible characters" test option). The self-check has answered what
-    it can; the next step is a different way of handing the bone matrices to
-    the GPU. The proposed first try copies Dolphin's matrix access (see the
-    [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-adreno-invisible-characters)).
+    it can. Merged for the release after 0.8.0: on Adreno 6xx/7xx, Automatic
+    turns off Dawn's uniform-buffer rewrite and repacks character vertices
+    (see the [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)).
+    Checked on the emulator only; an affected phone has to confirm it.
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.

@@ -122,8 +122,8 @@ Act when evidence exists; don't chase reporters.
 
 | Issue | State | Next step |
 |---|---|---|
-| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Proposed first: Dolphin-style matrix access, see the [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-adreno-invisible-characters) |
-| #304 PowerVR exploding characters | Vertex layout and shader limit ruled out | Waiting for a 0.7.13+ log |
+| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Native uniform buffers plus character repack is merged for the next release ([12 October update](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)); ask Deivmsr and PeriTheFrost once for the self-check line when it ships |
+| #304 PowerVR exploding characters | Vertex layout and shader limit ruled out; the matrix read is the remaining suspect, and Dawn decomposes it on every Vulkan GPU | When the native-uniforms build ships, ask Quiridel once to try **Character Graphics Test → Experimental: native uniform buffers** and send the self-check line |
 | #431 Honor textures | One screenshot and log requested | Waiting |
 | #390 launch flicker on 60 Hz iPhones/iPads | The FPS panel vanishes with the game image while touch buttons stay, so presentation timing is suspect | Needs a 60 Hz Apple device to reproduce; no fix yet |
 | #332 Moto G75 crash at load | No diagnostic | Waiting for a log |
