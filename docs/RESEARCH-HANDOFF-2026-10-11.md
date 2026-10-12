@@ -132,6 +132,41 @@ switch did not cover.
 S24 or Adreno 619 phone specifically. Check public Dolphin reports, or ask the
 reporters in the same single request.
 
+### Update 12 October: Dawn rewrites every uniform read
+
+The pinned Dawn (`13abc3bc`, 3 June 2026) turns on
+`decompose_uniform_buffers` for Vulkan and GL whenever it runs outside
+Chromium (`src/dawn/platform/DawnPlatform.cpp`). Tint then lowers every
+uniform buffer to `array<vec4<u32>>` and rebuilds each value from raw words
+(`src/tint/lang/spirv/writer/raise/raise.cc`). That is why the September
+review saw the whole block as `array<vec4<u32>, 208>`. It applies to every
+dynamic uniform read: the bone matrices, and also the per-light loop, which
+the old switch workaround never covered and which fits the white bodies.
+Dolphin reads plain `float4` rows from a normal uniform buffer.
+
+The toggle is adapter-level, so KartPad can turn it off, but only if every
+uniform block keeps std140 layout: Dawn doesn't enable Vulkan's
+standard-layout feature. Aurora's only non-std140 field was
+`array_start: array<u32, 12>`; it is now `array<vec4u, 3>` (same bytes).
+
+Built in the Android runtime (`codex/adreno-native-uniforms`, `a1db7a3`):
+
+- `KARTPAD_RENDERER_NATIVE_UNIFORMS=1|0` or
+  `adb shell setprop debug.kartpad.native_uniforms 1|0`; unset is automatic,
+  which turns it on only for Adreno 6xx/7xx and adds the character vertex
+  repack there.
+- **Character Graphics Test** gains "Experimental: native uniform buffers";
+  the older modes keep the rewrite on, so they behave as before.
+- The log shows `KartPadUniforms mode=… native=…`, read back from Dawn's
+  own toggle list, and the draw self-check line gains `native_uniforms=`.
+
+Checked on the Android emulator with two Vulkan drivers (lavapipe, and the
+host GPU through gfxstream): forced on and forced off both draw menus,
+character select and a 12-racer Luigi Circuit race correctly, with no WebGPU
+errors and the self-check matching. That proves the new path is valid and
+doesn't change the picture; it doesn't prove it fixes Adreno. The next
+release's self-check line from #104 and #301 answers that.
+
 **Verifying without the phone:**
 
 - The emulator, the Pixel (Mali), the iPad Pro and the Mac show whether a

@@ -72,7 +72,7 @@ alias them. Desktop builds use a compile-time base and pay none of this.
 | Pass `ctx` to the FP adapters instead of a TLS lookup | TLS samples 10.4% → 2.5%; no measurable frame-time change | Rejected; patch kept |
 | Exact fast path for normal FP results | Inlined: `.text` +12%, about 10% **slower**. Out of line: no change | Rejected; patch kept |
 | Flat-memory locals (read both globals once per function) | `.text` −6.4% (116.4 → 109.0 MB); −1.4% user time over 8 pairs, inside the noise | **Candidate:** needs a phone A/B |
-| Profile-guided optimization (PGO) of the game pack | Pipeline works (see the investigation); A/B spoiled by host load | **Candidate:** measure on a quiet machine |
+| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the bench race: game thread **7.88 → 6.40 ms/frame (−19%)**; every PGO run beat every base run. The profile came from the same Luigi Circuit race, so this is the upper bound | **Candidate:** check an unprofiled track, then decide how it ships |
 
 Patches and the PGO dump source are in [`tools/android-perf`](../tools/android-perf/README.md).
 
@@ -91,6 +91,13 @@ Rules learned the hard way:
 - **Use a quiet machine.** Other chats' builds (BlueWake PGO, SunPad loops)
   pushed the load average to 184 and invalidated a whole A/B. Check
   `sysctl -n vm.loadavg` before trusting a run.
+- **Headless runs need `-gpu host`.** With `-no-window`, `-gpu auto` falls
+  back to software rendering: the emulator takes about ten cores and races run
+  at 10–20 FPS, which also explains part of the 10 October noise. `ab.sh` now
+  passes `-gpu host` (60 FPS, about 1.2 cores).
+- **Drive menus with touch only.** `adb shell input keyevent` makes Android
+  register a controller; the game then asks about GameCube rumble at the
+  licence screen and touch A no longer answers it.
 - **Resolution is about ±5%** (±0.4 ms) between cold-boot runs, so only changes
   around 10% or more are resolvable here.
 - **The emulator runs on M3 Max cores,** which hide load and branch costs that
@@ -102,13 +109,16 @@ Rules learned the hard way:
 
 ## Next steps, in order
 
-1. **Measure PGO on a quiet machine** (about an hour).
-   - Recipe: the investigation's PGO section.
-   - Before trusting a gain, collect the profile on a different track from
-     the bench and include a Retro Rewind race.
-   - If the gain is 10% or more, decide how it ships: the APK can be built with
-     a profile, but PadMint builds would need a published `.profdata`
-     (function names and counts derived from running the game; Chris to decide).
+1. **Finish the PGO check.** Measured −19% on the profiled bench race (above).
+   - Still needed: the same A/B on a track the profile didn't see. Reach it by
+     touch (the stick or D-pad by touch did not move the cup cursor in a
+     headless run; key events trigger the rumble prompt), or collect a new
+     profile on another track plus a Retro Rewind race and bench Luigi Circuit.
+   - Then decide how it ships: the APK can be built with a profile, but
+     PadMint builds would need a published `.profdata` (function names and
+     counts derived from running the game; Chris to decide). The release APK
+     compiles translated code in the full Gradle graph, so the profile has to
+     reach the shard targets there as well as `scripts/build-game-pack.sh`.
 2. **Phone A/B for flat-memory locals** (and optionally the explicit-context
    change). If it gains, implement it properly:
    - **Translator:** emit an entry macro before `goto <entry>` in

@@ -8,7 +8,8 @@ SDK=$HOME/Library/Android/sdk; A="$SDK/platform-tools/adb"
 boot() {
   "$A" emu kill >/dev/null 2>&1
   while pgrep -f qemu-system >/dev/null; do sleep 2; done
-  "$SDK/emulator/emulator" @${KP_AVD:-KartPad_API_36_ARM64} -no-window -no-audio -no-boot-anim -no-snapshot-save -gpu auto > /tmp/kartpad-perf-emu.log 2>&1 &
+  # Headless -gpu auto falls back to software rendering, which buries the game thread.
+  "$SDK/emulator/emulator" @${KP_AVD:-KartPad_API_36_ARM64} -no-window -no-audio -no-boot-anim -no-snapshot-save -gpu host > /tmp/kartpad-perf-emu.log 2>&1 &
   "$A" wait-for-device
   until [ "$("$A" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do sleep 2; done
   "$A" root >/dev/null; sleep 3; "$A" wait-for-device; sleep 20
