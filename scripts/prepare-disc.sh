@@ -4,6 +4,8 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 image="${1:-${repo_root}/ref/Mario Kart Wii.wbfs}"
 output="${2:-${repo_root}/private/self-build/disc}"
+# The maintainer's reference WBFS. Players' images differ (ISO, WBFS from other tools,
+# RVZ), so the image hash is recorded, not required: the extracted files decide.
 expected_image_sha256="fc035e60610842da6860d23d4a30c1f1c0f019d492469deb8a2ac25ef5822331"
 expected_dol_sha256="80d18895b39c63bd80f457398bfcbb91b7d16ac116a41a88967e954080155b05"
 expected_rel_sha256="16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d"
@@ -66,10 +68,9 @@ validate_output() {
 }
 
 image_sha256="$(shasum -a 256 "${image}" | awk '{print $1}')"
-[[ "${image_sha256}" == "${expected_image_sha256}" ]] || {
-  echo "ERROR: disc-image SHA-256 is unsupported: ${image_sha256}" >&2
-  exit 65
-}
+if [[ "${image_sha256}" != "${expected_image_sha256}" ]]; then
+  echo "Disc image ${image_sha256:0:16}… differs from the reference copy; checking the game files inside it instead."
+fi
 
 if [[ -d "${output}" ]]; then
   validate_output "${output}"
