@@ -9,12 +9,12 @@ for 0.8.0.
 
 **Paused on 11 October.** Start from the
 [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md): it records Chris's
-decisions (0.8.0 stays a draft, no test phone) and the proposed plan, which
-puts the Adreno character fix first.
+decisions (no test phone) and the proposed plan, which puts the Adreno
+character fix first. Chris approved publishing 0.8.0 on 12 October, so
+KartPad's Mac copy is back in PadMint (0.5.1).
 
-1. **Hold 0.8.0.** It is merged and staged as a draft. Chris decided on
-   11 October to keep it unpublished and ship its changes with the next
-   release that fixes something.
+1. **0.8.0 is out** (12 October), with PadMint 0.5.1. What's left of
+   [Phase 0](#phase-0-publish-080-done) is the hands-on iPad checks.
 2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
    Measure the two ready candidates first, then take on the large structural
    change.
@@ -52,13 +52,12 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
   - Never publish game data, keys, saves or signing material.
 - **PadMint:**
   - Keep `padmint.json`, the `published_app` names and `SHA256SUMS` stable.
-  - The PadMint chat owns the PadMint repository. Its next release (0.4.14)
-    waits on KartPad 0.8.0.
+  - The PadMint chat owns the PadMint repository. PadMint 0.5.1 carries
+    KartPad 0.8.0 support.
 
-## Phase 0: publish 0.8.0 (held)
+## Phase 0: publish 0.8.0 (done)
 
-On hold since 11 October: 0.8.0 ships together with the next fix. When it does,
-these steps still apply.
+Published on 12 October with PadMint 0.5.1. These were the steps.
 
 - **Publish:** `gh release create`/publish the existing draft at `c0056a6f`,
   marked as latest.
@@ -69,15 +68,14 @@ these steps still apply.
 - **Post the 0.8.0 replies:** #437 (app icons) and #430 (Shake to Trick) can
   close; #377 (update notices), #202 (Fill Screen under the cutout) and #411
   (iPhone/iPad sound) stay open for confirmation.
-- **Tell the PadMint chat** that 0.8.0 is out, so PadMint 0.4.14 (Intel Mac
-  iPhone builds, KartPad's Mac copy) can ship. From then, README's "Mac: build
-  with PadMint" is true again.
+- **PadMint 0.5.1** (Intel Mac iPhone builds, KartPad's Mac copy) ships right
+  after 0.8.0. From then, README's "Mac: build with PadMint" is true again.
 - **Hands-on checks** on the iPad that no automation can do: **Display → App
   Icon**, **Controls → Shake to Trick…**, and the **Update available** notice
   once a newer release exists.
 
 **Done when:** 0.8.0 is latest, the files verify, the replies are posted, and
-PadMint 0.4.14 is unblocked.
+PadMint 0.5.1 is out.
 
 ## Phase 1: Android speed (#339)
 
