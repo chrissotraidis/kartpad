@@ -16,7 +16,8 @@ internal object KartPadCharacterGraphicsTest {
         val rows: String = "",
     ) {
         // Empty repack/uniforms = let the renderer decide: every draw repacked on Adreno 8xx;
-        // native uniform buffers plus character repack on Adreno 6xx/7xx; off elsewhere.
+        // off elsewhere, as in 0.7.15 (0.8.0's Adreno 6xx/7xx default hid characters on phones
+        // that drew them before).
         // rows = "1" reads bone matrices as three float rows, the way Dolphin does (#104, #301).
         NORMAL("normal", "Automatic (recommended)", null, repack = "", uniforms = ""),
         MATRIX_ROWS("matrix_rows", "Experimental: matrix rows like Dolphin (Snapdragon 8 Gen 3 and older)", null, repack = "1", uniforms = "1", rows = "1"),
