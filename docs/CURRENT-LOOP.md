@@ -11,11 +11,10 @@ for 0.8.0.
 [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md): it records Chris's
 decisions (no test phone) and the proposed plan, which puts the Adreno
 character fix first. 0.8.0 shipped on 12 October with that fix, and
-PadMint 0.5.1 brings KartPad's Mac copy back.
+PadMint 0.5.1 brought KartPad's Mac copy back the same day.
 
 1. **0.8.0 is out** (12 October, build 262). What's left of
-   [Phase 0](#phase-0-publish-080-done) is PadMint 0.5.1 and the hands-on
-   iPad checks.
+   [Phase 0](#phase-0-publish-080-done) is the hands-on iPad checks.
 2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
    Measure the two ready candidates first, then take on the large structural
    change.
@@ -68,10 +67,11 @@ These were the steps.
   - confirm the update path from 0.7.15 on the emulator once more if anything
     changed.
 - **Post the 0.8.0 replies:** #437 (app icons) and #430 (Shake to Trick) can
-  close; #377 (update notices), #202 (Fill Screen under the cutout) and #411
-  (iPhone/iPad sound) stay open for confirmation.
-- **PadMint 0.5.1** (Intel Mac iPhone builds, KartPad's Mac copy) ships right
-  after 0.8.0. From then, README's "Mac: build with PadMint" is true again.
+  close (done); #377 (update notices) and #202 (Fill Screen under the cutout)
+  stay open for confirmation. #411 (iPhone/iPad sound) shipped in 0.7.15 and
+  stays open for a hands-on check with Spotify.
+- **PadMint 0.5.1** (Intel Mac iPhone builds, KartPad's Mac copy): published
+  right after 0.8.0, so README's "Mac: build with PadMint" is true again.
 - **Hands-on checks** on the iPad that no automation can do: **Display → App
   Icon**, **Controls → Shake to Trick…**, and the **Update available** notice
   once a newer release exists.

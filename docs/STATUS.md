@@ -3,8 +3,8 @@
 ## Current status: 12 October 2026
 
 **Latest release: [KartPad 0.8.0](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.0) (build 262), 12 October.**
-PadMint 0.5.1, which follows it, builds it for Mac again and for iPhone/iPad on
-Intel Macs (experimental).
+[PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1), also out on 12 October,
+builds it for Mac again and for iPhone/iPad on Intel Macs (experimental).
 Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
 build KartPad with PadMint (the release carries the PadMint inputs) and, from
 0.8.0, say when a new version is out. 0.8.0 moves to the latest WiiCompiled
