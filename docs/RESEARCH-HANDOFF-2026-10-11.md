@@ -175,6 +175,16 @@ release's self-check line from #104 and #301 answers that.
   only on Adreno 6xx/7xx, so other phones keep today's path.
 - The existing self-check reports whether bodies draw on the affected phones.
 
+### Update 12 October, evening: 0.8.0 on the Galaxy S24 Ultra
+
+Deivmsr's 0.8.0 (build 262) log from the S24 Ultra settles the 12 October
+candidate: `KartPadUniforms mode=auto qualcomm=true adreno=750 native=true`,
+the character repack active, and every self-check attempt (10 of 10)
+`native_uniforms=true game_layout=cpu_repack drawn_game=0 drawn_other=0 drawn_constant=0`.
+The race renders at 60 FPS with tracks and karts intact, and riders missing.
+So Dawn's uniform rewrite isn't the cause, or not the only one. Next is
+candidate 1 above (Dolphin-style `vec4f` rows), then candidate 2.
+
 ## Research: remote device labs
 
 Found 11 October; check terms, availability and models again before use.
