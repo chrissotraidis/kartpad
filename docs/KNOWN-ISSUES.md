@@ -41,6 +41,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   matrix lookup alone isn't either: on these GPUs only both workarounds
   together draw bodies, and then white. A real fix needs a renderer change;
   you don't need to send more logs for this.
+  The release after 0.8.0 tries one: on these GPUs **Automatic** reads the
+  game's matrices the standard way instead of through Dawn's integer rewrite,
+  together with the character fix. It draws correctly on the emulator but
+  hasn't been confirmed on an affected phone yet.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
