@@ -8,10 +8,9 @@ The September Pixel experiments are in the
 
 ## Release context
 
-- Public: **0.7.15** (9 October).
-- **0.8.0** (WiiCompiled sync, update notices, Shake to Trick, app icons) is
-  merged at `c0056a6f` and staged as a **draft** release with all six files.
-  It waits for Chris to publish it, and PadMint 0.4.14 waits on it.
+- Public: **0.8.0** (build 262, 12 October; WiiCompiled sync, update notices,
+  Shake to Trick, app icons, Mac controller fix, Adreno 6xx/7xx character fix),
+  tagged at `41c07740`.
 - 0.8.0 contains no speed work. Nothing on this page has shipped yet.
 
 ## What we know
@@ -165,8 +164,6 @@ emulator, Pixel and reporter results separate.
 
 ## Needs Chris
 
-- 0.8.0 stays a draft until the next fix ships with it (decided 11 October);
-  PadMint 0.4.14 waits on it.
 - A quiet machine window for benchmarks, or pausing other chats' long builds.
 - No slow test phone gets bought (decided 11 October). Remote device labs are
   the proposed substitute; see the

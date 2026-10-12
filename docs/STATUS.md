@@ -1,15 +1,15 @@
 # KartPad status
 
-## Current status: 10 October 2026
+## Current status: 12 October 2026
 
-**Latest release: [KartPad 0.7.15](https://github.com/chrissotraidis/kartpad/releases/tag/v0.7.15) (build 260), 9 October.**
-**KartPad 0.8.0 (build 261) is merged and staged as a draft release** with all
-six files checked; it goes out when Chris says publish, and PadMint 0.4.14
-(KartPad 0.8.0 support) follows it.
+**Latest release: [KartPad 0.8.0](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.0) (build 262), 12 October.**
+PadMint 0.5.1, which follows it, builds it for Mac again and for iPhone/iPad on
+Intel Macs (experimental).
 Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
 build KartPad with PadMint (the release carries the PadMint inputs) and, from
 0.8.0, say when a new version is out. 0.8.0 moves to the latest WiiCompiled
-engine and adds Shake to Trick and a choice of app icons.
+engine, fixes controllers on the Mac, tries a fix for invisible characters on
+Adreno 6xx/7xx, and adds Shake to Trick and a choice of app icons.
 Players add their own game data the first time. Work in progress follows
 the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 [known issues](KNOWN-ISSUES.md).
@@ -32,7 +32,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | 0.7.13 | The self-check draws a third copy with the other bone-matrix lookup (`result=indexing` when only that copy draws); Retro Rewind starts on the first Play after downloading it (it used to say "No DVD root is configured"). Same pack interface | Emulator: `indexing` with both layout copies deliberately emptied, `match` on normal runs; Retro Rewind download then Play reaches the game. iPad Pro: installed in place and launched. All files checked by anonymous download against `SHA256SUMS` |
 | 0.7.14 | Android updates itself (#377): download, check against `SHA256SUMS` and the signing key, Android confirms. Every game file is checked at import and on the chooser, so an incomplete copy names the missing file before Play (all platforms). Android music and game-sound sliders (#411). Android APK plus PadMint inputs only; no ready-to-play IPA or Mac zip. Same pack interface | Emulator: a 0.7.12-labelled build updated itself to the published 0.7.13 twice (permission page, download, verify, install), save unchanged, game data intact; cancel keeps the old version; full file check on complete and broken data. 344 repo tests |
 | 0.7.15 | Retro Rewind 6.13.1 (official pack plus update), required for Retro WFC. iPhone/iPad keep Retro saves and ghosts when replacing the pack. Android save/ghost writes verified before completing; **Help → Cancel Pending Ghost Import**. Compressed Original ghosts imported in replayable form. iPhone/iPad music and game-sound controls. Apple motion: flat device steers straight, shake still works. PadMint Mac bootstrap fetches Retro Rewind and the translator source. Same pack interface | Emulator: the signed APK installs over 0.7.14 with all app data unchanged and reaches a race; fresh zip import reaches a race; Retro 6.13.1 install, Retro race, Retro WFC sign-in, worldwide room and online races (two mid-race room disconnects on the emulator, each recovered); a real compressed Chadsoft ghost imported and replayed. iPad Pro: installed in place with saves/settings unchanged. iPad Simulator: 6.12.8 to 6.13.1 upgrade kept a save. Mac: clean PadMint build. Sound and motion not yet hands-on on an iPhone/iPad |
-| 0.8.0 (draft) | WiiCompiled upstream sync (display lists that overflow the staging batch now draw instead of dropping models; TLS sessions stop cleanly after a failed write). Update notices on iPhone, iPad and Mac. Shake to Trick on Android and iPhone/iPad. App icon choice (red K, Circuit, Mono). Android Fill Screen draws under display cutouts. Android identity/Mii writes keep their recovery request on failure. PadMint: Intel Mac iPhone builds; Mac builds without Homebrew tools, with a much smaller first download. New pack interface | Emulator: the signed APK installs over public 0.7.15 with all 2,079 app data files unchanged and reaches a race; a fresh install imports game data and reaches a race; app icon switching. Pixel 9 Pro XL: updated in place from 0.7.12 with saves and licences kept; Original race at 60 FPS; Retro Rewind 6.13.1 downloaded and installed in the app, booted and signed in to Retro WFC. iPad Pro: installed in place with 34 critical files unchanged; Original runs at 60 FPS. Mac: full PadMint build with only system tools on the path; game runs at 60 FPS. Shake to Trick and the icon picker not yet hands-on on a device |
+| 0.8.0 | Build 262. WiiCompiled upstream sync (display lists that overflow the staging batch now draw instead of dropping models; TLS sessions stop cleanly after a failed write). Mac: a connected controller works alongside the keyboard instead of being ignored. Android Adreno 6xx/7xx: native uniform buffers plus character repack for invisible characters (#104, #301). Update notices on iPhone, iPad and Mac. Shake to Trick on Android and iPhone/iPad. App icon choice (red K, Circuit, Mono). Android Fill Screen draws under display cutouts. Android identity/Mii writes keep their recovery request on failure. Retro Rewind error 22010 guidance. PadMint 0.5.1: Intel Mac iPhone builds; Mac builds without Homebrew tools. New pack interface | Emulator: the release-signed APK installs over public 0.7.15 with all 2,076 app data files unchanged and races at 60 FPS; a fresh install imports a game data zip through the Files picker and races. Pixel 9 Pro XL (Mali): a test-signed copy of the same app code updated in place and raced at 60 FPS. iPad Pro: the published iPhone/iPad app with its pack installed in place with 34 critical files unchanged, both games ready; its game code matches the build 261 test that ran Original at 60 FPS. Mac: PadMint player build (Apple Python, empty PadMint folder); controller fix covered by a virtual-controller test. Adreno fix, Mac physical controllers, Shake to Trick and the icon picker not yet confirmed on an affected or hands-on device |
 
 **Confirmed by players on 0.7.10:** the OnePlus 15's graphics with Automatic
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
@@ -55,10 +55,11 @@ in PadMint.
     either vertex layout and with either bone lookup on its own. Only the two
     changes together drew bodies on the S24 (white, about 24 FPS, the
     "fix invisible characters" test option). The self-check has answered what
-    it can. Merged for the release after 0.8.0: on Adreno 6xx/7xx, Automatic
+    it can. Shipped in 0.8.0: on Adreno 6xx/7xx, Automatic
     turns off Dawn's uniform-buffer rewrite and repacks character vertices
     (see the [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)).
-    Checked on the emulator only; an affected phone has to confirm it.
+    Checked on the emulator and a Mali Pixel only; an affected phone has to
+    confirm it.
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.
@@ -96,11 +97,9 @@ in PadMint.
 
 ### Next versions
 
-- **0.8.0** (draft, pack interface change): WiiCompiled sync, update notices on
-  iPhone/iPad/Mac, Shake to Trick, app icons. Publish, then PadMint 0.4.14.
 - **After 0.8.0:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
-  (PGO measurement, then a phone A/B for flat-memory locals); Adreno
-  bone-matrix decision ([loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
+  (a phone A/B for flat-memory locals); confirm the Adreno character fix with
+  affected players ([loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
 
 Status through 29 September (source-only period, 0.5.x packages and earlier
 acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before

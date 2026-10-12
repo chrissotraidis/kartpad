@@ -9,12 +9,13 @@ for 0.8.0.
 
 **Paused on 11 October.** Start from the
 [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md): it records Chris's
-decisions (0.8.0 stays a draft, no test phone) and the proposed plan, which
-puts the Adreno character fix first.
+decisions (no test phone) and the proposed plan, which puts the Adreno
+character fix first. 0.8.0 shipped on 12 October with that fix, and
+PadMint 0.5.1 brings KartPad's Mac copy back.
 
-1. **Hold 0.8.0.** It is merged and staged as a draft. Chris decided on
-   11 October to keep it unpublished and ship its changes with the next
-   release that fixes something.
+1. **0.8.0 is out** (12 October, build 262). What's left of
+   [Phase 0](#phase-0-publish-080-done) is PadMint 0.5.1 and the hands-on
+   iPad checks.
 2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
    Measure the two ready candidates first, then take on the large structural
    change.
@@ -52,16 +53,16 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
   - Never publish game data, keys, saves or signing material.
 - **PadMint:**
   - Keep `padmint.json`, the `published_app` names and `SHA256SUMS` stable.
-  - The PadMint chat owns the PadMint repository. Its next release (0.4.14)
-    waits on KartPad 0.8.0.
+  - The PadMint chat owns the PadMint repository. PadMint 0.5.1 carries
+    KartPad 0.8.0 support.
 
-## Phase 0: publish 0.8.0 (held)
+## Phase 0: publish 0.8.0 (done)
 
-On hold since 11 October: 0.8.0 ships together with the next fix. When it does,
-these steps still apply.
+Published on 12 October as build 262, tagged at `41c07740`. It added the Mac
+controller fix and the Adreno 6xx/7xx character fix to the build 261 draft.
+These were the steps.
 
-- **Publish:** `gh release create`/publish the existing draft at `c0056a6f`,
-  marked as latest.
+- **Publish:** done, marked as latest.
 - **Check the published files:**
   - download every file anonymously and check it against `SHA256SUMS`;
   - confirm the update path from 0.7.15 on the emulator once more if anything
@@ -69,15 +70,14 @@ these steps still apply.
 - **Post the 0.8.0 replies:** #437 (app icons) and #430 (Shake to Trick) can
   close; #377 (update notices), #202 (Fill Screen under the cutout) and #411
   (iPhone/iPad sound) stay open for confirmation.
-- **Tell the PadMint chat** that 0.8.0 is out, so PadMint 0.4.14 (Intel Mac
-  iPhone builds, KartPad's Mac copy) can ship. From then, README's "Mac: build
-  with PadMint" is true again.
+- **PadMint 0.5.1** (Intel Mac iPhone builds, KartPad's Mac copy) ships right
+  after 0.8.0. From then, README's "Mac: build with PadMint" is true again.
 - **Hands-on checks** on the iPad that no automation can do: **Display → App
   Icon**, **Controls → Shake to Trick…**, and the **Update available** notice
   once a newer release exists.
 
 **Done when:** 0.8.0 is latest, the files verify, the replies are posted, and
-PadMint 0.4.14 is unblocked.
+PadMint 0.5.1 is out.
 
 ## Phase 1: Android speed (#339)
 
@@ -122,8 +122,8 @@ Act when evidence exists; don't chase reporters.
 
 | Issue | State | Next step |
 |---|---|---|
-| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Native uniform buffers plus character repack is merged for the next release ([12 October update](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)); ask Deivmsr and PeriTheFrost once for the self-check line when it ships |
-| #304 PowerVR exploding characters | Vertex layout and shader limit ruled out; the matrix read is the remaining suspect, and Dawn decomposes it on every Vulkan GPU | When the native-uniforms build ships, ask Quiridel once to try **Character Graphics Test → Experimental: native uniform buffers** and send the self-check line |
+| #104, #301 Adreno 6xx/7xx invisible characters | Self-check logs show bodies draw only with both changes together | Native uniform buffers plus character repack shipped in 0.8.0 ([12 October update](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)); ask Deivmsr and PeriTheFrost once for the self-check line |
+| #304 PowerVR exploding characters | Vertex layout and shader limit ruled out; the matrix read is the remaining suspect, and Dawn decomposes it on every Vulkan GPU | 0.8.0 has the native-uniforms option: ask Quiridel once to try **Character Graphics Test → Experimental: native uniform buffers** and send the self-check line |
 | #431 Honor textures | One screenshot and log requested | Waiting |
 | #390 launch flicker on 60 Hz iPhones/iPads | The FPS panel vanishes with the game image while touch buttons stay, so presentation timing is suspect | Needs a 60 Hz Apple device to reproduce; no fix yet |
 | #332 Moto G75 crash at load | No diagnostic | Waiting for a log |
