@@ -44,8 +44,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   0.8.0 tried one: on these GPUs **Automatic** reads the game's matrices the
   standard way instead of through Dawn's integer rewrite, together with the
   character fix. On the Galaxy S24 Ultra (Adreno 750) the characters are still
-  invisible with it; the rest of the race draws normally at 60 FPS. The next
-  release adds **Help → Character Graphics Test → Experimental: matrix rows
+  invisible with it; the rest of the race draws normally at 60 FPS. On some
+  Adreno phones that drew characters before, it hid them, so the next release
+  returns **Automatic** to 0.7.15's behaviour; the native-uniforms path stays
+  a Character Graphics Test option. The next release also adds **Help → Character Graphics Test → Experimental: matrix rows
   like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
   does. It draws correctly on the emulator; an affected phone has to say
   whether it brings the riders back.

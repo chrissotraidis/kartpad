@@ -60,7 +60,9 @@ in PadMint.
     (see the [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#update-12-october-dawn-rewrites-every-uniform-read)).
     On the Galaxy S24 Ultra (Adreno 750) it doesn't help: 0.8.0's log shows
     it active and the self-check still drawing nothing, with the race at 60 FPS
-    (#104, 12 October). Next: Dolphin-style matrix rows, merged as a
+    (#104, 12 October), and it hid characters on Adreno phones that drew them
+    in 0.7.15 (Discord, 13 October), so Automatic goes back to 0.7.15's behaviour
+    in the next release. Next: Dolphin-style matrix rows, merged as a
     Character Graphics Test option (#463) for the next release.
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
