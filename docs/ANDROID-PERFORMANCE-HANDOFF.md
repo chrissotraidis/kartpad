@@ -9,7 +9,8 @@ The September Pixel experiments are in the
 ## Release context
 
 - Public: **0.8.0** (12 October; WiiCompiled sync, update notices, Shake to
-  Trick, app icons), built at `c0056a6f`.
+  Trick, app icons), tagged at `60383d6a`. Its app code is the same as
+  `c0056a6f`, where the APK and IPA were built.
 - 0.8.0 contains no speed work. Nothing on this page has shipped yet.
 
 ## What we know
