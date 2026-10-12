@@ -45,7 +45,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   standard way instead of through Dawn's integer rewrite, together with the
   character fix. On the Galaxy S24 Ultra (Adreno 750) the characters are still
   invisible with it; the rest of the race draws normally at 60 FPS. The next
-  attempt reads the bone matrices as plain rows, the way Dolphin does.
+  release adds **Help → Character Graphics Test → Experimental: matrix rows
+  like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
+  does. It draws correctly on the emulator; an affected phone has to say
+  whether it brings the riders back.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
@@ -64,8 +67,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   (an iPad and an iPhone) report it on real devices. 0.7.4 fixed the greyed-out
   Open button, but only in the Simulator. Workaround: put the folder (with
   `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
-  **Import from Extracted Folder…**. A fix that uses a folder-only picker is in
-  progress. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
+  **Import from Extracted Folder…**. The next release opens a picker that only
+  chooses folders and always reports back after Open; it works in the
+  Simulator, and a real device has to confirm it. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
 
 ## Graphics (Apple)
 
