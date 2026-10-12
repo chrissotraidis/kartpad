@@ -61,8 +61,8 @@ regions are not supported), and:
   with about 6 GB free.
 - **iPhone and iPad:** iOS or iPadOS 16 or newer, and Sideloadly, AltStore or
   SideStore with your own Apple ID, plus a computer to run PadMint: Windows,
-  Linux or an Apple Silicon Mac. Intel Macs can build it from KartPad 0.8.0
-  with PadMint 0.4.14.
+  Linux or a Mac. On an Intel Mac this is experimental and needs PadMint 0.5.1
+  or newer.
 - **Mac:** an Apple Silicon Mac with macOS 14 or newer, to run PadMint and play.
 
 ### Your game data
