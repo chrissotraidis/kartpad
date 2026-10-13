@@ -45,9 +45,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   standard way instead of through Dawn's integer rewrite, together with the
   character fix. On the Galaxy S24 Ultra (Adreno 750) the characters are still
   invisible with it; the rest of the race draws normally at 60 FPS. On some
-  Adreno phones that drew characters before, it hid them, so the next release
+  Adreno phones that drew characters before, it hid them, so 0.8.1
   returns **Automatic** to 0.7.15's behaviour; the native-uniforms path stays
-  a Character Graphics Test option. The next release also adds **Help → Character Graphics Test → Experimental: matrix rows
+  a Character Graphics Test option. 0.8.1 also adds **Help → Character Graphics Test → Experimental: matrix rows
   like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
   does. It draws correctly on the emulator; an affected phone has to say
   whether it brings the riders back.
@@ -69,7 +69,7 @@ the [archive](archive/known-issues-through-2026-09.md).
   (an iPad and an iPhone) report it on real devices. 0.7.4 fixed the greyed-out
   Open button, but only in the Simulator. Workaround: put the folder (with
   `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
-  **Import from Extracted Folder…**. The next release opens a picker that only
+  **Import from Extracted Folder…**. 0.8.1 opens a picker that only
   chooses folders and always reports back after Open; it works in the
   Simulator, and a real device has to confirm it. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
 
