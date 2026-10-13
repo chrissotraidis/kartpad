@@ -49,8 +49,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   returns **Automatic** to 0.7.15's behaviour; the native-uniforms path stays
   a Character Graphics Test option. 0.8.1 also adds **Help → Character Graphics Test → Experimental: matrix rows
   like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
-  does. It draws correctly on the emulator; an affected phone has to say
-  whether it brings the riders back.
+  does. On the Galaxy S24 Ultra it doesn't: 0.8.1's log shows it active and
+  the riders still invisible (13 October). Next: pass each vertex's bone index
+  to the GPU directly.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
