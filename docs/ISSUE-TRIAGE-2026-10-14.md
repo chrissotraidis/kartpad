@@ -106,7 +106,31 @@ The candidate starts on API 34 and API 36 and accepts touch through license
 creation/selection. The first seeded-data run on each emulator stayed at the
 title screen despite input; a fresh process then accepted touch. This is
 recorded as a test limitation, not a fixed input bug or a successful fresh-import
-release check. Final race/lifecycle evidence follows below.
+release check. API 36 actual-game mouse activity plus idle timeout, Home/resume,
+and a system-bar swipe retain the same process and fullscreen window with no
+JNI abort. API 34 reaches a Luigi Circuit Grand Prix race with touch navigation,
+acceleration, a visible driver and an acquired item. Mouse movement followed by
+six seconds idle, Home/resume and a system-bar swipe retain the same process,
+fullscreen window and running race without the baseline JNI abort. Screenshots
+record the race before and after resume. This is a race/lifecycle smoke check,
+not a completed cup, a performance measurement or Adreno rendering acceptance.
+
+## Review status
+
+[KartPad #474](https://github.com/chrissotraidis/kartpad/pull/474) preserves this
+pass on `codex/issue-triage-20261014`. KartPad's three hosted checks pass on
+`62d711e0` (runtime boundaries, maintenance receipts and REL-report integrity).
+The runtime dependency [WiiCompiled #7](https://github.com/chrissotraidis/wiicompiled/pull/7)
+is draft: translator tests pass, but inherited desktop jobs fail before the
+changed files compile. Windows/Linux/Intel are rejected by the existing
+arm64-only CMake guard; macOS arm64 finds an existing Dawn archive SHA-256
+mismatch. Neither platform guards, dependency pins nor workflows changed in
+this pass. Do not bypass the checksum or describe those checks as passing.
+The maintained Android source builds through KartPad's own dependency setup.
+Both PRs remain draft. Resolve the fork CI configuration/dependency failures
+and validate a normal fresh import with a release candidate before promotion;
+the seeded-data first-launch input limitation remains unexplained. No further
+player replies arrived during the final GitHub refresh.
 
 ## Open PR and remaining work
 
@@ -123,7 +147,12 @@ distribution decision. #473 remains behind this correctness/performance work.
 
 ## Local evidence
 
-Private logs, emulator screenshots, reply receipts and build output are kept
-outside tracked source. Public records contain only reviewed findings and issue
-links. No player archive, game data, saves, translated game library or device
+Private logs and reply receipts are preserved in ignored
+`private/triage-20261014/`; screenshots are in ignored `build/perf/ui/`.
+The tested private APK is under
+`build/triage-20261014-cursor/20261014-122105/out/`, SHA-256
+`2580dbd669ee284ccb66d2286c3af76880795fb131163c9c30c2c09f05d6e364`.
+It retains a development 0.8.1/263 label and is not a public update. Public
+records contain only reviewed findings and issue links. No player archive,
+game data, saves, translated game library or device
 identifier is added to Git.

@@ -41,7 +41,7 @@ from the [current triage review](ISSUE-TRIAGE-2026-10-14.md).
 | --- | --- | --- | --- |
 | Honor MTN-NX3, Adreno 810, API 36; 0.7.15/260 and 0.8.1/263 | #470: Retro runtime logs show low FPS and high main-thread occupancy at 1×. 0.8.1 also reaches thermal status 3. No pending shaders in the slow samples; both use automatic all-draw repack | `reproduced-open` | Investigate equivalent warmed work with #339; no new log request |
 | AYN Thor Max; 0.8.1 | #202: race photos still show bands; one includes visible status/navigation bars | `reproduced-open` | Verify SDL fullscreen correction locally, then Thor confirmation after a release |
-| Android 14/API 34 emulator; baseline main and local candidate fixtures | Baseline has FORCE_NOT_FULLSCREEN and black bands; candidate has FULLSCREEN/IMMERSIVE_STICKY and fills the screen across launch, resume, menu return and system-bar swipe | `candidate-awaiting-device` | Actual game smoke and newer-Android check; not Thor acceptance |
+| Android 14/API 34 and Android 16/API 36 emulators; baseline main and private candidate | API 34 baseline has FORCE_NOT_FULLSCREEN and bands. Candidate fixtures retain FULLSCREEN/IMMERSIVE_STICKY across launch, resume and bar swipe on both APIs. Actual-game API 34 reaches a race; both APIs retain fullscreen and process through mouse/idle, Home/resume and swipe without the baseline JNI abort | `candidate-awaiting-device` | Resolve first seeded-launch input limitation; complete fresh-import/release checks and Thor confirmation. Emulator behavior is not Thor acceptance |
 | OnePlus OPD2403, Android 16/API 36; 0.8.1/263 | #472: faces visible but bodies missing; reporter says all graphics options tried. GPU/driver not supplied | `awaiting-reporter` | One reviewed diagnostic log requested; keep separate from #104/#301 until matched |
 | Moto G85, Adreno 619; 0.8.1/263 | #301: missing bodies persist; supplied log has native_uniforms=false and matrix_rows=false. Reporter says Dolphin renders the bodies | `reproduced-open` | Candidate 2 investigation; no repeat settings test. Freeze without input remains separate |
 | Galaxy S24 Ultra, Adreno 750; 0.8.1/263 | #104: matrix_rows=true and native_uniforms=true, bodies still invisible | `reproduced-open` | Candidate 2; no more logs requested |
@@ -50,7 +50,7 @@ from the [current triage review](ISSUE-TRIAGE-2026-10-14.md).
 ## Historical matrix
 
 **These rows record evidence up to 22 September (0.4.x and early 0.5 builds).**
-The current release is 0.7.10; per-device state for it is in
+Current per-device state is in
 [KNOWN-ISSUES.md](KNOWN-ISSUES.md). Newer evidence: the OnePlus 15 (Adreno 8xx)
 draws correctly with Automatic on 0.7.10 (#316, reporter-confirmed), and the
 Moto G54 (PowerVR BXM-8-256) reaches a race on 0.7.10 with no shader over its
