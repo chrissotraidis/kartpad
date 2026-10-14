@@ -45,6 +45,29 @@ int main() {
     assert(state.buttons == 0);
     assert(!IsTouchInputConnected());
 
+    // A complete tap between samples must reach both SDK readers, in either
+    // order, exactly once. Probing and repeated reads must not drain its peer.
+    for (auto first : {TouchInputReader::Kpad, TouchInputReader::UnifiedWpad}) {
+        const auto second = first == TouchInputReader::Kpad ?
+            TouchInputReader::UnifiedWpad : TouchInputReader::Kpad;
+        PublishTouchInput({0, 0, 0, 0, kTouchButtonA, true});
+        PublishTouchInput({0, 0, 0, 0, 0, true});
+        assert(IsTouchInputConnected());
+        assert(ConsumeTouchInput(first).buttons == kTouchButtonA);
+        assert(ConsumeTouchInput(first).buttons == 0);
+        assert(ConsumeTouchInput(second).buttons == kTouchButtonA);
+        assert(ConsumeTouchInput(second).buttons == 0);
+
+        PublishTouchInput({0, 0, 0, 0, kTouchButtonB, true});
+        for (auto reader : {first, second, first, second})
+            assert(ConsumeTouchInput(reader).buttons == kTouchButtonB);
+        ClearTouchInput(); // focus loss clears held state AND both pending taps.
+        for (auto reader : {first, second}) {
+            const auto cleared = ConsumeTouchInput(reader);
+            assert(!cleared.connected && cleared.buttons == 0);
+        }
+    }
+
     std::cout << "Android touch input contract passed\n";
     return 0;
 }
