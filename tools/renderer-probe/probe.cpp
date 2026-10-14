@@ -177,15 +177,15 @@ void run(wgpu::Instance instance, wgpu::Adapter adapter, bool robustness, std::o
         report<<"ERROR robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")<<": "<<e.what()<<"\n";
       }
     }
-    for (bool packed : {false, true}) {
-        try { drawProbe(instance, device, *errors, robustness, packed, report); }
-        catch (const std::exception& e) { report<<"ERROR draw robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")<<": "<<e.what()<<"\n"; }
+    for (bool packed : {false, true}) for(bool vertexAttribute : {false,true}) {
+        try { drawProbe(instance, device, *errors, robustness, packed, vertexAttribute, report); }
+        catch (const std::exception& e) { report<<"ERROR draw robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")<<" vertex_attribute="<<vertexAttribute<<": "<<e.what()<<"\n"; }
     }
     queue={}; device.Destroy();
 }
 std::string diagnose() {
     std::ostringstream report;
-    report<<"KartPad synthetic renderer probe 2\nHelper SHA256: "<<kHelperSha<<"\n";
+    report<<"KartPad synthetic renderer probe 3\nHelper SHA256: "<<kHelperSha<<"\n";
     report<<"No game data read. Validation enabled. Compute and indexed-draw readback; not gameplay acceptance.\n";
     try {
         const auto feature=wgpu::InstanceFeatureName::TimedWaitAny;

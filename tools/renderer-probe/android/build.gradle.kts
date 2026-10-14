@@ -7,8 +7,8 @@ android {
         applicationId = "dev.kartpad.rendererprobe"
         minSdk = 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
         ndk { abiFilters += "arm64-v8a" }
         externalNativeBuild { cmake { arguments += listOf(
             "-DANDROID_STL=c++_static",
@@ -23,7 +23,7 @@ android {
 val notices = layout.buildDirectory.dir("generated/probeAssets/notices")
 val prepareProbeNotices by tasks.registering(Copy::class) {
     from(rootProject.file("../../../LICENSE"))
-    from(rootProject.file("../../../ref/upstream/Wiicompiled/aurora-main/LICENSE")) { rename { "Aurora-MIT.txt" } }
+    from(rootProject.file("../../../vendor/runtimes/android/aurora-main/LICENSE")) { rename { "Aurora-MIT.txt" } }
     from(rootProject.file("../licenses"))
     from("${System.getenv("ANDROID_HOME")}/ndk/29.0.14206865/NOTICE.toolchain") { rename { "NDK-toolchain.txt" } }
     into(notices)

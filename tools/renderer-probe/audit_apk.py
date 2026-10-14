@@ -24,7 +24,7 @@ assert 'certificate SHA-256 digest: c1dbe0a0d72d830a5779476b346a750d0a37515adef9
 assert cert.count('certificate SHA-256 digest:') == 1
 notices = {
     'assets/notices/LICENSE': ROOT/'LICENSE',
-    'assets/notices/Aurora-MIT.txt': ROOT/'ref/upstream/Wiicompiled/aurora-main/LICENSE',
+    'assets/notices/Aurora-MIT.txt': ROOT/'vendor/runtimes/android/aurora-main/LICENSE',
     'assets/notices/NDK-toolchain.txt': sdk/'ndk/29.0.14206865/NOTICE.toolchain',
 }
 for file in (ROOT/"tools/renderer-probe/licenses").glob("*.txt"):
