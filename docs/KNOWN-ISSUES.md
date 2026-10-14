@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.8.1** (14 October 2026). Each item links its GitHub
+Current for **KartPad 0.8.1** (15 October 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).

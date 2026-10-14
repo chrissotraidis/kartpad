@@ -360,7 +360,7 @@ No. PowerPC code is translated ahead of time and compiled into the app. The iPho
 <details>
 <summary>Why is it slow or freezing, and are distorted graphics fixed?</summary>
 
-The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**. Broken characters on Android depend on the GPU: Snapdragon 8 Elite (Adreno 8xx) is fixed by **Automatic** in 0.7.10, while older Adreno and PowerVR GPUs are still open. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
+The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**. Broken characters on Android depend on the GPU. On Adreno 8xx (Snapdragon 8 Elite), **Automatic** fixed it on a OnePlus 15 in 0.7.10 and is reporter-confirmed there. On Adreno 6xx/7xx (Snapdragon 8 Gen 3 and older) and PowerVR, there's no automatic fix yet; **Help → Character Graphics Test…** has options that help on some phones. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
 
 </details>
 

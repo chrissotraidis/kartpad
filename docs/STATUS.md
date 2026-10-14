@@ -1,6 +1,6 @@
 # KartPad status
 
-## Current status: 14 October 2026
+## Current status: 15 October 2026
 
 **Latest release: [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1) (build 263), 13 October.** It fixes 0.8.0's invisible characters on some Snapdragon phones and Mac builds that refused most disc images.
 [PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1), also out on 12 October,
@@ -126,9 +126,11 @@ in PadMint.
 
 ### Next versions
 
-- **After 0.8.0:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
-  (a phone A/B for flat-memory locals); confirm the Adreno character fix with
-  affected players ([loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
+- **After 0.8.1:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
+  (decide PGO after Retro and phone checks, then the flat-memory locals phone
+  A/B); the Adreno 6xx/7xx character work continues with the bone-index
+  candidate awaiting affected-device evidence
+  ([loop](CURRENT-LOOP.md)).
 
 Status through 29 September (source-only period, 0.5.x packages and earlier
 acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before
