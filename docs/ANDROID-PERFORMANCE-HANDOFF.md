@@ -115,7 +115,7 @@ alias them. Desktop builds use a compile-time base and pay none of this.
 | Pass `ctx` to the FP adapters instead of a TLS lookup | TLS samples 10.4% → 2.5%; no measurable frame-time change | Rejected; patch kept |
 | Exact fast path for normal FP results | Inlined: `.text` +12%, about 10% **slower**. Out of line: no change | Rejected; patch kept |
 | Flat-memory locals (read both globals once per function) | `.text` −6.4% (116.4 → 109.0 MB); −1.4% user time over 8 pairs, inside the noise | **Candidate:** needs a phone A/B |
-| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the bench race: game thread **7.88 → 6.40 ms/frame (−19%)**; every PGO run beat every base run. The profile came from the same Luigi Circuit race, so this is the upper bound | **Candidate:** check an unprofiled track, then decide how it ships |
+| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the training race: game thread **7.88 → 6.40 ms/frame (−19%)**, an upper bound. On 14 October, unprofiled Mario Circuit also favors PGO: later windows **6.90–6.94 ms** versus baseline **7.73–8.68 ms**; traffic/camera and host variation limit precision, and code grows 9% | **Candidate:** unprofiled-course direction confirmed; still needs Retro coverage, final-runtime/phone validation and a distribution decision. [Full cross-track record](artifacts/2026-10-14/pgo-cross-track.md) |
 
 Patches and the PGO dump source are in [`tools/android-perf`](../tools/android-perf/README.md).
 
@@ -152,16 +152,17 @@ Rules learned the hard way:
 
 ## Next steps, in order
 
-1. **Finish the PGO check.** Measured −19% on the profiled bench race (above).
-   - Still needed: the same A/B on a track the profile didn't see. Reach it by
-     touch (the stick or D-pad by touch did not move the cup cursor in a
-     headless run; key events trigger the rumble prompt), or collect a new
-     profile on another track plus a Retro Rewind race and bench Luigi Circuit.
+1. **Broaden the PGO check.** Measured −19% on the profiled bench race (above).
+   - Mario Circuit is now reached with a floating-stick drag and tested with
+     both packs. The direction persists, but traffic/camera variation limits
+     precision. Next collect a broader profile including Retro Rewind and
+     repeat on the final runtime; retain per-run screenshots and host activity.
    - Then decide how it ships: the APK can be built with a profile, but
      PadMint builds would need a published `.profdata` (function names and
-     counts derived from running the game; Chris to decide). The release APK
-     compiles translated code in the full Gradle graph, so the profile has to
-     reach the shard targets there as well as `scripts/build-game-pack.sh`.
+     counts derived from running the game; Chris to decide). Apply it to the
+     translated game-pack build that actually ships, retaining the pack
+     fingerprint/export checks; changing only a local profiling graph is not
+     release integration.
 2. **Phone A/B for flat-memory locals** (and optionally the explicit-context
    change). If it gains, implement it properly:
    - **Translator:** emit an entry macro before `goto <entry>` in

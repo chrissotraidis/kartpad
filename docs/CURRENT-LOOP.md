@@ -20,7 +20,11 @@ current release instructions. KartPad 0.8.1 (build 263) and PadMint 0.5.1 are li
 2. **Continue #470/#339 with equivalent warmed CPU work.** Repacking now takes
    roughly 27–34% less CPU time in larger synthetic cases with identical bytes.
    This is not a phone FPS gain or the regression's cause. Keep Adreno 8xx's
-   rendering correction and seek matched race/profile/thermal evidence.
+   rendering correction and seek matched race/profile/thermal evidence. The
+   [PGO check on Mario Circuit](artifacts/2026-10-14/pgo-cross-track.md) now shows
+   a consistent CPU benefit beyond the training course, with timing/camera
+   variation and 9% code growth. Retro coverage and final-runtime/phone checks
+   remain before adopting it.
 3. **Validate the missing-character candidate on affected Adreno hardware.**
    Native bone-index attributes are built but off by default; the synthetic GPU
    probe passes 49,152 checks on SwiftShader. Rows failed on S24. #472 still lacks

@@ -149,8 +149,10 @@ vertex-repack CPU time by roughly 27–34% in the larger synthetic cases, preser
 all output hashes; no phone FPS improvement or regression cause is established.
 [Follow-up tests and measurements](artifacts/2026-10-14/android-input-cpu-renderer.md),
 [bounded #470 progress reply](https://github.com/chrissotraidis/kartpad/issues/470#issuecomment-6161798518).
-The existing PGO result still needs an unprofiled-course/Retro check and a
-distribution decision. #473 remains behind this correctness/performance work.
+The [PGO follow-up on unprofiled Mario Circuit](artifacts/2026-10-14/pgo-cross-track.md)
+also favors the candidate, with variable baseline timing and 9% code growth.
+Retro coverage, final-runtime/phone validation and a distribution decision remain.
+#473 remains behind this correctness/performance work.
 
 ## Local evidence
 

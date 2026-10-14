@@ -97,6 +97,13 @@ process, with no validation error or native abort in the captured logs. A synthe
 Adreno 619/750 or the unidentified GPU in #472. Keep those reports open and do
 not enable this by default without affected-device evidence.
 
+Follow-up source review confirms that diagnostic draws call the same
+`gx::render` function, including the native vertex-buffer binding. Persistent
+pipeline records contain configurations that are rebuilt through
+`gx::create_pipeline`; they do not reuse a shader compiled with a different
+experiment setting. The setting is read once per process, so changing it requires
+a restart. No additional shader-cache or self-check correction was needed.
+
 ## New Mac build report #475
 
 The report fails a certificate check during PadMint preflight, before game
