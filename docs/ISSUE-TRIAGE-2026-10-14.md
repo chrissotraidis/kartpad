@@ -2,7 +2,8 @@
 
 Latest public app: **0.8.1, build 263**, published 13 October. Intake found
 31 open issues and one open PR, draft #375. This pass does not publish a new
-app or close any affected-device report. Discord was not contacted; no physical
+app or close any affected-device report. The follow-up found new issue #475
+(Mac certificate failure); current open count is 32. Discord was not contacted; no physical
 iPad was used. Work reuses the existing clean task worktree; the dirty primary
 checkout is untouched.
 
@@ -17,6 +18,11 @@ checkout is untouched.
 | [#380](https://github.com/chrissotraidis/kartpad/issues/380) | Follow-up uses third-party IPA/DATA and no computer/PadMint; reporter adds iPadOS 26.6.1 and anti-revoke DNS | App provenance/version unverified; not confirmation of the 0.8.1 picker failing. [Explained the supported build route](https://github.com/chrissotraidis/kartpad/issues/380#issuecomment-6159855691); no evidence blaming DNS, no reinstall request |
 | [#473](https://github.com/chrissotraidis/kartpad/issues/473) | New request for touch L item-hold similar to A acceleration lock, Android and iPhone/iPad | Enhancement labelled and [acknowledged](https://github.com/chrissotraidis/kartpad/issues/473#issuecomment-6159856629). Optional/off by default, lifecycle clearing; [scope](TODO.md#optional-touch-item-hold-473), not implemented |
 | [#465](https://github.com/chrissotraidis/kartpad/issues/465) | Already closed by reporter after 1× avoided the heat-related slowdown seen at 4×. Their 1.5× option request was still actionable | Android menu now offers 1.5×. [Reply](https://github.com/chrissotraidis/kartpad/issues/465#issuecomment-6160331947). This is a quality/performance choice, not a fix for #470 or a measured speed gain |
+
+The new #475 report fails HTTPS certificate validation before compilation.
+The Mac preflight recipe could switch to a different Python on PATH; it now
+retains PadMint's interpreter. This is a tested routing correction, with the
+reporter's TLS cause still unconfirmed. [Reply and launcher question](https://github.com/chrissotraidis/kartpad/issues/475#issuecomment-6161775955). See the [follow-up evidence](artifacts/2026-10-14/android-input-cpu-renderer.md#new-mac-build-report-475).
 
 No other recent player reply changes the next action. Existing pending device
 checks remain pending; silence is not acceptance. No duplicate closures in this
@@ -34,7 +40,8 @@ new export's session directory is misleadingly prefixed `base`.
 The observed slowdown is real. These are different sessions, with different
 thermal conditions and unlabelled offline/online boundaries, so their medians
 cannot establish a before/after speed difference or identify a commit. No
-performance patch is claimed. Do not disable the Adreno 8xx repack that fixed
+whole-game performance gain is claimed. The follow-up reduced vertex-repack
+CPU cost in a controlled microbenchmark; see below. Do not disable the Adreno 8xx repack that fixed
 real rendering failures merely because it costs CPU time.
 
 ## Android window correction (#202)
@@ -102,35 +109,30 @@ are unchanged. Runtime source: [WiiCompiled #7](https://github.com/chrissotraidi
 commit `c74f7d059b6fa6e8c457e3dc02fe7847d1017249`. Staged source was verified
 against that pin after the build.
 
-The candidate starts on API 34 and API 36 and accepts touch through license
-creation/selection. The first seeded-data run on each emulator stayed at the
-title screen despite input; a fresh process then accepted touch. This is
-recorded as a test limitation, not a fixed input bug or a successful fresh-import
-release check. API 36 actual-game mouse activity plus idle timeout, Home/resume,
-and a system-bar swipe retain the same process and fullscreen window with no
-JNI abort. API 34 reaches a Luigi Circuit Grand Prix race with touch navigation,
-acceleration, a visible driver and an acquired item. Mouse movement followed by
-six seconds idle, Home/resume and a system-bar swipe retain the same process,
-fullscreen window and running race without the baseline JNI abort. Screenshots
-record the race before and after resume. This is a race/lifecycle smoke check,
-not a completed cup, a performance measurement or Adreno rendering acceptance.
+The cursor candidate starts on API 34/36; API 34 reaches a Luigi Circuit race.
+Mouse/idle, Home/resume and system-bar swipe retain the same process and
+fullscreen window without the baseline JNI abort. These are smoke checks,
+not completed-cup, performance or Adreno acceptance.
+
+The seeded-data title-screen observation was investigated further. Android's
+fullscreen tutorial and the game's idle demo confounded the first attempts;
+the original run recovered to license selection without restarting. Separately,
+a real short-tap defect was found: unified WPAD status and KPAD drained the same
+pending edge. Each now has its own latch, with held-state and lifecycle tests.
+The final private build passes a **normal fresh folder import, license creation,
+a race and Home/resume in its first native game process** on API 34.
+[Exact scope and evidence](artifacts/2026-10-14/android-input-cpu-renderer.md#short-taps-and-first-launch).
 
 ## Review status
 
-[KartPad #474](https://github.com/chrissotraidis/kartpad/pull/474) preserves this
-pass on `codex/issue-triage-20261014`. KartPad's three hosted checks pass on
-`62d711e0` (runtime boundaries, maintenance receipts and REL-report integrity).
-The runtime dependency [WiiCompiled #7](https://github.com/chrissotraidis/wiicompiled/pull/7)
-is draft: translator tests pass, but inherited desktop jobs fail before the
-changed files compile. Windows/Linux/Intel are rejected by the existing
-arm64-only CMake guard; macOS arm64 finds an existing Dawn archive SHA-256
-mismatch. Neither platform guards, dependency pins nor workflows changed in
-this pass. Do not bypass the checksum or describe those checks as passing.
-The maintained Android source builds through KartPad's own dependency setup.
-Both PRs remain draft. Resolve the fork CI configuration/dependency failures
-and validate a normal fresh import with a release candidate before promotion;
-the seeded-data first-launch input limitation remains unexplained. No further
-player replies arrived during the final GitHub refresh.
+[KartPad #474](https://github.com/chrissotraidis/kartpad/pull/474) and
+[WiiCompiled #7](https://github.com/chrissotraidis/wiicompiled/pull/7) remain draft.
+The inherited desktop workflows were replaced by the maintained Android
+compile/link/behavior lane, retaining translator tests. Both runtime jobs pass
+on `ac118be`; KartPad's three checks passed on `83096695`. No checksum or
+architecture guard was weakened. This is not a fix for the old desktop Dawn
+archive mismatch. Final release-signed update/fresh races, artifact audits,
+PadMint player checks and affected-device evidence remain required.
 
 ## Open PR and remaining work
 
@@ -139,9 +141,14 @@ passing hosted checks, unlike the older conflict snapshot. It still has
 unresolved sustained rendering/replay, custom course/variant/mode coverage,
 and physical iPhone picker/gameplay acceptance. No change or merge in this pass.
 
-Graphics candidate 2 (bone index through a vertex attribute) remains unbuilt.
-The rows path failed on the S24; no evidence supports turning another
-experimental path on by default. #470 needs a controlled CPU-work comparison.
+Graphics candidate 2 (bone index through a vertex attribute) is implemented,
+built and off by default. The separate synthetic probe passes 49,152 checks
+on Vulkan SwiftShader; affected Adreno acceptance is still missing. The rows
+path failed on S24 and is a separate experiment. For #470, a loop change reduces
+vertex-repack CPU time by roughly 27–34% in the larger synthetic cases, preserving
+all output hashes; no phone FPS improvement or regression cause is established.
+[Follow-up tests and measurements](artifacts/2026-10-14/android-input-cpu-renderer.md),
+[bounded #470 progress reply](https://github.com/chrissotraidis/kartpad/issues/470#issuecomment-6161798518).
 The existing PGO result still needs an unprofiled-course/Retro check and a
 distribution decision. #473 remains behind this correctness/performance work.
 
@@ -156,3 +163,6 @@ It retains a development 0.8.1/263 label and is not a public update. Public
 records contain only reviewed findings and issue links. No player archive,
 game data, saves, translated game library or device
 identifier is added to Git.
+
+Follow-up private build, fingerprint, tests and log locations are recorded in
+the [14 October engineering evidence](artifacts/2026-10-14/android-input-cpu-renderer.md).

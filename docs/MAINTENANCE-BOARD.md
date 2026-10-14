@@ -6,7 +6,10 @@ The [current goal loop](CURRENT-LOOP.md) sets the order of work after 0.8.1.
 The [14 October review](ISSUE-TRIAGE-2026-10-14.md) records #470's supplied logs,
 #202's failed Thor retest and local window correction, #472's new graphics
 report, #380's unsupported setup, #301's returned log, and #473's request. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept
-current with each release. Everything below on this board is a dated snapshot:
+current with each release. The [engineering follow-up](artifacts/2026-10-14/android-input-cpu-renderer.md)
+records the short-tap fix, passing Android CI and fresh-import race, measured
+repack CPU reduction, off-by-default bone-index experiment, and #475 Mac
+preflight interpreter correction. Everything below on this board is a dated snapshot:
 useful evidence, not current next actions.
 
 Performance (#339) is resumed from the

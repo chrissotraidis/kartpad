@@ -7,6 +7,13 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Setup and game data
 
+- **Mac build stops at `CERTIFICATE_VERIFY_FAILED` before compilation (#475).**
+  A secure download failed its certificate check. The cause on the reported Mac
+  is still unconfirmed. A prepared recipe correction keeps PadMint's own Python
+  during preflight instead of selecting another Python from PATH; it is not in
+  0.8.1. Keep certificate verification enabled. [Report](https://github.com/chrissotraidis/kartpad/issues/475)
+
+
 - **KartPad asks for a "Wii common key".** That only happens with
   **Import or Reimport Wii Disc Image…**. Use **Import from Extracted Game Data
   Folder…** with a folder from Dolphin's **Extract Entire Disc** instead (or,
@@ -51,7 +58,8 @@ the [archive](archive/known-issues-through-2026-09.md).
   like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
   does. On the Galaxy S24 Ultra it doesn't: 0.8.1's log shows it active and
   the riders still invisible (13 October). Next: pass each vertex's bone index
-  to the GPU directly. The Moto G85's 0.8.1 log still shows missing bodies,
+  to the GPU directly. That experiment is built and off by default; synthetic
+  software-GPU checks pass, but no affected Adreno result yet. The Moto G85's 0.8.1 log still shows missing bodies,
   with matrix rows off; it does not test that option. A new
   [OnePlus OPD2403 report](https://github.com/chrissotraidis/kartpad/issues/472)
   shows the same visible symptom, with GPU/driver evidence still pending.

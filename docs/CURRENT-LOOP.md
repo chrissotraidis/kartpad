@@ -12,21 +12,22 @@ records new player evidence and the work completed in this pass. The
 [11 October research](RESEARCH-HANDOFF-2026-10-11.md) remains background, not
 current release instructions. KartPad 0.8.1 (build 263) and PadMint 0.5.1 are live.
 
-1. **Finish the Android window correction (#202).** The Thor still has bands
-   on 0.8.1. A delayed SDL window-style command restores windowed state; the
-   Android 14 fixture reproduces it. Keep SDL's fullscreen state active, check
-   startup/resume/menu/swipe behavior, and retain the Thor confirmation gate.
-   The real-game check also reproduced an existing Android cursor/JNI abort;
-   the candidate moves cursor changes onto the scheduler event path.
-2. **Investigate the performance regression (#470 with #339).** Both supplied
-   logs are useful. The Adreno 810 game thread is busy at 1×; heat rises during
-   the 0.8.1 session. This is not established as the 0.8.0 Adreno 6xx/7xx
-   change, shader compilation, or heat alone. Compare equivalent warmed work
-   before changing the renderer or claiming a speed gain.
-3. **Continue the character investigation (#104, #301, #472).** Rows failed on
-   the S24; the Moto G85's latest log has rows off. The OnePlus OPD2403 report
-   has no GPU/driver log yet. Keep candidate 2 (bone index as a vertex
-   attribute) separate from a verified fix. No repeated settings sweeps.
+1. **Review the tested input/CI corrections in draft #474 and runtime #7.**
+   Independent short-tap latches pass production tests; the normal fresh folder
+   import reaches a race in its first process. Android compile/link and translator
+   CI pass. Window/cursor corrections and 1.5× remain unreleased; Thor confirmation
+   and final release-signed update/fresh tests remain separate.
+2. **Continue #470/#339 with equivalent warmed CPU work.** Repacking now takes
+   roughly 27–34% less CPU time in larger synthetic cases with identical bytes.
+   This is not a phone FPS gain or the regression's cause. Keep Adreno 8xx's
+   rendering correction and seek matched race/profile/thermal evidence.
+3. **Validate the missing-character candidate on affected Adreno hardware.**
+   Native bone-index attributes are built but off by default; the synthetic GPU
+   probe passes 49,152 checks on SwiftShader. Rows failed on S24. #472 still lacks
+   a GPU/driver log. No more player settings sweeps; no release until ready.
+
+[Detailed follow-up](artifacts/2026-10-14/android-input-cpu-renderer.md) also records
+#475's new Mac certificate failure and the tested PadMint interpreter correction.
 
 Released state is in [STATUS.md](STATUS.md). Speed details are in the
 [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md).

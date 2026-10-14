@@ -46,6 +46,16 @@ on Adreno 8xx. Source/history alone is not a measured speedup.
 
 [Detailed triage and replies](ISSUE-TRIAGE-2026-10-14.md).
 
+## 14 October candidate: vertex-repack loop
+
+The production repacker now visits attributes before vertices, avoiding repeated
+format/absent-attribute checks. ASan/UBSan golden cases pass and every benchmark
+output hash matches the unchanged implementation. Quiet-host forward/reverse
+runs show roughly 27–34% less CPU time for 32–2,048 vertices. This is an Apple
+Silicon CPU microbenchmark, **not Android FPS**, and does not identify #470's
+regression. Adreno 8xx all-draw repacking remains enabled. See the
+[measurements and limits](artifacts/2026-10-14/android-input-cpu-renderer.md#470-cheaper-vertex-repacking).
+
 ## What we know
 
 **The slowness is CPU-bound, on one thread.** The game runs on a single

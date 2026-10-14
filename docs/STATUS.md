@@ -47,7 +47,13 @@ on Android 14; the Thor itself still needs confirmation. Android also has a
 1.5× resolution choice prepared for the next build (#465). The same pass
 reproduced a cursor/JNI abort on the Android 14 baseline and prepared a fix
 that services cursor changes from the scheduler stack. These changes are not
-in the published 0.8.1.
+in the published 0.8.1. The follow-up also fixes short taps being consumed by
+one input reader before another, passes a normal fresh-import race, and repairs
+the Android fork's CI. A measured vertex-repack CPU optimization and an off-by-default
+native bone-index experiment are in the drafts; neither establishes a fix for
+#470 or missing Adreno bodies. #475's Mac certificate report prompted a tested
+correction to retain PadMint's Python during preflight. [Evidence and remaining
+gates](artifacts/2026-10-14/android-input-cpu-renderer.md).
 
 #470's Adreno 810 slowdown is confirmed in logs; the responsible change is
 unknown. #472 adds a OnePlus OPD2403 missing-body report with GPU/driver evidence
@@ -81,7 +87,8 @@ in PadMint.
     in 0.7.15 (Discord, 13 October), so Automatic goes back to 0.7.15's behaviour
     in 0.8.1. Dolphin-style matrix rows (#463) also failed on the S24.
     The Moto G85's 0.8.1 log has rows off, so it is not a result for that option.
-    Next candidate: a vertex attribute for the bone index, still unverified.
+    Next candidate: a vertex attribute for the bone index, built and tested with
+    synthetic software-GPU cases; still unverified on affected Adreno devices.
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.
