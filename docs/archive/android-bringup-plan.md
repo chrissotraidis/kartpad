@@ -241,9 +241,8 @@ KartPadLaunchActivity
             `-- Aurora / Dawn Vulkan
 ```
 
-The current
-[`wiicompiled-dual-product-target.patch`](../../patches/wiicompiled-dual-product-target.patch)
-already establishes the correct product model. Android should extend it with a
+The historical `wiicompiled-dual-product-target.patch` established the
+correct product model at the time. Android should extend that model with a
 shared-library product branch; it should not make Original and Retro Rewind
 separate applications or downloadable code modules.
 
