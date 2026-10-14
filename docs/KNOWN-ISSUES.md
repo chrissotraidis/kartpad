@@ -127,6 +127,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   keyboard and the controller both work.
 - **Mac: Wii Remote with Classic Controller Pro** has input lag and no D-pad.
   [#306](https://github.com/chrissotraidis/kartpad/issues/306)
+- **Mac: the Wii Remote disappears from Controller Settings once a Nunchuk or
+  Classic Controller Pro is attached; a Wii Remote Plus (RVL-CNT-01-TR) won't
+  connect.** Reported on 0.8.1 after pairing with WiimotePair rather than
+  KartPad's own pairing window. Not diagnosed. [#476](https://github.com/chrissotraidis/kartpad/issues/476)
 
 ## Online
 

@@ -24,6 +24,17 @@ The Mac preflight recipe could switch to a different Python on PATH; it now
 retains PadMint's interpreter. This is a tested routing correction, with the
 reporter's TLS cause still unconfirmed. [Reply and launcher question](https://github.com/chrissotraidis/kartpad/issues/475#issuecomment-6161775955). See the [follow-up evidence](artifacts/2026-10-14/android-input-cpu-renderer.md#new-mac-build-report-475).
 
+## 15 October follow-up
+
+| Issue | Finding | Disposition / next actor |
+| --- | --- | --- |
+| [#476](https://github.com/chrissotraidis/kartpad/issues/476) | New Mac report on 0.8.1 with Retro Rewind 6.13.1: Wii Remote paired through WiimotePair (KartPad's own pairing failed); it shows in Controller Settings until a Nunchuk or Classic Controller Pro is attached, then vanishes. A Wii Remote Plus (RVL-CNT-01-TR) won't connect. No report ID or log | Not diagnosed. SDL's Wii driver re-reads the controller and renames it when an extension is attached ("Nintendo Wii Remote with Nunchuk"); whether KartPad's controller list loses the renamed device is unverified and untested on hardware. [Reply](https://github.com/chrissotraidis/kartpad/issues/476#issuecomment-6180856784) asks for one **Help → Save Diagnostics Report…** with the Nunchuk attached. Tracked with #306 ([link](https://github.com/chrissotraidis/kartpad/issues/306#issuecomment-6180857071)) |
+| [#475](https://github.com/chrissotraidis/kartpad/issues/475) | Reporter has not answered the launcher question (14 October) | Waiting. The interpreter correction ships with #474 and is not in 0.8.1 |
+| [#390](https://github.com/chrissotraidis/kartpad/issues/390) | Last comment is the reporter's thanks on 10 October; no new evidence | No reply needed. Still needs a physical 60 Hz iPhone or iPad to reproduce |
+
+Open count is 32 and the open PRs are drafts #474 and #375; nothing was published
+or closed. The primary checkout's uncommitted work was not touched.
+
 No other recent player reply changes the next action. Existing pending device
 checks remain pending; silence is not acceptance. No duplicate closures in this
 pass. #472's GPU/driver and #301's frozen-picture behavior must not be erased by

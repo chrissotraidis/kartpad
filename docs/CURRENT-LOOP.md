@@ -148,8 +148,12 @@ Act when evidence exists; don't chase reporters.
 
 - **#378 generic controllers:** fixed in 0.7.6 to 0.7.8; waiting for
   confirmation.
-- **#324 single Joy-Cons; #306 Mac Wii Remote with Classic Controller Pro**
-  (lag, no D-pad): open, not scheduled.
+- **#324 single Joy-Cons; #306 and #476 Mac Wii Remote with Classic
+  Controller Pro or Nunchuk** (lag, no D-pad, remote vanishes from Controller
+  Settings when an extension is attached): open, not scheduled. The next step
+  is one Mac diagnostics report from #476's reporter (requested 15 October),
+  then a source review of how KartPad's controller list handles SDL
+  re-registering the remote under a new name.
 - **#295 Retro Rewind ghost transfer:** draft #375 is mergeable with passing
   hosted checks on 14 October, but its replay/rendering and device acceptance
   gaps remain. Original ghosts already

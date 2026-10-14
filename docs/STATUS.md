@@ -105,7 +105,7 @@ in PadMint.
   still outstanding.
 - **Controllers:** ipega and similar fixed in 0.7.6 to 0.7.8, awaiting
   confirmation (#378); single Joy-Cons (#324); Mac Wii Remote with Classic
-  Controller Pro (#306).
+  Controller Pro or Nunchuk (#306, #476).
 - **Game flow and data:** the crash after a cup's last race (#131) doesn't
   happen on 0.7.10 in automated full cups, including at 3x
   ([record](artifacts/2026-10-04/android/131-cup-ceremony-harness.md)); awaiting
