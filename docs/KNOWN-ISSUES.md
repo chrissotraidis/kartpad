@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.8.0** (October 2026). Each item links its GitHub
+Current for **KartPad 0.8.1** (14 October 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).
@@ -18,7 +18,7 @@ the [archive](archive/known-issues-through-2026-09.md).
   The game data copy didn't finish, for example a folder only partly
   downloaded from iCloud Drive or another cloud drive. Make sure the whole
   folder is downloaded (in Files or Finder: **Download Now**), copy it again
-  and reimport. From the next release, KartPad checks every file when you
+  and reimport. From 0.7.14, KartPad checks every file when you
   import and on the game chooser, so this shows up there with the file's name
   instead of after you press Play. [#370](https://github.com/chrissotraidis/kartpad/issues/370)
 - **Android, fixed in 0.7.13: "The game stopped because DVD data is
@@ -51,18 +51,25 @@ the [archive](archive/known-issues-through-2026-09.md).
   like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
   does. On the Galaxy S24 Ultra it doesn't: 0.8.1's log shows it active and
   the riders still invisible (13 October). Next: pass each vertex's bone index
-  to the GPU directly.
-- **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
-  (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
+  to the GPU directly. The Moto G85's 0.8.1 log still shows missing bodies,
+  with matrix rows off; it does not test that option. A new
+  [OnePlus OPD2403 report](https://github.com/chrissotraidis/kartpad/issues/472)
+  shows the same visible symptom, with GPU/driver evidence still pending.
+- **OnePlus 15:** its Adreno 8xx graphics were fixed by **Automatic** in
+  0.7.10 (reporter-confirmed). This does not establish all Adreno 8xx devices
+  as fixed. If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
 - **PowerVR GPUs** (for example Moto G54): the 3D scene breaks up. The cause is
   not found yet; 0.7.10's log ruled out the GPU's shader limit. [#304](https://github.com/chrissotraidis/kartpad/issues/304)
 - **Moto G75:** crashes while loading the game; we need a diagnostic log.
   [#332](https://github.com/chrissotraidis/kartpad/issues/332)
-- **AYN Thor:** black bars even with full screen. From 0.8.0, **Fill Screen**
-  draws races under the display's cutout area (checked on a Pixel 9 Pro XL),
-  which may remove the band; menus keep their own width. Not yet confirmed on a
-  Thor. [#202](https://github.com/chrissotraidis/kartpad/issues/202)
+- **AYN Thor:** black bands remain with Fill Screen in 0.8.1, confirmed by
+  the reporter's race photos. The cutout change did not resolve this. A
+  delayed SDL window-style command can restore windowed mode after KartPad
+  hides the system bars. A correction is under test; Android 14 fixture
+  evidence is recorded in the [14 October review](ISSUE-TRIAGE-2026-10-14.md).
+  It is not in the published 0.8.1 and still needs Thor confirmation.
+  [#202](https://github.com/chrissotraidis/kartpad/issues/202)
 
 ## Setup on iPhone and iPad
 
@@ -72,7 +79,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
   **Import from Extracted Folder…**. 0.8.1 opens a picker that only
   chooses folders and always reports back after Open; it works in the
-  Simulator, and a real device has to confirm it. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
+  Simulator, and a real device has to confirm it. The latest follow-up uses a
+  third-party IPA and DATA download without a PadMint build, so it does not
+  yet test the supported 0.8.1 path. The `ios-for-padmint.ipa` alone cannot play
+  the game; importing DATA does not supply the translated game code. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
 
 ## Graphics (Apple)
 
@@ -89,6 +99,13 @@ the [archive](archive/known-issues-through-2026-09.md).
   so its speed follows that core's speed. Lowering the render resolution
   usually helps little; resolutions above 1× still cost GPU time, so start at
   **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
+- **Honor Magic 8 Lite / Adreno 810: reported regression** from previously
+  playable builds. Both 0.7.15 and 0.8.1 logs show slow gameplay at 1× with a
+  busy main thread and no pending shader compilation in the slow samples.
+  The newer session also reaches severe thermal status. The responsible
+  change is not identified; different sessions are not a controlled A/B.
+  [#470](https://github.com/chrissotraidis/kartpad/issues/470)
+
 
 ## Controllers
 

@@ -1,8 +1,11 @@
 # Maintenance work and test board
 
-## Current work (from 5 October)
+## Current work (14 October)
 
-The [current goal loop](CURRENT-LOOP.md) sets the order of work after 0.8.0. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept
+The [current goal loop](CURRENT-LOOP.md) sets the order of work after 0.8.1.
+The [14 October review](ISSUE-TRIAGE-2026-10-14.md) records #470's supplied logs,
+#202's failed Thor retest and local window correction, #472's new graphics
+report, #380's unsupported setup, #301's returned log, and #473's request. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept
 current with each release. Everything below on this board is a dated snapshot:
 useful evidence, not current next actions.
 

@@ -1,6 +1,6 @@
 # KartPad status
 
-## Current status: 13 October 2026
+## Current status: 14 October 2026
 
 **Latest release: [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1) (build 263), 13 October.** It fixes 0.8.0's invisible characters on some Snapdragon phones and Mac builds that refused most disc images.
 [PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1), also out on 12 October,
@@ -39,6 +39,21 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
 iPad (#310, closed).
 
+### 14 October follow-up
+
+[Issue triage](ISSUE-TRIAGE-2026-10-14.md) records the new 0.8.1 reports and
+public replies. A local Android window correction removes the bands reproduced
+on Android 14; the Thor itself still needs confirmation. Android also has a
+1.5× resolution choice prepared for the next build (#465). The same pass
+reproduced a cursor/JNI abort on the Android 14 baseline and prepared a fix
+that services cursor changes from the scheduler stack. These changes are not
+in the published 0.8.1.
+
+#470's Adreno 810 slowdown is confirmed in logs; the responsible change is
+unknown. #472 adds a OnePlus OPD2403 missing-body report with GPU/driver evidence
+pending. #380's new follow-up uses an unverified third-party IPA without PadMint,
+so it does not establish a failure of the supported 0.8.1 picker.
+
 ### What remains
 
 Things decided for later are in the [to-do list](TODO.md). iPhone, iPad and
@@ -50,7 +65,8 @@ in PadMint.
   folder comes first, the key requirement is stated up front, and Android takes
   a zip so cloud transfers can't silently drop files.
 - **Android 3D drawing.**
-  - Adreno 8xx: fixed by Automatic in 0.7.10.
+  - OnePlus 15 graphics: reporter-confirmed with Automatic in 0.7.10.
+    Do not generalize that result to all Adreno 8xx devices.
   - Adreno 6xx/7xx (#104, #301): no automatic fix. The 0.7.12 and 0.7.13
     self-check logs from both phones show character bodies drawing nothing with
     either vertex layout and with either bone lookup on its own. Only the two
@@ -63,8 +79,9 @@ in PadMint.
     it active and the self-check still drawing nothing, with the race at 60 FPS
     (#104, 12 October), and it hid characters on Adreno phones that drew them
     in 0.7.15 (Discord, 13 October), so Automatic goes back to 0.7.15's behaviour
-    in 0.8.1. Next: Dolphin-style matrix rows, a Character Graphics Test
-    option in 0.8.1 (#463); Deivmsr and PeriTheFrost have been asked to try it.
+    in 0.8.1. Dolphin-style matrix rows (#463) also failed on the S24.
+    The Moto G85's 0.8.1 log has rows off, so it is not a result for that option.
+    Next candidate: a vertex attribute for the bone index, still unverified.
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.

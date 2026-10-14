@@ -1,26 +1,32 @@
-# Current goal loop: after 0.8.0
+# Current goal loop: after 0.8.1
 
-Written 10 October 2026. It replaces the
+Updated 14 October 2026. It replaces the
 [5 October loop](archive/current-loop-2026-10-05.md), whose setup, sound,
 file-check and WiiCompiled-sync work shipped in 0.7.11 to 0.7.15 or is merged
 for 0.8.0.
 
 ## What we're doing next
 
-**Paused on 11 October.** Start from the
-[11 October handoff](RESEARCH-HANDOFF-2026-10-11.md): it records Chris's
-decisions (no test phone) and the proposed plan, which puts the Adreno
-character fix first. 0.8.0 shipped on 12 October with that fix, and
-PadMint 0.5.1 brought KartPad's Mac copy back the same day.
+**Resumed 14 October after 0.8.1.** The [14 October issue review](ISSUE-TRIAGE-2026-10-14.md)
+records new player evidence and the work completed in this pass. The
+[11 October research](RESEARCH-HANDOFF-2026-10-11.md) remains background, not
+current release instructions. KartPad 0.8.1 (build 263) and PadMint 0.5.1 are live.
 
-1. **0.8.0 is out** (12 October, build 262). What's left of
-   [Phase 0](#phase-0-publish-080-done) is the hands-on iPad checks.
-2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
-   Measure the two ready candidates first, then take on the large structural
-   change.
-3. **Keep players unblocked.** Act on Android graphics and crash reports when
-   evidence arrives, and leave new features in the backlog unless Chris pulls
-   one in.
+1. **Finish the Android window correction (#202).** The Thor still has bands
+   on 0.8.1. A delayed SDL window-style command restores windowed state; the
+   Android 14 fixture reproduces it. Keep SDL's fullscreen state active, check
+   startup/resume/menu/swipe behavior, and retain the Thor confirmation gate.
+   The real-game check also reproduced an existing Android cursor/JNI abort;
+   the candidate moves cursor changes onto the scheduler event path.
+2. **Investigate the performance regression (#470 with #339).** Both supplied
+   logs are useful. The Adreno 810 game thread is busy at 1×; heat rises during
+   the 0.8.1 session. This is not established as the 0.8.0 Adreno 6xx/7xx
+   change, shader compilation, or heat alone. Compare equivalent warmed work
+   before changing the renderer or claiming a speed gain.
+3. **Continue the character investigation (#104, #301, #472).** Rows failed on
+   the S24; the Moto G85's latest log has rows off. The OnePlus OPD2403 report
+   has no GPU/driver log yet. Keep candidate 2 (bone index as a vertex
+   attribute) separate from a verified fix. No repeated settings sweeps.
 
 Released state is in [STATUS.md](STATUS.md). Speed details are in the
 [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md).
@@ -28,8 +34,9 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
 ## Ground rules
 
 - **Devices:**
-  - Use the Android emulator on this Mac, the iPad Pro, the iPhone 14 and this
-    Mac, plus Chris's Pixel 9 Pro XL when he connects it.
+  - Use the Android emulator, iPad Simulator and this Mac. **Do not use the
+    hardware iPad** (Chris's current instruction). Other physical devices need
+    an explicitly owned test session.
   - No test phones get bought (Chris confirmed this on 11 October). Remote
     device labs are the proposed substitute; see the
     [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-remote-device-labs).
@@ -122,9 +129,9 @@ Act when evidence exists; don't chase reporters.
 
 | Issue | State | Next step |
 |---|---|---|
-| #104, #301 Adreno 6xx/7xx invisible characters | 0.8.0's native uniform buffers plus character repack ran on the S24 Ultra and still drew no bodies (#104, 12 October); #301 untested on 0.8.0 | Dolphin-style matrix rows ([candidate 1](RESEARCH-HANDOFF-2026-10-11.md#research-adreno-invisible-characters)) shipped in 0.8.1 as **Character Graphics Test → Experimental: matrix rows like Dolphin** (#463), emulator-checked. It didn't bring riders back on the S24 Ultra (#104, 0.8.1 log, 13 October); #301 untested. If rows fail too, candidate 2 (index as a vertex attribute) |
+| #104, #301 Adreno 6xx/7xx invisible characters | 0.8.0's native uniform buffers plus character repack ran on the S24 Ultra and still drew no bodies (#104, 12 October); #301 untested on 0.8.0 | Dolphin-style matrix rows ([candidate 1](RESEARCH-HANDOFF-2026-10-11.md#research-adreno-invisible-characters)) shipped in 0.8.1 as **Character Graphics Test → Experimental: matrix rows like Dolphin** (#463), emulator-checked. It didn't bring riders back on the S24 Ultra (#104, 0.8.1 log, 13 October); #301 untested. Candidate 2 (index as a vertex attribute); the 13 October #301 log has rows off, so it is not a rows result |
 | #304 PowerVR exploding characters | Vertex layout and shader limit ruled out; the matrix read is the remaining suspect, and Dawn decomposes it on every Vulkan GPU | 0.8.0 has the native-uniforms option: ask Quiridel once to try **Character Graphics Test → Experimental: native uniform buffers** and send the self-check line |
-| #380 iPhone/iPad folder picker: Open does nothing | Reopened 12 October: a second real-device report (iPad A16), plus Cas on Discord (iPhone). 0.7.4's fix was Simulator-only | Folder-only picker and always-report-back import merged (#462), checked on the iPad (A16) Simulator; shipped in 0.8.1 and the reporter was asked to confirm on a device |
+| #380 iPhone/iPad folder picker: Open does nothing | Reopened 12 October: a second real-device report (iPad A16), plus Cas on Discord (iPhone). 0.7.4's fix was Simulator-only | Folder-only picker and always-report-back import merged (#462), checked on the iPad (A16) Simulator; shipped in 0.8.1. The new follow-up uses a third-party IPA/DATA folder without PadMint, so it does not establish a failure of the supported 0.8.1 app; real-device confirmation is still open |
 | #431 Honor textures | One screenshot and log requested | Waiting |
 | #390 launch flicker on 60 Hz iPhones/iPads | The FPS panel vanishes with the game image while touch buttons stay, so presentation timing is suspect | Needs a 60 Hz Apple device to reproduce; no fix yet |
 | #332 Moto G75 crash at load | No diagnostic | Waiting for a log |
@@ -138,7 +145,9 @@ Act when evidence exists; don't chase reporters.
   confirmation.
 - **#324 single Joy-Cons; #306 Mac Wii Remote with Classic Controller Pro**
   (lag, no D-pad): open, not scheduled.
-- **#295 Retro Rewind ghost transfer:** draft #375. Original ghosts already
+- **#295 Retro Rewind ghost transfer:** draft #375 is mergeable with passing
+  hosted checks on 14 October, but its replay/rendering and device acceptance
+  gaps remain. Original ghosts already
   work, including compressed Chadsoft ghosts (0.7.15).
 - **#234 full identity and Mii migration:** not supported. The save-transfer
   guide says so.
@@ -163,7 +172,9 @@ submits; the agent prepares the branch and notes.
 - **Input and content:**
   - #91 DSU input;
   - #441 original soundtrack mod;
-  - #203 assorted requests.
+  - #203 assorted requests;
+  - #473 optional touch item hold on Android and iPhone/iPad (off by default,
+    clear on menu/background, not implemented).
 - **PadMint:** one-click rebuild on new KartPad releases ([to-do](TODO.md)).
 
 ## Support, every pass

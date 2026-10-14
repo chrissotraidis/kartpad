@@ -1,6 +1,6 @@
 # Android performance: where we stand
 
-Updated 10 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 14 October 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
@@ -8,10 +8,43 @@ The September Pixel experiments are in the
 
 ## Release context
 
-- Public: **0.8.0** (build 262, 12 October; WiiCompiled sync, update notices,
-  Shake to Trick, app icons, Mac controller fix, Adreno 6xx/7xx character fix),
-  tagged at `41c07740`.
-- 0.8.0 contains no speed work. Nothing on this page has shipped yet.
+- Public: **0.8.1** (build 263, 13 October), tagged at `12bf9dd6`.
+  Automatic restored the 0.7.15 path for Adreno 6xx/7xx after 0.8.0 hid
+  characters on some previously working devices. Adreno 8xx keeps its earlier
+  all-draw repack policy.
+- 0.8.0 and 0.8.1 contain no general CPU optimization from this page.
+
+## New regression evidence (#470, 14 October)
+
+The Honor MTN-NX3 report identifies Adreno 810, Android API 36. The first
+attached runtime is 0.7.15/260, the next 0.8.1/263, both Retro Rewind at 1×
+with automatic all-draw repack. The 0.8.1 export's session-directory prefix
+says `base`, but the console's activated/translated profile and same-PID
+health records say Retro Rewind; do not infer the profile from the directory.
+
+- 0.7.15 includes a 23.99 FPS sample with main-thread occupancy 94.2% and
+  32.487 ms CPU per present over its reporting interval; same-session thermal
+  status is 1 (light).
+- 0.8.1 includes an 18.34 FPS sample with main-thread occupancy 93.8% and
+  39.248 ms CPU per present over its reporting interval; nearby same-session
+  health reports thermal status 3 (severe). Other low samples begin at
+  thermal status 1 or 2, so heat alone is not an established cause.
+- `pipelines_queued=0` in these samples. FPS and CPU telemetry cover different
+  window lengths; do not derive one from the other or treat whole-session
+  medians as race benchmarks.
+- Old version-65 thermal history in the exports is not this session. Match
+  health by PID and time. This is also a different case from #465, whose
+  reporter found 1× avoided their heat-related slowdown at 4×.
+
+The player reports time trials stay stable, offline bots improve somewhat on
+0.8.1, and online worsens. Those mode boundaries are not explicitly labelled in
+the exported trace, and there is no log from the earlier well-performing build.
+The cause of the regression is open. Reuse the supplied evidence; no further
+settings sweep or log request now. Prioritize equivalent warmed CPU work and
+inspect all-draw repack cost without disabling the known graphics correction
+on Adreno 8xx. Source/history alone is not a measured speedup.
+
+[Detailed triage and replies](ISSUE-TRIAGE-2026-10-14.md).
 
 ## What we know
 
@@ -146,7 +179,9 @@ Rules learned the hard way:
 - **Performance:**
   - #339 (patchzyy's request; slow-phone reports are folded into it).
   - #438 (POCO X7, Mali, Dimensity 7300; also a Retro WFC 61070 error).
-  - #444 (Honor, Snapdragon 6s Gen 3; no reply yet).
+  - #470 (Honor MTN-NX3, Adreno 810; 0.7.15/0.8.1 logs reviewed above).
+  - #465 is closed by its reporter; 1× avoids its reported high-resolution
+    thermal slowdown. The requested 1.5× UI option is prepared, not a CPU fix.
 - **Not performance, so don't mix them in:**
   - Adreno 6xx/7xx invisible characters (#104, #301; next step is a different
     way to hand bone matrices to the GPU, Chris's decision, [loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability));
