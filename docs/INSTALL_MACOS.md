@@ -15,6 +15,10 @@ iPhone/iPad.
    and replace the app; your settings and saves stay.
    The Mac build needs PadMint 0.5.1 or newer and Xcode (install it from the
    App Store and open it once). PadMint supplies the other build tools.
+   A PadMint 0.5.1 build can stop during the first tool download, before
+   compilation starts ([#475](https://github.com/chrissotraidis/kartpad/issues/475)).
+   That is not an out-of-memory failure or a rejected disc. Keep certificate
+   verification on. PadMint 0.5.2's notes do not include a fix for it.
 2. If macOS says it can't check the app, choose **Done**, then
    open **System Settings → Privacy & Security** and choose **Open Anyway**.
    The app isn't notarized by Apple, which is why macOS asks. Don't turn off
@@ -59,11 +63,15 @@ caches in `~/Library/Caches/KartPad`. Replacing the app keeps both.
 
 Turn on **Controls → Experimental Wii Remote + Nunchuk**, press the red
 **SYNC** button on the Wii Remote to pair, attach the Nunchuk, then choose
-**Wii Remote + Nunchuk (Experimental)** in Controller Settings. It works with an
-original `RVL-CNT-01` or Wii Remote Plus `RVL-CNT-01-TR`, without a
-DolphinBar. It uses private macOS Bluetooth interfaces and needs more hardware
-testing; reconnecting and long sessions may not work yet. A Classic Controller
-Pro on a Wii Remote has open problems ([#306](https://github.com/chrissotraidis/kartpad/issues/306)).
+**Wii Remote + Nunchuk (Experimental)** in Controller Settings. It is meant for an
+original `RVL-CNT-01` or a Wii Remote Plus `RVL-CNT-01-TR`, without a
+DolphinBar. On 0.8.1, one Mac report says the Plus remote never connects, and
+the original remote leaves Controller Settings when a Nunchuk or Classic
+Controller is attached
+([#476](https://github.com/chrissotraidis/kartpad/issues/476)). It uses private
+macOS Bluetooth interfaces and needs more hardware testing; reconnecting and
+long sessions may not work yet. A Classic Controller Pro on a Wii Remote has
+input lag and no D-pad ([#306](https://github.com/chrissotraidis/kartpad/issues/306)).
 
 ## Build it yourself
 
@@ -75,7 +83,9 @@ Developers can build the Mac app from their own disc image. Install the
 open build/KartPad.app
 ```
 
-It accepts only the exact pinned development image (checked by SHA-256), fetches
+It records the disc-image hash and does not require it to match one reference
+file. The extracted game must be PAL RMCP01 revision 0, with the supported
+`sys/main.dol` and `files/rel/StaticR.rel` hashes. It fetches
 and verifies the pinned dependencies and Retro Rewind inputs, translates both
 games, builds and audits the app, and sets `dvd_root` and
 `retro_rewind_root` in your KartPad configuration. Back up that configuration

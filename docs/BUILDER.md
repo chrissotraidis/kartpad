@@ -1,10 +1,11 @@
 # KartPad Personal Builder
 
-From 0.7.9, KartPad's releases are ready to play: the Android APK, the
-iPhone/iPad IPA and the Mac app include the game code, and most players should
-follow [Get KartPad](../README.md#get-kartpad). Building your own copy stays
-optional. [PadMint](https://github.com/chrissotraidis/padmint) builds the game
-part from your own disc against the release's no-game-code app
+From 0.7.14, the Android APK on each release is ready to play. iPhone, iPad
+and Mac copies are built with [PadMint](https://github.com/chrissotraidis/padmint)
+from your own disc. 0.7.9 to 0.7.13 also published ready-to-play iPhone/iPad
+and Mac downloads; those do not get updates. Most players should follow
+[Get KartPad](../README.md#get-kartpad). PadMint builds the game part from
+your own disc against the release's no-game-code app
 (`KartPad-v…-ios-for-padmint.ipa` on iPhone/iPad). This page describes the
 repository builder that PadMint runs and the separate development workflows.
 
@@ -15,7 +16,7 @@ repository builder that PadMint runs and the separate development workflows.
 | Android game pack | Windows, macOS or Linux | `.so` game pack for the published APK, plus extracted game data |
 | iPhone/iPad personal app | Apple Silicon Mac with Xcode | Published empty IPA with your `.dylib` game pack added, plus extracted game data |
 | iPhone/iPad personal app (experimental) | Windows or Linux | Same personal IPA, using PadMint's LLVM and open-source headers; see the evidence below |
-| Mac development app | Apple Silicon Mac | Local app through the [Mac self-build workflow](INSTALL_MACOS.md#build-it-yourself); the release also has a ready-to-play Mac app |
+| Mac development app | Apple Silicon Mac | Local app through the [Mac self-build workflow](INSTALL_MACOS.md#build-it-yourself). Current releases do not include a ready-to-play Mac app |
 
 Android phone-only builds through PadMint and Termux remain experimental.
 See PadMint's [phone guide](https://github.com/chrissotraidis/padmint#android-phone-only-experimental)
@@ -67,7 +68,7 @@ empty IPA instead:
 ./scripts/build-user-ipa.sh bootstrap --target ios-pack
 ./scripts/build-user-ipa.sh doctor --target ios-pack
 ./scripts/build-user-ipa.sh build-pack ios /path/to/Mario-Kart-Wii.rvz \
-  --app /path/to/KartPad-v0.7.3-ios-unsigned.ipa \
+  --app /path/to/KartPad-v…-ios-for-padmint.ipa \
   --output artifacts/KartPad-ios-personal.ipa \
   --game-data artifacts/KartPad-ios-game-data
 ```

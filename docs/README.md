@@ -36,7 +36,7 @@ and observations named in them.
 
 | Task | Guide |
 | --- | --- |
-| Resume current work | [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md), [current goal loop](CURRENT-LOOP.md), [handoff](HANDOFF.md), [maintenance workflow](MAINTENANCE.md), [work/test board](MAINTENANCE-BOARD.md) |
+| Resume current work | [Current goal loop](CURRENT-LOOP.md) (updated 15 October), [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md), [handoff](HANDOFF.md), [maintenance workflow](MAINTENANCE.md), [work/test board](MAINTENANCE-BOARD.md) |
 | Check requirements | [PRD](PRD.md); original [engineering](GOAL-LOOP.md) and [Android](ANDROID-GOAL-LOOP.md) goal loops (history) |
 | Prepare a release | [Release checklist](RELEASE-CHECKLIST.md), [Android publication](RELEASING_ANDROID.md), [upstream updates](UPSTREAM_UPDATES.md) |
 | Plan deferred work | [Technical debt](TECH-DEBT.md), [future features](FUTURE-FEATURES.md), [research](RESEARCH.md) |

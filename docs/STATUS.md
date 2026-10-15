@@ -1,10 +1,11 @@
 # KartPad status
 
-## Current status: 13 October 2026
+## Current status: 15 October 2026
 
-**Latest release: [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1) (build 263), 13 October.** It fixes 0.8.0's invisible characters on some Snapdragon phones and Mac builds that refused most disc images.
-[PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1), also out on 12 October,
-builds it for Mac again and for iPhone/iPad on Intel Macs (experimental).
+**Latest release: [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1) (build 263), 13 October.** Automatic character drawing for Adreno 6xx/7xx is back to 0.7.15, because 0.8.0 hid characters on some Snapdragon phones that had drawn them. It does not fix the Galaxy S24 Ultra ([#104](https://github.com/chrissotraidis/kartpad/issues/104)): Dolphin-style matrix rows were tried on 0.8.1 and the riders stayed invisible. Mac builds accept any RMCP01 image whose extracted game files match.
+[PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1) (12 October)
+builds KartPad for Mac again and for iPhone/iPad on Intel Macs (experimental).
+[PadMint 0.5.2](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.2) (15 October) adds GalaxyPad and does not change that KartPad route.
 Android gets a ready-to-play APK that now updates itself. iPhone, iPad and Mac
 build KartPad with PadMint (the release carries the PadMint inputs) and, from
 0.8.0, say when a new version is out. 0.8.0 moves to the latest WiiCompiled
@@ -21,7 +22,7 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 | Apple Silicon Mac | Built with PadMint, or `scripts/self-build-macos.sh` | Experimental |
 | Apple TV | Experimental source build | Experimental |
 
-### 0.7.9 to 0.8.0
+### 0.7.9 to 0.8.1
 
 | Version | What changed | Checked |
 | --- | --- | --- |
@@ -63,8 +64,12 @@ in PadMint.
     it active and the self-check still drawing nothing, with the race at 60 FPS
     (#104, 12 October), and it hid characters on Adreno phones that drew them
     in 0.7.15 (Discord, 13 October), so Automatic goes back to 0.7.15's behaviour
-    in 0.8.1. Next: Dolphin-style matrix rows, a Character Graphics Test
-    option in 0.8.1 (#463); Deivmsr and PeriTheFrost have been asked to try it.
+    in 0.8.1. Matrix rows shipped in 0.8.1 as a Character Graphics Test option
+    and failed on the S24 Ultra (13 October: the option was on, and the riders
+    stayed invisible). The Moto G85's 0.8.1 log (#301) still has missing bodies
+    with that option off. A OnePlus tablet (#472) shows faces only on 0.8.1
+    after the in-app options were tried; the cause isn't confirmed. Next: pass
+    each vertex's bone index to the GPU.
   - PowerVR (#304): 0.7.12's log shows character pieces "exploding" with both
     vertex layouts, so the vertex layout isn't the cause; the shader limit was
     ruled out on 4 October. A 0.7.13 log was requested.
@@ -81,17 +86,25 @@ in PadMint.
   still outstanding.
 - **Controllers:** ipega and similar fixed in 0.7.6 to 0.7.8, awaiting
   confirmation (#378); single Joy-Cons (#324); Mac Wii Remote with Classic
-  Controller Pro (#306).
+  Controller Pro (#306). On 0.8.1 a Mac Wii Remote Plus did not connect, and an
+  original remote left Controller Settings when a Nunchuk or Classic Controller
+  was attached (#476, same path as #306).
 - **Game flow and data:** the crash after a cup's last race (#131) doesn't
   happen on 0.7.10 in automated full cups, including at 3x
   ([record](artifacts/2026-10-04/android/131-cup-ceremony-harness.md)); awaiting
-  a player retest. AYN Thor screen area (#202); identity and rating transfer
+  a player retest. AYN Thor black bars remain on 0.8.1 with Fill Screen on
+  (#202); a later fullscreen correction is not in 0.8.1. Identity and rating transfer
   (#234); Mac two-player rendering (#127).
 - **Performance (#339, patchzyy's request).** Slow phones are limited by one
   CPU core running the game; lowering resolution barely helps. Shipped so far:
   about 14% less game-thread CPU (0.5.1) and 37% less compile CPU (0.7.5).
   The 10 October investigation found where the rest goes and two unmeasured
-  candidates (flat-memory locals, PGO). **Start at the
+  candidates (flat-memory locals, PGO). On 14 October, matched emulator pairs
+  on Mario Circuit (not in the training profile) used less game-thread CPU with
+  PGO; that result is in draft
+  [#474](https://github.com/chrissotraidis/kartpad/pull/474), is not shipped,
+  and is not phone FPS. An Honor Magic 8 Lite (Snapdragon 6 Gen 4) is much slower
+  since the latest update (#470); that is not fixed in 0.8.1. **Start at the
   [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md)** for findings,
   the bench and the next steps.
 - **WiiCompiled.** 0.8.0 syncs the translator and all four runtimes to
@@ -102,9 +115,10 @@ in PadMint.
 
 ### Next versions
 
-- **After 0.8.0:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md)
-  (a phone A/B for flat-memory locals); confirm the Adreno character fix with
-  affected players ([loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability)).
+- **After 0.8.1:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md).
+  PGO has an emulator-only result in draft #474 and is not shipped. A phone A/B
+  for flat-memory locals is still open. Invisible characters remain (#104,
+  #301, #472). See the [current loop](CURRENT-LOOP.md).
 
 Status through 29 September (source-only period, 0.5.x packages and earlier
 acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before

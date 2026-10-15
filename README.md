@@ -159,16 +159,14 @@ on those release pages but won't get updates; build newer versions with PadMint.
 
 Your saves and game data stay.
 
-### Source maintenance
+### Current release
 
-**0.4.22 moved KartPad to maintained WiiCompiled source** with pinned platform
-branches, preserving the existing game behavior and repository history. Source
-parity, rollback and build checks passed; the owner accepted loading, running
-and starting games on iPad and Android. macOS reached a race in the host smoke
-check. New-license Retro WFC login worked on iPad; an existing profile's serial
-mismatch reproduced on both builds and remains unresolved. Completed online
-races/reconnect and broader hardware coverage are not new claims.
-See the [migration validation](docs/source-maintenance/VALIDATION.md).
+**[KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1)**
+(build 263, 13 October 2026) is the latest release. What changed, and what is
+still open, is in [status](docs/STATUS.md) and
+[known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
+WiiCompiled source is recorded in
+[source maintenance](docs/source-maintenance/VALIDATION.md).
 
 ## Playing
 
@@ -360,7 +358,7 @@ No. PowerPC code is translated ahead of time and compiled into the app. The iPho
 <details>
 <summary>Why is it slow or freezing, and are distorted graphics fixed?</summary>
 
-The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**. Broken characters on Android depend on the GPU: Snapdragon 8 Elite (Adreno 8xx) is fixed by **Automatic** in 0.7.10, while older Adreno and PowerVR GPUs are still open. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
+The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**. Broken characters on Android depend on the GPU: Snapdragon 8 Elite (Adreno 8xx) is fixed by **Automatic** in 0.7.10. 0.8.0's automatic change for older Adreno GPUs hid characters on some phones, so 0.8.1 puts Automatic back. The Galaxy S24 Ultra and some other Adreno phones still have invisible bodies, and PowerVR is still open. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
 
 </details>
 
@@ -394,7 +392,7 @@ WiiCompiled translates PowerPC game code ahead of time; KartPad compiles it for
 ARM64 and renders through Vulkan on Android or Metal on Apple platforms.
 
 - [Apple builds](docs/BUILDING.md): prerequisites, Mac self-build and iOS workflows.
-- [Android builds](android/README.md): source-only shell and complete runtime.
+- [Android builds](android/README.md): the current APK, plus a historical full-app recipe.
 - [Source maintenance](docs/source-maintenance/README.md): editable WiiCompiled source, upstream comparison, and migration status.
 - [Documentation](docs/README.md): user guides, architecture and release evidence.
 - [Current status](docs/STATUS.md) and [maintenance board](docs/MAINTENANCE-BOARD.md):
