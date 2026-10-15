@@ -80,6 +80,10 @@ KartPad needs your game's files once. Either:
   `common-key.bin`, for example from a BootMii NAND backup of your console.
   KartPad does not include it and we cannot provide it.
 
+If KartPad says **Game Data Import Failed** and asks for a Wii common key, you
+selected a disc image. You do not need that key. Use the extracted folder
+above instead.
+
 ### Android
 
 1. Install `KartPad-v…-android.apk`. It updates an older KartPad and keeps your
@@ -113,7 +117,10 @@ allow KartPad to install apps.
    Mac, a zip you unzip in the Files app, iCloud Drive once it has fully
    downloaded, or a USB drive). In KartPad, tap
    **Import Game** on the Mario Kart Wii card, then **Import from Extracted
-   Folder…**, and pick the folder in the Files window that opens.
+   Folder…**, and pick the folder in the Files window that opens. If a dialog
+   says **Game Data Import Failed** and tells you to save `common-key.bin` in
+   **On My iPhone/iPad → KartPad**, you picked an ISO or WBFS. Tap OK and import
+   the extracted folder instead.
 
 See [iPhone/iPad setup](docs/INSTALL_IPA.md) for more.
 
@@ -214,13 +221,35 @@ downloads that won't get updates). See [Get KartPad](#get-kartpad).
 </details>
 
 <details>
-<summary>KartPad asks me for a "Wii common key". What is that?</summary>
+<summary>It says "Game Data Import Failed" or asks for a Wii common key. What does that mean?</summary>
 
-You chose **Import or Reimport Wii Disc Image…**. Reading a disc image needs a
-key from your own Wii, which most people don't have and KartPad can't provide.
-Go back and choose **Import from Extracted Game Data Folder…** (iPhone/iPad:
-**Import from Extracted Folder…**) with a folder from Dolphin instead. It needs
-no key. See [Your game data](#your-game-data).
+You selected a disc image (an ISO or WBFS file) instead of the extracted game
+folder. KartPad can read a disc image only with a key from your own Wii, and
+it cannot give you one.
+
+On iPhone and iPad the dialog is titled **Game Data Import Failed**. It tells
+you to save your own 16-byte `common-key.bin` in **On My iPhone/iPad →
+KartPad**, then import the disc image again. From KartPad 0.7.11 it also says
+to use Dolphin's **Extract Entire Disc**. On Android the same choice is titled
+**Disc Images Need Your Wii's Key**, with a **Use Extracted Folder…** button.
+
+You do not need the key. Use the extracted folder instead:
+
+1. On a computer, open [Dolphin](https://dolphin-emu.org). Right-click Mario
+   Kart Wii, choose **Properties → Filesystem**, right-click the disc, and
+   choose **Extract Entire Disc**.
+2. Copy the `DATA` folder it makes onto the device. On iPhone or iPad, use
+   AirDrop, a zip you unzip in Files, or a USB drive. On Android, a USB cable
+   or one zip is the reliable way. A folder that is still downloading from
+   iCloud or Google Drive will be missing files.
+3. In KartPad, tap **Import Game** on the Mario Kart Wii card, then **Import
+   from Extracted Folder…** (on Android, **Import from Extracted Game Data
+   Folder…**). Pick `DATA`.
+
+Only if you already have your own key: on iPhone or iPad, put `common-key.bin`
+in **Files → On My iPhone/iPad → KartPad**, then import the disc image again.
+On Android, choose `common-key.bin` from the dialog. The extracted folder is
+still the easier path. See [Your game data](#your-game-data).
 
 </details>
 

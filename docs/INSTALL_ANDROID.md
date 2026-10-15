@@ -74,8 +74,9 @@ then the 6.13.1 update).
 **Import or Reimport Wii Disc Image…** reads an ISO, WBFS or RVZ directly, but
 it needs your own Wii's 16-byte common key saved as `common-key.bin` (for
 example from a BootMii NAND backup). KartPad doesn't include it and we can't
-provide it. If KartPad asks you for a key and you don't have one, use the
-extracted folder above instead.
+provide it. If the dialog is **Disc Images Need Your Wii's Key**, or **Game
+Data Import Failed** asks for `common-key.bin`, and you don't have a key, tap
+**Use Extracted Folder…** or go back and import the extracted folder above.
 
 ## Updating
 
