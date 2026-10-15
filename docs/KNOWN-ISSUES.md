@@ -7,10 +7,14 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Setup and game data
 
-- **KartPad asks for a "Wii common key".** That only happens with
-  **Import or Reimport Wii Disc Image…**. Use **Import from Extracted Game Data
-  Folder…** with a folder from Dolphin's **Extract Entire Disc** instead (or,
-  on Android 0.7.11, **Import Game Data Zip…**); it needs no key. Steps:
+- **KartPad says "Game Data Import Failed" or asks for a "Wii common key".**
+  You selected a disc image (ISO or WBFS). On iPhone and iPad the dialog tells
+  you to save `common-key.bin` in **On My iPhone/iPad → KartPad** and import
+  the disc again. You do not need that key. Choose **Import from Extracted
+  Folder…** (on Android, **Import from Extracted Game Data Folder…**, or **Use
+  Extracted Folder…** on the **Disc Images Need Your Wii's Key** dialog) with
+  a folder from Dolphin's **Extract Entire Disc**. A zip of that folder also
+  works (**Import Game Data Zip…** on Android 0.7.11 and newer). Steps:
   [Android](INSTALL_ANDROID.md#2-make-your-game-data-folder),
   [iPhone/iPad](INSTALL_IPA.md#2-make-your-game-data-folder).
 - **"Ready to play", then "The game stopped because the game data is
