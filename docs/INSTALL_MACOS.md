@@ -9,10 +9,10 @@ iPhone/iPad.
 
 ## Install
 
-1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
-   your disc image and **Mac**, and move the **KartPad** app it makes to
-   Applications. To update, build the new version with PadMint, quit KartPad
-   and replace the app; your settings and saves stay.
+1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **Mario Kart Wii**,
+   your disc image and **This Mac** under **Where will you play?**, and move the
+   **KartPad** app it makes to Applications. To update, build the new version
+   with PadMint, quit KartPad and replace the app; your settings and saves stay.
    The Mac build needs PadMint 0.5.1 or newer and Xcode (install it from the
    App Store and open it once). PadMint supplies the other build tools.
    A PadMint 0.5.1 build can stop during the first tool download, before
@@ -29,6 +29,30 @@ iPhone/iPad.
    **Properties → Filesystem**, right-click the disc and choose
    **Extract Entire Disc**. You can change it later with
    **Data → Choose Mario Kart Wii Data…**.
+
+## Missing This Mac option
+
+If PadMint only offers **iPhone/iPad** and **Android**:
+
+1. Close PadMint's Terminal window. Download the latest
+   [PadMint for Mac](https://github.com/chrissotraidis/padmint/releases/latest/download/PadMint-macos.zip),
+   extract it, then open `PadMint.command` from the **new folder**. You need
+   PadMint 0.5.1 or newer. Each folder has its own game list; refreshing the
+   browser or opening an older folder does not update it.
+2. Check **Apple menu → About This Mac**. **Chip: Apple M…** is supported.
+   An Intel Mac can build KartPad for iPhone/iPad experimentally, but cannot
+   build or play the Mac version.
+3. On Apple Silicon, PadMint **0.5.2** can still hide **This Mac** if it runs
+   under Rosetta. Close PadMint's Terminal window. Open Terminal, type `cd `
+   (with a space), drag the newly extracted PadMint folder from Finder into
+   Terminal and press Return. Then start PadMint natively:
+
+   ```sh
+   arch -arm64 /bin/bash ./PadMint.command
+   ```
+
+Keep your disc images, completed builds, caches and saves. None need deleting
+to restore the Mac option.
 
 ## Retro Rewind
 

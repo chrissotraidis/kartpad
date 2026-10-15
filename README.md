@@ -108,7 +108,7 @@ allow KartPad to install apps.
 
 ### iPhone and iPad
 
-1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
+1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **Mario Kart Wii**,
    your disc image and **iPhone/iPad**. Install the IPA it makes with
    Sideloadly, AltStore or SideStore. To keep your saves, install it over your
    KartPad with the same tool and Apple ID. PadMint also makes your
@@ -126,19 +126,22 @@ See [iPhone/iPad setup](docs/INSTALL_IPA.md) for more.
 
 ### Mac
 
-1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
-   your disc image and **Mac**, then move the **KartPad** app it makes to
-   Applications.
+1. In [PadMint](https://github.com/chrissotraidis/padmint) **0.5.1 or newer**,
+   choose **Mario Kart Wii**, your disc image and **This Mac** under **Where
+   will you play?**, then move the **KartPad** app it makes to Applications.
 2. If macOS says it can't check the app, choose **Done**, then
    **System Settings → Privacy & Security → Open Anyway**.
 3. Import your game data folder when KartPad asks for it.
 
-See [Install on Mac](docs/INSTALL_MACOS.md) for more.
+**Only seeing iPhone/iPad and Android?** Open the latest PadMint from its newly
+extracted folder. KartPad for Mac needs Apple Silicon; PadMint 0.5.2 can also
+hide the option when running under Rosetta. See
+[the Mac option troubleshooting steps](docs/INSTALL_MACOS.md#missing-this-mac-option).
 
 ### PadMint
 
 [PadMint](https://github.com/chrissotraidis/padmint) builds KartPad from your
-own disc on your own computer: choose **KartPad**, your disc image and where
+own disc on your own computer: choose **Mario Kart Wii**, your disc image and where
 you'll play, and it makes your copy and your `KartPad game data` folder. From
 0.7.14 it's how iPhone, iPad and Mac get KartPad, and it still works for
 Android.
