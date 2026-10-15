@@ -35,8 +35,10 @@ pass; actual PowerVR Vulkan launch/race acceptance remains open.
 ## Current matrix
 
 **These rows record evidence up to 22 September (0.4.x and early 0.5 builds).**
-The current release is 0.7.10; per-device state for it is in
-[KNOWN-ISSUES.md](KNOWN-ISSUES.md). Newer evidence: the OnePlus 15 (Adreno 8xx)
+The current release is [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1);
+per-device state for it is in
+[KNOWN-ISSUES.md](KNOWN-ISSUES.md). Evidence added after these rows, and before
+0.8.1, included: the OnePlus 15 (Adreno 8xx)
 draws correctly with Automatic on 0.7.10 (#316, reporter-confirmed), and the
 Moto G54 (PowerVR BXM-8-256) reaches a race on 0.7.10 with no shader over its
 inter-stage limit of 14, which rules that cause out (#304).

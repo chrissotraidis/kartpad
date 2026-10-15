@@ -63,7 +63,8 @@ Build from the pinned supported image in one fail-closed local workflow:
 ```
 
 The workflow bootstraps and verifies the pinned public sources plus the exact
-Retro Rewind pack pinned in the builder profile, verifies the complete supported image hash, extracts
+Retro Rewind pack pinned in the builder profile, records the disc-image hash
+without requiring the reference image, extracts
 it read-only with pinned `nodtool`, validates `RMCP01` revision 0 plus the
 DOL/REL hashes, translates the dual private title graph with bounded
 parallelism, builds the maintained Apple runtime, and audits the ad-hoc-signed

@@ -82,7 +82,8 @@ the folder again and reimport.
 3. Tap **Play Game**.
 
 For **Retro Rewind**, tap **Set Up Game** on its card. KartPad downloads and
-installs the official Retro Rewind 6.12.8 pack (about 1.7 GB).
+installs official Retro Rewind 6.13.1 (the 6.13.0 full pack, about 1.9 GB,
+then the 6.13.1 update).
 
 ### Using a disc image instead
 
