@@ -24,11 +24,38 @@ iPhone/iPad.
    The app isn't notarized by Apple, which is why macOS asks. Don't turn off
    Gatekeeper.
 3. When KartPad asks for game data, choose your extracted Mario Kart Wii
-   `DATA` folder (PAL **RMCP01**, revision 0). To make it, in
+   folder (PAL **RMCP01**, revision 0). You can reuse PadMint's files below.
+   To make a `DATA` folder yourself, in
    [Dolphin](https://dolphin-emu.org) right-click the game, choose
    **Properties → Filesystem**, right-click the disc and choose
    **Extract Entire Disc**. You can change it later with
    **Data → Choose Mario Kart Wii Data…**.
+
+## Reuse PadMint's game files
+
+The Mac build produces an app ZIP. It also extracts Original and Retro Rewind
+while building, but doesn't put a separate `KartPad game data` folder in
+Downloads. You can copy those prepared files into a local folder you will keep:
+
+1. In Finder, choose **Go → Go to Folder…** and enter
+   `~/.padmint/games/kartpad-v0.8.1/`. Use the version folder matching the app
+   you built. This is PadMint's usual location; if you set `PADMINT_HOME`, use
+   that folder instead of `~/.padmint`.
+2. Copy `private/self-build/disc` to your chosen location. When KartPad asks
+   for Original game data, select that copied `disc` folder; it contains
+   `files` and `sys`, just like Dolphin's `DATA` folder.
+3. For KartPad 0.8.1's Retro Rewind 6.13.1, also copy the whole
+   `private/builder/retro-rewind-downloads/6.13.1-extracted` folder there.
+   In KartPad, choose **Data → Choose Retro Rewind Data…** and select the
+   `RetroRewind6` folder inside your copy. Then follow the game-switching
+   steps below.
+
+Keep the chosen copies in place. Retro Rewind can store saves beside
+`RetroRewind6`, so keep its whole enclosing folder when backing it up or moving
+it. If these folders aren't present, check which version and location PadMint
+used in its build log, or use the Dolphin and official Retro Rewind downloads
+described here. There is no need to edit KartPad's configuration or delete any
+existing game files or saves.
 
 ## Missing This Mac option
 
@@ -56,8 +83,9 @@ to restore the Mac option.
 
 ## Retro Rewind
 
-The Mac app doesn't download Retro Rewind. Download the official Retro Rewind
-6.13.0 full pack and the 6.13.1 update, extract the update over the full pack,
+The Mac app doesn't download Retro Rewind. You can reuse PadMint's prepared
+files above, or download the official Retro Rewind 6.13.0 full pack and the
+6.13.1 update. For manual downloads, extract the update over the full pack,
 then choose **Data → Choose Retro Rewind Data…** and select
 its `RetroRewind6` folder. Choose **Game → Retro Rewind**, quit and reopen
 KartPad. **Game → Original Mario Kart Wii** and reopening switches back.
@@ -80,8 +108,10 @@ update.
 - The mouse works in KartPad's menus but doesn't drive; use the keyboard or a
   controller in races.
 
-Settings and saves are in `~/Library/Application Support/KartPad`, graphics
-caches in `~/Library/Caches/KartPad`. Replacing the app keeps both.
+Settings and Original saves are in `~/Library/Application Support/KartPad`,
+graphics caches in `~/Library/Caches/KartPad`. Retro Rewind can store saves
+beside its selected data folder; keep that enclosing folder too. Replacing the
+app keeps these files.
 
 ## Experimental Wii Remote and Nunchuk
 
