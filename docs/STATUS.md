@@ -104,7 +104,8 @@ in PadMint.
   PGO; that result is in draft
   [#474](https://github.com/chrissotraidis/kartpad/pull/474), is not shipped,
   and is not phone FPS. An Honor Magic 8 Lite (Snapdragon 6 Gen 4) is much slower
-  since the latest update (#470); that is not fixed in 0.8.1. **Start at the
+  since the latest update (#470); that is not fixed in 0.8.1. The phone check
+  waits until the Thor correction and the Adreno bone-index attempt. **Start at the
   [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md)** for findings,
   the bench and the next steps.
 - **WiiCompiled.** 0.8.0 syncs the translator and all four runtimes to
@@ -115,10 +116,11 @@ in PadMint.
 
 ### Next versions
 
-- **After 0.8.1:** performance per the [handoff](ANDROID-PERFORMANCE-HANDOFF.md).
-  PGO has an emulator-only result in draft #474 and is not shipped. A phone A/B
-  for flat-memory locals is still open. Invisible characters remain (#104,
-  #301, #472). See the [current loop](CURRENT-LOOP.md).
+- **After 0.8.1, in this order:** the Thor fullscreen correction (#202), then
+  one Adreno bone-index attempt (#104, #301, #472), then one phone check of
+  draft #474 covering #339 and the Honor Magic 8 Lite slowdown (#470). Do not
+  ship that speed change from emulator numbers. See the
+  [current loop](CURRENT-LOOP.md).
 
 Status through 29 September (source-only period, 0.5.x packages and earlier
 acceptance) is in the [archive](archive/status-2026-09-08-to-09-29.md); before

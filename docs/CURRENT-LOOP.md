@@ -13,22 +13,32 @@ PadMint 0.5.2 (15 October) adds GalaxyPad and does not change the KartPad
 route. The [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md) still records
 Chris's decision not to buy a test phone.
 
-1. **0.8.1 is out.** What's left of [Phase 0](#phase-0-publish-080-done) is
-   the hands-on iPad checks. The update notice can be checked now, because
-   0.8.1 is newer than 0.8.0.
-2. **Make Android faster (#339).** The slowness is one CPU-bound game thread.
-   PGO has a positive emulator result on Mario Circuit, which was not in the
-   training profile. It lives in draft #474, has not shipped, and is not phone
-   FPS. Then measure flat-memory locals on a phone, then the large structural
-   change.
-3. **Android graphics and the Thor bars.** The S24 still has invisible riders
-   after 0.8.0's automatic change and 0.8.1's matrix-rows option. Next is
-   passing each vertex's bone index to the GPU. #472 is a new faces-only
-   report on a OnePlus tablet; the cause isn't confirmed. Fill Screen still
-   leaves black bars on the AYN Thor on 0.8.1 (#202). An emulator correction
-   exists and is not in 0.8.1, and it has not been checked on a Thor.
-4. **Keep players unblocked.** Act on graphics and crash reports when evidence
-   arrives, and leave new features in the backlog unless Chris pulls one in.
+Decided 15 October. Do these three things in order. Do not start another
+documentation pass, and do not refresh the September compatibility matrix or
+the dated maintenance-board snapshots.
+
+1. **AYN Thor fullscreen (#202).** Photos on 0.8.1 still show black bars with
+   Fill Screen on. An Android 14 emulator reproduced the bands, and a startup
+   correction filled the screen there, including after returning from the
+   background and dismissing the menu. That correction is not in 0.8.1 and has
+   not been checked on a Thor. Land it, then ask once, on a build that contains
+   it.
+2. **One Adreno character path (#104, #301, #472).** Native uniform buffers and
+   matrix rows both failed on the S24 Ultra. Do not ask for another matrix-rows
+   log. The next attempt passes each vertex's bone index to the GPU. #472
+   already tried the in-app options on a OnePlus tablet.
+3. **One phone check of the speed draft (#339, #470).** PGO and a vertex-repack
+   reduction are in draft #474. Both are emulator results. The Honor Magic 8
+   Lite slowdown is part of this check. Do not publish a speed release from the
+   emulator pairs. Flat-memory locals and moving GX off the game thread stay
+   behind that phone check.
+
+Leave the rest. #475 is a PadMint recipe, not another KartPad guide. #380 waits
+for a PadMint-built app. #390, #332, #431, #131, #304, #411, and #378 wait on a
+device, a log, or a hands-on check. #306 and #476 stay unscheduled. Feature
+requests stay in the backlog. The iPad checks in
+[Phase 0](#phase-0-publish-080-done) can happen when the iPad is connected.
+They do not come before the three items above.
 
 Released state is in [STATUS.md](STATUS.md). Speed details are in the
 [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md).
@@ -96,6 +106,10 @@ did not bring riders back on the S24 Ultra.
 
 ## Phase 1: Android speed (#339)
 
+This is third. The [order above](#what-were-doing-next) finishes the Thor
+correction and the Adreno bone-index attempt first. #470, the Honor Magic 8
+Lite slowdown, is part of this phone check rather than a separate project.
+
 The [performance handoff](ANDROID-PERFORMANCE-HANDOFF.md) has the evidence. In
 order:
 
@@ -135,6 +149,10 @@ order:
 compiles) are goals, not promises.
 
 ## Phase 2: Android graphics and stability
+
+The Thor bars are first in the [order above](#what-were-doing-next). The
+character reports are one path: bone index next, and no further matrix-rows
+log from the S24.
 
 Act when evidence exists; don't chase reporters.
 
