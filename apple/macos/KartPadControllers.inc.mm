@@ -374,8 +374,9 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
 - (void)clearKeyboard:(NSButton *)sender {
   if(sender.tag>=100) PADSetKeyAxisBinding(0,{PAD_KEY_INVALID,(PADAxis)(PAD_AXIS_LEFT_X_POS+sender.tag-100),0});
   else PADSetKeyButtonBinding(0,{PAD_KEY_INVALID,KPButtons[sender.tag]});
+  PADSerializeMappings();
   self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1; [self refreshKeyboardLabels];
-  self.status.stringValue=@"Keyboard binding cleared. Changes are saved by Aurora when KartPad exits.";
+  self.status.stringValue=@"Keyboard binding cleared.";
 }
 - (SDL_Scancode)scancodeForPhysicalKeyCode:(NSUInteger)keyCode {
   return KPMacPhysicalScancode((unsigned short)keyCode,
@@ -399,8 +400,9 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
   if(sc<=SDL_SCANCODE_UNKNOWN) return;
   if(self.keyboardCaptureKind==0) PADSetKeyButtonBinding(0,{sc,KPButtons[self.keyboardCaptureIndex]});
   else PADSetKeyAxisBinding(0,{sc,(PADAxis)(PAD_AXIS_LEFT_X_POS+self.keyboardCaptureIndex),0});
-  PADSetKeyboardActive(0,TRUE); self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1;
-  self.status.stringValue=@"Keyboard binding updated. Changes are saved by Aurora when KartPad exits.";
+  PADSetKeyboardActive(0,TRUE); PADSerializeMappings();
+  self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1;
+  self.status.stringValue=@"Keyboard binding updated.";
   [self refreshKeyboardLabels];
 }
 - (void)remap:(NSButton *)sender {

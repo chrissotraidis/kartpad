@@ -110,16 +110,26 @@ int main(){@autoreleasepool {
    arm();[second handleKeyboardEvent:event(pair.first,@"")];assert(testKeys[0].scancode==pair.second);
  }
  int previous=testKeys[0].scancode;
+ int savesBeforeInvalid=testKeyboardSaves;
  arm();[second handleKeyboardEvent:event(65535,@"a")];assert(testKeys[0].scancode==previous);
  [second handleKeyboardEvent:event(12,@"a",YES)];assert(testKeys[0].scancode==previous);
  assert(second.keyboardCaptureKind==0);[second cancel:nil];
+ assert(testKeyboardSaves==savesBeforeInvalid);
  assert(KPMacPhysicalScancode(10,false)==SDL_SCANCODE_NONUSBACKSLASH);
  assert(KPMacPhysicalScancode(50,false)==SDL_SCANCODE_GRAVE);
  assert(KPMacPhysicalScancode(10,true)==SDL_SCANCODE_GRAVE);
  assert(KPMacPhysicalScancode(50,true)==SDL_SCANCODE_NONUSBACKSLASH);
  assert(KPMacPhysicalScancode(65535,false)==SDL_SCANCODE_UNKNOWN);
+ int savesBeforeRemap=testKeyboardSaves;
+ arm();[second handleKeyboardEvent:event(36,@"\r")];
+ assert(testKeys[0].scancode==SDL_SCANCODE_RETURN && testKeyboardSaves==savesBeforeRemap+1);
  second.keyboardCaptureKind=1;second.keyboardCaptureIndex=0;
  [second handleKeyboardEvent:event(12,@"a")];assert(testKeyAxes[0].scancode==SDL_SCANCODE_Q);
+ assert(testKeyboardSaves==savesBeforeRemap+2);
+ NSButton *clearButton=[NSButton new];clearButton.tag=0;
+ [second clearKeyboard:clearButton];assert(testKeys[0].scancode==PAD_KEY_INVALID);
+ clearButton.tag=100;[second clearKeyboard:clearButton];assert(testKeyAxes[0].scancode==PAD_KEY_INVALID);
+ assert(testKeyboardSaves==savesBeforeRemap+4);
  puts("PASS: keyboard cancel/Escape/close/reopen/deactivation, alternate layouts, special keys, ISO, repeat and invalid-key handling");
  uint32_t controllerBefore=testButtons[0].nativeButton;
  assert(PADSetKeyButtonBinding(0,{SDL_SCANCODE_F,KPButtons[0]}));
@@ -163,15 +173,16 @@ int main(){@autoreleasepool {
    assert([second.profiles isEqual:profilesBeforeReset]);
    assert(second.capture==-1 && !second.armed && second.keyboardCaptureKind==-1 && second.keyboardCaptureIndex==-1);
  };
+ int savesBeforeReset=testKeyboardSaves;
  testKeyboardLoaded=false; // persisted edits must load before resetting
  second.capture=2;second.armed=YES;arm();
- [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==1);
+ [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==savesBeforeReset+1);
  [second save:nil];checkDefaults(); // immediate Save Profile must not clear defaults
  testKeys[0].scancode=SDL_SCANCODE_F;testKeyAxes[0].scancode=PAD_KEY_INVALID;
  second.selectedID=id;second.capture=3;second.armed=YES;
- [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==2);
- [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==3);
- puts("PASS: concrete keyboard defaults, lazy-load ordering, reset then Save, capture cancellation, other ports and controller profiles preserved");
+ [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==savesBeforeReset+2);
+ [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==savesBeforeReset+3);
+ puts("PASS: remap/clear serialization, concrete keyboard defaults, lazy-load ordering, reset then Save, capture cancellation, other ports and controller profiles preserved");
  assert([second scancodeForPhysicalKeyCode:12]==SDL_SCANCODE_Q); // physical key, independent of layout character
  assert([second scancodeForPhysicalKeyCode:76]==SDL_SCANCODE_KP_ENTER);
  assert([second scancodeForPhysicalKeyCode:122]==SDL_SCANCODE_F1);
