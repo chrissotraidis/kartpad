@@ -7,7 +7,7 @@ output="${3:-${build}/controller-profile-tests}"
 clang++ -std=c++20 -fobjc-arc -DTARGET_PC -Wall -Wextra \
   -I "${repo_root}/vendor/runtimes/macos/runtime/include" \
   -I "${repo_root}/apple/macos" -I "${source}/include" -I "${source}/third_party/toml11" \
-  -I "${source}/aurora-main/include" -I "${build}/_deps/sdl-src/include" \
+  -I "${repo_root}/vendor/runtimes/macos/aurora-main/include" -I "${build}/_deps/sdl-src/include" \
   "${repo_root}/tests/macos/controller_profiles.mm" "${build}/_deps/sdl-build/libSDL3.a" \
   -framework Cocoa -framework Carbon -framework CoreVideo -framework IOKit \
   -framework ForceFeedback -framework CoreAudio -framework AudioToolbox \
