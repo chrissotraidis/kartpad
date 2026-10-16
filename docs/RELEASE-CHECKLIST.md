@@ -98,6 +98,10 @@ Platform procedures: [Android release](RELEASING_ANDROID.md),
       game selection, licenses, saves and settings. Record audio and performance
       scope separately. CI and build/package success do not establish gameplay
       acceptance; a race fault or unfinished flow blocks release acceptance.
+- [ ] In **Controls → Controller Settings…**, select **Keyboard** and use
+      **Reset Keyboard Defaults**. Check that assigned keys appear, menu and
+      race controls work, and the defaults persist after quit/relaunch. Repeat
+      with a previously remapped profile; saves and unrelated settings must stay.
 
 ## Acceptance and publication
 
