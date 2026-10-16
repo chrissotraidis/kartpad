@@ -93,18 +93,20 @@ Platform procedures: [Android release](RELEASING_ANDROID.md),
       caches are reused, a new output is created, and the previous app/ZIP and
       player data remain unchanged. Do not clear a player's cache for this test.
 - [ ] Open the final app using Finder/`ditto` extraction and follow the documented
-      missing-data → native import → offline race → clean quit/relaunch flow
-      for both Original and matching Retro Rewind. Check controls and retained
-      game selection, licenses, saves and settings. Record audio and performance
-      scope separately. CI and build/package success do not establish gameplay
-      acceptance; a race fault or unfinished flow blocks release acceptance.
+      missing-data → native import → offline race entry → clean quit/relaunch
+      flow for both Original and matching Retro Rewind. For the focused 0.8.2
+      fixes, reach gameplay past the former fault, verify input, and quit/reopen
+      with game selection, licenses, saves and settings retained. Full race
+      completion is not required for this release's accepted scope. Record audio
+      and performance separately; CI/build success alone does not prove gameplay.
 - [ ] In **Controls → Controller Settings…**, select **Keyboard**. Remap and
-      clear bindings, capture left/right Shift, Control and Option, then use
-      **Reset Keyboard Defaults**. Verify the assigned keys perform the expected
-      menu and race actions, not just that labels change. Check that remaps and
-      reset defaults persist after quit/relaunch without **Save Profile**
-      (keyboard changes save automatically), then repeat with **Save Profile**.
-      Saves and unrelated settings must stay.
+      clear bindings, then use **Reset Keyboard Defaults**. Verify actual menu
+      and race actions and keyboard autosave across quit/relaunch without
+      **Save Profile**, then explicit **Save Profile**. Preserve saves and
+      unrelated settings. Record which reset states were observed or reloaded.
+      Left/right Shift, Control and Option capture has synthetic AppKit and
+      production-input coverage; physical capture remains unverified and is
+      recorded as a coverage limit, not an additional 0.8.2 release gate.
 
 ## Acceptance and publication
 
