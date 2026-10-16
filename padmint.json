@@ -130,22 +130,9 @@
           "stage": "compile",
           "command": [
             "/bin/bash",
-            "{repo}/scripts/build-macos-app.sh",
+            "{repo}/scripts/build-padmint-macos.sh",
             "{repo}/private/self-build/retro-rewind/translation",
-            "{work}/macos-source",
-            "{work}/macos-build",
-            "{work}/KartPad.app",
-            "dual"
-          ]
-        },
-        {
-          "stage": "package",
-          "command": [
-            "/usr/bin/ditto",
-            "-c",
-            "-k",
-            "--keepParent",
-            "{work}/KartPad.app",
+            "{work}",
             "{output}"
           ]
         }

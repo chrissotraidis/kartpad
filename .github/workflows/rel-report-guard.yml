@@ -4,6 +4,10 @@ on:
     paths:
       - 'scripts/*game-runtime.sh'
       - 'scripts/*game-app.sh'
+      - 'scripts/build-macos-app.sh'
+      - 'scripts/build-padmint-macos.sh'
+      - 'padmint.json'
+      - 'tests/test_macos_build_retry.py'
       - 'scripts/translate-*.sh'
       - 'scripts/generate-g8-full-title.sh'
       - 'scripts/inject-retro-rel-report-guard.py'
@@ -36,6 +40,10 @@ on:
     paths:
       - 'scripts/*game-runtime.sh'
       - 'scripts/*game-app.sh'
+      - 'scripts/build-macos-app.sh'
+      - 'scripts/build-padmint-macos.sh'
+      - 'padmint.json'
+      - 'tests/test_macos_build_retry.py'
       - 'scripts/translate-*.sh'
       - 'scripts/generate-g8-full-title.sh'
       - 'scripts/inject-retro-rel-report-guard.py'
@@ -66,6 +74,13 @@ on:
 permissions:
   contents: read
 jobs:
+  macos-build-retry:
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repeat the Mac recipe with fixture inputs and real ZIP packaging
+        run: /usr/bin/python3 -B -m unittest discover -s tests -p 'test_macos_build_retry.py' -v
   regression:
     runs-on: ubuntu-latest
     timeout-minutes: 5
