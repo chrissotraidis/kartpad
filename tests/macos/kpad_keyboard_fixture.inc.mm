@@ -117,6 +117,15 @@ static void TestClassicKeyboard(KPControllerSettings* panel) {
  }
  [panel resetKeyboard:nil];hold(SDL_SCANCODE_U);classic(0);
  hold(SDL_SCANCODE_RETURN);classic(0x10);
+ // Real native modifier capture reaches guest input. Shared keys intentionally
+ // drive both actions until the other binding is explicitly cleared.
+ panel.keyboardCaptureKind=0;panel.keyboardCaptureIndex=0;
+ NSEvent* shift=[NSEvent keyEventWithType:NSEventTypeFlagsChanged location:NSZeroPoint
+   modifierFlags:NSEventModifierFlagShift|NX_DEVICELSHIFTKEYMASK timestamp:0 windowNumber:0 context:nil
+   characters:@"" charactersIgnoringModifiers:@"" isARepeat:NO keyCode:kVK_Shift];
+ assert([panel handleKeyboardEvent:shift]);hold(SDL_SCANCODE_LSHIFT);classic(0x14);
+ clear.tag=5;[panel clearKeyboard:clear];hold(SDL_SCANCODE_LSHIFT);classic(0x10);
+ [panel resetKeyboard:nil];
  // Queued short taps work through each real guest API, even after physical up.
  release();tap(SDL_SCANCODE_RETURN);KPAD__Read_HLE(0,status,1);
  assert(Memory::Read32(status+0x64)==0x10 && Memory::Read32(status)==0x800);
