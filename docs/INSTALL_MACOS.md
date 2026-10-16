@@ -101,10 +101,11 @@ update.
 - **Data** changes the game data folders, manages Miis and opens the data and
   cache folders.
 - **Controls → Controller Settings…** detects and maps controllers for up to
-  four players. **Control Reference…** lists every keyboard binding.
-- Keyboard defaults: `WASD` to steer, `U` or Return to accelerate and
-  confirm, `M` or Delete to brake and go back, `E` to drift, Left Shift for
-  items, arrow keys for tricks, Space to pause and Tab for select.
+  four players. Select **Keyboard** to see or change your current keys.
+- The default keyboard mapping shown there uses `WASD` to steer, Return to
+  accelerate and confirm, Backspace (Delete on a Mac keyboard) to brake and
+  go back, Left Option to drift, Left Control for items, Left Shift for rear
+  view, arrow keys for tricks and menu directions, and Space to pause.
 - The mouse works in KartPad's menus but doesn't drive; use the keyboard or a
   controller in races.
 
