@@ -26,7 +26,7 @@ For each release:
    provisioning profile. For private acceptance, check the personal pack against
    that exact app with `scripts/check-game-pack-state.py`, add it to a private
    copy, and install in place after backing up and reading back player data.
-4. **Mac:** verify the changed PadMint/source-build path when affected. There is
+4. **Mac:** complete the [Mac player flow](#mac-player-flow) when affected. There is
    no ready-to-play Mac download from 0.7.14. A recipe path edit alone does not
    prove that a fresh PadMint Mac build or its gameplay works.
 5. **Other files:** `padmint.json` as `-padmint.json`; a notices zip with
@@ -76,6 +76,28 @@ For each release:
 Platform procedures: [Android release](RELEASING_ANDROID.md),
 [Apple build](BUILDING.md), [Personal IPA Builder](BUILDER.md),
 [Mac install](INSTALL_MACOS.md) and [tvOS build/test](TVOS.md).
+
+### Mac player flow
+
+- [ ] Record the exact PadMint ZIP, KartPad revision/recipe, host and process
+      architecture. Run `scripts/player-check.sh` from PadMint's current `main`
+      with the clean KartPad checkout before tagging, then without a checkout
+      after publishing and before announcing. Its fresh build does not replace
+      the packaged page checks below.
+- [ ] Extract the candidate PadMint Mac ZIP and use its real launcher and page.
+      Check native Apple Silicon and an actual Rosetta parent restarting
+      natively. On real Intel, verify the Mac target explains the Apple Silicon
+      requirement and supported mobile choices remain available.
+- [ ] Complete **Make my copy** with an isolated empty PadMint folder, then
+      repeat with the same folder, unchanged checkout and inputs. Verify valid
+      caches are reused, a new output is created, and the previous app/ZIP and
+      player data remain unchanged. Do not clear a player's cache for this test.
+- [ ] Open the final app using Finder/`ditto` extraction and follow the documented
+      missing-data → native import → offline race → clean quit/relaunch flow
+      for both Original and matching Retro Rewind. Check controls and retained
+      game selection, licenses, saves and settings. Record audio and performance
+      scope separately. CI and build/package success do not establish gameplay
+      acceptance; a race fault or unfinished flow blocks release acceptance.
 
 ## Acceptance and publication
 
