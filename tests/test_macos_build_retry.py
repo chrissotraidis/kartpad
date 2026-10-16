@@ -28,6 +28,7 @@ class MacBuildRetryTests(unittest.TestCase):
         self.translation = self.repo / "private/self-build/retro-rewind/translation"
         self.write("private/self-build/retro-rewind/translation/build_shards/shards.cmake", "# translation fixture\n")
         self.write("scripts/inject-retro-rel-report-guard.py", "# verified separately\n")
+        self.write("scripts/inject-mkw-texture-link-guard.py", "# verified separately\n")
         for name in ("prepare-g7-game-runtime.sh", "stage-maintained-runtime.py",
                      "build-macos-app.sh", "build-padmint-macos.sh"):
             shutil.copy2(REPO / "scripts" / name, self.repo / "scripts" / name)

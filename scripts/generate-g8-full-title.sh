@@ -26,6 +26,8 @@ done
   "${functions}/func_805A1A8C.cpp"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" \
   "${functions}/func_8000A440.cpp"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" \
+  "${functions}/func_802289DC.cpp"
 "${dotnet_bin}" "${translator_dll}" generate-data-init --project "${manifest}"
 # generate-data-init rewrites the assembly payload table in ELF/COFF spelling.
 # Preserve the Mach-O aliases applied by prepare-g7-game-runtime.sh on every
@@ -41,7 +43,9 @@ fi
   --native-source-dir "${repo_root}/build/wiicompiled-fpscr/runtime/src" \
   --out "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --inject-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --inject-shards "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify-shards "${shards}"
 
 
 test -f "${functions}/func_8055531C.cpp"

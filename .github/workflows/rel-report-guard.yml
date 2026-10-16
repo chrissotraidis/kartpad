@@ -11,6 +11,9 @@ on:
       - 'scripts/translate-*.sh'
       - 'scripts/generate-g8-full-title.sh'
       - 'scripts/inject-retro-rel-report-guard.py'
+      - 'scripts/inject-mkw-texture-link-guard.py'
+      - 'tests/test_mkw_texture_link_guard.py'
+      - 'tests/fixtures/texture_links/**'
       - 'vendor/runtimes/**'
       - 'vendor/wiicompiled/**'
       - '.gitmodules'
@@ -47,6 +50,9 @@ on:
       - 'scripts/translate-*.sh'
       - 'scripts/generate-g8-full-title.sh'
       - 'scripts/inject-retro-rel-report-guard.py'
+      - 'scripts/inject-mkw-texture-link-guard.py'
+      - 'tests/test_mkw_texture_link_guard.py'
+      - 'tests/fixtures/texture_links/**'
       - 'vendor/runtimes/**'
       - 'vendor/wiicompiled/**'
       - '.gitmodules'
@@ -97,6 +103,10 @@ jobs:
         run: python3 -B -m unittest discover -s tests -p 'test_retro_rel_report_guard.py' -v
       - name: Builder integration
         run: bash scripts/test-kartpad-builder.sh
+      - name: Malformed model texture links
+        env:
+          CXX: clang++
+        run: python3 -B -m unittest discover -s tests -p 'test_mkw_texture_link_guard.py' -v
       - name: Pinned source, staging, and offline source restoration
         env:
           PYTHONPATH: builder

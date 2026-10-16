@@ -51,6 +51,8 @@ done
   "${functions}/func_805A1A8C.cpp"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" \
   "${functions}/func_8000A440.cpp"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" \
+  "${functions}/func_802289DC.cpp"
 
 "${dotnet_bin}" "${translator}" emit-base-manifest \
   --project "${manifest}" --profile online \
@@ -75,7 +77,9 @@ done
   --resolved-profile "${mod_output}/resolved_dispatch_profile.json" \
   --retro-cpp-dir "${mod_output}/cpp" --out "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --inject-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --inject-shards "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify-shards "${shards}"
 
 
 rg -q '^set\(MKW_RETRO_REWIND_FUNCTION_COUNT [1-9][0-9]*\)$' \

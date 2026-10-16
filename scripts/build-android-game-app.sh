@@ -64,7 +64,11 @@ discio_jni_root="${KARTPAD_DISCIO_JNI_ROOT:-$repo_root/build/dolphin-android-dis
 
 python3 "$repo_root/scripts/inject-retro-rel-report-guard.py" --verify \
   "$translation_root/functions/func_8000A440.cpp"
+python3 "$repo_root/scripts/inject-mkw-texture-link-guard.py" --verify \
+  "$translation_root/functions/func_802289DC.cpp"
 python3 "$repo_root/scripts/inject-retro-rel-report-guard.py" --verify-shards \
+  "$translation_root/build_shards"
+python3 "$repo_root/scripts/inject-mkw-texture-link-guard.py" --verify-shards \
   "$translation_root/build_shards"
 
 native_target="WiiCompiled"

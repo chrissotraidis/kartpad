@@ -63,7 +63,8 @@
       {"function": "func_8084E388.cpp", "script": "scripts/inject-online-rkg-selection-hooks.py"},
       {"function": "func_80643F48.cpp", "script": "scripts/inject-online-rkg-selection-hooks.py"},
       {"function": "func_805A1A8C.cpp", "script": "scripts/inject-g10-camera-lifecycle-guard.py"},
-      {"function": "func_8000A440.cpp", "script": "scripts/inject-retro-rel-report-guard.py"}
+      {"function": "func_8000A440.cpp", "script": "scripts/inject-retro-rel-report-guard.py"},
+      {"function": "func_802289DC.cpp", "script": "scripts/inject-mkw-texture-link-guard.py"}
     ],
     "expectedGeneratedFunctions": 29637,
     "expectedBaseFunctions": 29065,

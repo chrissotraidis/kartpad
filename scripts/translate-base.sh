@@ -35,6 +35,8 @@ done
   "${functions}/func_805A1A8C.cpp"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" \
   "${functions}/func_8000A440.cpp"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" \
+  "${functions}/func_802289DC.cpp"
 "${dotnet_bin}" "${translator}" generate-data-init --project "${manifest}"
 
 blob_asm="${output}/data_sections_init_blobs.S"
@@ -48,7 +50,9 @@ fi
   --native-source-dir "${repo_root}/build/wiicompiled-fpscr/runtime/src" \
   --out "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --inject-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --inject-shards "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify-shards "${shards}"
 
 
 [[ -f "${functions}/func_8055531C.cpp" && -f "${shards}/shards.cmake" ]] || { echo "translate-base.sh: check failed (line 51)" >&2; exit 1; }
