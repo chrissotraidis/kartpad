@@ -52,6 +52,7 @@ void PADSerializeMappings(){++testKeyboardSaves;}
 #undef BOOL
 }
 namespace Wup028Adapter { void SetPortAssignment(uint32_t,int){} }
+#include "kpad_keyboard_fixture.inc.mm"
 int main(){@autoreleasepool {
  char path[]="/tmp/kartpad-profile-test-XXXXXX";assert(mkdtemp(path));
  testRoot=[NSURL fileURLWithPath:@(path)];
@@ -246,6 +247,7 @@ int main(){@autoreleasepool {
  assert([KPControllerDiagnostics() containsString:@"Detected controllers: 1"]);
  assert([KPButtonLabel(nullptr,SDL_GAMEPAD_BUTTON_START) isEqual:@"Menu"]);
  assert([KPButtonLabel(nullptr,SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) isEqual:@"LB"]);
+ TestClassicKeyboard(second);
  SDL_CloseGamepad(testPad);testPad=nullptr;SDL_DetachVirtualJoystick(id);SDL_Quit();
  [[NSFileManager defaultManager] removeItemAtURL:testRoot error:nil];
  puts("PASS: profile round trip, legacy secondary bindings, dead zones, shared bindings, A OR RT via virtual SDL input, clear, corrupt-file preservation, Xbox labels");
