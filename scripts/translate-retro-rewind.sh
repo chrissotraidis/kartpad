@@ -151,6 +151,8 @@ done
   "${functions}/func_805A1A8C.cpp"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" \
   "${functions}/func_8000A440.cpp"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" \
+  "${functions}/func_802289DC.cpp"
 
 "${dotnet_bin}" "${translator}" emit-base-manifest \
   --project "${manifest}" --profile retro-rewind \
@@ -186,9 +188,15 @@ fi
   --retro-cpp-dir "${mod_output}/cpp" --out "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" \
   --inject-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" \
+  --inject-shards "${shards}"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
   "${functions}/func_8000A440.cpp"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify \
+  "${functions}/func_802289DC.cpp"
 "${repo_root}/scripts/inject-retro-rel-report-guard.py" \
+  --verify-shards "${shards}"
+"${repo_root}/scripts/inject-mkw-texture-link-guard.py" \
   --verify-shards "${shards}"
 
 # Mach-O C symbols carry a leading underscore. Publish aliases immediately so

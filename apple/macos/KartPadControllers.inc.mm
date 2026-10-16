@@ -3,6 +3,7 @@
 #include <SDL3/SDL_scancode.h>
 #include <iterator>
 #import <Carbon/Carbon.h>
+#import <IOKit/hidsystem/IOLLEvent.h>
 #include "../third_party/sdl/scancodes_darwin.h"
 
 static SDL_Scancode KPMacPhysicalScancode(unsigned short keyCode, bool isoKeyboard) {
@@ -13,10 +14,35 @@ static SDL_Scancode KPMacPhysicalScancode(unsigned short keyCode, bool isoKeyboa
 }
 #define BOOL KPPadBOOL
 #include <dolphin/pad.h>
+#include "keyboard_defaults.h"
 #undef BOOL
 #include "wup028_adapter.h"
 #include <array>
 #include <dolphin/controller_binding.h>
+
+static bool KPMacModifierPressed(NSEvent *event) {
+  // Match SDL Cocoa's side-specific flags, including its aggregate-only fallback.
+  // The generic Shift flag alone cannot distinguish releasing Left Shift while
+  // Right Shift is still held.
+  static constexpr struct {
+    unsigned short key;
+    NSUInteger target, other, either;
+  } modifiers[] = {
+    {kVK_Shift, NX_DEVICELSHIFTKEYMASK, NX_DEVICERSHIFTKEYMASK, NSEventModifierFlagShift},
+    {kVK_RightShift, NX_DEVICERSHIFTKEYMASK, NX_DEVICELSHIFTKEYMASK, NSEventModifierFlagShift},
+    {kVK_Control, NX_DEVICELCTLKEYMASK, NX_DEVICERCTLKEYMASK, NSEventModifierFlagControl},
+    {kVK_RightControl, NX_DEVICERCTLKEYMASK, NX_DEVICELCTLKEYMASK, NSEventModifierFlagControl},
+    {kVK_Option, NX_DEVICELALTKEYMASK, NX_DEVICERALTKEYMASK, NSEventModifierFlagOption},
+    {kVK_RightOption, NX_DEVICERALTKEYMASK, NX_DEVICELALTKEYMASK, NSEventModifierFlagOption},
+  };
+  for (const auto& modifier : modifiers) if (event.keyCode == modifier.key) {
+    const bool target = (event.modifierFlags & modifier.target) != 0;
+    const bool other = (event.modifierFlags & modifier.other) != 0;
+    const bool either = (event.modifierFlags & modifier.either) != 0;
+    return either != (target || other) ? either : target;
+  }
+  return false;
+}
 
 static constexpr std::array<PADButton, 12> KPButtons = {
   PAD_BUTTON_A, PAD_BUTTON_B, PAD_BUTTON_X, PAD_BUTTON_Y, PAD_BUTTON_START,
@@ -245,16 +271,14 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
     [self button:@"Cancel Remapping" action:@selector(cancel:) frame:NSMakeRect(175,24,165,32)].keyEquivalent = @"\033";
     [self button:@"Save Profile" action:@selector(save:) frame:NSMakeRect(620,24,140,32)];
     [self button:@"Reset Keyboard Defaults" action:@selector(resetKeyboard:) frame:NSMakeRect(345,24,180,32)];
-    self.keyboardMonitor=[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^NSEvent *(NSEvent *event) {
-      if(self.keyboardCaptureKind>=0) { [self handleKeyboardEvent:event]; return nil; }
-      return event;
+    self.keyboardMonitor=[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown|NSEventMaskFlagsChanged handler:^NSEvent *(NSEvent *event) {
+      return [self handleKeyboardEvent:event] ? nil : event;
     }];
   }
 }
 - (void)activateInput {
-  if(!self.keyboardMonitor) self.keyboardMonitor=[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^NSEvent *(NSEvent *event) {
-    if(self.keyboardCaptureKind>=0) { [self handleKeyboardEvent:event]; return nil; }
-    return event;
+  if(!self.keyboardMonitor) self.keyboardMonitor=[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown|NSEventMaskFlagsChanged handler:^NSEvent *(NSEvent *event) {
+    return [self handleKeyboardEvent:event] ? nil : event;
   }];
   if (!self.backgroundHintOwned) {
     const char *hint=SDL_GetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS);
@@ -367,35 +391,51 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
   [self cancelCapture];
   self.keyboardCaptureKind=sender.tag>=100 ? 1 : 0;
   self.keyboardCaptureIndex=sender.tag>=100 ? sender.tag-100 : sender.tag;
-  self.status.stringValue=@"Press a keyboard key. Controller input will not be captured.";
+  self.status.stringValue=@"Press a key, including Shift, Control or Option. Command shortcuts remain available.";
   [self refreshKeyboardLabels];
 }
 - (void)clearKeyboard:(NSButton *)sender {
   if(sender.tag>=100) PADSetKeyAxisBinding(0,{PAD_KEY_INVALID,(PADAxis)(PAD_AXIS_LEFT_X_POS+sender.tag-100),0});
   else PADSetKeyButtonBinding(0,{PAD_KEY_INVALID,KPButtons[sender.tag]});
+  PADSerializeMappings();
   self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1; [self refreshKeyboardLabels];
-  self.status.stringValue=@"Keyboard binding cleared. Changes are saved by Aurora when KartPad exits.";
+  self.status.stringValue=@"Keyboard binding cleared.";
 }
 - (SDL_Scancode)scancodeForPhysicalKeyCode:(NSUInteger)keyCode {
   return KPMacPhysicalScancode((unsigned short)keyCode,
                                KBGetLayoutType(LMGetKbdType()) == kKeyboardISO);
 }
 - (void)resetKeyboard:(id)sender {
-  (void)sender; PADClearKeyBindings(0); PADSetKeyboardActive(0,TRUE);
-  self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1; [self refreshKeyboardLabels];
-  self.status.stringValue=@"Keyboard defaults restored. Changes are saved by Aurora when KartPad exits.";
+  (void)sender;
+  // Aurora loads saved keyboard mappings lazily; load them before replacing
+  // player 1 so a later refresh cannot overwrite the restored defaults.
+  unsigned count=0; PADGetKeyButtonBindings(0,&count);
+  KartPadKeyboard::ConfigureDefaultPort();
+  PADSerializeMappings();
+  [self cancelCapture]; [self refreshKeyboardLabels];
+  self.status.stringValue=@"Keyboard defaults restored.";
 }
-- (void)handleKeyboardEvent:(NSEvent *)event {
-  if(self.keyboardCaptureKind<0 || event.type!=NSEventTypeKeyDown || event.isARepeat) return;
+- (BOOL)handleKeyboardEvent:(NSEvent *)event {
+  if(self.keyboardCaptureKind<0) return NO;
+  // A Command shortcut must not silently replace the binding or lose its menu
+  // action. Standalone Command is reserved for those same shortcuts.
+  if((event.modifierFlags & NSEventModifierFlagCommand) ||
+     event.keyCode==kVK_Command || event.keyCode==kVK_RightCommand) return NO;
+  if(event.type==NSEventTypeFlagsChanged) {
+    if(!KPMacModifierPressed(event)) return NO; // releases and unsupported modifiers
+  } else if(event.type!=NSEventTypeKeyDown) return NO;
+  else if(event.isARepeat) return YES;
   // Escape cancels before the local monitor can consume it as a binding.
-  if (event.keyCode == kVK_Escape) { [self cancel:nil]; return; }
+  if (event.keyCode == kVK_Escape) { [self cancel:nil]; return YES; }
   int sc = KPMacPhysicalScancode(event.keyCode, KBGetLayoutType(LMGetKbdType()) == kKeyboardISO);
-  if(sc<=SDL_SCANCODE_UNKNOWN) return;
+  if(sc<=SDL_SCANCODE_UNKNOWN) return YES;
   if(self.keyboardCaptureKind==0) PADSetKeyButtonBinding(0,{sc,KPButtons[self.keyboardCaptureIndex]});
   else PADSetKeyAxisBinding(0,{sc,(PADAxis)(PAD_AXIS_LEFT_X_POS+self.keyboardCaptureIndex),0});
-  PADSetKeyboardActive(0,TRUE); self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1;
-  self.status.stringValue=@"Keyboard binding updated. Changes are saved by Aurora when KartPad exits.";
+  PADSetKeyboardActive(0,TRUE); PADSerializeMappings();
+  self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1;
+  self.status.stringValue=@"Keyboard binding updated.";
   [self refreshKeyboardLabels];
+  return YES;
 }
 - (void)remap:(NSButton *)sender {
   if([self keyboardSelected]) { [self captureKeyboard:sender]; return; }

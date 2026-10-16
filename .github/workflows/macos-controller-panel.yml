@@ -1,0 +1,44 @@
+name: Mac controller panel
+on:
+  pull_request:
+    paths: &paths
+      - 'apple/macos/**'
+      - 'apple/third_party/sdl/**'
+      - 'vendor/runtimes/macos'
+      - 'tests/macos/**'
+      - 'scripts/test-macos-controller-profiles.sh'
+      - 'scripts/audit-macos-package.sh'
+      - 'tests/test_macos_package_contract.py'
+      - '.github/workflows/macos-controller-panel.yml'
+  push:
+    branches: [main]
+    paths: *paths
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-panel:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            architecture: arm64
+          - os: macos-15-intel
+            architecture: x86_64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check native architecture and load only maintained Mac sources
+        run: |
+          test "$(uname -m)" = '${{ matrix.architecture }}'
+          git submodule update --init --depth 1 vendor/runtimes/macos
+      - name: Build pinned SDL without game assets
+        run: |
+          cmake -S tests/macos/controller-panel-deps -B "$RUNNER_TEMP/controller-panel" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/controller-panel" --target SDL3-static --parallel 3
+      - name: Exercise keyboard reset, remap persistence calls, and controller profiles
+        run: scripts/test-macos-controller-profiles.sh "$RUNNER_TEMP/controller-panel" vendor/runtimes/macos/runtime
+      - name: Keep package audit markers aligned with current native sources
+        run: /usr/bin/python3 -B -m unittest discover -s tests -p test_macos_package_contract.py -v

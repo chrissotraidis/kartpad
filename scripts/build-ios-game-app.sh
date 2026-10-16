@@ -44,7 +44,11 @@ if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
 fi
 python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
   "${translation_root}/functions/func_8000A440.cpp"
+python3 "${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify \
+  "${translation_root}/functions/func_802289DC.cpp"
 python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards \
+  "${translation_root}/build_shards"
+python3 "${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify-shards \
   "${translation_root}/build_shards"
 if [[ ! -f "${dawn_archive}" ]] ||
    [[ "$(shasum -a 256 "${dawn_archive}" | awk '{print $1}')" != "${dawn_sha256}" ]]; then

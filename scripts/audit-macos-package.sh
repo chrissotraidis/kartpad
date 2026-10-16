@@ -120,8 +120,10 @@ for shell_contract in \
   "Experimental Wii Remote + Nunchuk" \
   "Wii Remote + Nunchuk (Experimental)" \
   "Use item" \
-  "Left Shift (Classic L)" \
-  "Select / minus" \
+  "Left Control" \
+  "Left Option" \
+  "Rear view" \
+  "Left Shift" \
   "showControls:" \
   "Render resolution" \
   "ControllerProfiles.json" \

@@ -174,6 +174,9 @@ class RelReportGuardTests(unittest.TestCase):
         # Keep the real mod-count pin; one guarded fixture stands in for the base graph.
         data['translation']['expectedGeneratedFunctions'] = 1
         data['translation']['expectedBaseFunctions'] = 1
+        # This fixture isolates the REL guard and mod-count contract.
+        data['translation']['injectors'] = [item for item in data['translation']['injectors']
+                                            if item['function'] == 'func_8000A440.cpp']
         profile = Profile(Path('fixture.json'), data)
         functions = self.root / 'functions'
         functions.mkdir()

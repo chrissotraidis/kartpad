@@ -74,10 +74,11 @@ KartPad needs your game's files once. Either:
   disc, choose **Extract Entire Disc** and keep the `DATA` folder it makes
   (KartPad doesn't need `UPDATE` or `CHANNEL`).
   [PadMint](https://github.com/chrissotraidis/padmint) also saves one, named
-  `KartPad game data`, when it builds KartPad.
-- **Your disc image.** KartPad can import an ISO or WBFS directly (Android also
-  accepts RVZ). This needs your own Wii's 16-byte common key saved as
-  `common-key.bin`, for example from a BootMii NAND backup of your console.
+  `KartPad game data`, for iPhone, iPad and Android. For Mac, you can
+  [reuse the files PadMint prepared](docs/INSTALL_MACOS.md#reuse-padmints-game-files).
+- **Your disc image (iPhone, iPad and Android).** KartPad can import an ISO or
+  WBFS directly (Android also accepts RVZ). This needs your own Wii's 16-byte
+  common key saved as `common-key.bin`, for example from a BootMii NAND backup of your console.
   KartPad does not include it and we cannot provide it.
 
 If KartPad says **Game Data Import Failed** and asks for a Wii common key, you
@@ -108,7 +109,7 @@ allow KartPad to install apps.
 
 ### iPhone and iPad
 
-1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
+1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **Mario Kart Wii**,
    your disc image and **iPhone/iPad**. Install the IPA it makes with
    Sideloadly, AltStore or SideStore. To keep your saves, install it over your
    KartPad with the same tool and Apple ID. PadMint also makes your
@@ -126,22 +127,29 @@ See [iPhone/iPad setup](docs/INSTALL_IPA.md) for more.
 
 ### Mac
 
-1. In [PadMint](https://github.com/chrissotraidis/padmint), choose **KartPad**,
-   your disc image and **Mac**, then move the **KartPad** app it makes to
-   Applications.
+1. In [PadMint](https://github.com/chrissotraidis/padmint) **0.5.1 or newer**,
+   choose **Mario Kart Wii**, your disc image and **This Mac** under **Where
+   will you play?**, then move the **KartPad** app it makes to Applications.
 2. If macOS says it can't check the app, choose **Done**, then
    **System Settings → Privacy & Security → Open Anyway**.
-3. Import your game data folder when KartPad asks for it.
+3. Choose your extracted game data folder when KartPad asks for it. You can
+   [reuse the files PadMint prepared](docs/INSTALL_MACOS.md#reuse-padmints-game-files)
+   or extract them with Dolphin.
 
-See [Install on Mac](docs/INSTALL_MACOS.md) for more.
+**Only seeing iPhone/iPad and Android?** Open the latest PadMint from its newly
+extracted folder. KartPad for Mac needs Apple Silicon; PadMint 0.5.2 can also
+hide the option when running under Rosetta. See
+[the Mac option troubleshooting steps](docs/INSTALL_MACOS.md#missing-this-mac-option).
 
 ### PadMint
 
 [PadMint](https://github.com/chrissotraidis/padmint) builds KartPad from your
-own disc on your own computer: choose **KartPad**, your disc image and where
-you'll play, and it makes your copy and your `KartPad game data` folder. From
-0.7.14 it's how iPhone, iPad and Mac get KartPad, and it still works for
-Android.
+own disc on your own computer: choose **Mario Kart Wii**, your disc image and where
+you'll play. For iPhone, iPad and Android, it also exports a `KartPad game data`
+folder. The Mac build saves an app ZIP; its extracted game files can be reused
+with the [Mac setup steps](docs/INSTALL_MACOS.md#reuse-padmints-game-files).
+From 0.7.14, PadMint is how iPhone, iPad and Mac get KartPad, and it still works
+for Android.
 
 ### Which file is which
 
@@ -168,9 +176,10 @@ Your saves and game data stay.
 
 ### Current release
 
-**[KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1)**
-(build 263, 13 October 2026) is the latest release. What changed, and what is
-still open, is in [status](docs/STATUS.md) and
+**KartPad 0.8.2** (build 264) prepares the Mac setup, repeat-build, keyboard
+and Retro race-start fixes described in the [release notes](docs/releases/v0.8.2.md).
+The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
+What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
 WiiCompiled source is recorded in
 [source maintenance](docs/source-maintenance/VALIDATION.md).

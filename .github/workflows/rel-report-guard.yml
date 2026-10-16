@@ -4,9 +4,16 @@ on:
     paths:
       - 'scripts/*game-runtime.sh'
       - 'scripts/*game-app.sh'
+      - 'scripts/build-macos-app.sh'
+      - 'scripts/build-padmint-macos.sh'
+      - 'padmint.json'
+      - 'tests/test_macos_build_retry.py'
       - 'scripts/translate-*.sh'
       - 'scripts/generate-g8-full-title.sh'
       - 'scripts/inject-retro-rel-report-guard.py'
+      - 'scripts/inject-mkw-texture-link-guard.py'
+      - 'tests/test_mkw_texture_link_guard.py'
+      - 'tests/fixtures/texture_links/**'
       - 'vendor/runtimes/**'
       - 'vendor/wiicompiled/**'
       - '.gitmodules'
@@ -36,9 +43,16 @@ on:
     paths:
       - 'scripts/*game-runtime.sh'
       - 'scripts/*game-app.sh'
+      - 'scripts/build-macos-app.sh'
+      - 'scripts/build-padmint-macos.sh'
+      - 'padmint.json'
+      - 'tests/test_macos_build_retry.py'
       - 'scripts/translate-*.sh'
       - 'scripts/generate-g8-full-title.sh'
       - 'scripts/inject-retro-rel-report-guard.py'
+      - 'scripts/inject-mkw-texture-link-guard.py'
+      - 'tests/test_mkw_texture_link_guard.py'
+      - 'tests/fixtures/texture_links/**'
       - 'vendor/runtimes/**'
       - 'vendor/wiicompiled/**'
       - '.gitmodules'
@@ -66,6 +80,13 @@ on:
 permissions:
   contents: read
 jobs:
+  macos-build-retry:
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repeat the Mac recipe with fixture inputs and real ZIP packaging
+        run: /usr/bin/python3 -B -m unittest discover -s tests -p 'test_macos_build_retry.py' -v
   regression:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -82,6 +103,10 @@ jobs:
         run: python3 -B -m unittest discover -s tests -p 'test_retro_rel_report_guard.py' -v
       - name: Builder integration
         run: bash scripts/test-kartpad-builder.sh
+      - name: Malformed model texture links
+        env:
+          CXX: clang++
+        run: python3 -B -m unittest discover -s tests -p 'test_mkw_texture_link_guard.py' -v
       - name: Pinned source, staging, and offline source restoration
         env:
           PYTHONPATH: builder

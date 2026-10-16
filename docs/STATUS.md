@@ -1,8 +1,10 @@
 # KartPad status
 
-## Current status: 15 October 2026
+## Current status: 16 October 2026
 
-**Latest release: [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1) (build 263), 13 October.** Automatic character drawing for Adreno 6xx/7xx is back to 0.7.15, because 0.8.0 hid characters on some Snapdragon phones that had drawn them. It does not fix the Galaxy S24 Ultra ([#104](https://github.com/chrissotraidis/kartpad/issues/104)): Dolphin-style matrix rows were tried on 0.8.1 and the riders stayed invisible. Mac builds accept any RMCP01 image whose extracted game files match.
+**0.8.2 (build 264) release preparation:** Mac repeat builds, keyboard mapping/reset/persistence and a Retro model lookup fault are fixed. Setup instructions cover the missing **This Mac** option and Rosetta. [Release notes](releases/v0.8.2.md) record the bounded acceptance and known limits. The latest published files remain on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
+
+**0.8.1 (build 263), 13 October:** Automatic character drawing for Adreno 6xx/7xx is back to 0.7.15, because 0.8.0 hid characters on some Snapdragon phones that had drawn them. It does not fix the Galaxy S24 Ultra ([#104](https://github.com/chrissotraidis/kartpad/issues/104)): Dolphin-style matrix rows were tried on 0.8.1 and the riders stayed invisible. Mac builds accept any RMCP01 image whose extracted game files match.
 [PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1) (12 October)
 builds KartPad for Mac again and for iPhone/iPad on Intel Macs (experimental).
 [PadMint 0.5.2](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.2) (15 October) adds GalaxyPad and does not change that KartPad route.
