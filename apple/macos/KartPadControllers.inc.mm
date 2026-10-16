@@ -13,6 +13,7 @@ static SDL_Scancode KPMacPhysicalScancode(unsigned short keyCode, bool isoKeyboa
 }
 #define BOOL KPPadBOOL
 #include <dolphin/pad.h>
+#include "keyboard_defaults.h"
 #undef BOOL
 #include "wup028_adapter.h"
 #include <array>
@@ -381,9 +382,14 @@ static NSString *KPProfileKey(SDL_Gamepad *pad) {
                                KBGetLayoutType(LMGetKbdType()) == kKeyboardISO);
 }
 - (void)resetKeyboard:(id)sender {
-  (void)sender; PADClearKeyBindings(0); PADSetKeyboardActive(0,TRUE);
-  self.keyboardCaptureKind=-1; self.keyboardCaptureIndex=-1; [self refreshKeyboardLabels];
-  self.status.stringValue=@"Keyboard defaults restored. Changes are saved by Aurora when KartPad exits.";
+  (void)sender;
+  // Aurora loads saved keyboard mappings lazily; load them before replacing
+  // player 1 so a later refresh cannot overwrite the restored defaults.
+  unsigned count=0; PADGetKeyButtonBindings(0,&count);
+  KartPadKeyboard::ConfigureDefaultPort();
+  PADSerializeMappings();
+  [self cancelCapture]; [self refreshKeyboardLabels];
+  self.status.stringValue=@"Keyboard defaults restored.";
 }
 - (void)handleKeyboardEvent:(NSEvent *)event {
   if(self.keyboardCaptureKind<0 || event.type!=NSEventTypeKeyDown || event.isARepeat) return;

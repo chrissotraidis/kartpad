@@ -14,8 +14,13 @@ static int testPort=0;
 static std::array<PADButtonMapping,12> testButtons;
 static std::array<PADButtonMapping,12> testAlternates;
 static PADDeadZones testZones{true,true,8000,9000,30000,31000};
-static std::array<PADKeyButtonBinding,12> testKeys;
-static std::array<PADKeyAxisBinding,10> testKeyAxes;
+static std::array<std::array<PADKeyButtonBinding,12>,4> testPortKeys;
+static std::array<std::array<PADKeyAxisBinding,10>,4> testPortKeyAxes;
+static auto &testKeys=testPortKeys[0];
+static auto &testKeyAxes=testPortKeyAxes[0];
+static std::array<bool,4> testKeyboardActive;
+static bool testKeyboardLoaded=true;
+static int testKeyboardSaves=0;
 extern "C" {
 u32 PADCount(){return testPad ? 1:0;}
 s32 PADGetIndexForPort(u32 p){return (int)p==testPort ? 0:-1;}
@@ -28,13 +33,22 @@ PADDeadZones *PADGetDeadZones(u32){return &testZones;}
 void PADSetButtonMapping(u32,PADButtonMapping m){for(auto &b:testButtons)if(b.padButton==m.padButton)b=m;}
 void PADSetAltButtonMapping(u32,PADButtonMapping m){for(auto &b:testAlternates)if(b.padButton==m.padButton)b=m;}
 void PADRestoreDefaultMapping(u32){}
-PADKeyButtonBinding *PADGetKeyButtonBindings(u32,u32 *count){*count=12;return testKeys.data();}
-PADKeyAxisBinding *PADGetKeyAxisBindings(u32,u32 *count){*count=10;return testKeyAxes.data();}
+PADKeyButtonBinding *PADGetKeyButtonBindings(u32 p,u32 *count){
+ if(!testKeyboardLoaded){
+   // Model Aurora's first read replacing in-memory values with saved mappings.
+   for(auto &b:testPortKeys[p])b.scancode=SDL_SCANCODE_F;
+   for(auto &b:testPortKeyAxes[p])b.scancode=SDL_SCANCODE_G;
+   testKeyboardLoaded=true;
+ }
+ *count=12;return testPortKeys[p].data();
+}
+PADKeyAxisBinding *PADGetKeyAxisBindings(u32 p,u32 *count){*count=10;return testPortKeyAxes[p].data();}
 #define BOOL KPPadBOOL
-BOOL PADSetKeyButtonBinding(u32,PADKeyButtonBinding m){for(auto &b:testKeys)if(b.padButton==m.padButton){b=m;return TRUE;}return FALSE;}
-BOOL PADSetKeyAxisBinding(u32,PADKeyAxisBinding m){for(auto &b:testKeyAxes)if(b.padAxis==m.padAxis){b=m;return TRUE;}return FALSE;}
-void PADClearKeyBindings(u32){for(auto &b:testKeys)b.scancode=PAD_KEY_INVALID;for(auto &b:testKeyAxes)b.scancode=PAD_KEY_INVALID;}
-void PADSetKeyboardActive(u32,BOOL){}
+BOOL PADSetKeyButtonBinding(u32 p,PADKeyButtonBinding m){for(auto &b:testPortKeys[p])if(b.padButton==m.padButton){b=m;return TRUE;}return FALSE;}
+BOOL PADSetKeyAxisBinding(u32 p,PADKeyAxisBinding m){for(auto &b:testPortKeyAxes[p])if(b.padAxis==m.padAxis){b=m;return TRUE;}return FALSE;}
+void PADClearKeyBindings(u32 p){for(auto &b:testPortKeys[p])b.scancode=PAD_KEY_INVALID;for(auto &b:testPortKeyAxes[p])b.scancode=PAD_KEY_INVALID;testKeyboardActive[p]=false;}
+void PADSetKeyboardActive(u32 p,BOOL active){testKeyboardActive[p]=active;}
+void PADSerializeMappings(){++testKeyboardSaves;}
 #undef BOOL
 }
 namespace Wup028Adapter { void SetPortAssignment(uint32_t,int){} }
@@ -113,6 +127,51 @@ int main(){@autoreleasepool {
  assert(PADSetKeyAxisBinding(0,{SDL_SCANCODE_G,(PADAxis)PAD_AXIS_LEFT_X_POS,0}));
  assert(testKeyAxes[0].scancode==SDL_SCANCODE_G);
  PADClearKeyBindings(0); assert(testKeys[0].scancode==PAD_KEY_INVALID);
+ // Use the actual shared default helper through the UI action. The PAD fixture
+ // checks orchestration; real Aurora save/load and app relaunch are separate checks.
+ constexpr int expectedKeys[]={SDL_SCANCODE_RETURN,SDL_SCANCODE_BACKSPACE,
+   SDL_SCANCODE_Q,SDL_SCANCODE_E,SDL_SCANCODE_SPACE,SDL_SCANCODE_LSHIFT,
+   SDL_SCANCODE_LCTRL,SDL_SCANCODE_LALT,SDL_SCANCODE_UP,SDL_SCANCODE_DOWN,
+   SDL_SCANCODE_LEFT,SDL_SCANCODE_RIGHT};
+ constexpr int expectedAxes[]={SDL_SCANCODE_D,SDL_SCANCODE_A,SDL_SCANCODE_W,
+   SDL_SCANCODE_S,SDL_SCANCODE_L,SDL_SCANCODE_J,SDL_SCANCODE_I,SDL_SCANCODE_K,
+   SDL_SCANCODE_LCTRL,SDL_SCANCODE_LALT};
+ for(int port=1;port<4;++port) {
+   for(int i=0;i<12;++i)testPortKeys[port][i]={SDL_SCANCODE_F,KPButtons[i]};
+   for(int i=0;i<10;++i)testPortKeyAxes[port][i]={SDL_SCANCODE_G,(PADAxis)i,0};
+   testKeyboardActive[port]=(port==2);
+ }
+ const auto buttonsBeforeReset=testButtons, alternatesBeforeReset=testAlternates;
+ const auto zonesBeforeReset=testZones;
+ NSDictionary *profilesBeforeReset=[second.profiles copy];
+ auto checkDefaults=[&] {
+   for(int i=0;i<12;++i)assert(testKeys[i].padButton==KPButtons[i] && testKeys[i].scancode==expectedKeys[i]);
+   for(int i=0;i<10;++i)assert(testKeyAxes[i].padAxis==(PADAxis)i && testKeyAxes[i].scancode==expectedAxes[i]);
+   assert(testKeyboardActive[0]);
+   for(int port=1;port<4;++port) {
+     for(auto b:testPortKeys[port])assert(b.scancode==SDL_SCANCODE_F);
+     for(auto b:testPortKeyAxes[port])assert(b.scancode==SDL_SCANCODE_G);
+     assert(testKeyboardActive[port]==(port==2));
+   }
+   for(int i=0;i<12;++i) {
+     assert(testButtons[i].nativeButton==buttonsBeforeReset[i].nativeButton);
+     assert(testAlternates[i].nativeButton==alternatesBeforeReset[i].nativeButton);
+   }
+   assert(testZones.useDeadzones==zonesBeforeReset.useDeadzones && testZones.emulateTriggers==zonesBeforeReset.emulateTriggers);
+   assert(testZones.stickDeadZone==zonesBeforeReset.stickDeadZone && testZones.substickDeadZone==zonesBeforeReset.substickDeadZone);
+   assert(testZones.leftTriggerActivationZone==zonesBeforeReset.leftTriggerActivationZone && testZones.rightTriggerActivationZone==zonesBeforeReset.rightTriggerActivationZone);
+   assert([second.profiles isEqual:profilesBeforeReset]);
+   assert(second.capture==-1 && !second.armed && second.keyboardCaptureKind==-1 && second.keyboardCaptureIndex==-1);
+ };
+ testKeyboardLoaded=false; // persisted edits must load before resetting
+ second.capture=2;second.armed=YES;arm();
+ [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==1);
+ [second save:nil];checkDefaults(); // immediate Save Profile must not clear defaults
+ testKeys[0].scancode=SDL_SCANCODE_F;testKeyAxes[0].scancode=PAD_KEY_INVALID;
+ second.selectedID=id;second.capture=3;second.armed=YES;
+ [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==2);
+ [second resetKeyboard:nil];checkDefaults();assert(testKeyboardSaves==3);
+ puts("PASS: concrete keyboard defaults, lazy-load ordering, reset then Save, capture cancellation, other ports and controller profiles preserved");
  assert([second scancodeForPhysicalKeyCode:12]==SDL_SCANCODE_Q); // physical key, independent of layout character
  assert([second scancodeForPhysicalKeyCode:76]==SDL_SCANCODE_KP_ENTER);
  assert([second scancodeForPhysicalKeyCode:122]==SDL_SCANCODE_F1);
