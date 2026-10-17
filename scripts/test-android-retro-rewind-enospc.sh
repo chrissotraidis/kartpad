@@ -67,7 +67,7 @@ payload_digest = hashlib.sha256()
 with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as archive:
     root = retro["root"]
     archive.writestr(f"{root}/", b"")
-    archive.writestr(f"{root}/version.txt", f"{retro['version']}\n".encode())
+    archive.writestr(f"{root}/version.txt", f"{retro.get('packVersion', retro['version'])}\n".encode())
     archive.writestr(f"{root}/fixture/", b"")
     with archive.open(f"{root}/fixture/large.bin", "w", force_zip64=True) as output:
         for _ in range(payload_bytes // len(chunk)):

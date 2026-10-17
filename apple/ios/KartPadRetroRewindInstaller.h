@@ -8,6 +8,8 @@ typedef void (^KartPadRetroRewindInstallProgress)(NSString *status,
 @interface KartPadRetroRewindInstaller : NSObject
 
 + (NSString *)requiredVersion;
+// Exact version.txt value inside the pinned pack; normally requiredVersion.
++ (NSString *)requiredPackVersion;
 + (NSURL *)officialVersionManifestURL;
 + (NSURL *)officialArchiveURL;
 + (uint64_t)officialArchiveBytes;

@@ -76,7 +76,7 @@ final class RetroRewindInstallValidator {
 
     static Contract productionContract() {
         return new Contract(
-                RetroRewindRelease.VERSION,
+                RetroRewindRelease.PACK_VERSION,
                 RetroRewindRelease.ROOT,
                 Arrays.asList(
                         new ArtifactRequirement(

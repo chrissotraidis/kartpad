@@ -38,14 +38,14 @@ while building, but doesn't put a separate `KartPad game data` folder in
 Downloads. You can copy those prepared files into a local folder you will keep:
 
 1. In Finder, choose **Go → Go to Folder…** and enter
-   `~/.padmint/games/kartpad-v0.8.2/`. Use the version folder matching the app
+   `~/.padmint/games/kartpad-v0.8.3/`. Use the version folder matching the app
    you built. This is PadMint's usual location; if you set `PADMINT_HOME`, use
    that folder instead of `~/.padmint`.
 2. Copy `private/self-build/disc` to your chosen location. When KartPad asks
    for Original game data, select that copied `disc` folder; it contains
    `files` and `sys`, just like Dolphin's `DATA` folder.
-3. For KartPad 0.8.2's Retro Rewind 6.13.1, also copy the whole
-   `private/builder/retro-rewind-downloads/6.13.1-extracted` folder there.
+3. For KartPad 0.8.3's Retro Rewind 6.13.3, also copy the whole
+   `private/builder/retro-rewind-downloads/6.13.3-extracted` folder there.
    In KartPad, choose **Data → Choose Retro Rewind Data…** and select the
    `RetroRewind6` folder inside your copy. Then follow the game-switching
    steps below.
@@ -84,9 +84,8 @@ to restore the Mac option.
 ## Retro Rewind
 
 The Mac app doesn't download Retro Rewind. You can reuse PadMint's prepared
-files above, or download the official Retro Rewind 6.13.0 full pack and the
-6.13.1 update. For manual downloads, extract the update over the full pack,
-then choose **Data → Choose Retro Rewind Data…** and select
+files above, or download and extract the official Retro Rewind 6.13.3 full
+pack (`6.13.3-full.zip`), then choose **Data → Choose Retro Rewind Data…** and select
 its `RetroRewind6` folder. Choose **Game → Retro Rewind**, quit and reopen
 KartPad. **Game → Original Mario Kart Wii** and reopening switches back.
 

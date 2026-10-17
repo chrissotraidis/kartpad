@@ -94,9 +94,22 @@ def main() -> int:
     parser.add_argument("--profile", type=Path, default=DEFAULT_PROFILE)
     parser.add_argument("--update-archive", type=Path)
     parser.add_argument("--update-url")
+    parser.add_argument(
+        "--accept-pack-version",
+        help="with --latest, accept this reviewed version.txt value inside the "
+        "official full pack when Retro Rewind did not bump it for the feed version",
+    )
     args = parser.parse_args()
 
     expected_version = None
+    pack_version = None
+    if args.accept_pack_version is not None:
+        if not args.latest:
+            parser.error("--accept-pack-version requires --latest")
+        try:
+            version_key(args.accept_pack_version)
+        except ValueError as exc:
+            parser.error(str(exc))
     if args.latest:
         if any((args.archive, args.archive_url, args.update_archive, args.update_url)):
             parser.error("--latest does not accept archive arguments")
@@ -113,7 +126,18 @@ def main() -> int:
             parser.error(f"download failed: {exc}")
         with zipfile.ZipFile(args.archive) as bundle:
             base_version = bundle.read("RetroRewind6/version.txt").decode().strip()
-        if base_version != version:
+        if (
+            args.accept_pack_version is not None
+            and base_version == args.accept_pack_version
+            and version_key(base_version) < version_key(version)
+        ):
+            pack_version = base_version
+        elif args.accept_pack_version is not None:
+            parser.error(
+                f"full pack reports {base_version}, not the accepted pack version "
+                f"{args.accept_pack_version}"
+            )
+        elif base_version != version:
             pending = [line.split() for line in read_manifest("RetroRewindVersion.txt").splitlines()
                        if line.strip() and version_key(line.split()[0]) > version_key(base_version)]
             if len(pending) != 1 or pending[0][0] != version:
@@ -179,9 +203,17 @@ def main() -> int:
         while chunk := source.read(1024 * 1024):
             archive_hash.update(chunk)
 
-    if expected_version is not None and version != expected_version:
+    if pack_version is not None:
+        if version != pack_version:
+            parser.error("downloaded pack version differs from the accepted pack version")
+        version = expected_version
+    elif expected_version is not None and version != expected_version:
         parser.error("downloaded pack version differs from the official version feed")
     config["version"] = version
+    if pack_version is not None:
+        config["packVersion"] = pack_version
+    else:
+        config.pop("packVersion", None)
     if update_pin:
         config["updateArchive"] = update_pin
     else:

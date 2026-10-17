@@ -2514,7 +2514,7 @@ class KartPadActivity : SDLActivity() {
                 zip.putNextEntry(ZipEntry("${RetroRewindRelease.ROOT}/"))
                 zip.closeEntry()
                 zip.putNextEntry(ZipEntry("${RetroRewindRelease.ROOT}/version.txt"))
-                zip.write("${RetroRewindRelease.VERSION}\n".toByteArray(Charsets.UTF_8))
+                zip.write("${RetroRewindRelease.PACK_VERSION}\n".toByteArray(Charsets.UTF_8))
                 zip.closeEntry()
             }
             val result = RetroRewindArchiveExtractor.extract(
@@ -2528,7 +2528,7 @@ class KartPadActivity : SDLActivity() {
             check(result.isComplete() && result.selectedEntries == 2L &&
                 result.selectedBytes == extracted.toByteArray(Charsets.UTF_8).size.toLong() &&
                 result.extractedBytes == result.selectedBytes &&
-                extracted == "${RetroRewindRelease.VERSION}\n")
+                extracted == "${RetroRewindRelease.PACK_VERSION}\n")
             Log.i(TAG, "A3 JNI archive extraction passed entries=2 bytes=${result.extractedBytes}")
         } catch (error: Exception) {
             Log.e(TAG, "A3 JNI archive extraction failed", error)

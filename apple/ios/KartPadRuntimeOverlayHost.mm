@@ -4307,7 +4307,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
 }
 
 - (void)showRetroManager {
-  NSString *version=[NSString stringWithContentsOfFile:[KartPadRetroRewindInstaller.installedRootPath stringByAppendingPathComponent:@"version.txt"] encoding:NSUTF8StringEncoding error:nil];
+  NSString *version=KartPadRetroRewindInstaller.installedVersion;
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Manage Retro Rewind" message:[NSString stringWithFormat:@"Installed version: %@\nRequired version: %@\n\nReturn to the KartPad menu and choose Retro Rewind to check its pack and install or update when required.",version?:@"Not installed",KartPadRetroRewindInstaller.requiredVersion] preferredStyle:UIAlertControllerStyleAlert];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Return to KartPad Menu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){gKartPadMainMenuRequested=YES;}]];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];[self presentOverlayAlert:sheet];
@@ -4470,6 +4470,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   return KartPadDiagnosticContext(
       [KartPadRetroRewindInstaller.installedRootPath stringByAppendingPathComponent:@"version.txt"],
       KartPadRetroRewindInstaller.requiredVersion,
+      KartPadRetroRewindInstaller.requiredPackVersion,
       gKartPadRetroRewindSelected ? @"retro_rewind" : @"base",
       settings.renderScaleFloat, settings.aspectRatioMode);
 }

@@ -24,6 +24,7 @@ from kartpad_builder.retro_rewind import (
     BuildError,
     extract_archive,
     validate_pack,
+    validate_config,
     validate_rwfc_payload,
 )
 
@@ -271,6 +272,35 @@ class RetroRewindTests(unittest.TestCase):
             validate_pack(destination, config)
             self.assertFalse((root / "apps").exists())
             self.assertFalse((root / "RetroRewind.wad").exists())
+
+    def test_pack_version_is_the_only_accepted_version_txt_when_pinned(self) -> None:
+        # Retro Rewind 6.13.3 shipped with version.txt still reading 6.13.2.
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            archive, config = self.make_archive(root)
+            destination = root / "RetroRewind6"
+            extract_archive(archive, destination, config)
+            shipped = config["version"]
+            config["version"] = "6.99.9"
+            with self.assertRaisesRegex(BuildError, "version does not match"):
+                validate_pack(destination, config)
+            config["packVersion"] = shipped
+            validate_pack(destination, config)
+            (destination / "version.txt").write_text("6.99.9\n")
+            with self.assertRaisesRegex(BuildError, "version does not match"):
+                validate_pack(destination, config)
+        data = load_profiles(PROFILES)[0].data
+        pinned = {**data["retroRewind"], "version": "6.99.9", "packVersion": "6.99.8"}
+        validate_config(pinned)
+        header = render_retro_rewind_header({**data, "retroRewind": pinned})
+        self.assertIn('#define KARTPAD_RR_VERSION "6.99.9"', header)
+        self.assertIn('#define KARTPAD_RR_PACK_VERSION "6.99.8"', header)
+        unpinned = {key: value for key, value in pinned.items() if key != "packVersion"}
+        self.assertIn('#define KARTPAD_RR_PACK_VERSION "6.99.9"',
+                      render_retro_rewind_header({**data, "retroRewind": unpinned}))
+        for invalid in ("6.99.9", "latest", ""):
+            with self.subTest(pack_version=invalid), self.assertRaises(BuildError):
+                validate_config({**pinned, "packVersion": invalid})
 
     def test_base_and_update_are_validated_before_activation(self) -> None:
         for failure in (None, "missing", "hash", "traversal", "duplicate", "version", "limit"):

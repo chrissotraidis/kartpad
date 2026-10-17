@@ -432,6 +432,12 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
   return [NSString stringWithUTF8String:KARTPAD_RR_VERSION];
 }
 
+// Retro Rewind 6.13.3 shipped with version.txt still reading 6.13.2. The profile
+// pins that value alongside the exact Code.pul and XML hashes.
++ (NSString *)requiredPackVersion {
+  return [NSString stringWithUTF8String:KARTPAD_RR_PACK_VERSION];
+}
+
 + (NSURL *)officialVersionManifestURL {
   return [NSURL URLWithString:
       [NSString stringWithUTF8String:KARTPAD_RR_VERSION_MANIFEST_URL]];
@@ -460,7 +466,8 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
                                                error:nil];
   NSString *trimmed = [version
       stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
-  return trimmed.length == 0 ? nil : trimmed;
+  if (trimmed.length == 0) return nil;
+  return [trimmed isEqualToString:self.requiredPackVersion] ? self.requiredVersion : trimmed;
 }
 
 + (BOOL)validateInstalledRoot:(NSString *)root error:(NSError **)error {
@@ -481,7 +488,7 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
   if (version == nil ||
       ![[version stringByTrimmingCharactersInSet:
           NSCharacterSet.whitespaceAndNewlineCharacterSet]
-          isEqualToString:self.requiredVersion]) {
+          isEqualToString:self.requiredPackVersion]) {
     if (error != nullptr) {
       *error = readError ?: KartPadRetroRewindError(11,
           [NSString stringWithFormat:

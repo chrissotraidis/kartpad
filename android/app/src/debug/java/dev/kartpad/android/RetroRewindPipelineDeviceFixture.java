@@ -20,7 +20,7 @@ import java.util.zip.ZipOutputStream;
 /** Runs the real Android install pipeline against bounded synthetic content. */
 final class RetroRewindPipelineDeviceFixture {
     private static final String TAG = "KartPadFixture";
-    private static final String VERSION = RetroRewindRelease.VERSION;
+    private static final String VERSION = RetroRewindRelease.PACK_VERSION;
     private static final String CODE_PATH = "fixture/code.bin";
     private static final String XML_PATH = "fixture/config.xml";
 
