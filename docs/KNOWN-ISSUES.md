@@ -126,8 +126,8 @@ the [archive](archive/known-issues-through-2026-09.md).
 - **Retro Rewind online says "Invalid pack version! Please update or reinstall
   your pack to log in. Error Code: 22010".** Retro WFC accepts only the current
   Retro Rewind. Android updates Retro Rewind inside the app. iPhone, iPad and
-  Mac have it built in, so they need a new build: KartPad 0.8.1 (or 0.8.0)
-  with PadMint 0.5.1 or newer, for Retro Rewind 6.13.1. Retro Rewind updates almost always
+  Mac have it built in, so they need a new build: KartPad 0.8.3 with PadMint
+  0.5.3 or newer, for Retro Rewind 6.13.3. Retro Rewind updates almost always
   change its game code, so this repeats with each one.
 - **Finding a room fails on mobile data** (error 86420) while Wi-Fi works. Many
   carriers block the direct player-to-player connections the game uses; use

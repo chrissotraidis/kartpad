@@ -35,7 +35,7 @@ int main() { @autoreleasepool {
   [NSFileManager.defaultManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
   NSString *path = [dir stringByAppendingPathComponent:@"version.txt"];
   auto report = [&]() {
-    NSString *text = KartPadDiagnosticContext(path, @"6.12.7", @"retro_rewind", 1.0, 0);
+    NSString *text = KartPadDiagnosticContext(path, @"6.12.7", @"6.12.7", @"retro_rewind", 1.0, 0);
     assert(![text containsString:dir]);
     return (NSDictionary *)[NSJSONSerialization JSONObjectWithData:[text dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
   };
@@ -86,7 +86,7 @@ int main() { @autoreleasepool {
             "Clock.kt": 'package android.os\nobject SystemClock { fun elapsedRealtime() = 1234L }',
             "Settings.kt": '''package dev.kartpad.android
 object BuildConfig { const val VERSION_NAME = "test"; const val VERSION_CODE = 1 }
-object RetroRewindRelease { const val ROOT = "RetroRewind6"; const val VERSION = "6.12.7" }
+object RetroRewindRelease { const val ROOT = "RetroRewind6"; const val VERSION = "6.12.7"; const val PACK_VERSION = "6.12.7" }
 object KartPadTouchSettings {
  fun resolutionScale(context: android.content.Context) = 1
  fun aspectMode(context: android.content.Context) = 0

@@ -41,8 +41,11 @@ static inline NSDictionary *KartPadPackagedBuildProvenance() {
 }
 
 // Same schema/field semantics as Android's KartPadReportContext. No network or raw file data.
+// supported is the Retro Rewind release KartPad targets; packVersion is the exact
+// version.txt value inside that pinned pack (normally the same string).
 static inline NSString *KartPadDiagnosticContext(NSString *versionPath, NSString *supported,
-                                                NSString *profile, double resolution, NSInteger aspect) {
+                                                NSString *packVersion, NSString *profile,
+                                                double resolution, NSInteger aspect) {
   NSString *installed = nil;
   @try {
     NSFileHandle *file = [NSFileHandle fileHandleForReadingAtPath:versionPath];
@@ -62,7 +65,7 @@ static inline NSString *KartPadDiagnosticContext(NSString *versionPath, NSString
   } @catch (NSException *exception) { (void)exception; }
   NSString *state = ![NSFileManager.defaultManager fileExistsAtPath:versionPath] ? @"not_installed"
       : installed == nil ? @"unreadable_or_invalid"
-      : [installed isEqualToString:supported] ? @"version_match_only" : @"version_mismatch";
+      : [installed isEqualToString:packVersion] ? @"version_match_only" : @"version_mismatch";
   NSBundle *bundle = NSBundle.mainBundle;
   NSDictionary *context = @{
     @"schema": @1, @"platform": @"ios",

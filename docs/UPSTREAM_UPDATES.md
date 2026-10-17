@@ -39,6 +39,13 @@ Advance one upstream at a time on a dedicated branch.
    before the update and final validation complete.
    An already-downloaded archive can still be supplied explicitly with
    `python3 scripts/update-retro-rewind-profile.py PATH_TO_ARCHIVE OFFICIAL_URL`.
+   If an official full pack's `version.txt` lags the feed (6.13.3 shipped
+   saying 6.13.2), confirm the release from Retro Rewind's own announcement,
+   then pin it with `--latest --accept-pack-version 6.13.2`. The profile keeps
+   the feed version in `version` and the file's value in `packVersion`; only
+   the installed-pack `version.txt` checks read `packVersion`, and the
+   `Code.pul`, XML and archive hashes stay pinned. Omit the flag for normal
+   releases, which removes `packVersion`.
 3. Update the relevant lock entry and replace only its detached reference
    checkout. Record the new commit and tree.
 4. Validate the production payload signature and its pinned size and hash.

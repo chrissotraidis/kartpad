@@ -122,7 +122,10 @@ public final class RetroRewindInstallValidatorTestMain {
 
     private static void testProductionContract() {
         var contract = RetroRewindInstallValidator.productionContract();
-        expect(contract.version.equals("6.12.7"), "production version drifted");
+        // Retro Rewind 6.13.3's pack still says 6.13.2 in version.txt.
+        expect(contract.version.equals("6.13.2") &&
+                        RetroRewindRelease.VERSION.equals("6.13.3"),
+                "production version drifted");
         expect(contract.root.equals("RetroRewind6"), "production root drifted");
         expect(contract.artifacts.size() == 2, "production artifact count drifted");
     }

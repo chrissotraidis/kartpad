@@ -66,7 +66,7 @@ internal object KartPadReportContext {
         val state = when {
             !versionFile.exists() -> "not_installed"
             installed == null -> "unreadable_or_invalid"
-            installed != RetroRewindRelease.VERSION -> "version_mismatch"
+            installed != RetroRewindRelease.PACK_VERSION -> "version_mismatch"
             else -> "version_match_only"
         }
         return JSONObject()

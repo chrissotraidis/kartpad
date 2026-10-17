@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
+import re
 import shutil
 import stat
 import urllib.parse
@@ -32,6 +33,11 @@ RWFC_SIGNED_REGION_OFFSET = 0x110
 RWFC_SIGNATURE_OFFSET = 0x10
 RWFC_MAX_BYTES = 16 * 1024 * 1024
 SHA256_DIGEST_INFO_PREFIX = bytes.fromhex("3031300d060960864801650304020105000420")
+
+
+def pack_version(config: dict[str, Any]) -> str:
+    """The exact version.txt value inside the pinned pack (normally the feed version)."""
+    return config.get("packVersion", config["version"])
 
 
 @dataclass(frozen=True)
@@ -68,6 +74,14 @@ def validate_config(config: dict[str, Any], location: str = "retroRewind") -> No
             raise BuildError(f"{location} is missing {key}")
     if not isinstance(config["version"], str) or not config["version"]:
         raise BuildError(f"{location}.version must be a non-empty string")
+    if "packVersion" in config and (
+        not isinstance(config["packVersion"], str)
+        or not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", config["packVersion"])
+        or config["packVersion"] == config["version"]
+    ):
+        raise BuildError(
+            f"{location}.packVersion must be a different dotted version when present"
+        )
     manifest_url = config["versionManifestUrl"]
     if not isinstance(manifest_url, str):
         raise BuildError(
@@ -131,7 +145,7 @@ def validate_pack(root: Path, config: dict[str, Any]) -> None:
     if not root.is_dir():
         raise BuildError(f"Retro Rewind installation is missing {config['root']}")
     version_path = root / "version.txt"
-    if not version_path.is_file() or version_path.read_text().strip() != config["version"]:
+    if not version_path.is_file() or version_path.read_text().strip() != pack_version(config):
         raise BuildError("Retro Rewind version does not match the pinned profile")
     for label, key in (("Code.pul", "codePul"), ("Riivolution XML", "riivolutionXml")):
         item = config[key]
