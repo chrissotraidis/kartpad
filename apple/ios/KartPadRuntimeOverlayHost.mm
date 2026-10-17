@@ -1004,9 +1004,13 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 
 - (UIView *)gameCard:(BOOL)retro installedVersion:(NSString *)installedVersion {
   BOOL current = self.resumingGame && self.currentRetroRewind == retro;
-  BOOL ready = self.gameDataReady && (!retro || installedVersion.length > 0);
+  // An installed pack from another Retro Rewind release needs the in-app update.
+  BOOL outdated = retro && installedVersion.length > 0 &&
+      ![installedVersion isEqualToString:KartPadRetroRewindInstaller.requiredVersion];
+  BOOL ready = self.gameDataReady && (!retro || (installedVersion.length > 0 && !outdated));
   NSString *status = current ? @"Paused" : (self.resumingGame ? @"Next launch"
-      : (ready ? @"Ready to play" : (retro && !self.gameDataReady ? @"Import Mario Kart Wii first" : @"Setup needed")));
+      : (ready ? @"Ready to play" : (retro && !self.gameDataReady ? @"Import Mario Kart Wii first"
+          : (outdated ? @"Update needed" : @"Setup needed"))));
   UILabel *title = [self label:retro ? @"Retro Rewind" : @"Mario Kart Wii" style:UIFontTextStyleTitle2 secondary:NO];
   title.accessibilityTraits |= UIAccessibilityTraitHeader;
   [self.cardTitles addObject:title];
