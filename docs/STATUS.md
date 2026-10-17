@@ -2,7 +2,7 @@
 
 ## Current status: 16 October 2026
 
-**0.8.2 (build 264) release preparation:** Mac repeat builds, keyboard mapping/reset/persistence and a Retro model lookup fault are fixed. Setup instructions cover the missing **This Mac** option and Rosetta. [Release notes](releases/v0.8.2.md) record the bounded acceptance and known limits. The latest published files remain on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
+**0.8.3 (build 265):** Retro Rewind 6.13.3 support, including the runtime's double-precision fused FP helpers its new game code needs. [Release notes](releases/v0.8.3.md) record what was checked. 0.8.2 fixed Mac repeat builds, keyboard mapping and a Retro model lookup fault ([notes](releases/v0.8.2.md)). The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 
 **0.8.1 (build 263), 13 October:** Automatic character drawing for Adreno 6xx/7xx is back to 0.7.15, because 0.8.0 hid characters on some Snapdragon phones that had drawn them. It does not fix the Galaxy S24 Ultra ([#104](https://github.com/chrissotraidis/kartpad/issues/104)): Dolphin-style matrix rows were tried on 0.8.1 and the riders stayed invisible. Mac builds accept any RMCP01 image whose extracted game files match.
 [PadMint 0.5.1](https://github.com/chrissotraidis/padmint/releases/tag/v0.5.1) (12 October)

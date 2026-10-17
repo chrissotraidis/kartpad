@@ -122,7 +122,7 @@ internal class RetroRewindInstallActivity : Activity() {
         column.addView(
             label(
                 "Optional community content for extra tracks, characters, and Retro WFC. " +
-                    "KartPad downloads the pinned official pack and update and verifies them before use.",
+                    "KartPad downloads the pinned official pack and verifies it before use.",
                 16f,
                 Color.rgb(220, 211, 218),
             ),

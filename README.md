@@ -176,8 +176,8 @@ Your saves and game data stay.
 
 ### Current release
 
-**KartPad 0.8.2** (build 264) prepares the Mac setup, repeat-build, keyboard
-and Retro race-start fixes described in the [release notes](docs/releases/v0.8.2.md).
+**KartPad 0.8.3** (build 265) supports Retro Rewind 6.13.3, as described in the
+[release notes](docs/releases/v0.8.3.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
