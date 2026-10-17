@@ -1,6 +1,6 @@
 # Maintenance work and test board
 
-## Current work (from 5 October)
+## Current work (14 October)
 
 The [current goal loop](CURRENT-LOOP.md) sets the order of work after 0.8.1. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept
 current with each release. Everything below on this board is a dated snapshot:

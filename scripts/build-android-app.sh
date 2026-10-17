@@ -15,7 +15,14 @@ source "$repo_root/scripts/android-toolchain-versions.sh"
 package_format="${KARTPAD_ANDROID_PACKAGE_FORMAT:-apk}"
 case "$package_format" in
   apk) package_task=assembleDebug; package_path="$repo_root/android/app/build/outputs/apk/debug/app-debug.apk" ;;
-  apk-release) package_task=assembleRelease; package_path="$repo_root/android/app/build/outputs/apk/release/app-release-unsigned.apk" ;;
+  apk-release)
+    package_task=assembleRelease
+    package_path="$repo_root/android/app/build/outputs/apk/release/app-release-unsigned.apk"
+    # Gradle debug-signs diagnostic release builds for local profiling.
+    if [[ "${ORG_GRADLE_PROJECT_kartpadDiagnosticRelease:-false}" == true ]]; then
+      package_path="$repo_root/android/app/build/outputs/apk/release/app-release.apk"
+    fi
+    ;;
   aab) package_task=bundleRelease; package_path="$repo_root/android/app/build/outputs/bundle/release/app-release.aab" ;;
   *) echo "ERROR: KARTPAD_ANDROID_PACKAGE_FORMAT must be apk, apk-release or aab" >&2; exit 64 ;;
 esac

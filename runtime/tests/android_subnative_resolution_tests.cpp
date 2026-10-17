@@ -7,7 +7,7 @@ int main() {
     using namespace aurora::render_size_limits;
     // Exercise the renderer's actual sizing code at the new UI choices, including
     // fractional rounding and wide/portrait canvases used by Fill Screen.
-    for (const float scale : {0.5f, 0.75f, 1.f, 2.f, 3.f, 4.f}) {
+    for (const float scale : {0.5f, 0.75f, 1.f, 1.5f, 2.f, 3.f, 4.f}) {
         const auto native = scale_framebuffer_to_aspect(640, 480, scale, 4.f / 3.f);
         assert(native.width == std::lround(640 * scale));
         assert(native.height == std::lround(480 * scale));

@@ -19,12 +19,15 @@ Outputs go to `build/perf/` (ignored).
 - **Signing:** the perf app is debug-signed. The first install over another
   signer needs the game data moved aside and back as root; see the
   investigation.
+- Stop the selected test emulator before `ab.sh`. It launches and stops only
+  its own process on `KP_SERIAL` (default `emulator-5554`), refuses hardware
+  serials or an already-running target, and cold-boots without snapshots.
 
 ## Scripts
 
 | Script | What it does |
 |---|---|
-| `build-variant.sh NAME` | Builds an optimized, profileable, debug-signed `0.8.0-perf` app that loads a pushed game pack, plus a game pack for the current runtime working tree, into `build/perf/v-NAME`. Keeps the unstripped `libmain` for profiling |
+| `build-variant.sh NAME` | Builds an optimized, profileable, debug-signed `<current-version>-perf` app that loads a pushed game pack, plus a game pack for the current runtime working tree, into `build/perf/v-NAME`. Keeps the unstripped `libmain` for profiling. Any build failure stops the script |
 | `deploy.sh NAME` | Installs `v-NAME` over the current install (data kept) and pushes its pack and fingerprint |
 | `bench.sh LABEL SECONDS` | Starts the app, drives it into Grand Prix race 1 (Luigi Circuit, player idle), waits 55 s, then reports game-thread user and kernel CPU per frame |
 | `ab.sh OUT A B ROUNDS` | Alternates A and B, cold-booting the emulator before every run, and records the emulator's host memory |
@@ -35,6 +38,25 @@ Outputs go to `build/perf/` (ignored).
 
 To make a base variant without rebuilding, copy a known app and pack into
 `build/perf/v-base` (`app.apk`, `libkartpad_game.so`, `fingerprint`).
+
+The build wrapper recognizes Gradle's debug-signed diagnostic release APK name;
+it must not recover from a failed build by copying an earlier APK. Deployment
+creates the private pack directory if needed and stops on a failed move or
+permission repair. These changes do not alter production release signing.
+
+## Checking an unprofiled track
+
+At **Select Cup**, a touch drag from `(300, 840)` to `(490, 840)` over 250 ms
+moves from Mushroom to Flower Cup on the default 2400×1080 layout. The left
+stick is floating: a stationary press establishes its anchor and does not steer.
+Confirm **Flower Cup**, then **Mario Circuit**, before measuring. Use touch
+throughout; injected keyboard/gamepad keys can trigger the rumble prompt.
+
+Keep before/after screenshots for every timing window. CPU racers can lap and
+bump an idle kart, changing its camera. Do not silently compare a menu, another
+track, an idle demo, or a compiling frame with a warmed race, and do not discard
+only one variant's traffic-affected runs. The existing `bench.sh` follows the
+Luigi Circuit route; another track needs separate verified navigation.
 
 ## Profiling a running race
 

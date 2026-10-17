@@ -42,6 +42,27 @@ the [current goal loop](CURRENT-LOOP.md); open problems by device are in
 (#316, closed) and no crashes in 20 minutes of Grand Prix and online play on an
 iPad (#310, closed).
 
+### 14 October follow-up
+
+[Issue triage](ISSUE-TRIAGE-2026-10-14.md) records the new 0.8.1 reports and
+public replies. A local Android window correction removes the bands reproduced
+on Android 14; the Thor itself still needs confirmation. Android also has a
+1.5× resolution choice prepared for the next build (#465). The same pass
+reproduced a cursor/JNI abort on the Android 14 baseline and prepared a fix
+that services cursor changes from the scheduler stack. These changes are not
+in the published 0.8.1. The follow-up also fixes short taps being consumed by
+one input reader before another, passes a normal fresh-import race, and repairs
+the Android fork's CI. A measured vertex-repack CPU optimization and an off-by-default
+native bone-index experiment are in the drafts; neither establishes a fix for
+#470 or missing Adreno bodies. #475's Mac certificate report prompted a tested
+correction to retain PadMint's Python during preflight. [Evidence and remaining
+gates](artifacts/2026-10-14/android-input-cpu-renderer.md).
+
+#470's Adreno 810 slowdown is confirmed in logs; the responsible change is
+unknown. #472 adds a OnePlus OPD2403 missing-body report with GPU/driver evidence
+pending. #380's new follow-up uses an unverified third-party IPA without PadMint,
+so it does not establish a failure of the supported 0.8.1 picker.
+
 ### What remains
 
 Things decided for later are in the [to-do list](TODO.md). iPhone, iPad and
@@ -53,7 +74,8 @@ in PadMint.
   folder comes first, the key requirement is stated up front, and Android takes
   a zip so cloud transfers can't silently drop files.
 - **Android 3D drawing.**
-  - Adreno 8xx: fixed by Automatic in 0.7.10.
+  - OnePlus 15 graphics: reporter-confirmed with Automatic in 0.7.10.
+    Do not generalize that result to all Adreno 8xx devices.
   - Adreno 6xx/7xx (#104, #301): no automatic fix. The 0.7.12 and 0.7.13
     self-check logs from both phones show character bodies drawing nothing with
     either vertex layout and with either bone lookup on its own. Only the two

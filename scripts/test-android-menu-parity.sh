@@ -283,7 +283,7 @@ assert_labels \
   "Fill Screen (Experimental)"
 
 open_submenu_action "Display" "Render Resolution"
-assert_labels "Render Resolution" "1× (Native)" "2×" "3×" "4×"
+assert_labels "Render Resolution" "1× (Native)" "1.5×" "2×" "3×" "4×"
 
 open_submenu_action "Display" "FPS Counter Size"
 assert_labels "FPS Counter Size" "Small" "Medium" "Large"

@@ -103,12 +103,16 @@
         {
           "stage": "preflight",
           "command": [
-            "/bin/bash",
-            "{repo}/scripts/build-user-ipa.sh",
+            "{python}",
+            "-m",
+            "kartpad_builder.cli",
             "bootstrap",
             "--target",
             "macos"
-          ]
+          ],
+          "env": {
+            "PYTHONPATH": "{repo}/builder"
+          }
         },
         {
           "stage": "translate",

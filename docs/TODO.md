@@ -39,3 +39,19 @@ downloadable IPA, and from 0.7.14 we publish only the Android APK.
 
 **Done when:** a player on iPhone, iPad or Mac learns about a new version inside
 KartPad, and updating takes one action in PadMint with saves kept.
+
+## Optional touch item hold (#473)
+
+Requested on Pixel 10a / Android 17 / KartPad 0.8.1, with matching behavior
+wanted on iPhone/iPad. Holding L to trail a defensive item competes with
+steering and drifting on a touchscreen.
+
+Keep it separate from auto-accelerate and off by default. Proposed behavior:
+hold L to lock, press L again to release, show the locked state, and clear it
+on menu entry, app backgrounding, controller handoff and layout editing. A short
+tap must keep its ordinary item behavior; accessibility needs an equivalent
+lock/release action. No saved held button across launches.
+
+Not implemented. Before shipping, check defensive-item trailing and release,
+ordinary item use, multiple touches and lifecycle cancellation on Android and
+iPhone/iPad. [Request and reply](https://github.com/chrissotraidis/kartpad/issues/473#issuecomment-6159856629).

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Synthetic graphics-stage companion. Included inside probe.cpp's anonymous namespace.
 void drawProbe(wgpu::Instance instance, wgpu::Device device, Errors& errors,
-               bool robustness, bool packed, std::ostringstream& report) {
+               bool robustness, bool packed, bool vertexAttribute, std::ostringstream& report) {
     constexpr unsigned width=16, vertices=width*width*4, phases=4, rowBytes=256;
     constexpr unsigned attributeBlock=vertices*8, prefix=256;
     constexpr unsigned uniformBytes=80+20*48;
     wgpu::Limits limits{}; device.GetLimits(&limits);
     const unsigned uniformStride=((uniformBytes+limits.minUniformBufferOffsetAlignment-1)/limits.minUniformBufferOffsetAlignment)*limits.minUniformBufferOffsetAlignment;
     auto queue=device.GetQueue();
-    auto vertex=buffer(device,prefix+vertices*4,wgpu::BufferUsage::Storage|wgpu::BufferUsage::CopyDst);
+    auto vertex=buffer(device,prefix+vertices*8,wgpu::BufferUsage::Storage|wgpu::BufferUsage::Vertex|wgpu::BufferUsage::CopyDst);
     auto attributes=buffer(device,prefix+12*attributeBlock,wgpu::BufferUsage::Storage|wgpu::BufferUsage::CopyDst);
     auto uniform=buffer(device,2*uniformStride,wgpu::BufferUsage::Uniform|wgpu::BufferUsage::CopyDst);
     auto indices=buffer(device,width*width*6*2,wgpu::BufferUsage::Index|wgpu::BufferUsage::CopyDst);
-    std::vector<uint8_t> vertexData(prefix+vertices*4), attributeData(prefix+12*attributeBlock);
+    std::vector<uint8_t> vertexData(prefix+vertices*8), attributeData(prefix+12*attributeBlock);
     std::vector<uint16_t> indexData;
     std::array<uint32_t,uniformBytes/4> uniformData{};
     uniformData[0]=prefix;
@@ -28,9 +28,9 @@ void drawProbe(wgpu::Instance instance, wgpu::Device device, Errors& errors,
         const unsigned v=cell*4;
         for(unsigned n : {0u,1u,2u,2u,1u,3u}) indexData.push_back(uint16_t(v+n));
         for(unsigned corner=0;corner<4;++corner) {
-            const unsigned index=v+corner, off=prefix+index*4;
+            const unsigned index=v+corner, off=prefix+index*8;
             vertexData[off]=uint8_t(index>>8); vertexData[off+1]=uint8_t(index);
-            vertexData[off+2]=uint8_t(cell%20);
+            vertexData[off+4]=uint8_t((cell%20)*3); // raw GX row index in an aligned slot
         }
     }
     queue.WriteBuffer(vertex,0,vertexData.data(),vertexData.size());
@@ -58,10 +58,14 @@ struct VertexOutput {
  @location(0) @interpolate(flat) color: vec4u,
  @location(1) @interpolate(flat) cell: u32,
 };
-@vertex fn vs_main(@builtin(vertex_index) vidx: u32) -> VertexOutput {
- let base = ubuf.vtx_start + vidx * 4u;
+@vertex fn vs_main(@builtin(vertex_index) vidx: u32)WGSL";
+    if(vertexAttribute) code+=", @location(0) pnmtx_attribute: u32";
+    code+=R"WGSL() -> VertexOutput {
+ let base = ubuf.vtx_start + vidx * 8u;
  let idx = load_u16(&vbuf, base, false);
- let matrix = load_u8(&vbuf, base+2u);
+ let matrix = )WGSL";
+    code+=vertexAttribute ? "(pnmtx_attribute & 255u) / 3u;" : "load_u8(&vbuf, base+4u) / 3u;";
+    code+=R"WGSL(
  let cell = vidx/4u;
  let slot = cell%12u;
  let arrayOffset = )WGSL";
@@ -103,6 +107,12 @@ struct VertexOutput {
     wgpu::FragmentState fragment{.module=module,.entryPoint="fs_main",.targetCount=1,.targets=&colorTarget};
     wgpu::RenderPipelineDescriptor pd{}; pd.layout=device.CreatePipelineLayout(&pld);
     pd.vertex.module=module; pd.vertex.entryPoint="vs_main"; pd.fragment=&fragment;
+    wgpu::VertexAttribute boneIndex{};
+    boneIndex.format=wgpu::VertexFormat::Uint32; boneIndex.offset=4; boneIndex.shaderLocation=0;
+    wgpu::VertexBufferLayout vertexLayout{};
+    vertexLayout.arrayStride=8; vertexLayout.stepMode=wgpu::VertexStepMode::Vertex;
+    vertexLayout.attributeCount=1; vertexLayout.attributes=&boneIndex;
+    if(vertexAttribute) {pd.vertex.bufferCount=1;pd.vertex.buffers=&vertexLayout;}
     pd.primitive.topology=wgpu::PrimitiveTopology::TriangleList;
     auto pipeline=device.CreateRenderPipeline(&pd); errors.check();
     std::array<wgpu::BindGroupEntry,2> storageEntries{};
@@ -145,6 +155,7 @@ struct VertexOutput {
         wgpu::RenderPassColorAttachment ca{}; ca.view=target.CreateView(); ca.loadOp=wgpu::LoadOp::Clear; ca.storeOp=wgpu::StoreOp::Store;
         wgpu::RenderPassDescriptor rp{.colorAttachmentCount=1,.colorAttachments=&ca}; auto pass=encoder.BeginRenderPass(&rp);
         pass.SetPipeline(pipeline); pass.SetBindGroup(0,storageBind); pass.SetBindGroup(1,uniformBind,1,&dynamicOffset); pass.SetBindGroup(2,textureBind);
+        if(vertexAttribute) pass.SetVertexBuffer(0,vertex,prefix,vertices*8);
         pass.SetIndexBuffer(indices,wgpu::IndexFormat::Uint16); pass.DrawIndexed(width*width*6); pass.End();
         readbacks[phase]=buffer(device,rowBytes*width,wgpu::BufferUsage::CopyDst|wgpu::BufferUsage::MapRead);
         wgpu::TexelCopyTextureInfo source{.texture=target};
@@ -166,5 +177,6 @@ struct VertexOutput {
         readbacks[phase].Unmap();
     }
     report<<(failures?"FAIL":"PASS")<<" draw robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")
+          <<" vertex_attribute="<<vertexAttribute
           <<" frames="<<phases<<" checks="<<phases*width*width*4<<" mismatches="<<failures<<"\n";
 }

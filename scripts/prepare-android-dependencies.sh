@@ -14,7 +14,7 @@ fetch_locked() {
     curl --fail --location --show-error --progress-bar "$url" -o "$output"
   fi
   local actual_bytes actual_sha256
-  actual_bytes="$(stat -f '%z' "$output")"
+  actual_bytes="$(wc -c < "$output" | tr -d '[:space:]')"
   actual_sha256="$(shasum -a 256 "$output" | awk '{print $1}')"
   if [[ "$actual_bytes" != "$expected_bytes" || "$actual_sha256" != "$expected_sha256" ]]; then
     echo "ERROR: locked dependency check failed for $(basename "$output")" >&2

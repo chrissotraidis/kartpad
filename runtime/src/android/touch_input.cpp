@@ -1,6 +1,7 @@
 #include "kartpad/android/touch_input.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <mutex>
 
@@ -9,7 +10,7 @@ namespace {
 
 std::mutex g_touch_mutex;
 TouchInputState g_held;
-std::uint32_t g_latched_buttons = 0;
+std::array<std::uint32_t, 2> g_latched_buttons{};
 
 float SanitizeAxis(float value) noexcept {
     if (!std::isfinite(value)) {
@@ -28,15 +29,16 @@ void PublishTouchInput(TouchInputState state) noexcept {
     state.buttons &= kTouchButtonMask;
 
     std::scoped_lock lock(g_touch_mutex);
-    g_latched_buttons |= state.buttons & ~g_held.buttons;
+    for (auto& pending : g_latched_buttons) pending |= state.buttons & ~g_held.buttons;
     g_held = state;
 }
 
-TouchInputState ConsumeTouchInput() noexcept {
+TouchInputState ConsumeTouchInput(TouchInputReader reader) noexcept {
     std::scoped_lock lock(g_touch_mutex);
     TouchInputState result = g_held;
-    result.buttons |= g_latched_buttons;
-    g_latched_buttons = 0;
+    auto& pending = g_latched_buttons[reader == TouchInputReader::Kpad ? 0 : 1];
+    result.buttons |= pending;
+    pending = 0;
     return result;
 }
 
@@ -48,7 +50,7 @@ bool IsTouchInputConnected() noexcept {
 void ClearTouchInput() noexcept {
     std::scoped_lock lock(g_touch_mutex);
     g_held = {};
-    g_latched_buttons = 0;
+    g_latched_buttons.fill(0);
 }
 
 }  // namespace kartpad::android
