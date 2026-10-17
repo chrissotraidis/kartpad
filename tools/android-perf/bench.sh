@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Game-thread CPU per frame in Grand Prix race 1 (Luigi Circuit, 12 racers, player idle).
-set -u
+set -euo pipefail
 export KP_SERIAL=${KP_SERIAL:-emulator-5554}
 A="$HOME/Library/Android/sdk/platform-tools/adb -s $KP_SERIAL"
 UI="python3 $(dirname "$0")/ui.py"

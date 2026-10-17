@@ -46,8 +46,9 @@ Released state is in [STATUS.md](STATUS.md). Speed details are in the
 ## Ground rules
 
 - **Devices:**
-  - Use the Android emulator on this Mac, the iPad Pro, the iPhone 14 and this
-    Mac, plus Chris's Pixel 9 Pro XL when he connects it.
+  - Use the Android emulator, iPad Simulator and this Mac. **Do not use the
+    hardware iPad** (Chris's current instruction). Other physical devices need
+    an explicitly owned test session.
   - No test phones get bought (Chris confirmed this on 11 October). Remote
     device labs are the proposed substitute; see the
     [11 October handoff](RESEARCH-HANDOFF-2026-10-11.md#research-remote-device-labs).

@@ -177,15 +177,15 @@ void run(wgpu::Instance instance, wgpu::Adapter adapter, bool robustness, std::o
         report<<"ERROR robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")<<": "<<e.what()<<"\n";
       }
     }
-    for (bool packed : {false, true}) {
-        try { drawProbe(instance, device, *errors, robustness, packed, report); }
-        catch (const std::exception& e) { report<<"ERROR draw robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")<<": "<<e.what()<<"\n"; }
+    for (bool packed : {false, true}) for(bool vertexAttribute : {false,true}) {
+        try { drawProbe(instance, device, *errors, robustness, packed, vertexAttribute, report); }
+        catch (const std::exception& e) { report<<"ERROR draw robustness="<<robustness<<" uniform="<<(packed?"vec4":"scalar")<<" vertex_attribute="<<vertexAttribute<<": "<<e.what()<<"\n"; }
     }
     queue={}; device.Destroy();
 }
 std::string diagnose() {
     std::ostringstream report;
-    report<<"KartPad synthetic renderer probe 2\nHelper SHA256: "<<kHelperSha<<"\n";
+    report<<"KartPad synthetic renderer probe 3\nHelper SHA256: "<<kHelperSha<<"\n";
     report<<"No game data read. Validation enabled. Compute and indexed-draw readback; not gameplay acceptance.\n";
     try {
         const auto feature=wgpu::InstanceFeatureName::TimedWaitAny;
@@ -206,9 +206,10 @@ std::string diagnose() {
         auto adapter=std::move(*createdAdapter);
         require(bool(adapter),"Requested backend unavailable; no fallback used");
         wgpu::AdapterInfo info{}; adapter.GetInfo(&info);
-        // This pinned Dawn aborts in a device-toggle assertion on SwiftShader.
-        // Report unsupported software adapters before device creation, never a pass.
-        require(info.adapterType != wgpu::AdapterType::CPU, "Software adapter unsupported by this hardware probe");
+        // The maintained Dawn dependency fixes the old SwiftShader toggle
+        // assertion. Keep software execution explicit: it cannot clear a
+        // hardware-specific rendering or performance report.
+        report<<"Software adapter: "<<(info.adapterType == wgpu::AdapterType::CPU ? "yes" : "no")<<"\n";
         report<<"Adapter: "<<string(info.device)<<"\nDriver: "<<string(info.description)<<"\n";
         wgpu::Limits limits{}; adapter.GetLimits(&limits);
         report<<"Uniform alignment: "<<limits.minUniformBufferOffsetAlignment<<" Storage alignment: "<<limits.minStorageBufferOffsetAlignment<<"\n";

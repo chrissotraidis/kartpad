@@ -7,6 +7,11 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Setup and game data
 
+- **Mac build stops at `CERTIFICATE_VERIFY_FAILED` before compiling.** A
+  secure download failed its certificate check. The 0.8.1 recipe could switch
+  from PadMint's own Python to another one on PATH during setup; 0.8.3 keeps
+  PadMint's Python. The cause on the reporting Mac isn't confirmed. Keep
+  certificate checks on. [#475](https://github.com/chrissotraidis/kartpad/issues/475)
 - **KartPad says "Game Data Import Failed" or asks for a "Wii common key".**
   You selected a disc image (ISO or WBFS). On iPhone and iPad the dialog tells
   you to save `common-key.bin` in **On My iPhone/iPad → KartPad** and import
@@ -69,10 +74,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   not found yet; 0.7.10's log ruled out the GPU's shader limit. [#304](https://github.com/chrissotraidis/kartpad/issues/304)
 - **Moto G75:** crashes while loading the game; we need a diagnostic log.
   [#332](https://github.com/chrissotraidis/kartpad/issues/332)
-- **AYN Thor:** black bars even with full screen. 0.8.0's **Fill Screen** draws
-  races under the display cutout (checked on a Pixel 9 Pro XL), but photos on
-  0.8.1 still show the bars with Fill Screen on. That change wasn't enough, and
-  a later correction is not in 0.8.1.
+- **AYN Thor:** black bars even with full screen. Photos on 0.8.1 still showed
+  the bars with Fill Screen on. SDL could switch the game window back out of
+  fullscreen after KartPad hid the system bars; 0.8.3 keeps it fullscreen
+  (checked on an Android 14 emulator). It still needs confirming on a Thor.
   [#202](https://github.com/chrissotraidis/kartpad/issues/202)
 
 ## Setup on iPhone and iPad
@@ -83,7 +88,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
   **Import from Extracted Folder…**. 0.8.1 opens a picker that only
   chooses folders and always reports back after Open; it works in the
-  Simulator, and a real device has to confirm it. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
+  Simulator, and a real device has to confirm it. The latest follow-up uses a
+  third-party IPA and DATA download without a PadMint build, so it does not
+  yet test the supported 0.8.1 path. The `ios-for-padmint.ipa` alone cannot play
+  the game; importing DATA does not supply the translated game code. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
 
 ## Graphics (Apple)
 
@@ -101,7 +109,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   usually helps little; resolutions above 1× still cost GPU time, so start at
   **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
 - **Honor Magic 8 Lite (Snapdragon 6 Gen 4):** much slower since the latest
-  update. Not fixed in 0.8.1.
+  update. 0.8.3 cuts the CPU time of the vertex repack both logs show busy
+  (27–34% less in large test cases, same output), but there's no phone
+  measurement yet and the cause of the slowdown isn't known.
   [#470](https://github.com/chrissotraidis/kartpad/issues/470)
 
 ## Controllers

@@ -446,6 +446,14 @@ class KartPadActivity : SDLActivity() {
         if (hasFocus) hideGameSystemBars()
     }
 
+    override fun sendCommand(command: Int, data: Any?): Boolean {
+        // SDL queues a windowed-style command during startup and native window
+        // creation. It can run after onResume/onWindowFocusChanged and restore
+        // the system bars (#202). Keep SDL's own immersive-mode state in sync
+        // with this game Activity, including its automatic re-hide after a swipe.
+        return super.sendCommand(command, if (command == COMMAND_CHANGE_WINDOW_STYLE) 1 else data)
+    }
+
     @Suppress("DEPRECATION")
     private fun hideGameSystemBars() {
         // SDL creates the game window non-fullscreen on Android, which sets
@@ -1002,8 +1010,8 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun showResolutionSettings() {
-        val labels = arrayOf("0.5× (Lowest detail)", "0.75× (Lower detail)", "1× (Native)", "2×", "3×", "4×")
-        val scales = floatArrayOf(0.5f, 0.75f, 1f, 2f, 3f, 4f)
+        val labels = arrayOf("0.5× (Lowest detail)", "0.75× (Lower detail)", "1× (Native)", "1.5×", "2×", "3×", "4×")
+        val scales = floatArrayOf(0.5f, 0.75f, 1f, 1.5f, 2f, 3f, 4f)
         val selected = scales.indexOfFirst {
             kotlin.math.abs(it - KartPadTouchSettings.resolutionScale(this)) < 0.01f
         }.let { if (it >= 0) it else scales.indexOfFirst { scale -> scale == 1f } }

@@ -1,6 +1,6 @@
 # Android performance: where we stand
 
-Updated 10 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 14 October 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
@@ -8,10 +8,53 @@ The September Pixel experiments are in the
 
 ## Release context
 
-- Public: **0.8.0** (build 262, 12 October; WiiCompiled sync, update notices,
-  Shake to Trick, app icons, Mac controller fix, Adreno 6xx/7xx character fix),
-  tagged at `41c07740`.
-- 0.8.0 contains no speed work. Nothing on this page has shipped yet.
+- Public: **0.8.1** (build 263, 13 October), tagged at `12bf9dd6`.
+  Automatic restored the 0.7.15 path for Adreno 6xx/7xx after 0.8.0 hid
+  characters on some previously working devices. Adreno 8xx keeps its earlier
+  all-draw repack policy.
+- 0.8.0 and 0.8.1 contain no general CPU optimization from this page.
+
+## New regression evidence (#470, 14 October)
+
+The Honor MTN-NX3 report identifies Adreno 810, Android API 36. The first
+attached runtime is 0.7.15/260, the next 0.8.1/263, both Retro Rewind at 1×
+with automatic all-draw repack. The 0.8.1 export's session-directory prefix
+says `base`, but the console's activated/translated profile and same-PID
+health records say Retro Rewind; do not infer the profile from the directory.
+
+- 0.7.15 includes a 23.99 FPS sample with main-thread occupancy 94.2% and
+  32.487 ms CPU per present over its reporting interval; same-session thermal
+  status is 1 (light).
+- 0.8.1 includes an 18.34 FPS sample with main-thread occupancy 93.8% and
+  39.248 ms CPU per present over its reporting interval; nearby same-session
+  health reports thermal status 3 (severe). Other low samples begin at
+  thermal status 1 or 2, so heat alone is not an established cause.
+- `pipelines_queued=0` in these samples. FPS and CPU telemetry cover different
+  window lengths; do not derive one from the other or treat whole-session
+  medians as race benchmarks.
+- Old version-65 thermal history in the exports is not this session. Match
+  health by PID and time. This is also a different case from #465, whose
+  reporter found 1× avoided their heat-related slowdown at 4×.
+
+The player reports time trials stay stable, offline bots improve somewhat on
+0.8.1, and online worsens. Those mode boundaries are not explicitly labelled in
+the exported trace, and there is no log from the earlier well-performing build.
+The cause of the regression is open. Reuse the supplied evidence; no further
+settings sweep or log request now. Prioritize equivalent warmed CPU work and
+inspect all-draw repack cost without disabling the known graphics correction
+on Adreno 8xx. Source/history alone is not a measured speedup.
+
+[Detailed triage and replies](ISSUE-TRIAGE-2026-10-14.md).
+
+## 14 October candidate: vertex-repack loop
+
+The production repacker now visits attributes before vertices, avoiding repeated
+format/absent-attribute checks. ASan/UBSan golden cases pass and every benchmark
+output hash matches the unchanged implementation. Quiet-host forward/reverse
+runs show roughly 27–34% less CPU time for 32–2,048 vertices. This is an Apple
+Silicon CPU microbenchmark, **not Android FPS**, and does not identify #470's
+regression. Adreno 8xx all-draw repacking remains enabled. See the
+[measurements and limits](artifacts/2026-10-14/android-input-cpu-renderer.md#470-cheaper-vertex-repacking).
 
 ## What we know
 
@@ -72,7 +115,7 @@ alias them. Desktop builds use a compile-time base and pay none of this.
 | Pass `ctx` to the FP adapters instead of a TLS lookup | TLS samples 10.4% → 2.5%; no measurable frame-time change | Rejected; patch kept |
 | Exact fast path for normal FP results | Inlined: `.text` +12%, about 10% **slower**. Out of line: no change | Rejected; patch kept |
 | Flat-memory locals (read both globals once per function) | `.text` −6.4% (116.4 → 109.0 MB); −1.4% user time over 8 pairs, inside the noise | **Candidate:** needs a phone A/B |
-| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the bench race: game thread **7.88 → 6.40 ms/frame (−19%)**; every PGO run beat every base run. The profile came from the same Luigi Circuit race, so this is the upper bound | **Candidate:** check an unprofiled track, then decide how it ships |
+| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the training race: game thread **7.88 → 6.40 ms/frame (−19%)**, an upper bound. On 14 October, unprofiled Mario Circuit also favors PGO: later windows **6.90–6.94 ms** versus baseline **7.73–8.68 ms**; traffic/camera and host variation limit precision, and code grows 9% | **Candidate:** unprofiled-course direction confirmed; still needs Retro coverage, final-runtime/phone validation and a distribution decision. [Full cross-track record](artifacts/2026-10-14/pgo-cross-track.md) |
 
 Patches and the PGO dump source are in [`tools/android-perf`](../tools/android-perf/README.md).
 
@@ -109,16 +152,17 @@ Rules learned the hard way:
 
 ## Next steps, in order
 
-1. **Finish the PGO check.** Measured −19% on the profiled bench race (above).
-   - Still needed: the same A/B on a track the profile didn't see. Reach it by
-     touch (the stick or D-pad by touch did not move the cup cursor in a
-     headless run; key events trigger the rumble prompt), or collect a new
-     profile on another track plus a Retro Rewind race and bench Luigi Circuit.
+1. **Broaden the PGO check.** Measured −19% on the profiled bench race (above).
+   - Mario Circuit is now reached with a floating-stick drag and tested with
+     both packs. The direction persists, but traffic/camera variation limits
+     precision. Next collect a broader profile including Retro Rewind and
+     repeat on the final runtime; retain per-run screenshots and host activity.
    - Then decide how it ships: the APK can be built with a profile, but
      PadMint builds would need a published `.profdata` (function names and
-     counts derived from running the game; Chris to decide). The release APK
-     compiles translated code in the full Gradle graph, so the profile has to
-     reach the shard targets there as well as `scripts/build-game-pack.sh`.
+     counts derived from running the game; Chris to decide). Apply it to the
+     translated game-pack build that actually ships, retaining the pack
+     fingerprint/export checks; changing only a local profiling graph is not
+     release integration.
 2. **Phone A/B for flat-memory locals** (and optionally the explicit-context
    change). If it gains, implement it properly:
    - **Translator:** emit an entry macro before `goto <entry>` in
@@ -146,7 +190,9 @@ Rules learned the hard way:
 - **Performance:**
   - #339 (patchzyy's request; slow-phone reports are folded into it).
   - #438 (POCO X7, Mali, Dimensity 7300; also a Retro WFC 61070 error).
-  - #444 (Honor, Snapdragon 6s Gen 3; no reply yet).
+  - #470 (Honor MTN-NX3, Adreno 810; 0.7.15/0.8.1 logs reviewed above).
+  - #465 is closed by its reporter; 1× avoids its reported high-resolution
+    thermal slowdown. The requested 1.5× UI option is prepared, not a CPU fix.
 - **Not performance, so don't mix them in:**
   - Adreno 6xx/7xx invisible characters (#104, #301; next step is a different
     way to hand bone matrices to the GPU, Chris's decision, [loop, Phase 2](CURRENT-LOOP.md#phase-2-android-graphics-and-stability));
