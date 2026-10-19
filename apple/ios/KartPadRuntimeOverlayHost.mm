@@ -772,6 +772,9 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 @property(nonatomic, assign) BOOL resumingGame;
 @property(nonatomic, assign) BOOL currentRetroRewind;
 @property(nonatomic, assign) BOOL gameDataReady;
+// A copy without the PadMint-built game code (the release's ios-for-padmint IPA)
+// can import game data but cannot play, so it must never look ready.
+@property(nonatomic, assign) BOOL needsGamePack;
 @property(nonatomic, strong) NSLayoutConstraint *contentWidthConstraint;
 @property(nonatomic, strong) UIStackView *content;
 @property(nonatomic, strong) UIStackView *header;
@@ -868,11 +871,18 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   help.view.backgroundColor = self.view.backgroundColor;
   help.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]
       initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(closeSetupHelp)];
-  UILabel *importTitle = [self label:@"1. Import Mario Kart Wii" style:UIFontTextStyleTitle2 secondary:NO];
-  UILabel *importBody = [self label:
-      @"Use your own PAL (Europe) ISO or WBFS: RMCP01, revision 0. An extracted DATA folder also works. RVZ files must be converted before importing."
+  const BOOL needsBuild = self.needsGamePack;
+  UILabel *buildTitle = [self label:@"1. Build your copy with PadMint" style:UIFontTextStyleTitle2 secondary:NO];
+  UILabel *buildBody = [self label:
+      @"This download has no game code, so it can't play yet. PadMint builds your own KartPad from your Mario Kart Wii disc on a Mac, Windows or Linux computer. Install that copy over this one with the same sideloading tool and Apple ID. Your saves and any game data you imported stay."
       style:UIFontTextStyleBody secondary:YES];
-  UILabel *retroTitle = [self label:@"2. Add Retro Rewind, if you want it" style:UIFontTextStyleTitle2 secondary:NO];
+  UILabel *importTitle = [self label:needsBuild ? @"2. Import Mario Kart Wii" : @"1. Import Mario Kart Wii"
+                               style:UIFontTextStyleTitle2 secondary:NO];
+  UILabel *importBody = [self label:
+      @"Easiest: the KartPad game data folder PadMint makes, or the folder Dolphin's Extract Entire Disc makes. Copy it to this device and choose Import from Extracted Folder. The game must be PAL (Europe) RMCP01, revision 0. An ISO or WBFS also works with your own Wii's common key."
+      style:UIFontTextStyleBody secondary:YES];
+  UILabel *retroTitle = [self label:needsBuild ? @"3. Add Retro Rewind, if you want it" : @"2. Add Retro Rewind, if you want it"
+                              style:UIFontTextStyleTitle2 secondary:NO];
   UILabel *retroBody = [self label:[NSString stringWithFormat:
       @"Import Mario Kart Wii first, then choose Retro Rewind. KartPad can download and install the official %@ pack. You do not need to import a second disc.",
       KartPadRetroRewindInstaller.requiredVersion] style:UIFontTextStyleBody secondary:YES];
@@ -880,7 +890,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   UILabel *supportBody = [self label:
       @"The GitHub guides cover supported files, free space, installation and common problems. If you report an issue, include your KartPad version, device, and the exact message you see."
       style:UIFontTextStyleBody secondary:YES];
-  for (UILabel *title in @[importTitle, retroTitle, supportTitle]) title.accessibilityTraits |= UIAccessibilityTraitHeader;
+  for (UILabel *title in @[buildTitle, importTitle, retroTitle, supportTitle]) title.accessibilityTraits |= UIAccessibilityTraitHeader;
   __weak KartPadFirstLaunchViewController *weakSelf = self;
   UIButton *setup = [self link:@"Setup Guide on GitHub" symbol:@"book.closed" action:^{
     [weakSelf openGuide:@"blob/main/docs/INSTALL_IPA.md"];
@@ -892,10 +902,14 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
       [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"",
       [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @""]
       style:UIFontTextStyleCaption1 secondary:YES];
-  UIStackView *content = [[UIStackView alloc] initWithArrangedSubviews:
+  NSMutableArray<UIView *> *sections = [NSMutableArray array];
+  if (needsBuild) [sections addObjectsFromArray:@[buildTitle, buildBody]];
+  [sections addObjectsFromArray:
       @[importTitle, importBody, retroTitle, retroBody, supportTitle, supportBody, setup, troubleshooting, version]];
+  UIStackView *content = [[UIStackView alloc] initWithArrangedSubviews:sections];
   content.axis = UILayoutConstraintAxisVertical;
   content.spacing = 12;
+  if (needsBuild) [content setCustomSpacing:28 afterView:buildBody];
   [content setCustomSpacing:28 afterView:importBody];
   [content setCustomSpacing:28 afterView:retroBody];
   content.translatesAutoresizingMaskIntoConstraints = NO;
@@ -1007,10 +1021,12 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   // An installed pack from another Retro Rewind release needs the in-app update.
   BOOL outdated = retro && installedVersion.length > 0 &&
       ![installedVersion isEqualToString:KartPadRetroRewindInstaller.requiredVersion];
-  BOOL ready = self.gameDataReady && (!retro || (installedVersion.length > 0 && !outdated));
+  BOOL ready = !self.needsGamePack && self.gameDataReady &&
+      (!retro || (installedVersion.length > 0 && !outdated));
   NSString *status = current ? @"Paused" : (self.resumingGame ? @"Next launch"
+      : (self.needsGamePack ? @"Needs your PadMint build"
       : (ready ? @"Ready to play" : (retro && !self.gameDataReady ? @"Import Mario Kart Wii first"
-          : (outdated ? @"Update needed" : @"Setup needed"))));
+          : (outdated ? @"Update needed" : @"Setup needed")))));
   UILabel *title = [self label:retro ? @"Retro Rewind" : @"Mario Kart Wii" style:UIFontTextStyleTitle2 secondary:NO];
   title.accessibilityTraits |= UIAccessibilityTraitHeader;
   [self.cardTitles addObject:title];
@@ -1030,7 +1046,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   identity.alignment = UIStackViewAlignmentCenter;
   identity.spacing = 18;
   NSString *actionTitle = current ? @"Resume Game" : (self.resumingGame ? @"Use on Next Launch"
-      : (ready ? @"Play Game" : (retro ? @"Set Up Game" : @"Import Game")));
+      : (ready ? @"Play Game" : (retro || self.needsGamePack ? @"Set Up Game" : @"Import Game")));
   UIButtonConfiguration *configuration = [UIButtonConfiguration filledButtonConfiguration];
   configuration.title = actionTitle;
   configuration.image = [UIImage systemImageNamed:@"arrow.right"];
@@ -1748,18 +1764,19 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 // The published app contains no game code. PadMint builds the player's own
-// KartPad from their disc on a computer, with the game pack inside the app.
+// KartPad from their disc on a computer (Mac, or Windows/Linux, experimental),
+// with the game pack inside the app. Imported game data and saves stay.
 - (void)showGamePackRequired {
   UIAlertController *alert =
-      [UIAlertController alertControllerWithTitle:@"Add Your Game with PadMint"
-          message:@"This copy of KartPad contains no game code. On a Mac, PadMint builds your own KartPad from your Mario Kart Wii disc. Install that copy over this one; your saves stay."
+      [UIAlertController alertControllerWithTitle:@"Build Your Copy with PadMint"
+          message:@"This download has no game code, so it can't play yet. PadMint builds your own KartPad from your Mario Kart Wii disc on a Mac, Windows or Linux computer.\n\nInstall that copy over this one with the same sideloading tool and Apple ID. Your saves and any game data you imported stay."
           preferredStyle:UIAlertControllerStyleAlert];
-  [alert addAction:[UIAlertAction actionWithTitle:@"Get PadMint"
+  [alert addAction:[UIAlertAction actionWithTitle:@"How to Build It"
                                             style:UIAlertActionStyleDefault
                                           handler:^(UIAlertAction *action) {
     (void)action;
     [UIApplication.sharedApplication
-        openURL:[NSURL URLWithString:@"https://github.com/chrissotraidis/padmint"]
+        openURL:[NSURL URLWithString:@"https://github.com/chrissotraidis/kartpad/blob/main/docs/INSTALL_IPA.md"]
         options:@{}
         completionHandler:nil];
   }]];
@@ -1867,6 +1884,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
   }
   self.root = [[KartPadFirstLaunchViewController alloc] init];
   self.root.gameDataReady = gameDataReady;
+  self.root.needsGamePack = !self.gamePackReady;
   self.window = [[UIWindow alloc] initWithWindowScene:scene];
   self.window.windowLevel = UIWindowLevelAlert + 1.0;
   self.window.rootViewController = self.root;
@@ -1893,6 +1911,11 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
     KartPadFirstLaunchHost *strongSelf = weakSelf;
     if (strongSelf == nil || strongSelf.finished) return;
     strongSelf.selectedRetroRewind = retroRewind;
+    // Without the game code nothing can play; say so before asking for game data.
+    if (!strongSelf.gamePackReady) {
+      [strongSelf showGamePackRequired];
+      return;
+    }
     if (!gameDataReady) {
       [strongSelf showOptions];
       return;
