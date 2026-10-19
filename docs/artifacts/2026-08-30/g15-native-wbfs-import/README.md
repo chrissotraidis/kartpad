@@ -38,7 +38,7 @@
    feel remains the next hardware gate because the reference intentionally
    leaves touch visible for Simulator controllers.
 
-![Warm title after direct WBFS import](warm-title.png)
+*Screenshot removed from the public repository.*
 
 The app and disposable Simulator were terminated and deleted after capture.
 Zero Simulators remained booted, and the user's preserved Simulator data was

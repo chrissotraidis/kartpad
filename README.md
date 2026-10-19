@@ -25,8 +25,6 @@ The projects are independently maintained.
   <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the KartPad Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
 </p>
 
-![KartPad running a race on DK Summit on iPad](docs/images/kartpad-dk-summit-ipad.png)
-
 > [!IMPORTANT]
 > **Bring your own game data.** KartPad requires a legally obtained supported
 > PAL `RMCP01` revision 0 Mario Kart Wii image. tvOS remains experimental.
