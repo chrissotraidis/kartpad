@@ -7,6 +7,13 @@ to 0.7.13 also had a ready-to-play IPA; it won't get updates.) What changed in
 each version is on the
 [releases page](https://github.com/chrissotraidis/kartpad/releases).
 
+> **KartPad says "Needs your PadMint build"?** You installed the
+> `ios-for-padmint.ipa` from the releases page, or installed it over an older
+> copy. That file is the app without the game code, so it can't play by itself.
+> Build your copy with PadMint (step 1 below) and install it over this one with
+> the same sideloading tool and Apple ID. Game data you already imported and
+> your saves stay, so you won't need to import again.
+
 ## What you need
 
 - A computer to build the IPA with PadMint. The candidate Intel Mac route
