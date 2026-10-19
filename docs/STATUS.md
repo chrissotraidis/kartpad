@@ -1,6 +1,8 @@
 # KartPad status
 
-## Current status: 16 October 2026
+## Current status: 19 October 2026
+
+**0.8.4 (build 266):** iPhone/iPad copies without the PadMint-built game code say **Needs your PadMint build** instead of **Ready to play**, with PadMint-first setup help (#494); builder downloads retry a dropped connection and name the server when they fail (#495); the recipe asks for 16 GB (#490). Android changes only its version. [Release notes](releases/v0.8.4.md).
 
 **0.8.3 (build 265):** Retro Rewind 6.13.3 support, including the runtime's double-precision fused FP helpers its new game code needs. [Release notes](releases/v0.8.3.md) record what was checked. 0.8.2 fixed Mac repeat builds, keyboard mapping and a Retro model lookup fault ([notes](releases/v0.8.2.md)). The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 
