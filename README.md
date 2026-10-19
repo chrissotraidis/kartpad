@@ -471,3 +471,13 @@ to use, modify and redistribute the software are separate from game-content
 rights. See [rights, licenses and Corresponding Source](RIGHTS_AND_LICENSES.md).
 Mario Kart, Wii and game imagery belong to their respective rights holders.
 KartPad is not affiliated with or endorsed by Nintendo.
+
+## Legal
+
+KartPad is an unofficial, fan-made project. It is not affiliated with, endorsed
+by, or sponsored by Nintendo. Mario Kart Wii and related names and marks are
+trademarks of Nintendo (and their respective owners). The source code in this
+repository contains no game data, disc images, or extracted assets. To use it,
+you need your own legally obtained copy of the game. On iPhone, iPad and Mac,
+you build it yourself on your own machine. Please don't share game files or
+builds made from them.
