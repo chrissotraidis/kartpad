@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from . import net
 from .errors import BuildError
 from .profiles import Profile, sha256_file
 
@@ -229,25 +230,30 @@ def _download(
 ) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     partial = output.with_name(output.name + f".partial.{os.getpid()}")
-    digest = hashlib.sha256()
-    total = 0
-    request = urllib.request.Request(url, headers={"User-Agent": "KartPad-Builder/0.3"})
-    try:
-        with urllib.request.urlopen(request) as response, partial.open("xb") as handle:
-            if response.geturl() != url:
-                raise BuildError(f"pinned {label} download redirected to an unexpected URL")
-            while chunk := response.read(1024 * 1024):
-                total += len(chunk)
-                if total > expected_size:
-                    raise BuildError(f"pinned {label} download is larger than expected")
-                digest.update(chunk)
-                handle.write(chunk)
-        if total != expected_size or digest.hexdigest() != expected_sha256:
-            raise BuildError(f"pinned {label} download identity does not match the profile")
-        os.replace(partial, output)
-    finally:
-        if partial.exists():
-            partial.unlink()
+
+    def attempt() -> None:
+        digest = hashlib.sha256()
+        total = 0
+        request = urllib.request.Request(url, headers={"User-Agent": "KartPad-Builder/0.3"})
+        try:
+            with urllib.request.urlopen(request, timeout=net.TIMEOUT) as response, \
+                    partial.open("xb") as handle:
+                if response.geturl() != url:
+                    raise BuildError(f"pinned {label} download redirected to an unexpected URL")
+                while chunk := response.read(1024 * 1024):
+                    total += len(chunk)
+                    if total > expected_size:
+                        raise BuildError(f"pinned {label} download is larger than expected")
+                    digest.update(chunk)
+                    handle.write(chunk)
+            if total != expected_size or digest.hexdigest() != expected_sha256:
+                raise BuildError(f"pinned {label} download identity does not match the profile")
+            os.replace(partial, output)
+        finally:
+            if partial.exists():
+                partial.unlink()
+
+    net.retrying(url, label, attempt)
 
 
 def _shared_path(name: str) -> Path | None:

@@ -10,6 +10,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from . import net
 from .pipeline import BuildError, run
 from .profiles import Profile
 
@@ -100,18 +101,22 @@ def _prepare_gitlinks(repo: Path, relatives: list[str], install: bool) -> None:
 def _download(url: str, expected_sha256: str, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     partial = output.with_name(output.name + ".partial")
-    digest = hashlib.sha256()
-    try:
-        with urllib.request.urlopen(url) as response, partial.open("wb") as handle:
-            while chunk := response.read(1024 * 1024):
-                digest.update(chunk)
-                handle.write(chunk)
-        if digest.hexdigest() != expected_sha256:
-            raise BuildError(f"downloaded artifact hash mismatch: {output.name}")
-        os.replace(partial, output)
-    finally:
-        if partial.exists():
-            partial.unlink()
+
+    def attempt() -> None:
+        digest = hashlib.sha256()
+        try:
+            with urllib.request.urlopen(url, timeout=net.TIMEOUT) as response, partial.open("wb") as handle:
+                while chunk := response.read(1024 * 1024):
+                    digest.update(chunk)
+                    handle.write(chunk)
+            if digest.hexdigest() != expected_sha256:
+                raise BuildError(f"downloaded artifact hash mismatch: {output.name}")
+            os.replace(partial, output)
+        finally:
+            if partial.exists():
+                partial.unlink()
+
+    net.retrying(url, output.name, attempt)
 
 
 def _has_command(command: str) -> bool:
