@@ -19,6 +19,13 @@ The next-version compressed-import correction expands a validated `.rkg` into th
 
 This release transfers ghosts from the Original game profile only. Retro Rewind ghost transfers are not implemented, including original Wii courses played inside Retro Rewind. If a file fails, report the app build, course and import/export step; do not post your full save or identity publicly.
 
+## Retro Rewind music
+
+Retro Rewind soundtrack packs work in the next version. Each track is a `.brstm` file named like one in Retro Rewind's own `strm` folder, for example `104_N.brstm` and `104_F.brstm` for that track's final lap. A file with that name replaces the track; the others keep Retro Rewind's music. Changes apply the next time KartPad starts, and your music stays when Retro Rewind updates. [#441](https://github.com/chrissotraidis/kartpad/issues/441)
+
+- **Android and iPhone/iPad:** **Game Data & Saves → Retro Rewind Music… → Add Music…**, then choose `.brstm` files or a pack's `.zip`. **Remove All** goes back to Retro Rewind's music.
+- **Mac:** put the files in the `MyStuff` folder inside the `RetroRewind6` folder you chose for KartPad, as you would for Dolphin.
+
 ## Controls and display
 
 Controller Button Mapping supports D-pad directions and triggers, optional shared physical actions, and the Use L1 for Items preset. Controller Player Setup remains separate. Touch layout controls and motion steering remain available.

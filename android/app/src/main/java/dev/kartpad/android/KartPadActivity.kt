@@ -721,6 +721,7 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Time Trial Ghosts (.rkg)…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showGhostManager) },
             MenuRow("Manage Saves…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showSaveManager) },
             MenuRow("Manage Retro Rewind…", R.drawable.ic_kartpad_gobackward) { closeKartPadMenu { startActivity(Intent(this, RetroRewindInstallActivity::class.java)) } },
+            MenuRow("Retro Rewind Music…", R.drawable.ic_kartpad_speaker) { closeKartPadMenu(::showRetroMusic) },
             MenuRow("Import from Extracted Folder…", R.drawable.ic_kartpad_folder) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT_FOLDER) } },
             MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT) } },
             MenuRow("Remove Stored Game Data…", R.drawable.ic_kartpad_trash) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_REMOVE) } },
@@ -1617,6 +1618,66 @@ class KartPadActivity : SDLActivity() {
             }.setNegativeButton("Done", null).show()
     }
 
+    private fun showRetroMusic() {
+        val count = runCatching { RetroRewindMusic.count(filesDir) }.getOrDefault(0)
+        val summary = if (count == 0) "No custom music yet." else "$count custom ${if (count == 1) "track" else "tracks"}."
+        val dialog = AlertDialog.Builder(this).setTitle("Retro Rewind Music")
+            .setMessage("$summary\n\nAdd .brstm files, or a .zip from a Retro Rewind soundtrack pack. " +
+                "A file named like one of Retro Rewind's own replaces that track, for example 104_N.brstm " +
+                "and 104_F.brstm for its final lap. Restart KartPad to hear changes. Your music stays " +
+                "when Retro Rewind updates.")
+            .setPositiveButton("Add Music…") { _, _ ->
+                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }, REQUEST_IMPORT_MUSIC)
+            }
+            .setNegativeButton("Done", null)
+        if (count > 0) dialog.setNeutralButton("Remove All…") { _, _ ->
+            AlertDialog.Builder(this).setTitle("Remove Custom Music?")
+                .setMessage("Retro Rewind goes back to its own music after a restart.")
+                .setPositiveButton("Remove") { _, _ ->
+                    runCatching { RetroRewindMusic.removeAll(filesDir) }
+                        .onSuccess { showParityBoundary("Custom Music Removed", "Restart KartPad to hear Retro Rewind's own music.") }
+                        .onFailure { showParityBoundary("Music Not Removed", it.message ?: "The music could not be removed.") }
+                }.setNegativeButton("Cancel", null).show()
+        }
+        dialog.show()
+    }
+
+    private fun importRetroMusic(uris: List<android.net.Uri>) {
+        val progress = AlertDialog.Builder(this).setTitle("Adding Music…")
+            .setMessage("Copying ${uris.size} ${if (uris.size == 1) "file" else "files"}.").setCancelable(false).show()
+        Thread {
+            var added = 0
+            var skipped = 0
+            var failure: String? = null
+            for (uri in uris) {
+                val name = contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                    ?.use { if (it.moveToFirst()) it.getString(0) else null } ?: uri.lastPathSegment.orEmpty()
+                runCatching {
+                    contentResolver.openInputStream(uri)?.use { RetroRewindMusic.importFile(filesDir, name, it) }
+                        ?: error("$name could not be opened.")
+                }.onSuccess { added += it.added; skipped += it.skipped }
+                    .onFailure { if (failure == null) failure = it.message }
+            }
+            runOnUiThread {
+                progress.dismiss()
+                val skippedNote = if (skipped == 0) "" else
+                    " Skipped $skipped ${if (skipped == 1) "file" else "files"} that aren't .brstm music with a simple name."
+                if (added == 0) {
+                    showParityBoundary("No Music Added", (failure ?: "None of the files were .brstm music.") + skippedNote)
+                } else {
+                    AlertDialog.Builder(this).setTitle("Music Added")
+                        .setMessage("Added $added ${if (added == 1) "track" else "tracks"}.$skippedNote" +
+                            (failure?.let { " Not added: $it" } ?: "") + " Restart KartPad to hear the new music.")
+                        .setPositiveButton("Restart Now") { _, _ -> restartToGameSelector() }
+                        .setNegativeButton("Later", null).show()
+                }
+            }
+        }.start()
+    }
+
     private fun showSaveManager() {
         kartPadOverlay.clearTouchInput()
         AlertDialog.Builder(this)
@@ -1775,6 +1836,13 @@ class KartPadActivity : SDLActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMPORT_MUSIC) {
+            if (resultCode != RESULT_OK || data == null) return
+            val clip = data.clipData
+            val uris = if (clip != null) (0 until clip.itemCount).map { clip.getItemAt(it).uri } else listOfNotNull(data.data)
+            if (uris.isNotEmpty()) importRetroMusic(uris)
+            return
+        }
         if (requestCode == REQUEST_MANAGE_GAME_DATA && resultCode == RESULT_OK) {
             AlertDialog.Builder(this)
                 .setTitle("Game Data Changed")
@@ -2630,6 +2698,7 @@ class KartPadActivity : SDLActivity() {
         private const val REQUEST_MANAGE_GAME_DATA = 4_302
         private const val REQUEST_EXPORT_GHOST = 4_320
         private const val REQUEST_IMPORT_GHOST = 4_321
+        private const val REQUEST_IMPORT_MUSIC = 4_322
         private val GHOST_COURSE_IDS = intArrayOf(8,1,2,4,0,5,6,7,9,15,3,11,10,14,12,13,31,25,24,30,27,26,29,28,16,17,18,19,20,21,22,23)
         private val GHOST_COURSES = arrayOf("Luigi Circuit", "Moo Moo Meadows", "Mushroom Gorge", "Toad's Factory", "Mario Circuit", "Coconut Mall", "DK Summit", "Wario's Gold Mine", "Daisy Circuit", "Koopa Cape", "Grumble Volcano", "Maple Treeway", "Moonview Highway", "Dry Dry Ruins", "Bowser's Castle", "Rainbow Road", "GBA Shy Guy Beach", "SNES Ghost Valley 2", "SNES Mario Circuit 3", "GBA Bowser Castle 3", "N64 Sherbet Land", "N64 Mario Raceway", "N64 DK's Jungle Parkway", "N64 Bowser's Castle", "GCN Peach Beach", "GCN Mario Circuit", "GCN Waluigi Stadium", "GCN DK Mountain", "DS Yoshi Falls", "DS Desert Hills", "DS Peach Gardens", "DS Delfino Square")
         private const val REQUEST_EXPORT_SAVE = 4_303

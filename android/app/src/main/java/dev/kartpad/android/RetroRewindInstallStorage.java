@@ -194,7 +194,9 @@ final class RetroRewindInstallStorage {
             requireDirectory(installed, "Retro Rewind installed root is invalid");
             // Saves live beside pack content. Copy them before moving either root;
             // a failed copy must leave the installed pack and progress untouched.
-            preserveRedirectedSaves(installed, normalizedStaging);
+            preserveTree(installed, normalizedStaging, "riivolution", "save", "Retro Rewind save");
+            // Player-added music (RetroRewind6/MyStuff) survives pack updates too.
+            preserveTree(installed, normalizedStaging, "RetroRewind6", "MyStuff", "Retro Rewind music");
             mover.move(installed, rollback);
             movedExisting = true;
         }
@@ -216,33 +218,34 @@ final class RetroRewindInstallStorage {
         }
     }
 
-    private static void preserveRedirectedSaves(Path installed, Path staging) throws IOException {
-        Path riivolution = installed.resolve("riivolution");
-        if (!exists(riivolution)) return;
-        requireDirectory(riivolution, "Retro Rewind save parent is invalid");
-        Path saves = riivolution.resolve("save");
-        if (!exists(saves)) return;
-        requireDirectory(saves, "Retro Rewind save root is invalid");
+    private static void preserveTree(Path installed, Path staging, String parentName,
+            String name, String label) throws IOException {
+        Path parent = installed.resolve(parentName);
+        if (!exists(parent)) return;
+        requireDirectory(parent, label + " parent is invalid");
+        Path retained = parent.resolve(name);
+        if (!exists(retained)) return;
+        requireDirectory(retained, label + " root is invalid");
 
-        Path destinationParent = staging.resolve("riivolution");
-        ensureSaveDirectory(destinationParent);
-        Path destination = destinationParent.resolve("save");
+        Path destinationParent = staging.resolve(parentName);
+        ensureRetainedDirectory(destinationParent, label);
+        Path destination = destinationParent.resolve(name);
         // Do not follow links from either the retained data or the staged pack.
-        Files.walkFileTree(saves, new SimpleFileVisitor<>() {
+        Files.walkFileTree(retained, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attrs)
                     throws IOException {
-                ensureSaveDirectory(destination.resolve(saves.relativize(directory)));
+                ensureRetainedDirectory(destination.resolve(retained.relativize(directory)), label);
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                     throws IOException {
-                Path target = destination.resolve(saves.relativize(file));
+                Path target = destination.resolve(retained.relativize(file));
                 if (!attrs.isRegularFile() || (exists(target) &&
                         !Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS))) {
-                    throw new IOException("Retro Rewind save entry is invalid");
+                    throw new IOException(label + " entry is invalid");
                 }
                 Files.copy(file, target, StandardCopyOption.REPLACE_EXISTING,
                         LinkOption.NOFOLLOW_LINKS);
@@ -251,9 +254,9 @@ final class RetroRewindInstallStorage {
         });
     }
 
-    private static void ensureSaveDirectory(Path directory) throws IOException {
+    private static void ensureRetainedDirectory(Path directory, String label) throws IOException {
         if (exists(directory)) {
-            requireDirectory(directory, "Retro Rewind save destination is invalid");
+            requireDirectory(directory, label + " destination is invalid");
         } else {
             Files.createDirectory(directory);
         }
