@@ -68,6 +68,8 @@ fun main() {
             check(KartPadCharacterGraphicsTest.mode(game) == mode)
             KartPadCharacterGraphicsTest.configure(game)
             check(android.system.Os.getenv("KARTPAD_RENDERER_CONST_PNMTX") == mode.environment)
+            check(android.system.Os.getenv("KARTPAD_RENDERER_VERTEX_PNMTX") ==
+                mode.boneIndex.ifEmpty { null })
         }
         check(KartPadCharacterGraphicsTest.setMode(chooser, KartPadCharacterGraphicsTest.Mode.ORIGINAL))
         KartPadCharacterGraphicsTest.configure(game) // Activity recreation must keep the running mode.
