@@ -124,6 +124,11 @@ int main() {
                         WpadMotorCommandEnablesRumble(kWpadMotorRumble) &&
                         !WpadMotorCommandEnablesRumble(2),
                     "only the WPAD rumble command may enable controller output");
+  passed &= Require(DeviceRumbleActive(true, false, true) &&
+                        !DeviceRumbleActive(true, true, true) &&
+                        !DeviceRumbleActive(true, false, false) &&
+                        !DeviceRumbleActive(false, false, true),
+                    "only a connected controller without a motor may vibrate the device");
 
   RawGamepadState axes;
   axes.connected = true;

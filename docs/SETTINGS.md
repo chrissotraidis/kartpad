@@ -23,6 +23,8 @@ This release transfers ghosts from the Original game profile only. Retro Rewind 
 
 Controller Button Mapping supports D-pad directions and triggers, optional shared physical actions, and the Use L1 for Items preset. Controller Player Setup remains separate. Touch layout controls and motion steering remain available.
 
+**Rumble** (Android, next version) is in Controller Button Mapping and is on by default. A controller with its own motor rumbles; when player one's controller has none, such as a handheld's built-in controls, the device vibrates instead. Touch-only play does not vibrate.
+
 **Touch auto-accelerate** is under Controls → Touch Control Settings. OFF uses ordinary touch A press/hold/release; ON retains the one-second touch hold-to-latch behavior. The choice persists and does not change physical controller buttons.
 
 Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. Physical controllers take priority. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.

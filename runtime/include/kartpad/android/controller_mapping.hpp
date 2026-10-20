@@ -57,4 +57,12 @@ void PublishControllerAutoAccelerate(bool enabled) noexcept;
 uint32_t ApplyControllerAutoAccelerate(uint32_t chan, uint32_t classicButtons,
                                        bool connected) noexcept;
 
+// Rumble (on by default). WPADControlMotor reads it on the guest thread.
+void PublishControllerRumble(bool enabled) noexcept;
+bool ControllerRumbleEnabled() noexcept;
+
+// Starts or stops player one's device vibration. Defined by the Android app's
+// JNI bridge, which forwards changes to KartPadDeviceRumble.
+void SetDeviceRumble(bool active) noexcept;
+
 }  // namespace kartpad::android
