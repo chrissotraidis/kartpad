@@ -25,8 +25,6 @@ The projects are independently maintained.
   <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the KartPad Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
 </p>
 
-![KartPad running a race on DK Summit on iPad](docs/images/kartpad-dk-summit-ipad.png)
-
 > [!IMPORTANT]
 > **Bring your own game data.** KartPad requires a legally obtained supported
 > PAL `RMCP01` revision 0 Mario Kart Wii image. tvOS remains experimental.
@@ -474,3 +472,13 @@ to use, modify and redistribute the software are separate from game-content
 rights. See [rights, licenses and Corresponding Source](RIGHTS_AND_LICENSES.md).
 Mario Kart, Wii and game imagery belong to their respective rights holders.
 KartPad is not affiliated with or endorsed by Nintendo.
+
+## Legal
+
+KartPad is an unofficial, fan-made project. It is not affiliated with, endorsed
+by, or sponsored by Nintendo. Mario Kart Wii and related names and marks are
+trademarks of Nintendo (and their respective owners). The source code in this
+repository contains no game data, disc images, or extracted assets. To use it,
+you need your own legally obtained copy of the game. On iPhone, iPad and Mac,
+you build it yourself on your own machine. Please don't share game files or
+builds made from them.

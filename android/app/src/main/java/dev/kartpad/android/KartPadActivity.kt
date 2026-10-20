@@ -223,6 +223,7 @@ class KartPadActivity : SDLActivity() {
         if (BuildConfig.GAME_RUNTIME) {
             addMenuButton()
             addLayoutEditorBar()
+            KartPadDeviceRumble.attach(applicationContext)
             applyControllerMapping()
             applyDisplaySettings()
             kartPadOverlay.postDelayed({ applyDisplaySettings() }, 1_000L)
@@ -393,6 +394,7 @@ class KartPadActivity : SDLActivity() {
             inputListenerRegistered = true
         }
         refreshControllerHandoff()
+        KartPadDeviceRumble.setPaused(false)
         if (::motionSteering.isInitialized) motionSteering.start()
         if (BuildConfig.GAME_RUNTIME) KartPadRuntimeHealth.start(this, runtimeProfile)
         hideGameSystemBars()
@@ -400,6 +402,7 @@ class KartPadActivity : SDLActivity() {
 
     override fun onPause() {
         routedControllerButtons = 0
+        KartPadDeviceRumble.setPaused(true)
         KartPadRuntimeHealth.stop()
         kartPadMenu?.dismiss()
         if (::editorBar.isInitialized && editorBar.visibility == View.VISIBLE) {
@@ -1168,6 +1171,15 @@ class KartPadActivity : SDLActivity() {
                 nativeApplyControllerAutoAccelerate(checked)
             }
         })
+        content.addView(Switch(this).apply {
+            text = "Rumble (vibrates this device when the controller has no motor)"
+            isChecked = KartPadTouchSettings.controllerRumble(this@KartPadActivity)
+            contentDescription = "Rumble: uses the controller's motor, or vibrates this device when the controller has none"
+            setOnCheckedChangeListener { _, checked ->
+                KartPadTouchSettings.setControllerRumble(this@KartPadActivity, checked)
+                nativeApplyControllerRumble(checked)
+            }
+        })
         KartPadControllerMapping.gameButtonNames.forEachIndexed { game, gameName ->
             content.addView(Button(this).apply {
                 val physical = KartPadControllerMapping.physicalButtonNames[mapping[game]]
@@ -1254,6 +1266,7 @@ class KartPadActivity : SDLActivity() {
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
         nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
+        nativeApplyControllerRumble(KartPadTouchSettings.controllerRumble(this))
     }
 
     private fun showShakeTricks() {
@@ -2601,6 +2614,7 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeGhostTransfer(save: ByteArray, ghost: ByteArray?, license: Int, slot: Int, downloaded: Boolean): ByteArray?
     private external fun nativeApplyControllerMapping(mapping: IntArray)
     private external fun nativeApplyControllerAutoAccelerate(enabled: Boolean)
+    private external fun nativeApplyControllerRumble(enabled: Boolean)
     private external fun nativeControllerDevices(): Array<String>
     private external fun nativeAssignControllerPlayer(instance: Long, player: Int): Boolean
     private external fun nativeClearControllerPlayer(player: Int): Boolean
