@@ -228,6 +228,9 @@ profiles:
         - section: Retro Rewind
           option: Pack
           choice: 1
+        - section: Retro Rewind
+          option: My Stuff
+          choice: 4
 """
     path.write_text(text)
 

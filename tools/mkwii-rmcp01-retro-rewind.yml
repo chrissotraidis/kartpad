@@ -65,6 +65,11 @@ profiles:
         - section: Retro Rewind
           option: Pack
           choice: 1
+        # RR Music lays RetroRewind6/MyStuff over the music folder. It maps
+        # nothing until a player adds .brstm files there (#441).
+        - section: Retro Rewind
+          option: My Stuff
+          choice: 4
     # The build script always overrides this with an explicit local payload or
     # the diagnostic-only --skip-retro-wfc flag. Keeping the manifest offline
     # prevents translation from silently downloading production server data.

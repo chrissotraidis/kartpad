@@ -76,6 +76,7 @@ extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std
 @property(nonatomic, copy) void (^saveManagerRequested)(void);
 @property(nonatomic, copy) void (^buttonMappingRequested)(void);
 @property(nonatomic, copy) void (^retroManagerRequested)(void);
+@property(nonatomic, copy) void (^retroMusicRequested)(void);
 @property(nonatomic, copy) void (^wiimoteRequested)(void);
 @property(nonatomic, weak) UIButton *kartPadGasButton;
 @property(nonatomic, strong) UIColor *kartPadGasRestColor;
@@ -2782,6 +2783,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
       }] atIndex:1];
       [dataItems insertObject:[UIAction actionWithTitle:@"Manage Saves…" image:[UIImage systemImageNamed:@"externaldrive"] identifier:nil handler:^(__kindof UIAction *action) { if (weakSelf.saveManagerRequested) weakSelf.saveManagerRequested(); }] atIndex:2];
       [dataItems insertObject:[UIAction actionWithTitle:@"Manage Retro Rewind…" image:[UIImage systemImageNamed:@"arrow.clockwise"] identifier:nil handler:^(__kindof UIAction *action) { if (weakSelf.retroManagerRequested) weakSelf.retroManagerRequested(); }] atIndex:3];
+      [dataItems insertObject:[UIAction actionWithTitle:@"Retro Rewind Music…" image:[UIImage systemImageNamed:@"music.note.list"] identifier:nil handler:^(__kindof UIAction *action) { if (weakSelf.retroMusicRequested) weakSelf.retroMusicRequested(); }] atIndex:4];
       gameData = [UIMenu menuWithTitle:dataMenu.title
                                  image:[UIImage systemImageNamed:@"externaldrive"]
                             identifier:dataMenu.identifier
@@ -3240,6 +3242,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   UIAlertController *_gameDataProgressAlert;
   BOOL _choosingMiiImport;
   BOOL _choosingGhostImport;
+  BOOL _choosingMusicImport;
   NSString *_saveImportProfile;
   NSUInteger _ghostLicense;
 }
@@ -3282,6 +3285,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   overlay.saveManagerRequested = ^{ [weakSelf showSaveManager]; };
   overlay.buttonMappingRequested = ^{ [weakSelf showControllerButtonMapping]; };
   overlay.retroManagerRequested = ^{ [weakSelf showRetroManager]; };
+  overlay.retroMusicRequested = ^{ [weakSelf showRetroMusic]; };
   overlay.miiManagerRequested = ^{
     [weakSelf showMiiManager];
   };
@@ -4182,6 +4186,11 @@ static void KartPadApplySoundLevels(BOOL persist) {
 - (void)documentPicker:(UIDocumentPickerViewController *)controller
     didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
   (void)controller;
+  if (_choosingMusicImport) {
+    _choosingMusicImport = NO;
+    if (urls.count > 0) [self importRetroMusicFromURLs:urls];
+    return;
+  }
   NSURL *url = urls.firstObject;
   if (_saveImportProfile) {
     NSString *profile=_saveImportProfile;_saveImportProfile=nil;NSError *error=nil;
@@ -4234,6 +4243,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   (void)controller;
   _choosingMiiImport = NO;
   _choosingGhostImport = NO;
+  _choosingMusicImport = NO;
   _saveImportProfile = nil;
 }
 
@@ -4338,6 +4348,61 @@ static void KartPadApplySoundLevels(BOOL persist) {
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Manage Retro Rewind" message:[NSString stringWithFormat:@"Installed version: %@\nRequired version: %@\n\nReturn to the KartPad menu and choose Retro Rewind to check its pack and install or update when required.",version?:@"Not installed",KartPadRetroRewindInstaller.requiredVersion] preferredStyle:UIAlertControllerStyleAlert];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Return to KartPad Menu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){gKartPadMainMenuRequested=YES;}]];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];[self presentOverlayAlert:sheet];
+}
+- (void)showRetroMusic {
+  NSUInteger count = KartPadRetroRewindInstaller.customMusicCount;
+  NSString *summary = count == 0 ? @"No custom music yet." :
+      [NSString stringWithFormat:@"%lu custom %@.", (unsigned long)count, count == 1 ? @"track" : @"tracks"];
+  UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Retro Rewind Music"
+      message:[summary stringByAppendingString:@"\n\nAdd .brstm files, or a .zip from a Retro Rewind soundtrack pack. A file named like one of Retro Rewind's own replaces that track, for example 104_N.brstm and 104_F.brstm for its final lap. Quit and reopen KartPad to hear changes. Your music stays when Retro Rewind updates."]
+      preferredStyle:UIAlertControllerStyleAlert];
+  __weak KartPadRuntimeOverlayHost *weakSelf = self;
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Add Music…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    KartPadRuntimeOverlayHost *strongSelf = weakSelf;
+    UIViewController *presenter = strongSelf ? KartPadVisibleViewController(strongSelf->_window) : nil;
+    if (!presenter) return;
+    UIDocumentPickerViewController *picker = [[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeData] asCopy:YES];
+    picker.delegate = strongSelf;
+    picker.allowsMultipleSelection = YES;
+    strongSelf->_choosingMusicImport = YES;
+    [presenter presentViewController:picker animated:YES completion:nil];
+  }]];
+  if (count > 0) [sheet addAction:[UIAlertAction actionWithTitle:@"Remove All Custom Music" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [KartPadRetroRewindInstaller removeCustomMusic];
+    [weakSelf showIntegrationAlert:@"Custom Music Removed" message:@"Quit and reopen KartPad to hear Retro Rewind's own music."];
+  }]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentOverlayAlert:sheet];
+}
+- (void)importRetroMusicFromURLs:(NSArray<NSURL *> *)urls {
+  __weak KartPadRuntimeOverlayHost *weakSelf = self;
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    NSUInteger added = 0, skipped = 0;
+    NSString *failure = nil;
+    for (NSURL *url in urls) {
+      NSUInteger fileAdded = 0, fileSkipped = 0;
+      NSError *error = nil;
+      if ([KartPadRetroRewindInstaller importMusicFromURL:url added:&fileAdded skipped:&fileSkipped error:&error]) {
+        added += fileAdded;
+        skipped += fileSkipped;
+      } else if (failure == nil) {
+        failure = error.localizedDescription;
+      }
+      [NSFileManager.defaultManager removeItemAtURL:url error:nil];
+    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+      NSString *skippedNote = skipped == 0 ? @"" : [NSString stringWithFormat:
+          @" Skipped %lu %@ that aren't .brstm music with a simple name.", (unsigned long)skipped, skipped == 1 ? @"file" : @"files"];
+      if (added == 0) {
+        [weakSelf showIntegrationAlert:@"No Music Added"
+            message:[(failure ?: @"None of the files were .brstm music.") stringByAppendingString:skippedNote]];
+      } else {
+        [weakSelf showIntegrationAlert:@"Music Added" message:[NSString stringWithFormat:
+            @"Added %lu %@.%@%@ Quit and reopen KartPad to hear the new music.", (unsigned long)added,
+            added == 1 ? @"track" : @"tracks", skippedNote, failure ? [@" Not added: " stringByAppendingString:failure] : @""]];
+      }
+    });
+  });
 }
 - (void)showSaveManager {
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Choose Save Profile" message:nil preferredStyle:UIAlertControllerStyleActionSheet];

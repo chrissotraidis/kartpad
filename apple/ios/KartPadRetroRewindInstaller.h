@@ -21,6 +21,17 @@ typedef void (^KartPadRetroRewindInstallProgress)(NSString *status,
                    progress:(nullable KartPadRetroRewindInstallProgress)progress
                       error:(NSError **)error;
 
+// Player-added music (#441): .brstm files in RetroRewind6/MyStuff, which the
+// pack's "My Stuff → RR Music" option lays over the game's music after a
+// restart. Pack updates keep them.
++ (NSUInteger)customMusicCount;
+// Adds one .brstm, or every .brstm inside a .zip, replacing same-named tracks.
++ (BOOL)importMusicFromURL:(NSURL *)url
+                     added:(NSUInteger *)added
+                   skipped:(NSUInteger *)skipped
+                     error:(NSError **)error;
++ (NSUInteger)removeCustomMusic;
+
 @end
 
 NS_ASSUME_NONNULL_END
