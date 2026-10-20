@@ -2143,6 +2143,16 @@ class KartPadActivity : SDLActivity() {
                 kartPadOverlay.reloadPresentationSettings()
             }
         }
+        val itemHold = Switch(this).apply {
+            text = "Touch item hold"
+            setTextColor(Color.WHITE)
+            isChecked = KartPadTouchSettings.itemHold(this@KartPadActivity)
+            contentDescription = "Touch item hold: hold touch L for one second to keep holding the item; press L again to let go"
+            setOnCheckedChangeListener { _, checked ->
+                KartPadTouchSettings.setItemHold(this@KartPadActivity, checked)
+                kartPadOverlay.reloadPresentationSettings()
+            }
+        }
         val modernCStick = Switch(this).apply {
             text = "Modern C-stick L/R"
             setTextColor(Color.WHITE)
@@ -2194,6 +2204,7 @@ class KartPadActivity : SDLActivity() {
             setPadding(dp(12), dp(8), 0, 0)
             addView(hide)
             addView(autoAccelerate)
+            addView(itemHold)
             addView(modernCStick)
             addView(moveControls)
             addView(resetTouchLayoutButton)

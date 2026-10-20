@@ -34,6 +34,8 @@ Controller Button Mapping supports D-pad directions and triggers, optional share
 
 **Touch auto-accelerate** is under Controls → Touch Control Settings. OFF uses ordinary touch A press/hold/release; ON retains the one-second touch hold-to-latch behavior. The choice persists and does not change physical controller buttons.
 
+**Touch item hold** (next version, Android and iPhone/iPad) is beside it and off by default. With it on, holding touch L for one second keeps the item held behind your kart after you lift your finger, so you can steer and drift while trailing a shell or banana; L turns blue. Press L again to let go. Opening the menu or leaving the game lets go too. [#473](https://github.com/chrissotraidis/kartpad/issues/473)
+
 Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. Physical controllers take priority. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
 
 On the released 0.7.14, iPhone/iPad shake input is inside Motion Steering, and Android has tilt steering only.
