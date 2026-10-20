@@ -40,6 +40,11 @@
 extern "C" int g_gxFrameCount;
 #include <atomic>
 static NSString *const kKartPadAutoAccelerateKey = @"KartPadAutoAccelerate";
+// Touch L latch for trailing items (#473); off by default, as on Android.
+static NSString *const kKartPadItemHoldKey = @"KartPadItemHold";
+static BOOL KartPadItemHoldEnabled() {
+  return [NSUserDefaults.standardUserDefaults boolForKey:kKartPadItemHoldKey];
+}
 static BOOL KartPadAutoAccelerateEnabled() {
   NSNumber *saved = [NSUserDefaults.standardUserDefaults objectForKey:kKartPadAutoAccelerateKey];
   return saved == nil || saved.boolValue;
@@ -82,6 +87,11 @@ extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std
 @property(nonatomic, assign) NSUInteger kartPadGasHoldGeneration;
 @property(nonatomic, assign) BOOL kartPadGasPressed;
 @property(nonatomic, assign) BOOL kartPadGasLocked;
+@property(nonatomic, weak) UIButton *kartPadItemButton;
+@property(nonatomic, strong) UIColor *kartPadItemRestColor;
+@property(nonatomic, assign) NSUInteger kartPadItemHoldGeneration;
+@property(nonatomic, assign) BOOL kartPadItemPressed;
+@property(nonatomic, assign) BOOL kartPadItemLocked;
 @property(nonatomic, assign) BOOL kartPadGasHoldSelfTestStarted;
 @property(nonatomic, assign) BOOL kartPadGasInputSelfTestStarted;
 @property(nonatomic, assign) BOOL kartPadModalInputSelfTestStarted;
@@ -2312,6 +2322,14 @@ static void KartPadApplySoundLevels(BOOL persist) {
             forControlEvents:UIControlEventValueChanged];
     [stack insertArrangedSubview:[self settingsRowWithTitle:@"Touch auto-accelerate" control:autoAccelerate]
                          atIndex:MIN((NSUInteger)3, stack.arrangedSubviews.count)];
+    UISwitch *itemHold = [UISwitch new];
+    itemHold.on = KartPadItemHoldEnabled();
+    itemHold.accessibilityLabel = @"Touch item hold";
+    itemHold.accessibilityHint = @"Hold touch L for one second to keep holding the item. Press L again to let go.";
+    [itemHold addTarget:self action:@selector(kartPadItemHoldChanged:)
+       forControlEvents:UIControlEventValueChanged];
+    [stack insertArrangedSubview:[self settingsRowWithTitle:@"Touch item hold" control:itemHold]
+                         atIndex:MIN((NSUInteger)4, stack.arrangedSubviews.count)];
     UISwitch *controllerAutoAccelerate = [UISwitch new];
     controllerAutoAccelerate.on = gKartPadControllerAutoAccelerate.load();
     controllerAutoAccelerate.accessibilityLabel = @"Controller auto-accelerate";
@@ -2320,7 +2338,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
                        forControlEvents:UIControlEventValueChanged];
     [stack insertArrangedSubview:[self settingsRowWithTitle:@"Controller auto-accelerate"
                                                     control:controllerAutoAccelerate]
-                         atIndex:MIN((NSUInteger)4, stack.arrangedSubviews.count)];
+                         atIndex:MIN((NSUInteger)5, stack.arrangedSubviews.count)];
   }
 }
 
@@ -2462,6 +2480,18 @@ static void KartPadApplySoundLevels(BOOL persist) {
     for (CALayer *layer in rightShoulder.layer.sublayers) {
       if ([layer isKindOfClass:CAShapeLayer.class]) layer.hidden = YES;
     }
+  }
+
+  // L shares the gas latch's timing and look, behind its own option.
+  if (leftShoulder != nil && self.kartPadItemButton != leftShoulder) {
+    self.kartPadItemButton = leftShoulder;
+    self.kartPadItemRestColor = leftShoulder.backgroundColor;
+    [leftShoulder addTarget:self action:@selector(kartPadItemDown:)
+           forControlEvents:UIControlEventTouchDown];
+    [leftShoulder addTarget:self action:@selector(kartPadItemUp:)
+           forControlEvents:UIControlEventTouchUpInside |
+                            UIControlEventTouchUpOutside |
+                            UIControlEventTouchCancel];
   }
 
   if (gasButton != nil && self.kartPadGasButton != gasButton) {
@@ -3149,6 +3179,77 @@ static void KartPadApplySoundLevels(BOOL persist) {
       : @"Hold to accelerate. Release to stop accelerating.";
 }
 
+- (void)kartPadItemHoldChanged:(UISwitch *)sender {
+  [NSUserDefaults.standardUserDefaults setBool:sender.on forKey:kKartPadItemHoldKey];
+  ++self.kartPadItemHoldGeneration;
+  if (!sender.on && self.kartPadItemLocked) {
+    self.kartPadItemLocked = NO;
+    if (!self.kartPadItemPressed) [super buttonUp:self.kartPadItemButton];
+    [self kartPadRestoreItemAppearance];
+  }
+}
+
+- (void)kartPadRestoreItemAppearance {
+  UIButton *button = self.kartPadItemButton;
+  button.backgroundColor = self.kartPadItemRestColor;
+  button.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.36].CGColor;
+  button.layer.shadowOpacity = 0.0;
+  button.accessibilityValue = nil;
+}
+
+- (void)kartPadItemDown:(UIButton *)button {
+  self.kartPadItemPressed = YES;
+  const NSUInteger generation = ++self.kartPadItemHoldGeneration;
+  if (self.kartPadItemLocked) {
+    // The next press lets go; the inherited touch-up action clears L.
+    self.kartPadItemLocked = NO;
+    [self kartPadRestoreItemAppearance];
+    return;
+  }
+  if (!KartPadItemHoldEnabled()) return;
+  __weak KartPadGameOverlay *weakSelf = self;
+  __weak UIButton *weakButton = button;
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)NSEC_PER_SEC),
+                 dispatch_get_main_queue(), ^{
+    KartPadGameOverlay *strongSelf = weakSelf;
+    UIButton *strongButton = weakButton;
+    if (strongSelf == nil || strongButton == nil ||
+        !strongSelf.kartPadItemPressed || !KartPadItemHoldEnabled() ||
+        strongSelf.kartPadItemHoldGeneration != generation) {
+      return;
+    }
+    strongSelf.kartPadItemLocked = YES;
+    strongButton.backgroundColor =
+        [UIColor colorWithRed:0.06 green:0.78 blue:0.92 alpha:0.98];
+    strongButton.layer.borderColor = UIColor.whiteColor.CGColor;
+    strongButton.layer.shadowColor =
+        [UIColor colorWithRed:0.06 green:0.78 blue:0.92 alpha:1.0].CGColor;
+    strongButton.layer.shadowOpacity = 0.9;
+    strongButton.layer.shadowRadius = 9.0;
+    strongButton.layer.shadowOffset = CGSizeZero;
+    strongButton.accessibilityValue = @"Item held";
+    UIImpactFeedbackGenerator *feedback = [[UIImpactFeedbackGenerator alloc]
+        initWithStyle:UIImpactFeedbackStyleLight];
+    [feedback impactOccurred];
+  });
+}
+
+- (void)kartPadItemUp:(UIButton *)button {
+  self.kartPadItemPressed = NO;
+  ++self.kartPadItemHoldGeneration;
+  if (!self.kartPadItemLocked) return;
+  // Reassert L after SunPad's touch-up action so the item stays held.
+  __weak KartPadGameOverlay *weakSelf = self;
+  __weak UIButton *weakButton = button;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    KartPadGameOverlay *strongSelf = weakSelf;
+    UIButton *strongButton = weakButton;
+    if (strongSelf == nil || strongButton == nil || !strongSelf.kartPadItemLocked) return;
+    [super buttonDown:strongButton];
+    strongButton.transform = CGAffineTransformIdentity;
+  });
+}
+
 - (void)kartPadGasDown:(UIButton *)button {
   self.kartPadGasPressed = YES;
   const NSUInteger generation = ++self.kartPadGasHoldGeneration;
@@ -3222,6 +3323,10 @@ static void KartPadApplySoundLevels(BOOL persist) {
   self.kartPadGasPressed = NO;
   self.kartPadGasLocked = NO;
   ++self.kartPadGasHoldGeneration;
+  self.kartPadItemPressed = NO;
+  self.kartPadItemLocked = NO;
+  ++self.kartPadItemHoldGeneration;
+  if (self.kartPadItemButton != nil) [self kartPadRestoreItemAppearance];
   if (self.kartPadGasButton != nil) {
     self.kartPadGasButton.backgroundColor = self.kartPadGasRestColor;
     self.kartPadGasButton.layer.borderColor =
