@@ -2,6 +2,8 @@ package dev.kartpad.android
 
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -10,14 +12,15 @@ import android.os.VibratorManager
 /**
  * Vibrates the device for player one when the game rumbles a controller that has no motor of its
  * own, such as a handheld's built-in controls (Dolphin does the same). The runtime calls
- * [setActive] from the game thread on each start/stop change; KartPadActivity pauses it in the
- * background.
+ * [setActive] from the game thread on each start/stop change and returns at once; the vibrator
+ * service is called on a separate thread, in order. KartPadActivity pauses it in the background.
  */
 object KartPadDeviceRumble {
     // The Wii Remote motor is on/off and the game always sends Stop. This
     // bound matches SDL's controller pulses and limits a missed Stop.
     private const val MAX_PULSE_MS = 5_000L
 
+    private val worker by lazy { Handler(HandlerThread("KartPadRumble").apply { start() }.looper) }
     private var vibrator: Vibrator? = null
     private var paused = true
     private var active = false
@@ -34,12 +37,16 @@ object KartPadDeviceRumble {
     @Synchronized
     fun setPaused(value: Boolean) {
         paused = value
-        if (value) stop()
+        if (value) worker.post { update(false) }
     }
 
     @JvmStatic
-    @Synchronized
     fun setActive(value: Boolean) {
+        worker.post { update(value) }
+    }
+
+    @Synchronized
+    private fun update(value: Boolean) {
         if (!value || paused) {
             stop()
             return
