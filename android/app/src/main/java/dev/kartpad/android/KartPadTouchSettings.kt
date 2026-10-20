@@ -19,6 +19,8 @@ internal object KartPadTouchSettings {
     private const val HIDE_ON_CONTROLLER = "hide_on_controller"
     private const val AUTO_ACCELERATE = "auto_accelerate"
     private const val CONTROLLER_AUTO_ACCELERATE = "controller_auto_accelerate"
+    private const val CONTROLLER_RUMBLE = "controller_rumble"
+    private const val ITEM_HOLD = "item_hold"
     private const val MODERN_C_STICK = "modern_c_stick_horizontal"
     private const val SHOW_FPS = "show_fps"
     private const val FPS_SIZE = "fps_size"
@@ -72,6 +74,21 @@ internal object KartPadTouchSettings {
 
     fun setControllerAutoAccelerate(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(CONTROLLER_AUTO_ACCELERATE, value).apply()
+    }
+
+    fun controllerRumble(context: Context): Boolean = preferences(context)
+        .getBoolean(CONTROLLER_RUMBLE, true)
+
+    fun setControllerRumble(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(CONTROLLER_RUMBLE, value).apply()
+    }
+
+    // Touch L latch for trailing items (#473); off by default.
+    fun itemHold(context: Context): Boolean = preferences(context)
+        .getBoolean(ITEM_HOLD, false)
+
+    fun setItemHold(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(ITEM_HOLD, value).apply()
     }
 
     fun modernCStickHorizontal(context: Context): Boolean = preferences(context)

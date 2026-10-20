@@ -77,6 +77,11 @@ class KartPadOverlayView(context: Context) : View(context) {
     private var gasHoldGeneration = 0
     private var autoAccelerate = KartPadTouchSettings.autoAccelerate(context)
     private var gasLocked = false
+    // Item hold (#473): hold touch L for the same second to keep the item held behind the kart;
+    // press L again to let go. Cleared with every other touch state.
+    private var itemHoldGeneration = 0
+    private var itemHold = KartPadTouchSettings.itemHold(context)
+    private var itemLocked = false
     private var leftStickAnchor: PointF? = null
     private val floatingStickDrawingFrame = RectF()
     private var debugVirtualKeyHapticCount = 0
@@ -187,6 +192,7 @@ class KartPadOverlayView(context: Context) : View(context) {
                     leftStickAnchor = PointF(event.getX(actionIndex), event.getY(actionIndex))
                 }
                 if (control.id == "A") beginGasPress()
+                if (control.id == "L") beginItemPress()
                 updateOwnedControl(control, event.getX(actionIndex), event.getY(actionIndex))
             }
             MotionEvent.ACTION_MOVE -> {
@@ -258,10 +264,13 @@ class KartPadOverlayView(context: Context) : View(context) {
         controllerKeyButtons = 0
         accessibilityPulseGenerations.clear()
         gasLocked = false
+        itemLocked = false
+        itemHoldGeneration += 1
         leftStickAnchor = null
         lastPublishedButtons = 0
         gasHoldGeneration += 1
         updateGasAccessibility()
+        updateItemAccessibility()
         nativeClearTouchState()
         invalidate()
     }
@@ -834,6 +843,13 @@ class KartPadOverlayView(context: Context) : View(context) {
             updateGasAccessibility()
             publishState(connected = !hiddenForController)
         }
+        itemHold = KartPadTouchSettings.itemHold(context)
+        if (!itemHold) {
+            itemHoldGeneration += 1
+            itemLocked = false
+            updateItemAccessibility()
+            publishState(connected = !hiddenForController)
+        }
         controlOpacity = KartPadTouchSettings.opacity(context)
         controlSizeScale = KartPadTouchSettings.size(context)
         modernCStickHorizontal = KartPadTouchSettings.modernCStickHorizontal(context)
@@ -1197,6 +1213,7 @@ class KartPadOverlayView(context: Context) : View(context) {
     private fun releasePointer(pointerId: Int) {
         val owner = pointerOwners.remove(pointerId) ?: return
         if (owner == "A") gasHoldGeneration += 1
+        if (owner == "L") itemHoldGeneration += 1
         when (controls.firstOrNull { it.id == owner }?.kind) {
             Kind.LEFT_STICK -> { leftX = 0f; leftY = 0f; leftStickAnchor = null }
             Kind.RIGHT_STICK -> { rightX = 0f; rightY = 0f }
@@ -1240,7 +1257,8 @@ class KartPadOverlayView(context: Context) : View(context) {
     }
 
     private fun publishState(connected: Boolean) {
-        var buttons = (if (gasLocked) BUTTON_A else 0) or accessibilityButtons or controllerKeyButtons
+        var buttons = (if (gasLocked) BUTTON_A else 0) or (if (itemLocked) BUTTON_L else 0) or
+            accessibilityButtons or controllerKeyButtons
         if (shakeTrickHeld) buttons = buttons or BUTTON_UP
         pointerOwners.values.forEach { owner ->
             buttons = buttons or (controls.firstOrNull { it.id == owner }?.mask ?: 0)
@@ -1279,6 +1297,33 @@ class KartPadOverlayView(context: Context) : View(context) {
         }
         sendVirtualAccessibilityEvent(
             controls.indexOfFirst { it.id == "A" },
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
+        )
+    }
+
+    private fun beginItemPress() {
+        itemHoldGeneration += 1
+        if (itemLocked) {
+            itemLocked = false
+            updateItemAccessibility()
+            return
+        }
+        if (!itemHold) return
+        val generation = itemHoldGeneration
+        mainHandler.postDelayed({
+            if (!itemHold || generation != itemHoldGeneration ||
+                !pointerOwners.containsValue("L")) return@postDelayed
+            itemLocked = true
+            updateItemAccessibility()
+            performVirtualKeyHaptic()
+            publishState(connected = true)
+            invalidate()
+        }, GAS_LOCK_DELAY_MS)
+    }
+
+    private fun updateItemAccessibility() {
+        sendVirtualAccessibilityEvent(
+            controls.indexOfFirst { it.id == "L" },
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
         )
     }
@@ -1384,6 +1429,16 @@ class KartPadOverlayView(context: Context) : View(context) {
         invalidate()
     }
 
+    private fun toggleAccessibilityItemLock() {
+        if (!itemHold) return
+        itemHoldGeneration += 1
+        itemLocked = !itemLocked
+        updateItemAccessibility()
+        performVirtualKeyHaptic()
+        publishState(connected = true)
+        invalidate()
+    }
+
     private fun updateAccessibilityHover(id: Int) {
         if (id == accessibilityHoverId) return
         if (accessibilityHoverId != View.NO_ID) {
@@ -1479,6 +1534,15 @@ class KartPadOverlayView(context: Context) : View(context) {
                         if (gasLocked) "Unlock acceleration" else "Lock acceleration",
                     ))
                 }
+                if (control.id == "L" && itemHold) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        stateDescription = if (itemLocked) "Item held" else "Item released"
+                    }
+                    addAction(AccessibilityNodeInfo.AccessibilityAction(
+                        ACTION_TOGGLE_ITEM_LOCK,
+                        if (itemLocked) "Let go of item" else "Hold item",
+                    ))
+                }
             }
         }
 
@@ -1533,6 +1597,10 @@ class KartPadOverlayView(context: Context) : View(context) {
                     toggleAccessibilityGasLock()
                     true
                 } else false
+                ACTION_TOGGLE_ITEM_LOCK -> if (control.id == "L" && itemHold) {
+                    toggleAccessibilityItemLock()
+                    true
+                } else false
                 ACTION_STICK_UP, ACTION_STICK_DOWN,
                 ACTION_STICK_LEFT, ACTION_STICK_RIGHT -> if (control.kind != Kind.BUTTON) {
                     pulseAccessibilityStick(control, action)
@@ -1555,6 +1623,7 @@ class KartPadOverlayView(context: Context) : View(context) {
 
     private fun buttonFillColor(control: Control): Int = when {
         control.id == "A" && gasLocked -> LOCKED_GAS_COLOR
+        control.id == "L" && itemLocked -> LOCKED_GAS_COLOR
         pointerOwners.containsValue(control.id) -> brighten(control.fill)
         else -> control.fill
     }
@@ -1582,6 +1651,7 @@ class KartPadOverlayView(context: Context) : View(context) {
         const val ACTION_STICK_LEFT = 0x01020003
         const val ACTION_STICK_RIGHT = 0x01020004
         const val ACTION_TOGGLE_GAS_LOCK = 0x01020005
+        const val ACTION_TOGGLE_ITEM_LOCK = 0x01020006
         val LOCKED_GAS_COLOR: Int = Color.argb(250, 15, 199, 235)
         val EDIT_SELECTED_COLOR: Int = Color.rgb(51, 199, 255)
         val EDIT_AVAILABLE_COLOR: Int = Color.rgb(255, 199, 51)

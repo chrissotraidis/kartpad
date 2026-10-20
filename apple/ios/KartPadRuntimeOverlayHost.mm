@@ -40,6 +40,11 @@
 extern "C" int g_gxFrameCount;
 #include <atomic>
 static NSString *const kKartPadAutoAccelerateKey = @"KartPadAutoAccelerate";
+// Touch L latch for trailing items (#473); off by default, as on Android.
+static NSString *const kKartPadItemHoldKey = @"KartPadItemHold";
+static BOOL KartPadItemHoldEnabled() {
+  return [NSUserDefaults.standardUserDefaults boolForKey:kKartPadItemHoldKey];
+}
 static BOOL KartPadAutoAccelerateEnabled() {
   NSNumber *saved = [NSUserDefaults.standardUserDefaults objectForKey:kKartPadAutoAccelerateKey];
   return saved == nil || saved.boolValue;
@@ -76,12 +81,18 @@ extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std
 @property(nonatomic, copy) void (^saveManagerRequested)(void);
 @property(nonatomic, copy) void (^buttonMappingRequested)(void);
 @property(nonatomic, copy) void (^retroManagerRequested)(void);
+@property(nonatomic, copy) void (^retroMusicRequested)(void);
 @property(nonatomic, copy) void (^wiimoteRequested)(void);
 @property(nonatomic, weak) UIButton *kartPadGasButton;
 @property(nonatomic, strong) UIColor *kartPadGasRestColor;
 @property(nonatomic, assign) NSUInteger kartPadGasHoldGeneration;
 @property(nonatomic, assign) BOOL kartPadGasPressed;
 @property(nonatomic, assign) BOOL kartPadGasLocked;
+@property(nonatomic, weak) UIButton *kartPadItemButton;
+@property(nonatomic, strong) UIColor *kartPadItemRestColor;
+@property(nonatomic, assign) NSUInteger kartPadItemHoldGeneration;
+@property(nonatomic, assign) BOOL kartPadItemPressed;
+@property(nonatomic, assign) BOOL kartPadItemLocked;
 @property(nonatomic, assign) BOOL kartPadGasHoldSelfTestStarted;
 @property(nonatomic, assign) BOOL kartPadGasInputSelfTestStarted;
 @property(nonatomic, assign) BOOL kartPadModalInputSelfTestStarted;
@@ -2312,6 +2323,14 @@ static void KartPadApplySoundLevels(BOOL persist) {
             forControlEvents:UIControlEventValueChanged];
     [stack insertArrangedSubview:[self settingsRowWithTitle:@"Touch auto-accelerate" control:autoAccelerate]
                          atIndex:MIN((NSUInteger)3, stack.arrangedSubviews.count)];
+    UISwitch *itemHold = [UISwitch new];
+    itemHold.on = KartPadItemHoldEnabled();
+    itemHold.accessibilityLabel = @"Touch item hold";
+    itemHold.accessibilityHint = @"Hold touch L for one second to keep holding the item. Press L again to let go.";
+    [itemHold addTarget:self action:@selector(kartPadItemHoldChanged:)
+       forControlEvents:UIControlEventValueChanged];
+    [stack insertArrangedSubview:[self settingsRowWithTitle:@"Touch item hold" control:itemHold]
+                         atIndex:MIN((NSUInteger)4, stack.arrangedSubviews.count)];
     UISwitch *controllerAutoAccelerate = [UISwitch new];
     controllerAutoAccelerate.on = gKartPadControllerAutoAccelerate.load();
     controllerAutoAccelerate.accessibilityLabel = @"Controller auto-accelerate";
@@ -2320,7 +2339,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
                        forControlEvents:UIControlEventValueChanged];
     [stack insertArrangedSubview:[self settingsRowWithTitle:@"Controller auto-accelerate"
                                                     control:controllerAutoAccelerate]
-                         atIndex:MIN((NSUInteger)4, stack.arrangedSubviews.count)];
+                         atIndex:MIN((NSUInteger)5, stack.arrangedSubviews.count)];
   }
 }
 
@@ -2462,6 +2481,18 @@ static void KartPadApplySoundLevels(BOOL persist) {
     for (CALayer *layer in rightShoulder.layer.sublayers) {
       if ([layer isKindOfClass:CAShapeLayer.class]) layer.hidden = YES;
     }
+  }
+
+  // L shares the gas latch's timing and look, behind its own option.
+  if (leftShoulder != nil && self.kartPadItemButton != leftShoulder) {
+    self.kartPadItemButton = leftShoulder;
+    self.kartPadItemRestColor = leftShoulder.backgroundColor;
+    [leftShoulder addTarget:self action:@selector(kartPadItemDown:)
+           forControlEvents:UIControlEventTouchDown];
+    [leftShoulder addTarget:self action:@selector(kartPadItemUp:)
+           forControlEvents:UIControlEventTouchUpInside |
+                            UIControlEventTouchUpOutside |
+                            UIControlEventTouchCancel];
   }
 
   if (gasButton != nil && self.kartPadGasButton != gasButton) {
@@ -2782,6 +2813,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
       }] atIndex:1];
       [dataItems insertObject:[UIAction actionWithTitle:@"Manage Saves…" image:[UIImage systemImageNamed:@"externaldrive"] identifier:nil handler:^(__kindof UIAction *action) { if (weakSelf.saveManagerRequested) weakSelf.saveManagerRequested(); }] atIndex:2];
       [dataItems insertObject:[UIAction actionWithTitle:@"Manage Retro Rewind…" image:[UIImage systemImageNamed:@"arrow.clockwise"] identifier:nil handler:^(__kindof UIAction *action) { if (weakSelf.retroManagerRequested) weakSelf.retroManagerRequested(); }] atIndex:3];
+      [dataItems insertObject:[UIAction actionWithTitle:@"Retro Rewind Music…" image:[UIImage systemImageNamed:@"music.note.list"] identifier:nil handler:^(__kindof UIAction *action) { if (weakSelf.retroMusicRequested) weakSelf.retroMusicRequested(); }] atIndex:4];
       gameData = [UIMenu menuWithTitle:dataMenu.title
                                  image:[UIImage systemImageNamed:@"externaldrive"]
                             identifier:dataMenu.identifier
@@ -3149,6 +3181,77 @@ static void KartPadApplySoundLevels(BOOL persist) {
       : @"Hold to accelerate. Release to stop accelerating.";
 }
 
+- (void)kartPadItemHoldChanged:(UISwitch *)sender {
+  [NSUserDefaults.standardUserDefaults setBool:sender.on forKey:kKartPadItemHoldKey];
+  ++self.kartPadItemHoldGeneration;
+  if (!sender.on && self.kartPadItemLocked) {
+    self.kartPadItemLocked = NO;
+    if (!self.kartPadItemPressed) [super buttonUp:self.kartPadItemButton];
+    [self kartPadRestoreItemAppearance];
+  }
+}
+
+- (void)kartPadRestoreItemAppearance {
+  UIButton *button = self.kartPadItemButton;
+  button.backgroundColor = self.kartPadItemRestColor;
+  button.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.36].CGColor;
+  button.layer.shadowOpacity = 0.0;
+  button.accessibilityValue = nil;
+}
+
+- (void)kartPadItemDown:(UIButton *)button {
+  self.kartPadItemPressed = YES;
+  const NSUInteger generation = ++self.kartPadItemHoldGeneration;
+  if (self.kartPadItemLocked) {
+    // The next press lets go; the inherited touch-up action clears L.
+    self.kartPadItemLocked = NO;
+    [self kartPadRestoreItemAppearance];
+    return;
+  }
+  if (!KartPadItemHoldEnabled()) return;
+  __weak KartPadGameOverlay *weakSelf = self;
+  __weak UIButton *weakButton = button;
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)NSEC_PER_SEC),
+                 dispatch_get_main_queue(), ^{
+    KartPadGameOverlay *strongSelf = weakSelf;
+    UIButton *strongButton = weakButton;
+    if (strongSelf == nil || strongButton == nil ||
+        !strongSelf.kartPadItemPressed || !KartPadItemHoldEnabled() ||
+        strongSelf.kartPadItemHoldGeneration != generation) {
+      return;
+    }
+    strongSelf.kartPadItemLocked = YES;
+    strongButton.backgroundColor =
+        [UIColor colorWithRed:0.06 green:0.78 blue:0.92 alpha:0.98];
+    strongButton.layer.borderColor = UIColor.whiteColor.CGColor;
+    strongButton.layer.shadowColor =
+        [UIColor colorWithRed:0.06 green:0.78 blue:0.92 alpha:1.0].CGColor;
+    strongButton.layer.shadowOpacity = 0.9;
+    strongButton.layer.shadowRadius = 9.0;
+    strongButton.layer.shadowOffset = CGSizeZero;
+    strongButton.accessibilityValue = @"Item held";
+    UIImpactFeedbackGenerator *feedback = [[UIImpactFeedbackGenerator alloc]
+        initWithStyle:UIImpactFeedbackStyleLight];
+    [feedback impactOccurred];
+  });
+}
+
+- (void)kartPadItemUp:(UIButton *)button {
+  self.kartPadItemPressed = NO;
+  ++self.kartPadItemHoldGeneration;
+  if (!self.kartPadItemLocked) return;
+  // Reassert L after SunPad's touch-up action so the item stays held.
+  __weak KartPadGameOverlay *weakSelf = self;
+  __weak UIButton *weakButton = button;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    KartPadGameOverlay *strongSelf = weakSelf;
+    UIButton *strongButton = weakButton;
+    if (strongSelf == nil || strongButton == nil || !strongSelf.kartPadItemLocked) return;
+    [super buttonDown:strongButton];
+    strongButton.transform = CGAffineTransformIdentity;
+  });
+}
+
 - (void)kartPadGasDown:(UIButton *)button {
   self.kartPadGasPressed = YES;
   const NSUInteger generation = ++self.kartPadGasHoldGeneration;
@@ -3222,6 +3325,10 @@ static void KartPadApplySoundLevels(BOOL persist) {
   self.kartPadGasPressed = NO;
   self.kartPadGasLocked = NO;
   ++self.kartPadGasHoldGeneration;
+  self.kartPadItemPressed = NO;
+  self.kartPadItemLocked = NO;
+  ++self.kartPadItemHoldGeneration;
+  if (self.kartPadItemButton != nil) [self kartPadRestoreItemAppearance];
   if (self.kartPadGasButton != nil) {
     self.kartPadGasButton.backgroundColor = self.kartPadGasRestColor;
     self.kartPadGasButton.layer.borderColor =
@@ -3240,6 +3347,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   UIAlertController *_gameDataProgressAlert;
   BOOL _choosingMiiImport;
   BOOL _choosingGhostImport;
+  BOOL _choosingMusicImport;
   NSString *_saveImportProfile;
   NSUInteger _ghostLicense;
 }
@@ -3282,6 +3390,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   overlay.saveManagerRequested = ^{ [weakSelf showSaveManager]; };
   overlay.buttonMappingRequested = ^{ [weakSelf showControllerButtonMapping]; };
   overlay.retroManagerRequested = ^{ [weakSelf showRetroManager]; };
+  overlay.retroMusicRequested = ^{ [weakSelf showRetroMusic]; };
   overlay.miiManagerRequested = ^{
     [weakSelf showMiiManager];
   };
@@ -4182,6 +4291,11 @@ static void KartPadApplySoundLevels(BOOL persist) {
 - (void)documentPicker:(UIDocumentPickerViewController *)controller
     didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls {
   (void)controller;
+  if (_choosingMusicImport) {
+    _choosingMusicImport = NO;
+    if (urls.count > 0) [self importRetroMusicFromURLs:urls];
+    return;
+  }
   NSURL *url = urls.firstObject;
   if (_saveImportProfile) {
     NSString *profile=_saveImportProfile;_saveImportProfile=nil;NSError *error=nil;
@@ -4234,6 +4348,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   (void)controller;
   _choosingMiiImport = NO;
   _choosingGhostImport = NO;
+  _choosingMusicImport = NO;
   _saveImportProfile = nil;
 }
 
@@ -4338,6 +4453,61 @@ static void KartPadApplySoundLevels(BOOL persist) {
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Manage Retro Rewind" message:[NSString stringWithFormat:@"Installed version: %@\nRequired version: %@\n\nReturn to the KartPad menu and choose Retro Rewind to check its pack and install or update when required.",version?:@"Not installed",KartPadRetroRewindInstaller.requiredVersion] preferredStyle:UIAlertControllerStyleAlert];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Return to KartPad Menu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){gKartPadMainMenuRequested=YES;}]];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];[self presentOverlayAlert:sheet];
+}
+- (void)showRetroMusic {
+  NSUInteger count = KartPadRetroRewindInstaller.customMusicCount;
+  NSString *summary = count == 0 ? @"No custom music yet." :
+      [NSString stringWithFormat:@"%lu custom %@.", (unsigned long)count, count == 1 ? @"track" : @"tracks"];
+  UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Retro Rewind Music"
+      message:[summary stringByAppendingString:@"\n\nAdd .brstm files, or a .zip from a Retro Rewind soundtrack pack. A file named like one of Retro Rewind's own replaces that track, for example 104_N.brstm and 104_F.brstm for its final lap. Quit and reopen KartPad to hear changes. Your music stays when Retro Rewind updates."]
+      preferredStyle:UIAlertControllerStyleAlert];
+  __weak KartPadRuntimeOverlayHost *weakSelf = self;
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Add Music…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    KartPadRuntimeOverlayHost *strongSelf = weakSelf;
+    UIViewController *presenter = strongSelf ? KartPadVisibleViewController(strongSelf->_window) : nil;
+    if (!presenter) return;
+    UIDocumentPickerViewController *picker = [[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeData] asCopy:YES];
+    picker.delegate = strongSelf;
+    picker.allowsMultipleSelection = YES;
+    strongSelf->_choosingMusicImport = YES;
+    [presenter presentViewController:picker animated:YES completion:nil];
+  }]];
+  if (count > 0) [sheet addAction:[UIAlertAction actionWithTitle:@"Remove All Custom Music" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+    [KartPadRetroRewindInstaller removeCustomMusic];
+    [weakSelf showIntegrationAlert:@"Custom Music Removed" message:@"Quit and reopen KartPad to hear Retro Rewind's own music."];
+  }]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentOverlayAlert:sheet];
+}
+- (void)importRetroMusicFromURLs:(NSArray<NSURL *> *)urls {
+  __weak KartPadRuntimeOverlayHost *weakSelf = self;
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    NSUInteger added = 0, skipped = 0;
+    NSString *failure = nil;
+    for (NSURL *url in urls) {
+      NSUInteger fileAdded = 0, fileSkipped = 0;
+      NSError *error = nil;
+      if ([KartPadRetroRewindInstaller importMusicFromURL:url added:&fileAdded skipped:&fileSkipped error:&error]) {
+        added += fileAdded;
+        skipped += fileSkipped;
+      } else if (failure == nil) {
+        failure = error.localizedDescription;
+      }
+      [NSFileManager.defaultManager removeItemAtURL:url error:nil];
+    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+      NSString *skippedNote = skipped == 0 ? @"" : [NSString stringWithFormat:
+          @" Skipped %lu %@ that aren't .brstm music with a simple name.", (unsigned long)skipped, skipped == 1 ? @"file" : @"files"];
+      if (added == 0) {
+        [weakSelf showIntegrationAlert:@"No Music Added"
+            message:[(failure ?: @"None of the files were .brstm music.") stringByAppendingString:skippedNote]];
+      } else {
+        [weakSelf showIntegrationAlert:@"Music Added" message:[NSString stringWithFormat:
+            @"Added %lu %@.%@%@ Quit and reopen KartPad to hear the new music.", (unsigned long)added,
+            added == 1 ? @"track" : @"tracks", skippedNote, failure ? [@" Not added: " stringByAppendingString:failure] : @""]];
+      }
+    });
+  });
 }
 - (void)showSaveManager {
   UIAlertController *sheet=[UIAlertController alertControllerWithTitle:@"Choose Save Profile" message:nil preferredStyle:UIAlertControllerStyleActionSheet];

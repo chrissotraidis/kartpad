@@ -65,8 +65,12 @@ the [archive](archive/known-issues-through-2026-09.md).
   phone. A OnePlus tablet (OPD2403, Android 16, 0.8.1) shows faces with the
   bodies missing after the in-app graphics options were tried
   ([#472](https://github.com/chrissotraidis/kartpad/issues/472)); whether that
-  is the same failure as the S24 isn't known yet. Next: pass each vertex's bone
-  index to the GPU directly.
+  is the same failure as the S24 isn't known yet. The next version adds
+  **Experimental: bone index per vertex**, which passes each vertex's bone
+  index to the GPU directly. It draws characters on the Android emulator; it
+  hasn't been tried on an affected phone yet. A Honor 400 Smart (Snapdragon 6s
+  Gen 3, [#492](https://github.com/chrissotraidis/kartpad/issues/492)) shows
+  only floating heads on 0.8.3 with every current option.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.

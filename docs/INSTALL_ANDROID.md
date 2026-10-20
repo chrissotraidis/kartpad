@@ -109,6 +109,10 @@ Multiplayer and **Report a Problem…**. The full menu is in
   hides too and comes back when you touch the screen. Buttons can be remapped
   in **Controller Button Mapping…**, and players assigned in
   **Controller Player Setup…**. See [controls and multiplayer](MULTIPLAYER.md).
+- **Rumble (next version):** on by default, in **Controller Button Mapping…**.
+  A controller with its own motor rumbles. If player one's controller has no
+  motor, such as a handheld's built-in controls, the device vibrates instead.
+  Touch-only play does not vibrate.
 - **Shake to Trick (next version):** **Controls → Shake to Trick…** is optional
   and off by default. Tilt steering can stay off. Shaking sends D-pad Up for
   tricks and bike wheelies; physical controllers take priority. This option is

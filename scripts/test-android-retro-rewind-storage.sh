@@ -16,7 +16,11 @@ mkdir -p "${classes}"
 find "${classes}" -type f -delete
 "${java_home}/bin/javac" -Werror -Xlint:all -d "${classes}" \
   "${repo_root}/android/app/src/main/java/dev/kartpad/android/RetroRewindInstallStorage.java" \
-  "${repo_root}/android/app/src/test/java/dev/kartpad/android/RetroRewindInstallStorageTestMain.java"
+  "${repo_root}/android/app/src/main/java/dev/kartpad/android/RetroRewindMusic.java" \
+  "${repo_root}/android/app/src/test/java/dev/kartpad/android/RetroRewindInstallStorageTestMain.java" \
+  "${repo_root}/android/app/src/test/java/dev/kartpad/android/RetroRewindMusicTestMain.java"
 "${java_home}/bin/java" -cp "${classes}" \
   dev.kartpad.android.RetroRewindInstallStorageTestMain
+"${java_home}/bin/java" -cp "${classes}" \
+  dev.kartpad.android.RetroRewindMusicTestMain
 echo "Android Retro Rewind storage contract passed."
