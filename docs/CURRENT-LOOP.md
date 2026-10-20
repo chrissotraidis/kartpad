@@ -7,6 +7,15 @@ for 0.8.0.
 
 ## What we're doing next
 
+**Update 20 October.** 0.8.3 (17 October, build 265) is the latest release;
+0.8.4 is a draft (iPhone/iPad setup wording, builder retries, 16 GB budget;
+Android unchanged). The Thor reporter confirmed on 0.8.3 that Fill Screen
+fills the screen, so item 1 is done and #202 is closed. Item 2 is
+[#498](https://github.com/chrissotraidis/kartpad/pull/498): the bone-index
+experiment as a Character Graphics Test option, for #104, #301, #472 and #492
+to try once it ships. Android rumble, which had never worked, is draft
+[#497](https://github.com/chrissotraidis/kartpad/pull/497). Item 3 is unchanged.
+
 **0.8.1 is the latest release** (13 October, build 263). 0.8.0 shipped on
 12 October, and PadMint 0.5.1 brought KartPad's Mac copy back the same day.
 PadMint 0.5.2 (15 October) adds GalaxyPad and does not change the KartPad
