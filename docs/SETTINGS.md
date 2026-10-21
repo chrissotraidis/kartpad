@@ -32,7 +32,7 @@ Controller Button Mapping supports D-pad directions and triggers, optional share
 
 **Rumble** (Android, next version) is in Controller Button Mapping and is on by default. A controller with its own motor rumbles; when player one's controller has none, such as a handheld's built-in controls, the device vibrates instead. Touch-only play does not vibrate.
 
-**Android controller mapping:** L3 and R3 stick clicks are available as physical buttons. Assign **D-pad Up — Trick / Wheelie**, or choose **Use L3 for Tricks**. **Rumble strength** runs from 0% to 200%; 100% retains the previous setting. It scales controller motors and handheld device vibration where amplitude control is supported.
+**Android controller mapping:** L3 and R3 stick clicks are available as physical buttons. Assign **D-pad Up — Trick / Wheelie**, or choose **Use L3 for Tricks**. **Rumble strength** runs from 0% to 200%; 100% is standard strength. It scales controller motors and handheld device vibration where amplitude control is supported.
 
 **Touch auto-accelerate** is under Controls → Touch Control Settings. OFF uses ordinary touch A press/hold/release; ON retains the one-second touch hold-to-latch behavior. The choice persists and does not change physical controller buttons.
 

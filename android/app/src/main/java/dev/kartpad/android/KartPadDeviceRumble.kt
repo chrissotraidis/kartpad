@@ -64,9 +64,9 @@ object KartPadDeviceRumble {
             return
         }
         val target = vibrator ?: return
-        // Keep the original device default at 100%. Adjustable motors use Android's
-        // midpoint amplitude as their baseline and reach full amplitude at 200%.
-        val amplitude = if (strengthPercent == 100 || !target.hasAmplitudeControl()) {
+        // Adjustable motors use one consistent scale, with midpoint amplitude at
+        // 100% and full amplitude at 200%. The device default is not always 128.
+        val amplitude = if (!target.hasAmplitudeControl()) {
             VibrationEffect.DEFAULT_AMPLITUDE
         } else {
             (128 * strengthPercent / 100).coerceIn(1, 255)

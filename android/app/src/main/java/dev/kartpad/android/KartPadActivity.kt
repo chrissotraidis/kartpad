@@ -1208,7 +1208,7 @@ class KartPadActivity : SDLActivity() {
         content.addView(rumble)
         content.addView(rumbleStrengthLabel)
         content.addView(rumbleStrength)
-        content.addView(settingsLabel("100% keeps the original strength. Higher settings boost supported motors; some devices only support on/off vibration."))
+        content.addView(settingsLabel("100% is standard strength. Higher settings boost supported motors; some devices only support on/off vibration."))
         KartPadControllerMapping.gameButtonNames.forEachIndexed { game, gameName ->
             content.addView(Button(this).apply {
                 val physical = KartPadControllerMapping.physicalButtonNames[mapping[game]]

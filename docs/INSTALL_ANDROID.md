@@ -114,7 +114,7 @@ Multiplayer and **Report a Problem…**. The full menu is in
   A controller with its own motor rumbles. If player one's controller has no
   motor, such as a handheld's built-in controls, the device vibrates instead.
   Touch-only play does not vibrate. **Rumble strength** adjusts both from
-  0% to 200%; 100% keeps the previous strength.
+  0% to 200%; 100% is standard strength.
 - **Shake to Trick:** **Controls → Shake to Trick…** is optional
   and off by default. Tilt steering can stay off. Shaking sends D-pad Up for
   tricks and bike wheelies; physical controllers take priority.
