@@ -66,7 +66,7 @@ are missing, KartPad tells you which ones, and you copy the folder again.
 3. When it says **Game Data Imported**, tap **Done**, then **Play Game**.
 
 For **Retro Rewind**, tap **Set Up Game** on its card. KartPad downloads and
-installs official Retro Rewind 6.13.3 (the full pack, about 1.9 GB). Moving
+installs official Retro Rewind 6.13.4 (the full pack, about 1.9 GB). Moving
 up from an earlier Retro Rewind downloads the full pack again; your Retro saves
 and ghosts stay.
 
@@ -108,15 +108,16 @@ Multiplayer and **Report a Problem…**. The full menu is in
   hide while one is connected; with **Hide on controller** on, the ⋯ button
   hides too and comes back when you touch the screen. Buttons can be remapped
   in **Controller Button Mapping…**, and players assigned in
-  **Controller Player Setup…**. See [controls and multiplayer](MULTIPLAYER.md).
-- **Rumble (next version):** on by default, in **Controller Button Mapping…**.
+  **Controller Player Setup…**. L3 and R3 (pressing either stick) can be mapped
+  to **D-pad Up — Trick / Wheelie**. See [controls and multiplayer](MULTIPLAYER.md).
+- **Rumble:** on by default, in **Controller Button Mapping…**.
   A controller with its own motor rumbles. If player one's controller has no
   motor, such as a handheld's built-in controls, the device vibrates instead.
-  Touch-only play does not vibrate.
-- **Shake to Trick (next version):** **Controls → Shake to Trick…** is optional
+  Touch-only play does not vibrate. **Rumble strength** adjusts both from
+  0% to 200%; 100% keeps the previous strength.
+- **Shake to Trick:** **Controls → Shake to Trick…** is optional
   and off by default. Tilt steering can stay off. Shaking sends D-pad Up for
-  tricks and bike wheelies; physical controllers take priority. This option is
-  not in 0.7.14.
+  tricks and bike wheelies; physical controllers take priority.
 - **Render resolution:** start at **Display → Render Resolution → 1×** and
   raise it if your phone keeps up.
 - **Character graphics:** if characters or tracks look broken, open **Help →

@@ -167,10 +167,10 @@ class RelReportGuardTests(unittest.TestCase):
         GUARD.inject(compiled)
         translate(profile, REPO, self.root, self.root, 1, None)
 
-    def test_pinned_6133_builder_accepts_current_mod_count_and_rejects_stale_count(self):
+    def test_pinned_6134_builder_accepts_current_mod_count_and_rejects_stale_count(self):
         data = json.loads((REPO / 'builder/profiles/mkwii-rmcp01-rev0.json').read_text())
-        self.assertEqual(data['retroRewind']['version'], '6.13.3')
-        self.assertEqual(data['translation']['expectedRetroFunctions'], 4153)
+        self.assertEqual(data['retroRewind']['version'], '6.13.4')
+        self.assertEqual(data['translation']['expectedRetroFunctions'], 4160)
         # Keep the real mod-count pin; one guarded fixture stands in for the base graph.
         data['translation']['expectedGeneratedFunctions'] = 1
         data['translation']['expectedBaseFunctions'] = 1
@@ -190,11 +190,11 @@ class RelReportGuardTests(unittest.TestCase):
         write_graph(shards, [compiled])
         graph = shards / 'shards.cmake'
         template = graph.read_text()
-        for count in (4188, 4095, 4124, 4101, 4153, 4103):
+        for count in (4188, 4095, 4124, 4101, 4153, 4103, 4160):
             with self.subTest(mod_functions=count):
                 graph.write_text(template.replace('MKW_RETRO_REWIND_FUNCTION_COUNT 1)',
                                                   f'MKW_RETRO_REWIND_FUNCTION_COUNT {count})'))
-                if count == 4153:
+                if count == 4160:
                     translate(profile, REPO, self.root, self.root, 1, None)
                 else:
                     with self.assertRaisesRegex(BuildError, 'cached translation failed profile validation'):

@@ -60,7 +60,7 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerMapping(
   if (env->ExceptionCheck()) return;
   kartpad::android::ControllerButtonMapping mapping{};
   for (std::size_t index = 0; index < mapping.size(); ++index) {
-    if (raw[index] < 0 || raw[index] >= 12) return;
+    if (raw[index] < 0 || raw[index] >= static_cast<jint>(kartpad::android::kMappablePhysicalButtons.size())) return;
     mapping[index] = static_cast<uint8_t>(raw[index]);
   }
   kartpad::android::PublishControllerButtonMapping(mapping);
@@ -82,7 +82,7 @@ std::atomic<bool> g_deviceRumbleActive{false};
 
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerRumble(
-    JNIEnv* env, jobject, jboolean enabled) {
+    JNIEnv* env, jobject, jboolean enabled, jint strengthPercent) {
   if (g_deviceRumbleClass.load(std::memory_order_acquire) == nullptr) {
     if (jclass local = env->FindClass("dev/kartpad/android/KartPadDeviceRumble")) {
       const jmethodID setActive = env->GetStaticMethodID(local, "setActive", "(Z)V");
@@ -95,7 +95,7 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerRumble(
     }
     if (env->ExceptionCheck()) env->ExceptionClear();
   }
-  kartpad::android::PublishControllerRumble(enabled == JNI_TRUE);
+  kartpad::android::PublishControllerRumble(enabled == JNI_TRUE, strengthPercent);
 }
 
 void kartpad::android::SetDeviceRumble(const bool active) noexcept {

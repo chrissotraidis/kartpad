@@ -14,11 +14,11 @@ inline constexpr ControllerButtonMapping kDefaultControllerButtonMapping{
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 };
 
-inline constexpr std::array<uint32_t, 12> kMappablePhysicalButtons{
+inline constexpr std::array<uint32_t, 14> kMappablePhysicalButtons{
     kGamepadSouth, kGamepadEast, kGamepadWest, kGamepadNorth,
     kGamepadLeftShoulder, kGamepadRightShoulder, kGamepadDpadUp,
     kGamepadDpadDown, kGamepadDpadLeft, kGamepadDpadRight,
-    kGamepadLeftTrigger, kGamepadRightTrigger,
+    kGamepadLeftTrigger, kGamepadRightTrigger, kGamepadLeftStick, kGamepadRightStick,
 };
 
 inline bool IsValidControllerButtonMapping(
@@ -37,7 +37,8 @@ inline uint32_t ApplyControllerButtonMapping(
   constexpr uint32_t mappedMask = kGamepadSouth | kGamepadEast |
       kGamepadWest | kGamepadNorth | kGamepadLeftShoulder |
       kGamepadRightShoulder | kGamepadDpadUp | kGamepadDpadDown |
-      kGamepadDpadLeft | kGamepadDpadRight | kGamepadLeftTrigger | kGamepadRightTrigger;
+      kGamepadDpadLeft | kGamepadDpadRight | kGamepadLeftTrigger | kGamepadRightTrigger |
+      kGamepadLeftStick | kGamepadRightStick;
   uint32_t result = buttons & ~mappedMask;
   for (std::size_t game = 0; game < mapping.size(); ++game) {
     if ((buttons & kMappablePhysicalButtons[mapping[game]]) != 0) {
@@ -58,8 +59,9 @@ uint32_t ApplyControllerAutoAccelerate(uint32_t chan, uint32_t classicButtons,
                                        bool connected) noexcept;
 
 // Rumble (on by default). WPADControlMotor reads it on the guest thread.
-void PublishControllerRumble(bool enabled) noexcept;
+void PublishControllerRumble(bool enabled, int strengthPercent = 100) noexcept;
 bool ControllerRumbleEnabled() noexcept;
+float ControllerRumbleStrength() noexcept;
 
 // Starts or stops player one's device vibration. Defined by the Android app's
 // JNI bridge, which forwards changes to KartPadDeviceRumble.

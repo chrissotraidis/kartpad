@@ -7,6 +7,8 @@ for 0.8.0.
 
 ## What we're doing next
 
+**Update 21 October.** 0.8.5 (build 267) updates Retro Rewind to 6.13.4, adds Android rumble strength and L3/R3 trick mappings, and shortens touch item hold to 0.67 seconds (#473). The owner requested publication without gameplay/device testing. Open draft #375 remains excluded because it conflicts and its ghost replay work is unfinished. Graphics reports #104, #301, #472 and #492 remain unresolved.
+
 **Update 20 October.** 0.8.4 (build 266) is the latest release. It adds
 Android rumble ([#497](https://github.com/chrissotraidis/kartpad/pull/497)),
 Retro Rewind soundtrack packs (#499, for #441), an optional touch item hold

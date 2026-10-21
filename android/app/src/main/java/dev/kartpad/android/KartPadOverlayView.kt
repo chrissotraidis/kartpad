@@ -77,7 +77,7 @@ class KartPadOverlayView(context: Context) : View(context) {
     private var gasHoldGeneration = 0
     private var autoAccelerate = KartPadTouchSettings.autoAccelerate(context)
     private var gasLocked = false
-    // Item hold (#473): hold touch L for the same second to keep the item held behind the kart;
+    // Item hold (#473): hold touch L for 0.67 seconds to keep the item held behind the kart;
     // press L again to let go. Cleared with every other touch state.
     private var itemHoldGeneration = 0
     private var itemHold = KartPadTouchSettings.itemHold(context)
@@ -1318,7 +1318,7 @@ class KartPadOverlayView(context: Context) : View(context) {
             performVirtualKeyHaptic()
             publishState(connected = true)
             invalidate()
-        }, GAS_LOCK_DELAY_MS)
+        }, ITEM_LOCK_DELAY_MS)
     }
 
     private fun updateItemAccessibility() {
@@ -1644,6 +1644,7 @@ class KartPadOverlayView(context: Context) : View(context) {
 
     private companion object {
         const val GAS_LOCK_DELAY_MS = 1_000L
+        const val ITEM_LOCK_DELAY_MS = 670L
         const val ACCESSIBILITY_PULSE_MS = 140L
         const val ACCESSIBILITY_STICK_PULSE_MS = 240L
         const val ACTION_STICK_UP = 0x01020001

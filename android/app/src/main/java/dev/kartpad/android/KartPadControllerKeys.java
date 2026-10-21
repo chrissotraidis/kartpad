@@ -20,6 +20,8 @@ public final class KartPadControllerKeys {
     static final int KEYCODE_BUTTON_R1 = 103;
     static final int KEYCODE_BUTTON_L2 = 104;
     static final int KEYCODE_BUTTON_R2 = 105;
+    static final int KEYCODE_BUTTON_THUMBL = 106;
+    static final int KEYCODE_BUTTON_THUMBR = 107;
     static final int KEYCODE_BUTTON_START = 108;
     static final int KEYCODE_BUTTON_SELECT = 109;
     static final int KEYCODE_ESCAPE = 111;
@@ -31,6 +33,8 @@ public final class KartPadControllerKeys {
     static final int SOURCE_JOYSTICK = 0x01000010;
 
     // Classic Controller bits, as in gamepad_contract.h.
+    static final int CLASSIC_UP = 0x00000001;
+    static final int CLASSIC_LEFT = 0x00000002;
     static final int CLASSIC_ZR = 0x00000004;
     static final int CLASSIC_X = 0x00000008;
     static final int CLASSIC_A = 0x00000010;
@@ -40,6 +44,13 @@ public final class KartPadControllerKeys {
     static final int CLASSIC_PLUS = 0x00000400;
     static final int CLASSIC_MINUS = 0x00001000;
     static final int CLASSIC_L = 0x00002000;
+    static final int CLASSIC_DOWN = 0x00004000;
+    static final int CLASSIC_RIGHT = 0x00008000;
+
+    private static final int[] GAME_ACTION_MASKS = {
+        CLASSIC_A, CLASSIC_B, CLASSIC_X, CLASSIC_Y, CLASSIC_ZR, CLASSIC_R,
+        CLASSIC_UP, CLASSIC_DOWN, CLASSIC_LEFT, CLASSIC_RIGHT, CLASSIC_L, CLASSIC_R,
+    };
 
     private KartPadControllerKeys() {}
 
@@ -61,6 +72,19 @@ public final class KartPadControllerKeys {
         }
     }
 
+    /** Stick clicks from key-only controllers use the same saved actions as SDL gamepads. */
+    static int classicMask(int keyCode, int[] mapping) {
+        int physical = keyCode == KEYCODE_BUTTON_THUMBL ? 12 :
+                keyCode == KEYCODE_BUTTON_THUMBR ? 13 : -1;
+        if (physical < 0) return classicMask(keyCode);
+        if (mapping == null || mapping.length != GAME_ACTION_MASKS.length) return 0;
+        int mask = 0;
+        for (int game = 0; game < mapping.length; ++game) {
+            if (mapping[game] == physical) mask |= GAME_ACTION_MASKS[game];
+        }
+        return mask;
+    }
+
     /** Mirrors SDLControllerManager.isDeviceSDLJoystick: SDL reads these devices itself. */
     static boolean sdlReadsDevice(int deviceId, boolean deviceExists, int deviceSources) {
         if (!deviceExists || deviceId < 0) {
@@ -77,7 +101,8 @@ public final class KartPadControllerKeys {
      */
     static boolean routes(int keyCode, int eventSource, int deviceId, boolean deviceExists,
             int deviceSources, boolean externalDevice) {
-        if (classicMask(keyCode) == 0 || sdlReadsDevice(deviceId, deviceExists, deviceSources)) {
+        boolean stickClick = keyCode == KEYCODE_BUTTON_THUMBL || keyCode == KEYCODE_BUTTON_THUMBR;
+        if ((!stickClick && classicMask(keyCode) == 0) || sdlReadsDevice(deviceId, deviceExists, deviceSources)) {
             return false;
         }
         if (keyCode == KEYCODE_BACK) {

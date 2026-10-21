@@ -14,7 +14,7 @@ fun main() {
     check(KartPadControllerMapping.assign(context, 6, 5).contentEquals(swapped))
     check(KartPadControllerMapping.load(context).contentEquals(swapped)) // v2 wins.
     check(KartPadControllerMapping.assign(context, -1, 5).contentEquals(swapped))
-    check(KartPadControllerMapping.assign(context, 6, 12).contentEquals(swapped))
+    check(KartPadControllerMapping.assign(context, 6, 14).contentEquals(swapped))
     check(KartPadControllerMapping.reset(context).contentEquals(defaults))
     check(KartPadControllerMapping.load(context).contentEquals(defaults)) // No re-migration.
 
