@@ -56,7 +56,7 @@ int main() {
       ApplyControllerButtonMapping(kGamepadSouth, swapped) == kGamepadEast &&
           ApplyControllerButtonMapping(kGamepadEast, swapped) == kGamepadSouth,
       "assigning a used physical button must swap game assignments");
-  const ControllerButtonMapping invalid{12, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  const ControllerButtonMapping invalid{14, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
   passed &= Require(!IsValidControllerButtonMapping(invalid) &&
                         ApplyControllerButtonMapping(kGamepadSouth, invalid) ==
                             kGamepadSouth,

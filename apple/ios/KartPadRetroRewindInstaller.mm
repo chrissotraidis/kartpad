@@ -487,8 +487,8 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
   return [NSString stringWithUTF8String:KARTPAD_RR_VERSION];
 }
 
-// Retro Rewind 6.13.3 shipped with version.txt still reading 6.13.2. The profile
-// pins that value alongside the exact Code.pul and XML hashes.
+// Some official packs have a version.txt that lags the release feed. The profile
+// pins that exact value alongside the Code.pul and XML hashes when needed.
 + (NSString *)requiredPackVersion {
   return [NSString stringWithUTF8String:KARTPAD_RR_PACK_VERSION];
 }

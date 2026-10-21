@@ -19,7 +19,7 @@ The projects are independently maintained.
   <img alt="Ahead-of-time static recompilation" src="https://img.shields.io/badge/PowerPC-static%20recompilation-FF9F0A">
   <img alt="macOS development target" src="https://img.shields.io/badge/macOS%20target-14%2B-0A84FF">
   <img alt="iPhone and iPad" src="https://img.shields.io/badge/platform-iPhone%20%2F%20iPad-0A84FF">
-  <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.13.3-FF375F">
+  <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.13.4-FF375F">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
   <a href="https://github.com/chrissotraidis/padmint"><img alt="Build KartPad with PadMint (optional)" src="https://img.shields.io/badge/PadMint-optional%20build-3EB489"></a>
   <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the KartPad Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
@@ -174,10 +174,10 @@ Your saves and game data stay.
 
 ### Current release
 
-**KartPad 0.8.4** (build 266) adds rumble on Android, Retro Rewind soundtrack
-packs, an optional touch item hold and a new Snapdragon character graphics
-test, and retries dropped downloads during PadMint builds; Retro Rewind stays
-at 6.13.3. See the [release notes](docs/releases/v0.8.4.md).
+**KartPad 0.8.5** (build 267) updates Retro Rewind to **6.13.4**, adds Android
+rumble strength and L3/R3 controller mappings for tricks, and shortens the
+optional touch item hold to 0.67 seconds on Android and iPhone/iPad.
+See the [release notes](docs/releases/v0.8.5.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
@@ -193,7 +193,7 @@ Use KartPad for app/platform problems or when the cause is unclear.
 [Frequently asked questions](#frequently-asked-questions) · [Controls](docs/MULTIPLAYER.md) · [Save transfer and troubleshooting](docs/SUPPORT.md)
 
 - Choose **Mario Kart Wii** or **Retro Rewind** when KartPad opens. Retro
-  Rewind 6.13.3 content installs separately; KartPad requires a matching native
+  Rewind 6.13.4 content installs separately; KartPad requires a matching native
   profile when the mod updates. Follow your platform's setup guide above.
 - Touch controls, motion steering and controllers are available on mobile;
   Mac also supports keyboard input. Touch layouts can be moved, resized and
@@ -319,7 +319,7 @@ VPN ([#405](https://github.com/chrissotraidis/kartpad/issues/405)).
 <details>
 <summary>Does KartPad support Retro Rewind, and what if it updates?</summary>
 
-Yes, with the separately installed **6.13.3** content and matching compiled profile. Almost every Retro Rewind update changes the mod's game code (`Code.pul`): 22 of its last 24 updates did. KartPad compiles that code into the app ahead of time, so a Retro Rewind update needs a new KartPad build; replacing files alone does not update the compiled game code. On Android the new build arrives through **Update available → Update Now**. On iPhone, iPad and Mac, build it with PadMint and install it over your current KartPad; iOS doesn't let a sideloaded app compile new code on the device. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch.
+Yes, with the separately installed **6.13.4** content and matching compiled profile. Almost every Retro Rewind update changes the mod's game code (`Code.pul`): 22 of its last 24 updates did. KartPad compiles that code into the app ahead of time, so a Retro Rewind update needs a new KartPad build; replacing files alone does not update the compiled game code. On Android the new build arrives through **Update available → Update Now**. On iPhone, iPad and Mac, build it with PadMint and install it over your current KartPad; iOS doesn't let a sideloaded app compile new code on the device. Apple checks the version before launch; Android checks the official version during installation and validates installed content at launch.
 
 </details>
 

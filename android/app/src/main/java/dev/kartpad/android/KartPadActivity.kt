@@ -372,7 +372,7 @@ class KartPadActivity : SDLActivity() {
         if (!routed) {
             return super.dispatchKeyEvent(event)
         }
-        val mask = KartPadControllerKeys.classicMask(event.keyCode)
+        val mask = KartPadControllerKeys.classicMask(event.keyCode, KartPadControllerMapping.load(this))
         routedControllerButtons = when (event.action) {
             KeyEvent.ACTION_DOWN -> routedControllerButtons or mask
             KeyEvent.ACTION_UP -> routedControllerButtons and mask.inv()
@@ -1160,7 +1160,7 @@ class KartPadActivity : SDLActivity() {
         content.addView(settingsLabel(if (controllers.isEmpty()) {
             "No extended controller is connected. You can review or reset the saved mapping; connect a controller to test it."
         } else {
-            "Connected: ${controllers.joinToString()}. Buttons, D-pad directions, and trigger presses can be remapped. Sticks and Start stay direct."
+            "Connected: ${controllers.joinToString()}. Buttons, D-pad directions, triggers, and L3/R3 stick clicks can be remapped. Stick movement and Start stay direct."
         }))
         lateinit var dialog: AlertDialog
         content.addView(Switch(this).apply {
@@ -1172,15 +1172,43 @@ class KartPadActivity : SDLActivity() {
                 nativeApplyControllerAutoAccelerate(checked)
             }
         })
-        content.addView(Switch(this).apply {
+        val rumble = Switch(this).apply {
             text = "Rumble (vibrates this device when the controller has no motor)"
             isChecked = KartPadTouchSettings.controllerRumble(this@KartPadActivity)
             contentDescription = "Rumble: uses the controller's motor, or vibrates this device when the controller has none"
-            setOnCheckedChangeListener { _, checked ->
-                KartPadTouchSettings.setControllerRumble(this@KartPadActivity, checked)
-                nativeApplyControllerRumble(checked)
+        }
+        val rumbleStrengthLabel = settingsLabel("")
+        val rumbleStrength = SeekBar(this).apply {
+            max = 200
+            progress = KartPadTouchSettings.controllerRumbleStrength(this@KartPadActivity)
+            contentDescription = "Rumble strength, from zero to two hundred percent"
+        }
+        fun refreshRumble() {
+            rumbleStrengthLabel.text = if (rumbleStrength.progress == 0) {
+                "Rumble strength: off"
+            } else {
+                "Rumble strength: ${rumbleStrength.progress}%"
             }
+            for (view in listOf(rumbleStrengthLabel, rumbleStrength)) {
+                view.isEnabled = rumble.isChecked
+                view.alpha = if (rumble.isChecked) 1f else 0.4f
+            }
+        }
+        rumble.setOnCheckedChangeListener { _, checked ->
+            KartPadTouchSettings.setControllerRumble(this@KartPadActivity, checked)
+            applyControllerRumble()
+            refreshRumble()
+        }
+        rumbleStrength.setOnSeekBarChangeListener(simpleSeekListener {
+            KartPadTouchSettings.setControllerRumbleStrength(this, rumbleStrength.progress)
+            applyControllerRumble()
+            refreshRumble()
         })
+        refreshRumble()
+        content.addView(rumble)
+        content.addView(rumbleStrengthLabel)
+        content.addView(rumbleStrength)
+        content.addView(settingsLabel("100% is standard strength. Higher settings boost supported motors; some devices only support on/off vibration."))
         KartPadControllerMapping.gameButtonNames.forEachIndexed { game, gameName ->
             content.addView(Button(this).apply {
                 val physical = KartPadControllerMapping.physicalButtonNames[mapping[game]]
@@ -1192,6 +1220,16 @@ class KartPadActivity : SDLActivity() {
                 }
             })
         }
+        content.addView(Button(this).apply {
+            text = "Use L3 for Tricks"
+            contentDescription = "Map left stick click to D-pad Up for tricks and wheelies"
+            setOnClickListener {
+                KartPadControllerMapping.assign(this@KartPadActivity, 6, 12)
+                applyControllerMapping()
+                dialog.dismiss()
+                menuButton.post { showControllerMapping() }
+            }
+        })
         content.addView(Button(this).apply {
             text = "Use L1 for Items"
             setOnClickListener {
@@ -1267,7 +1305,14 @@ class KartPadActivity : SDLActivity() {
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
         nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
-        nativeApplyControllerRumble(KartPadTouchSettings.controllerRumble(this))
+        applyControllerRumble()
+    }
+
+    private fun applyControllerRumble() {
+        val enabled = KartPadTouchSettings.controllerRumble(this)
+        val strength = KartPadTouchSettings.controllerRumbleStrength(this)
+        KartPadDeviceRumble.configure(enabled, strength)
+        nativeApplyControllerRumble(enabled, strength)
     }
 
     private fun showShakeTricks() {
@@ -2147,7 +2192,7 @@ class KartPadActivity : SDLActivity() {
             text = "Touch item hold"
             setTextColor(Color.WHITE)
             isChecked = KartPadTouchSettings.itemHold(this@KartPadActivity)
-            contentDescription = "Touch item hold: hold touch L for one second to keep holding the item; press L again to let go"
+            contentDescription = "Touch item hold: hold touch L for 0.67 seconds to keep holding the item; press L again to let go"
             setOnCheckedChangeListener { _, checked ->
                 KartPadTouchSettings.setItemHold(this@KartPadActivity, checked)
                 kartPadOverlay.reloadPresentationSettings()
@@ -2693,7 +2738,7 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeGhostTransfer(save: ByteArray, ghost: ByteArray?, license: Int, slot: Int, downloaded: Boolean): ByteArray?
     private external fun nativeApplyControllerMapping(mapping: IntArray)
     private external fun nativeApplyControllerAutoAccelerate(enabled: Boolean)
-    private external fun nativeApplyControllerRumble(enabled: Boolean)
+    private external fun nativeApplyControllerRumble(enabled: Boolean, strengthPercent: Int)
     private external fun nativeControllerDevices(): Array<String>
     private external fun nativeAssignControllerPlayer(instance: Long, player: Int): Boolean
     private external fun nativeClearControllerPlayer(player: Int): Boolean

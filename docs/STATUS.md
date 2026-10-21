@@ -1,6 +1,8 @@
 # KartPad status
 
-## Current status: 20 October 2026
+## Current status: 21 October 2026
+
+**0.8.5 (build 267), 21 October:** Retro Rewind 6.13.4, Android rumble strength (0–200%), L3/R3 controller mappings for tricks, and a shorter 0.67-second touch item hold on Android and iPhone/iPad. See the [release notes](releases/v0.8.5.md). Gameplay and device testing were skipped at the owner's request; no new graphics or performance fix is claimed.
 
 **0.8.4 (build 266), 20 October:** Android rumble, with device vibration for controllers without a motor (#497); Retro Rewind soundtrack packs on Android and iPhone/iPad (#499); an optional touch item hold (#500); the bone-index Character Graphics Test option for Adreno phones (#498). It also has the PadMint setup wording (#494), builder download retries (#495) and the 16 GB recipe (#490). The [release notes](releases/v0.8.4.md) record what was checked: each new feature in Android emulator races, and PadMint's clean Mac player check. Rumble on a real handheld or a controller with its own motor, soundtrack playback by ear, and the bone-index option on an affected Adreno phone are still unchecked.
 

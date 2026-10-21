@@ -20,6 +20,7 @@ internal object KartPadTouchSettings {
     private const val AUTO_ACCELERATE = "auto_accelerate"
     private const val CONTROLLER_AUTO_ACCELERATE = "controller_auto_accelerate"
     private const val CONTROLLER_RUMBLE = "controller_rumble"
+    private const val CONTROLLER_RUMBLE_STRENGTH = "controller_rumble_strength"
     private const val ITEM_HOLD = "item_hold"
     private const val MODERN_C_STICK = "modern_c_stick_horizontal"
     private const val SHOW_FPS = "show_fps"
@@ -81,6 +82,13 @@ internal object KartPadTouchSettings {
 
     fun setControllerRumble(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(CONTROLLER_RUMBLE, value).apply()
+    }
+
+    fun controllerRumbleStrength(context: Context): Int = preferences(context)
+        .getInt(CONTROLLER_RUMBLE_STRENGTH, 100).coerceIn(0, 200)
+
+    fun setControllerRumbleStrength(context: Context, value: Int) {
+        preferences(context).edit().putInt(CONTROLLER_RUMBLE_STRENGTH, value.coerceIn(0, 200)).apply()
     }
 
     // Touch L latch for trailing items (#473); off by default.

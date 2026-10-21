@@ -2326,7 +2326,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
     UISwitch *itemHold = [UISwitch new];
     itemHold.on = KartPadItemHoldEnabled();
     itemHold.accessibilityLabel = @"Touch item hold";
-    itemHold.accessibilityHint = @"Hold touch L for one second to keep holding the item. Press L again to let go.";
+    itemHold.accessibilityHint = @"Hold touch L for 0.67 seconds to keep holding the item. Press L again to let go.";
     [itemHold addTarget:self action:@selector(kartPadItemHoldChanged:)
        forControlEvents:UIControlEventValueChanged];
     [stack insertArrangedSubview:[self settingsRowWithTitle:@"Touch item hold" control:itemHold]
@@ -3211,7 +3211,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   if (!KartPadItemHoldEnabled()) return;
   __weak KartPadGameOverlay *weakSelf = self;
   __weak UIButton *weakButton = button;
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)NSEC_PER_SEC),
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 670 * NSEC_PER_MSEC),
                  dispatch_get_main_queue(), ^{
     KartPadGameOverlay *strongSelf = weakSelf;
     UIButton *strongButton = weakButton;

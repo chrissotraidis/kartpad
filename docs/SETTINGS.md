@@ -32,9 +32,11 @@ Controller Button Mapping supports D-pad directions and triggers, optional share
 
 **Rumble** (Android, next version) is in Controller Button Mapping and is on by default. A controller with its own motor rumbles; when player one's controller has none, such as a handheld's built-in controls, the device vibrates instead. Touch-only play does not vibrate.
 
+**Android controller mapping:** L3 and R3 stick clicks are available as physical buttons. Assign **D-pad Up — Trick / Wheelie**, or choose **Use L3 for Tricks**. **Rumble strength** runs from 0% to 200%; 100% is standard strength. It scales controller motors and handheld device vibration where amplitude control is supported.
+
 **Touch auto-accelerate** is under Controls → Touch Control Settings. OFF uses ordinary touch A press/hold/release; ON retains the one-second touch hold-to-latch behavior. The choice persists and does not change physical controller buttons.
 
-**Touch item hold** (next version, Android and iPhone/iPad) is beside it and off by default. With it on, holding touch L for one second keeps the item held behind your kart after you lift your finger, so you can steer and drift while trailing a shell or banana; L turns blue. Press L again to let go. Opening the menu or leaving the game lets go too. [#473](https://github.com/chrissotraidis/kartpad/issues/473)
+**Touch item hold** (Android and iPhone/iPad) is beside it and off by default. With it on, holding touch L for 0.67 seconds keeps the item held behind your kart after you lift your finger, so you can steer and drift while trailing a shell or banana; L turns blue. Press L again to let go. Opening the menu or leaving the game lets go too. [#473](https://github.com/chrissotraidis/kartpad/issues/473)
 
 Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. Physical controllers take priority. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
 

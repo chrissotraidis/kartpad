@@ -20,6 +20,8 @@ enum GamepadButton : uint32_t {
   kGamepadDpadRight = 1u << 11,
   kGamepadLeftTrigger = 1u << 12,
   kGamepadRightTrigger = 1u << 13,
+  kGamepadLeftStick = 1u << 14,
+  kGamepadRightStick = 1u << 15,
 };
 
 enum ClassicButton : uint32_t {

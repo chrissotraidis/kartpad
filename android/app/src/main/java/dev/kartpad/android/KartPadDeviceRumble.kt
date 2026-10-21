@@ -24,6 +24,8 @@ object KartPadDeviceRumble {
     private var vibrator: Vibrator? = null
     private var paused = true
     private var active = false
+    private var enabled = true
+    private var strengthPercent = 100
 
     @Synchronized
     fun attach(context: Context) {
@@ -40,6 +42,16 @@ object KartPadDeviceRumble {
         if (value) worker.post { update(false) }
     }
 
+    fun configure(enabled: Boolean, strengthPercent: Int) {
+        worker.post {
+            synchronized(this) {
+                this.enabled = enabled
+                this.strengthPercent = strengthPercent.coerceIn(0, 200)
+                if (active) update(true)
+            }
+        }
+    }
+
     @JvmStatic
     fun setActive(value: Boolean) {
         worker.post { update(value) }
@@ -47,12 +59,19 @@ object KartPadDeviceRumble {
 
     @Synchronized
     private fun update(value: Boolean) {
-        if (!value || paused) {
+        if (!value || paused || !enabled || strengthPercent == 0) {
             stop()
             return
         }
         val target = vibrator ?: return
-        val effect = VibrationEffect.createOneShot(MAX_PULSE_MS, VibrationEffect.DEFAULT_AMPLITUDE)
+        // Adjustable motors use one consistent scale, with midpoint amplitude at
+        // 100% and full amplitude at 200%. The device default is not always 128.
+        val amplitude = if (!target.hasAmplitudeControl()) {
+            VibrationEffect.DEFAULT_AMPLITUDE
+        } else {
+            (128 * strengthPercent / 100).coerceIn(1, 255)
+        }
+        val effect = VibrationEffect.createOneShot(MAX_PULSE_MS, amplitude)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             target.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_MEDIA))
         } else {
