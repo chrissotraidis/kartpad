@@ -339,7 +339,7 @@ bounded transition handlers. A matched baseline and first-white-frame capture
 are needed before changing renderer behavior. Both saves remain byte-identical
 after quiescing the app: Original `2361b5be…18467d`, Retro `6d58f798…e9c419`.
 
-## Remaining acceptance
+## Historical acceptance after the 6.12.8 checks
 
 Issue #295 remains open and PR #375 remains draft. Native custom-course and
 nonbase-variant import/export, the other three modes, and arbitrary/cross-mod
@@ -382,11 +382,12 @@ Validation on the merged source passes:
   presentation or device behavior; the six existing iOS picker checks also pass
   after the fix.
 
-These are source and host checks. The earlier native receipts used Retro Rewind
-6.12.8; they do not establish acceptance on current 6.13.4. Current-pack native
-transfer/replay, custom courses, variants, the other modes, sustained Original
-rendering and physical iPhone picker/gameplay remain open. PR #375 stays draft
-and issue #295 stays open; this integration creates no release.
+At that point, these were source and host checks. The earlier native receipts
+used Retro Rewind 6.12.8 and did not establish acceptance on current 6.13.4.
+Current-pack native transfer/replay, custom courses, variants, the other modes,
+sustained Original rendering and physical iPhone picker/gameplay remained open.
+PR #375 stayed draft and issue #295 stayed open; that integration created no
+release.
 
 Later on 23 October, merged main `46dc3535` after #506–#508: the standalone
 save-picker fix, bounded Mii reads with Apple picker CI, and Android diagnostic
@@ -394,7 +395,7 @@ session labels. The only conflict was the shared picker harness; main's newer
 version was retained and passes with this draft's Retro path enabled, including
 the Mii read bounds. The six existing iOS picker contracts and production
 Android `:app:compileDebugKotlin` also pass. Ghost storage and replay behavior
-are unchanged, and the native/device acceptance gates above remain open.
+were unchanged, and the native/device acceptance gates above remained open.
 
 ## 23 October validation before device testing
 
@@ -444,12 +445,22 @@ safety, not replay physics or native game acceptance.
 The normal iPhone no-game-code build completes against the actual UIKit SDK,
 including the overlay and shared manager. Its app content audit and PadMint
 audit pass with zero address-named game functions. Unsigned IPA SHA-256:
-`000766d1669b02f015795d48028b9b9d83809515bf6b2bf5653b1d5e035feae6`.
-This candidate at `76a9095c` was reconfigured after the shared-header fixes; its
+`583314c3c310cab8bbbc0bccdf34b63743ff06ee841ab5e795379c03a1cfc782`.
+This candidate at `b2be86f3` was rebuilt with the final import wording; its
 configured and embedded pack fingerprint both match the current source:
 `28b128f965135ce96b8f503ca19ab195e419b7a4e42e9dad412b9ab0979f49b9`.
 The draft differs from the pinned 0.8.5 release, so it is not a release-qualified
 artifact. Nothing was installed on physical hardware or released.
+
+The matching private iPhone game pack completes all 208 native build steps,
+passes the shared-state check and resolves all 130 app imports; its other 52
+imports are supplied by system libraries. Pack SHA-256:
+`2fbabe7cc694be263d7ef243d6befc89232000ef062189af15806e86070a6e93`.
+Normal personal packaging preserves all 22 original app payload files exactly,
+adding only the game library. Private unsigned IPA SHA-256:
+`bf176f582a286a954e85e858c9c1dc6a792ba365237612bdfb881eaef1c42d19`.
+This resolves build/import/fingerprint validation; installation and full-game
+Apple transfer/replay remain unverified.
 
 A focused XCUITest on a fresh iPhone 18 Pro / iOS 27.0 Simulator executes the
 exact production picker-presentation helper with real UIKit. Tapping the alert
@@ -459,7 +470,60 @@ did not reproduce, so no presentation change was made. This is a focused UIKit
 check, not full KartPad picker or game acceptance. The dedicated Simulator was
 removed after retaining the test source, log and result bundle privately.
 
-Current-pack native discovery/replay, wider mode/course/variant replay,
-sustained Original rendering, physical picker interaction and gameplay remain
-open. The historical native receipts above still describe 6.12.8. PR #375 and
-issue #295 remain open.
+Both mobile import confirmations now ask for a recording from the same Retro
+version, track, variant and mode, and explain that transfer does not convert
+ghosts between games or modes. Matching-recording replay remains an acceptance
+gate; cross-game conversion is outside this byte-preserving transfer feature.
+
+### Android 6.13.4 native transfer and control replay
+
+A fresh, isolated Android emulator runs the final clean-source `b2be86f3`
+app with its matching private game pack. The no-game-code APK passes repository
+and PadMint content audits; SHA-256:
+`36d8c88c7139ad63fa337fa7b41139662bf8904ada5fae7e9363ec7683d06a7a`.
+The private pack completes all 208 native build steps and passes its shared-state
+check; SHA-256:
+`c1ec53c593efae0b432859c2353de6d68a245d17801d9a19cc1dd7b31e7effa1`.
+App and pack fingerprint:
+`ec0762ae5aebba5bc294023a3f6b511ce10131fa753657549c2370d47684461d`.
+The actual system picker imports the pack, and installed readback matches.
+Retained, verified game files were copied into the fresh fixture; this does not
+validate the game-data installer or first-time player setup. All 19 NAND/config
+files remain exact across the final app update.
+
+For Wii Luigi Circuit / base variant / 150, the actual system picker imports a
+1,376-byte comparison derived from the matching bundled expert by changing only
+the valid date and checksum. The 1,552-byte expanded driving input is unchanged.
+Staging leaves both initialized saves and the original expert exact; the
+comparison is absent until restart. Restart Now followed by Retro launch changes
+the process, consumes the pending request and publishes
+`Ghosts/95ab4053/150/c5dfba.rkg`. Native system-picker export returns the exact
+1,376 bytes, SHA-256:
+`60df82808ee26b640e983495174fccd6a6cfeed0d09309d457f86e75540b04c4`.
+Both saves and the bundled expert remain unchanged through export. The game's
+native list discovers two entries with the expected name and time. Because the
+imported control and bundled expert have identical list labels, both distinct
+entries (`1/2` and `2/2`) were selected through native Replay and watched to
+completion. Both finish in `1:13.114`, with laps `24.465`, `24.415`, `24.234`.
+Selection, Replay-menu and result screenshots plus recordings remain private.
+This establishes replay of the matching date-only control on this one destination;
+it does not establish arbitrary downloaded-ghost or wider mode compatibility.
+
+Save preservation is scoped to transfer/export, before entering native replay
+menus. Native navigation/replay subsequently changes one Retro save byte at
+`0x5688` (`0e` to `00`) plus its four checksum bytes; the checksum remains valid.
+The retained save-layout source calls that bitfield unknown, so this observation
+does not establish its semantics or whole-save identity after replay. Original
+save data remains unchanged. The game also creates a 4,544-byte `ldb.pul`; its
+44 records are inactive and its trophies/favorites are empty. This is consistent
+with the retained Pulsar source's missing-file initialization path at commit
+`93ba8c8a`; exact correspondence to the shipped `Code.pul` remains unverified.
+Quiesced readback confirms these changes, the original expert and imported file
+remain exact, and no additional RKG was created despite the result banner. The
+dedicated emulator was shut down; its fixture, before/after files and logs remain
+private for reproduction.
+
+Wider native mode/course/variant import/export and matching-recording replay,
+sustained Original rendering, full-game Apple transfer/replay and physical-device
+picker/gameplay remain open. Earlier native receipts above describe 6.12.8; this
+section records the narrower current 6.13.4 check. PR #375 remains draft and issue #295 remains open.
