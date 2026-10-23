@@ -444,9 +444,20 @@ safety, not replay physics or native game acceptance.
 The normal iPhone no-game-code build completes against the actual UIKit SDK,
 including the overlay and shared manager. Its app content audit and PadMint
 audit pass with zero address-named game functions. Unsigned IPA SHA-256:
-`2e352b5b39962b176a689e0fc6439af24fe828eb20ad28cca6df02b2f25428c7`.
+`000766d1669b02f015795d48028b9b9d83809515bf6b2bf5653b1d5e035feae6`.
+This candidate at `76a9095c` was reconfigured after the shared-header fixes; its
+configured and embedded pack fingerprint both match the current source:
+`28b128f965135ce96b8f503ca19ab195e419b7a4e42e9dad412b9ab0979f49b9`.
 The draft differs from the pinned 0.8.5 release, so it is not a release-qualified
 artifact. Nothing was installed on physical hardware or released.
+
+A focused XCUITest on a fresh iPhone 18 Pro / iOS 27.0 Simulator executes the
+exact production picker-presentation helper with real UIKit. Tapping the alert
+action opens the system picker; Cancel reaches the delegate, clears the mode
+and returns to an interactive root controller. The suspected presentation race
+did not reproduce, so no presentation change was made. This is a focused UIKit
+check, not full KartPad picker or game acceptance. The dedicated Simulator was
+removed after retaining the test source, log and result bundle privately.
 
 Current-pack native discovery/replay, wider mode/course/variant replay,
 sustained Original rendering, physical picker interaction and gameplay remain
