@@ -4611,7 +4611,9 @@ static void KartPadApplySoundLevels(BOOL persist) {
 }
 - (void)chooseSaveRestore:(NSString *)profile {
   _saveImportProfile=profile;
-  [self presentGhostPicker:[[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeData] asCopy:YES] importing:NO];
+  UIDocumentPickerViewController *picker=[[UIDocumentPickerViewController alloc] initForOpeningContentTypes:@[UTTypeData] asCopy:YES];
+  picker.delegate=self;
+  [self presentGhostPicker:picker importing:NO];
 }
 
 - (void)showGhostActionsForLicense:(NSUInteger)license {
