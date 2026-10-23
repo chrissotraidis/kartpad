@@ -4493,7 +4493,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
     [choose addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];[weakSelf presentOverlayAlert:choose];
   }]];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Import Comparison Ghost…" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
-    NSString *message=[NSString stringWithFormat:@"Destination: %@ • %@. The .rkg course field cannot identify a Retro track. Restart adds a new comparison file. Existing ghosts, records and both saves stay unchanged.",selection[@"label"],selection[@"modeLabel"]];
+    NSString *message=[NSString stringWithFormat:@"Destination: %@ • %@. Use a ghost recorded for this Retro Rewind version, track, variant and mode. Importing does not convert ghosts between games or modes. Restart adds a new comparison file. Existing ghosts, records and both saves stay unchanged.",selection[@"label"],selection[@"modeLabel"]];
     UIAlertController *confirm=[UIAlertController alertControllerWithTitle:@"Import Retro Comparison Ghost" message:message preferredStyle:UIAlertControllerStyleAlert];
     [confirm addAction:[UIAlertAction actionWithTitle:@"Choose .rkg" style:UIAlertActionStyleDefault handler:^(UIAlertAction *selected){
       KartPadRuntimeOverlayHost *strongSelf=weakSelf;if(!strongSelf)return;

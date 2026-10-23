@@ -1680,7 +1680,7 @@ class KartPadActivity : SDLActivity() {
                             }, REQUEST_EXPORT_RETRO_GHOST)
                         }.setNegativeButton("Cancel", null).show()
                 } else AlertDialog.Builder(this).setTitle("Import Retro Comparison Ghost")
-                    .setMessage("Destination: ${selection.getString("label")} • ${arrayOf("150cc", "200cc", "150cc Feather", "200cc Feather")[selection.getInt("mode")]}. The .rkg course field cannot identify a Retro track. A new comparison file is added after restart. Existing ghosts, records and both saves stay unchanged.")
+                    .setMessage("Destination: ${selection.getString("label")} • ${arrayOf("150cc", "200cc", "150cc Feather", "200cc Feather")[selection.getInt("mode")]}. Use a ghost recorded for this Retro Rewind version, track, variant and mode. Importing does not convert ghosts between games or modes. A new comparison file is added after restart. Existing ghosts, records and both saves stay unchanged.")
                     .setPositiveButton("Choose .rkg") { _, _ ->
                         retroGhostSelection = selection.toString()
                         startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
