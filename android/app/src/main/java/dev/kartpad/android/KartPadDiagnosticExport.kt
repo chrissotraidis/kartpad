@@ -11,9 +11,36 @@ import java.util.zip.ZipOutputStream
 internal object KartPadDiagnosticExport {
     private const val MAX_FILE_BYTES = 4L * 1024 * 1024
     private const val MAX_FILES = 12
+    private const val HEADER_BYTES = 16 * 1024
     private const val DRAW_SELF_CHECK = "KartPad draw self-check:"
 
-    data class Session(val id: String, val modified: Long)
+    data class Session(val id: String, val modified: Long, val profile: String?) {
+        val profileLabel: String get() = when (profile) {
+            "base" -> "Original Mario Kart Wii"
+            "retro_rewind" -> "Retro Rewind"
+            else -> "Profile unavailable"
+        }
+    }
+
+    // The runtime creates its directory before choosing the game profile, so
+    // even a Retro Rewind session can have a base_ directory name. Use only the
+    // selected console's startup header, which exports also retain.
+    private fun sessionProfile(console: File): String? = runCatching {
+        RandomAccessFile(console, "r").use { input ->
+            val size = input.length()
+            val bytes = ByteArray(minOf(size, HEADER_BYTES.toLong()).toInt())
+            input.readFully(bytes)
+            val header = bytes.toString(Charsets.UTF_8)
+            val completeLines = if (size > bytes.size) header.substringBeforeLast('\n', "") else header
+            completeLines.lineSequence().firstNotNullOfOrNull { line ->
+                when (line.removeSuffix("\r")) {
+                    "[runtime] Selected translated function profile 'base'" -> "base"
+                    "[runtime] Selected translated function profile 'retro_rewind'" -> "retro_rewind"
+                    else -> null
+                }
+            }
+        }
+    }.getOrNull()
 
     private fun logsRoot(context: Context): File {
         val root = File(context.filesDir.canonicalFile, "KartPad/Logs")
@@ -26,7 +53,10 @@ internal object KartPadDiagnosticExport {
         return root.listFiles().orEmpty().filter { directory ->
             directory.isDirectory && directory.absoluteFile == directory.canonicalFile &&
                 File(directory, "console.log").let { it.isFile && it.absoluteFile == it.canonicalFile }
-        }.map { Session(it.name, File(it, "console.log").lastModified()) }
+        }.map {
+            val console = File(it, "console.log")
+            Session(it.name, console.lastModified(), sessionProfile(console))
+        }
             .sortedByDescending { it.modified }
     }
 
@@ -84,6 +114,7 @@ internal object KartPadDiagnosticExport {
                 appendLine("Export-time app: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 appendLine("Export-time device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}; API ${android.os.Build.VERSION.SDK_INT}")
                 appendLine("Selected session: ${session?.id ?: "no runtime session"}; console last written (Unix ms): ${session?.modified ?: "unavailable"}")
+                appendLine("Selected session profile: ${session?.profileLabel ?: "unavailable"}")
                 appendLine("Draw self-check: ${drawSelfCheck(directory)}")
                 appendLine("Older session version must be read from its console header; otherwise unknown.")
                 appendLine("OS exit history below may cover other sessions; match timestamp and recorded build/profile. Session text is capped at 256 KiB per file.")
@@ -143,6 +174,7 @@ internal object KartPadDiagnosticExport {
                 appendLine("report-context.json describes export time, not the source/version of older logs.")
                 appendLine("The selected console.log header is retained. If it has no version, the session runtime version is unknown.")
                 appendLine("Selected game session: ${session?.id ?: "none available"}")
+                appendLine("Selected session profile: ${session?.profileLabel ?: "unavailable"}")
                 appendLine("Draw self-check: ${drawSelfCheck(directory)}")
                 appendLine("Session console last-written time (Unix ms): ${session?.modified ?: "unavailable"}")
                 appendLine("Read Logs/${session?.id ?: "<no session>"}/console.log and any crash text from the same folder.")

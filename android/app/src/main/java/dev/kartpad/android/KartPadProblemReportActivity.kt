@@ -132,7 +132,7 @@ class KartPadProblemReportActivity : Activity() {
                 }, EXPORT_LOGS)
             }
             else AlertDialog.Builder(this).setTitle("Which game session had the problem?")
-                .setItems(sessions.map { "${it.id}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
+                .setItems(sessions.map { "${it.profileLabel}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
                     exportSession = sessions[index].id
                     launchDocument(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                         type = "text/plain"

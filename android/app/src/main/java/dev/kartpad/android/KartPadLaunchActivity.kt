@@ -728,7 +728,7 @@ open class KartPadChooserActivity : Activity() {
                             }, REQUEST_DIAGNOSTICS)
                         }
                         else AlertDialog.Builder(this@KartPadChooserActivity).setTitle("Choose the game session")
-                            .setItems(sessions.map { "${it.id}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
+                            .setItems(sessions.map { "${it.profileLabel}\nLast written: ${java.util.Date(it.modified)}" }.toTypedArray()) { _, index ->
                                 exportSession = sessions[index].id
                                 startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                                     addCategory(Intent.CATEGORY_OPENABLE)
