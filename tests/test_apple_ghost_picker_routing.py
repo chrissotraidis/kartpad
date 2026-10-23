@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(platform.system() == "Darwin", "Requires Apple Foundation")
 class AppleGhostPickerRouting(unittest.TestCase):
-    def test_save_completion_and_cancellation_do_not_capture_ghost_imports(self):
+    def test_import_picker_routing_and_mii_size_bounds(self):
         source = (ROOT / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()
         source = source[source.index("@implementation KartPadRuntimeOverlayHost {"):]
         methods = []
@@ -24,6 +24,7 @@ class AppleGhostPickerRouting(unittest.TestCase):
             methods.append(source[start:source.index("\n}", start) + 2])
         program = r'''
 #import <Foundation/Foundation.h>
+#import <objc/runtime.h>
 #include <cassert>
 #include <initializer_list>
 @class UIDocumentPickerViewController;
@@ -53,10 +54,21 @@ static UIViewController *presenter;
 static UIViewController *KartPadVisibleViewController(id) { return presenter; }
 static NSString *UTTypeData=@"data";
 static unsigned saveCalls, retroCalls, originalCalls, musicCalls, gameDataCalls;
+static unsigned miiCalls, documentReads;
+static NSString *lastMessage;
+@interface NSData (PickerReadProbe)
++ (instancetype)pickerProbeRead:(NSURL *)url options:(NSDataReadingOptions)options error:(NSError **)error;
+@end
+@implementation NSData (PickerReadProbe)
++ (instancetype)pickerProbeRead:(NSURL *)url options:(NSDataReadingOptions)options error:(NSError **)error {
+  ++documentReads;
+  return [self pickerProbeRead:url options:options error:error];
+}
+@end
 static BOOL KartPadStageSaveRestore(NSString *, NSData *, NSError **) { ++saveCalls; return YES; }
 [[maybe_unused]] static BOOL KartPadStageRetroGhost(NSData *, NSDictionary *, NSError **) { ++retroCalls; return YES; }
 static BOOL KartPadStageOriginalGhost(NSData *, NSUInteger, NSError **) { ++originalCalls; return YES; }
-static BOOL KartPadStageMiiImport(NSData *, NSString **, NSError **) { return YES; }
+static BOOL KartPadStageMiiImport(NSData *, NSString **, NSError **) { ++miiCalls; return YES; }
 @interface KartPadRuntimeOverlayHost : NSObject <PickerDelegate> {
 @public
   id _window;
@@ -72,7 +84,7 @@ static BOOL KartPadStageMiiImport(NSData *, NSString **, NSError **) { return YE
 - (void)importExtractedGameDataFromURL:(NSURL *)url deleteAfterwards:(BOOL)remove;
 @end
 @implementation KartPadRuntimeOverlayHost
-- (void)showIntegrationAlert:(NSString *)title message:(NSString *)message { (void)title; (void)message; }
+- (void)showIntegrationAlert:(NSString *)title message:(NSString *)message { (void)title; lastMessage=message; }
 - (void)importRetroMusicFromURLs:(NSArray<NSURL *> *)urls { (void)urls; ++musicCalls; }
 - (void)importExtractedGameDataFromURL:(NSURL *)url deleteAfterwards:(BOOL)remove {
   (void)url; (void)remove; ++gameDataCalls;
@@ -89,6 +101,9 @@ static void ImportGhost(KartPadRuntimeOverlayHost *host, NSURL *url, BOOL retro)
 }
 int main(int argc, char **argv) { @autoreleasepool {
   assert(argc==2);
+  method_exchangeImplementations(
+      class_getClassMethod(NSData.class,@selector(dataWithContentsOfURL:options:error:)),
+      class_getClassMethod(NSData.class,@selector(pickerProbeRead:options:error:)));
   presenter=[UIViewController new];
   NSURL *directory=[NSURL fileURLWithPath:@(argv[1])];
   NSURL *save=[directory URLByAppendingPathComponent:@"rksys.dat"];
@@ -118,6 +133,19 @@ int main(int argc, char **argv) { @autoreleasepool {
   ImportGhost(host,ghost,retro);
   [host presentGhostPicker:[UIDocumentPickerViewController new] importing:NO];
   assert(activePicker.delegate==nil); // Export completion must not enter an import callback.
+  }
+  // Manager format validation is separate; the picker must not read wrong-sized files.
+  for (NSUInteger length : {1024u*1024u,0u,73u,74u,75u}) {
+    NSURL *mii=[directory URLByAppendingPathComponent:[NSString stringWithFormat:@"selected-%lu.mii",(unsigned long)length]];
+    assert([[NSMutableData dataWithLength:length] writeToURL:mii atomically:YES]);
+    KartPadRuntimeOverlayHost *host=[KartPadRuntimeOverlayHost new];
+    host->_choosingMiiImport=YES;
+    documentReads=miiCalls=0;
+    [host documentPicker:[UIDocumentPickerViewController new] didPickDocumentsAtURLs:@[mii]];
+    assert(!host->_choosingMiiImport);
+    assert(documentReads==unsigned(length==74) && miiCalls==unsigned(length==74));
+    if (length!=74) assert([lastMessage containsString:@"74"]);
+    assert(![NSFileManager.defaultManager fileExistsAtPath:mii.path]);
   }
 } }
 '''
