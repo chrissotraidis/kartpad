@@ -83,26 +83,29 @@ static Bytes Read(const char* name) {
     Check(bool(f.read(reinterpret_cast<char*>(bytes.data()), std::streamsize(bytes.size()))), "Config fixture read failed");
     return bytes;
 }
-static void Actual(const char* rt, const char* ct) {
+static void Actual(const char* rt, const char* ct, const std::string& version) {
+    Check(version == "6.12.8" || version == "6.13.4", "Unknown pinned fixture version");
+    const bool current = version == "6.13.4";
     auto catalog = ParseCatalog(Read(rt), Read(ct));
-    Check(catalog.tracks.size() == 304, "Pinned race track count differs");
+    Check(catalog.tracks.size() == (current ? 316u : 304u), "Pinned race track count differs");
     size_t variants = 0; for (const auto& track : catalog.tracks) variants += track.variants.size();
-    Check(variants == 341, "Pinned race variant count differs");
+    Check(variants == (current ? 362u : 341u), "Pinned race variant count differs");
     auto lc = catalog.Select(0x158, 0, 0);
     Check(lc.label == "Wii Luigi Circuit" && lc.raceSlot == 0 &&
           lc.directory == "shared2/Pulsar/RetroRewind6/Ghosts/95ab4053/150" &&
           lc.expertPath == "Ghosts/ExpertsRT/88_150.rkg", "Pinned Wii course destination differs");
-    Check(catalog.Select(0x1ac, 0, 0).expertPath == "Ghosts/ExpertsCT/0_150.rkg", "Pinned CT concatenation differs");
+    Check(catalog.Select(current ? 0x1b0 : 0x1ac, 0, 0).expertPath == "Ghosts/ExpertsCT/0_150.rkg", "Pinned CT concatenation differs");
     for (const auto& track : catalog.tracks) for (const auto& variant : track.variants) for (uint32_t mode = 0; mode < 4; ++mode) {
         auto d = catalog.Select(track.pulsarId, variant.index, mode);
         Check(d.raceSlot < 32 && !d.label.empty() && d.directory.ends_with("/" + std::string(Modes[mode])), "Invalid pinned destination");
         Check(("/" + d.directory + "/123456.rkg").size() < 64, "Native IPC path limit exceeded");
     }
-    std::cout << "Pinned 6.12.8 configs: 304 race tracks, 341 variants, 1364 valid destinations; identity " << catalog.identity << "\n";
+    std::cout << "Pinned " << version << " configs: " << catalog.tracks.size() << " race tracks, "
+              << variants << " variants, " << variants * 4 << " valid destinations; identity " << catalog.identity << "\n";
 }
 int main(int argc, char** argv) {
     try {
-        Check(argc == 1 || argc == 3, "Usage: retro_catalog_tests [ConfigRT.pul ConfigCT.pul]");
-        Synthetic(); if (argc == 3) Actual(argv[1], argv[2]); return 0;
+        Check(argc == 1 || argc == 3 || argc == 4, "Usage: retro_catalog_tests [ConfigRT.pul ConfigCT.pul [version]]");
+        Synthetic(); if (argc >= 3) Actual(argv[1], argv[2], argc == 4 ? argv[3] : "6.12.8"); return 0;
     } catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
 }

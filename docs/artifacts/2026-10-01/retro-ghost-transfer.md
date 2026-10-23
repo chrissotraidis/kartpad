@@ -395,3 +395,60 @@ version was retained and passes with this draft's Retro path enabled, including
 the Mii read bounds. The six existing iOS picker contracts and production
 Android `:app:compileDebugKotlin` also pass. Ghost storage and replay behavior
 are unchanged, and the native/device acceptance gates above remain open.
+
+## 23 October validation before device testing
+
+Two additional defects were reproduced and fixed in `b08301af`:
+
+- If an exclusive rename published a comparison but directory synchronization
+  failed, the next attempt previously cleared the request without retrying that
+  synchronization. Retries now retain the request until synchronization succeeds.
+  Injected directory-only `EIO` reproduces the old false success and verifies
+  repeated failure followed by exact-byte recovery under ASAN/UBSAN.
+- Apple license edits used a duplicated pending-change check that omitted Retro
+  imports. They now use the existing aggregate check. A valid synthetic license
+  demonstrates that rename is blocked without side effects while a Retro import
+  is pending, then succeeds after it completes. The old manager fails this test.
+
+The optional private-pack checks now recognize both 6.12.8 and 6.13.4 config
+hashes. The retained 6.13.4 archive matches the builder profile's SHA-256
+`586b929de36018e5fc3f7ee73b0aba407730d38470d7a54b8a455dca14be7002`;
+both configs and all 394 extracted experts byte-match that archive. No config,
+ghost body, game pack or player snapshot is included in this PR.
+
+`scripts/test-retro-ghost-catalog.py --pack-root <private-RetroRewind6-directory>`
+passes with strict warnings and ASAN/UBSAN:
+
+- 316 tracks, 362 track/variant entries and all 1,448 mode destinations pass
+  catalog/path validation and stage/apply/export in fresh temporary storage.
+- All 394 experts validate. A date-only comparison of each preserves driving
+  inputs and round-trips exactly; importing the unchanged bundled expert is
+  rejected. Coverage includes 46 nonbase experts and seven padded files.
+- Saves and leaderboard sentinels remain unchanged after every transfer.
+  Expected expert counts and exact catalog coverage reject incomplete packs.
+- The actual experts cover 362 destinations in `150` and 32 in `200`.
+  `150F`/`200F` and custom nonbase variants retain synthetic coverage; there are
+  no matching real experts in this pack. These are transfer checks, not replay.
+
+The default script also runs a fully synthetic 40-destination pack test in CI.
+The expanded real-JVM JNI checks cover compressed/uncompressed transfers across
+all four modes, a Retro variant and a custom course; invalid selectors, null or
+oversized inputs, changed configs, cancellation and save/leaderboard isolation
+pass. Production Android Kotlin compilation passes.
+
+A deterministic temporary parser stress run (seed `0x37520261023`) completes
+7,388 catalog cases and 25,784 RKG cases, including 12,800 checksum-repair
+attempts, without ASAN/UBSAN findings. This checks bounded parsing and memory
+safety, not replay physics or native game acceptance.
+
+The normal iPhone no-game-code build completes against the actual UIKit SDK,
+including the overlay and shared manager. Its app content audit and PadMint
+audit pass with zero address-named game functions. Unsigned IPA SHA-256:
+`2e352b5b39962b176a689e0fc6439af24fe828eb20ad28cca6df02b2f25428c7`.
+The draft differs from the pinned 0.8.5 release, so it is not a release-qualified
+artifact. Nothing was installed on physical hardware or released.
+
+Current-pack native discovery/replay, wider mode/course/variant replay,
+sustained Original rendering, physical picker interaction and gameplay remain
+open. The historical native receipts above still describe 6.12.8. PR #375 and
+issue #295 remain open.

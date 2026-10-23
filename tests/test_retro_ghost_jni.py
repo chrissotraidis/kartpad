@@ -46,6 +46,10 @@ int main(int argc,char** argv) {
  Write(root/"RetroRewind/RetroRewind6/Binaries/ConfigRT.pul",rt);
  Write(root/"RetroRewind/RetroRewind6/Binaries/ConfigCT.pul",ct);
  auto g=retro_fixture::Ghost(true);Write(root/"incoming.rkg",g);
+ Write(root/"uncompressed.rkg",retro_fixture::Ghost(false,1));
+ Write(root/"NAND/title/00010004/524d4350/data/rksys.dat",{1,2,3,4});
+ Write(root/"RetroRewind/riivolution/save/RetroWFC/RMCP/rksys.dat",{5,6,7,8});
+ Write(root/"NAND/shared2/Pulsar/RetroRewind6/ldb.pul",{9,10,11,12});
  auto c=kartpad::ghost::retro::ParseCatalog(rt,ct);
  Write(root/"NAND"/c.Select(0x100,0,0).directory/"x😀.rkg",g);
 }
@@ -75,6 +79,14 @@ public class KartPadActivity {
   try {operation.run();}catch(IllegalArgumentException failure){return;}
   throw new AssertionError("invalid operation accepted");
  }
+ private static Map<String,String> snapshot(Path root) throws Exception {
+  Map<String,String> files=new TreeMap<>();
+  try(var paths=Files.walk(root)) {
+   for(Path path:paths.filter(Files::isRegularFile).toList())
+    files.put(root.relativize(path).toString(),Base64.getEncoder().encodeToString(Files.readAllBytes(path)));
+  }
+  return files;
+ }
  public static void main(String[] args) throws Exception {
   System.load(args[0]);String root=args[1];KartPadActivity a=new KartPadActivity();
   String catalog=a.nativeRetroGhostCatalog(root);
@@ -82,11 +94,21 @@ public class KartPadActivity {
   String prefix="\"identity\":\"";int start=catalog.indexOf(prefix)+prefix.length();
   String identity=catalog.substring(start,catalog.indexOf('"',start));
   byte[] ghost=Files.readAllBytes(Path.of(root,"incoming.rkg"));
+  byte[] uncompressed=Files.readAllBytes(Path.of(root,"uncompressed.rkg"));
+  Map<String,String> original=snapshot(Path.of(root));
   String[] names=a.nativeRetroGhostFiles(root,0x100,0,0,identity);
   if(names.length!=1||!names[0].equals("x😀.rkg"))throw new AssertionError("filename encoding");
   if(!Arrays.equals(ghost,a.nativeRetroGhostTransfer(root,0x100,0,0,identity,names[0],null)))throw new AssertionError("UTF8 export mismatch");
   rejects(()->a.nativeRetroGhostTransfer(root,0x100,0,1,identity,null,new byte[10]));
+  rejects(()->a.nativeRetroGhostTransfer(root,0x100,0,1,identity,null,new byte[0x2801]));
   rejects(()->a.nativeRetroGhostTransfer(root,0x100,0,1,"stale",null,ghost));
+  rejects(()->a.nativeRetroGhostTransfer(root,-1,0,0,identity,null,ghost));
+  rejects(()->a.nativeRetroGhostTransfer(root,0x100,-1,0,identity,null,ghost));
+  rejects(()->a.nativeRetroGhostTransfer(root,0x100,0,4,identity,null,ghost));
+  rejects(()->a.nativeRetroGhostTransfer(root,0x100,0,0,null,null,ghost));
+  rejects(()->a.nativeRetroGhostTransfer(root,0x100,0,0,identity,null,null));
+  rejects(()->a.nativeRetroGhostCatalog(null));
+  if(!original.equals(snapshot(Path.of(root))))throw new AssertionError("rejected JNI request changed files");
   a.nativeRetroGhostTransfer(root,0x100,1,3,identity,null,ghost);
   if(a.nativeRetroGhostFiles(root,0x100,1,3,identity).length!=0)throw new AssertionError("live mutation during staging");
   if(!Files.exists(Path.of(root,"PendingRetroGhost.bin")))throw new AssertionError("pending missing");
@@ -98,6 +120,33 @@ public class KartPadActivity {
   a.nativeRetroGhostPending(root,false);
   if(a.nativeRetroGhostFiles(root,0x100,1,2,identity).length!=0)throw new AssertionError("cancel applied");
   rejects(()->a.nativeRetroGhostFiles(root,0x100,1,2,"stale"));
+  // Exercise all four modes across a nonbase Retro variant and a custom course.
+  for(int track:new int[]{0x100,0x104}) for(int mode=0;mode<4;mode++) {
+   int variant=track==0x100?2:0;
+   byte[] input=(mode%2==0)?ghost:uncompressed;
+   Map<String,String> before=snapshot(Path.of(root,"NAND"));
+   a.nativeRetroGhostTransfer(root,track,variant,mode,identity,null,input);
+   if(!before.equals(snapshot(Path.of(root,"NAND"))))throw new AssertionError("staging changed live NAND");
+   a.nativeRetroGhostPending(root,true);
+   String[] exported=a.nativeRetroGhostFiles(root,track,variant,mode,identity);
+   if(exported.length!=1||!Arrays.equals(input,a.nativeRetroGhostTransfer(root,track,variant,mode,identity,exported[0],null)))
+    throw new AssertionError("mode/variant JNI roundtrip mismatch");
+  }
+  // Config replacement between selection and cold application must retain the request.
+  Map<String,String> before=snapshot(Path.of(root,"NAND"));
+  a.nativeRetroGhostTransfer(root,0x101,0,0,identity,null,ghost);
+  Path config=Path.of(root,"RetroRewind/RetroRewind6/Binaries/ConfigRT.pul");
+  byte[] savedConfig=Files.readAllBytes(config),changedConfig=savedConfig.clone();
+  changedConfig[changedConfig.length-1]^=1;Files.write(config,changedConfig);
+  rejects(()->a.nativeRetroGhostPending(root,true));
+  if(!Files.exists(Path.of(root,"PendingRetroGhost.bin"))||!before.equals(snapshot(Path.of(root,"NAND"))))
+   throw new AssertionError("stale config consumed request or changed NAND");
+  Files.write(config,savedConfig);
+  a.nativeRetroGhostPending(root,false);
+  if(!before.equals(snapshot(Path.of(root,"NAND"))))throw new AssertionError("cancel changed NAND");
+  for(String path:new String[]{"NAND/title/00010004/524d4350/data/rksys.dat","RetroRewind/riivolution/save/RetroWFC/RMCP/rksys.dat","NAND/shared2/Pulsar/RetroRewind6/ldb.pul"})
+   if(!original.get(path).equals(Base64.getEncoder().encodeToString(Files.readAllBytes(Path.of(root,path)))))
+    throw new AssertionError("JNI transfer changed save or leaderboard");
  }
 }
 ''')
