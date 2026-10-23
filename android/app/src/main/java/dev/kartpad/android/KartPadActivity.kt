@@ -235,6 +235,7 @@ class KartPadActivity : SDLActivity() {
         if (BuildConfig.GAME_RUNTIME) {
             addMenuButton()
             addLayoutEditorBar()
+            KartPadDeviceRumble.attach(applicationContext)
             applyControllerMapping()
             applyDisplaySettings()
             kartPadOverlay.postDelayed({ applyDisplaySettings() }, 1_000L)
@@ -383,7 +384,7 @@ class KartPadActivity : SDLActivity() {
         if (!routed) {
             return super.dispatchKeyEvent(event)
         }
-        val mask = KartPadControllerKeys.classicMask(event.keyCode)
+        val mask = KartPadControllerKeys.classicMask(event.keyCode, KartPadControllerMapping.load(this))
         routedControllerButtons = when (event.action) {
             KeyEvent.ACTION_DOWN -> routedControllerButtons or mask
             KeyEvent.ACTION_UP -> routedControllerButtons and mask.inv()
@@ -405,6 +406,7 @@ class KartPadActivity : SDLActivity() {
             inputListenerRegistered = true
         }
         refreshControllerHandoff()
+        KartPadDeviceRumble.setPaused(false)
         if (::motionSteering.isInitialized) motionSteering.start()
         if (BuildConfig.GAME_RUNTIME) KartPadRuntimeHealth.start(this, runtimeProfile)
         hideGameSystemBars()
@@ -412,6 +414,7 @@ class KartPadActivity : SDLActivity() {
 
     override fun onPause() {
         routedControllerButtons = 0
+        KartPadDeviceRumble.setPaused(true)
         KartPadRuntimeHealth.stop()
         kartPadMenu?.dismiss()
         if (::editorBar.isInitialized && editorBar.visibility == View.VISIBLE) {
@@ -457,6 +460,14 @@ class KartPadActivity : SDLActivity() {
             if (hasFocus) motionSteering.start() else motionSteering.stop()
         }
         if (hasFocus) hideGameSystemBars()
+    }
+
+    override fun sendCommand(command: Int, data: Any?): Boolean {
+        // SDL queues a windowed-style command during startup and native window
+        // creation. It can run after onResume/onWindowFocusChanged and restore
+        // the system bars (#202). Keep SDL's own immersive-mode state in sync
+        // with this game Activity, including its automatic re-hide after a swipe.
+        return super.sendCommand(command, if (command == COMMAND_CHANGE_WINDOW_STYLE) 1 else data)
     }
 
     @Suppress("DEPRECATION")
@@ -723,6 +734,7 @@ class KartPadActivity : SDLActivity() {
             MenuRow("Time Trial Ghosts (.rkg)…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showGhostManager) },
             MenuRow("Manage Saves…", R.drawable.ic_kartpad_folder) { closeKartPadMenu(::showSaveManager) },
             MenuRow("Manage Retro Rewind…", R.drawable.ic_kartpad_gobackward) { closeKartPadMenu { startActivity(Intent(this, RetroRewindInstallActivity::class.java)) } },
+            MenuRow("Retro Rewind Music…", R.drawable.ic_kartpad_speaker) { closeKartPadMenu(::showRetroMusic) },
             MenuRow("Import from Extracted Folder…", R.drawable.ic_kartpad_folder) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT_FOLDER) } },
             MenuRow("Import or Reimport Wii Disc Image…", R.drawable.ic_kartpad_refresh) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_IMPORT) } },
             MenuRow("Remove Stored Game Data…", R.drawable.ic_kartpad_trash) { closeKartPadMenu { openGameDataManager(KartPadGameDataActivity.ACTION_REMOVE) } },
@@ -1015,8 +1027,8 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun showResolutionSettings() {
-        val labels = arrayOf("0.5× (Lowest detail)", "0.75× (Lower detail)", "1× (Native)", "2×", "3×", "4×")
-        val scales = floatArrayOf(0.5f, 0.75f, 1f, 2f, 3f, 4f)
+        val labels = arrayOf("0.5× (Lowest detail)", "0.75× (Lower detail)", "1× (Native)", "1.5×", "2×", "3×", "4×")
+        val scales = floatArrayOf(0.5f, 0.75f, 1f, 1.5f, 2f, 3f, 4f)
         val selected = scales.indexOfFirst {
             kotlin.math.abs(it - KartPadTouchSettings.resolutionScale(this)) < 0.01f
         }.let { if (it >= 0) it else scales.indexOfFirst { scale -> scale == 1f } }
@@ -1161,7 +1173,7 @@ class KartPadActivity : SDLActivity() {
         content.addView(settingsLabel(if (controllers.isEmpty()) {
             "No extended controller is connected. You can review or reset the saved mapping; connect a controller to test it."
         } else {
-            "Connected: ${controllers.joinToString()}. Buttons, D-pad directions, and trigger presses can be remapped. Sticks and Start stay direct."
+            "Connected: ${controllers.joinToString()}. Buttons, D-pad directions, triggers, and L3/R3 stick clicks can be remapped. Stick movement and Start stay direct."
         }))
         lateinit var dialog: AlertDialog
         content.addView(Switch(this).apply {
@@ -1173,6 +1185,43 @@ class KartPadActivity : SDLActivity() {
                 nativeApplyControllerAutoAccelerate(checked)
             }
         })
+        val rumble = Switch(this).apply {
+            text = "Rumble (vibrates this device when the controller has no motor)"
+            isChecked = KartPadTouchSettings.controllerRumble(this@KartPadActivity)
+            contentDescription = "Rumble: uses the controller's motor, or vibrates this device when the controller has none"
+        }
+        val rumbleStrengthLabel = settingsLabel("")
+        val rumbleStrength = SeekBar(this).apply {
+            max = 200
+            progress = KartPadTouchSettings.controllerRumbleStrength(this@KartPadActivity)
+            contentDescription = "Rumble strength, from zero to two hundred percent"
+        }
+        fun refreshRumble() {
+            rumbleStrengthLabel.text = if (rumbleStrength.progress == 0) {
+                "Rumble strength: off"
+            } else {
+                "Rumble strength: ${rumbleStrength.progress}%"
+            }
+            for (view in listOf(rumbleStrengthLabel, rumbleStrength)) {
+                view.isEnabled = rumble.isChecked
+                view.alpha = if (rumble.isChecked) 1f else 0.4f
+            }
+        }
+        rumble.setOnCheckedChangeListener { _, checked ->
+            KartPadTouchSettings.setControllerRumble(this@KartPadActivity, checked)
+            applyControllerRumble()
+            refreshRumble()
+        }
+        rumbleStrength.setOnSeekBarChangeListener(simpleSeekListener {
+            KartPadTouchSettings.setControllerRumbleStrength(this, rumbleStrength.progress)
+            applyControllerRumble()
+            refreshRumble()
+        })
+        refreshRumble()
+        content.addView(rumble)
+        content.addView(rumbleStrengthLabel)
+        content.addView(rumbleStrength)
+        content.addView(settingsLabel("100% is standard strength. Higher settings boost supported motors; some devices only support on/off vibration."))
         KartPadControllerMapping.gameButtonNames.forEachIndexed { game, gameName ->
             content.addView(Button(this).apply {
                 val physical = KartPadControllerMapping.physicalButtonNames[mapping[game]]
@@ -1184,6 +1233,16 @@ class KartPadActivity : SDLActivity() {
                 }
             })
         }
+        content.addView(Button(this).apply {
+            text = "Use L3 for Tricks"
+            contentDescription = "Map left stick click to D-pad Up for tricks and wheelies"
+            setOnClickListener {
+                KartPadControllerMapping.assign(this@KartPadActivity, 6, 12)
+                applyControllerMapping()
+                dialog.dismiss()
+                menuButton.post { showControllerMapping() }
+            }
+        })
         content.addView(Button(this).apply {
             text = "Use L1 for Items"
             setOnClickListener {
@@ -1259,6 +1318,14 @@ class KartPadActivity : SDLActivity() {
     private fun applyControllerMapping() {
         nativeApplyControllerMapping(KartPadControllerMapping.load(this))
         nativeApplyControllerAutoAccelerate(KartPadTouchSettings.controllerAutoAccelerate(this))
+        applyControllerRumble()
+    }
+
+    private fun applyControllerRumble() {
+        val enabled = KartPadTouchSettings.controllerRumble(this)
+        val strength = KartPadTouchSettings.controllerRumbleStrength(this)
+        KartPadDeviceRumble.configure(enabled, strength)
+        nativeApplyControllerRumble(enabled, strength)
     }
 
     private fun showShakeTricks() {
@@ -1680,6 +1747,66 @@ class KartPadActivity : SDLActivity() {
             }.setNegativeButton("Done", null).show()
     }
 
+    private fun showRetroMusic() {
+        val count = runCatching { RetroRewindMusic.count(filesDir) }.getOrDefault(0)
+        val summary = if (count == 0) "No custom music yet." else "$count custom ${if (count == 1) "track" else "tracks"}."
+        val dialog = AlertDialog.Builder(this).setTitle("Retro Rewind Music")
+            .setMessage("$summary\n\nAdd .brstm files, or a .zip from a Retro Rewind soundtrack pack. " +
+                "A file named like one of Retro Rewind's own replaces that track, for example 104_N.brstm " +
+                "and 104_F.brstm for its final lap. Restart KartPad to hear changes. Your music stays " +
+                "when Retro Rewind updates.")
+            .setPositiveButton("Add Music…") { _, _ ->
+                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }, REQUEST_IMPORT_MUSIC)
+            }
+            .setNegativeButton("Done", null)
+        if (count > 0) dialog.setNeutralButton("Remove All…") { _, _ ->
+            AlertDialog.Builder(this).setTitle("Remove Custom Music?")
+                .setMessage("Retro Rewind goes back to its own music after a restart.")
+                .setPositiveButton("Remove") { _, _ ->
+                    runCatching { RetroRewindMusic.removeAll(filesDir) }
+                        .onSuccess { showParityBoundary("Custom Music Removed", "Restart KartPad to hear Retro Rewind's own music.") }
+                        .onFailure { showParityBoundary("Music Not Removed", it.message ?: "The music could not be removed.") }
+                }.setNegativeButton("Cancel", null).show()
+        }
+        dialog.show()
+    }
+
+    private fun importRetroMusic(uris: List<android.net.Uri>) {
+        val progress = AlertDialog.Builder(this).setTitle("Adding Music…")
+            .setMessage("Copying ${uris.size} ${if (uris.size == 1) "file" else "files"}.").setCancelable(false).show()
+        Thread {
+            var added = 0
+            var skipped = 0
+            var failure: String? = null
+            for (uri in uris) {
+                val name = contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                    ?.use { if (it.moveToFirst()) it.getString(0) else null } ?: uri.lastPathSegment.orEmpty()
+                runCatching {
+                    contentResolver.openInputStream(uri)?.use { RetroRewindMusic.importFile(filesDir, name, it) }
+                        ?: error("$name could not be opened.")
+                }.onSuccess { added += it.added; skipped += it.skipped }
+                    .onFailure { if (failure == null) failure = it.message }
+            }
+            runOnUiThread {
+                progress.dismiss()
+                val skippedNote = if (skipped == 0) "" else
+                    " Skipped $skipped ${if (skipped == 1) "file" else "files"} that aren't .brstm music with a simple name."
+                if (added == 0) {
+                    showParityBoundary("No Music Added", (failure ?: "None of the files were .brstm music.") + skippedNote)
+                } else {
+                    AlertDialog.Builder(this).setTitle("Music Added")
+                        .setMessage("Added $added ${if (added == 1) "track" else "tracks"}.$skippedNote" +
+                            (failure?.let { " Not added: $it" } ?: "") + " Restart KartPad to hear the new music.")
+                        .setPositiveButton("Restart Now") { _, _ -> restartToGameSelector() }
+                        .setNegativeButton("Later", null).show()
+                }
+            }
+        }.start()
+    }
+
     private fun showSaveManager() {
         kartPadOverlay.clearTouchInput()
         AlertDialog.Builder(this)
@@ -1861,6 +1988,13 @@ class KartPadActivity : SDLActivity() {
                         .setPositiveButton("Restart Now") { _, _ -> restartToGameSelector() }.setNegativeButton("Later", null).show()
                     else showParityBoundary("Ghost Exported", "The .rkg file was saved to your chosen location.")
                 }
+            return
+        }
+        if (requestCode == REQUEST_IMPORT_MUSIC) {
+            if (resultCode != RESULT_OK || data == null) return
+            val clip = data.clipData
+            val uris = if (clip != null) (0 until clip.itemCount).map { clip.getItemAt(it).uri } else listOfNotNull(data.data)
+            if (uris.isNotEmpty()) importRetroMusic(uris)
             return
         }
         if (requestCode == REQUEST_MANAGE_GAME_DATA && resultCode == RESULT_OK) {
@@ -2163,6 +2297,16 @@ class KartPadActivity : SDLActivity() {
                 kartPadOverlay.reloadPresentationSettings()
             }
         }
+        val itemHold = Switch(this).apply {
+            text = "Touch item hold"
+            setTextColor(Color.WHITE)
+            isChecked = KartPadTouchSettings.itemHold(this@KartPadActivity)
+            contentDescription = "Touch item hold: hold touch L for 0.67 seconds to keep holding the item; press L again to let go"
+            setOnCheckedChangeListener { _, checked ->
+                KartPadTouchSettings.setItemHold(this@KartPadActivity, checked)
+                kartPadOverlay.reloadPresentationSettings()
+            }
+        }
         val modernCStick = Switch(this).apply {
             text = "Modern C-stick L/R"
             setTextColor(Color.WHITE)
@@ -2214,6 +2358,7 @@ class KartPadActivity : SDLActivity() {
             setPadding(dp(12), dp(8), 0, 0)
             addView(hide)
             addView(autoAccelerate)
+            addView(itemHold)
             addView(modernCStick)
             addView(moveControls)
             addView(resetTouchLayoutButton)
@@ -2623,7 +2768,7 @@ class KartPadActivity : SDLActivity() {
                 zip.putNextEntry(ZipEntry("${RetroRewindRelease.ROOT}/"))
                 zip.closeEntry()
                 zip.putNextEntry(ZipEntry("${RetroRewindRelease.ROOT}/version.txt"))
-                zip.write("${RetroRewindRelease.VERSION}\n".toByteArray(Charsets.UTF_8))
+                zip.write("${RetroRewindRelease.PACK_VERSION}\n".toByteArray(Charsets.UTF_8))
                 zip.closeEntry()
             }
             val result = RetroRewindArchiveExtractor.extract(
@@ -2637,7 +2782,7 @@ class KartPadActivity : SDLActivity() {
             check(result.isComplete() && result.selectedEntries == 2L &&
                 result.selectedBytes == extracted.toByteArray(Charsets.UTF_8).size.toLong() &&
                 result.extractedBytes == result.selectedBytes &&
-                extracted == "${RetroRewindRelease.VERSION}\n")
+                extracted == "${RetroRewindRelease.PACK_VERSION}\n")
             Log.i(TAG, "A3 JNI archive extraction passed entries=2 bytes=${result.extractedBytes}")
         } catch (error: Exception) {
             Log.e(TAG, "A3 JNI archive extraction failed", error)
@@ -2707,6 +2852,7 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeRetroGhostPending(root: String, apply: Boolean)
     private external fun nativeApplyControllerMapping(mapping: IntArray)
     private external fun nativeApplyControllerAutoAccelerate(enabled: Boolean)
+    private external fun nativeApplyControllerRumble(enabled: Boolean, strengthPercent: Int)
     private external fun nativeControllerDevices(): Array<String>
     private external fun nativeAssignControllerPlayer(instance: Long, player: Int): Boolean
     private external fun nativeClearControllerPlayer(player: Int): Boolean
@@ -2722,8 +2868,9 @@ class KartPadActivity : SDLActivity() {
         private const val REQUEST_MANAGE_GAME_DATA = 4_302
         private const val REQUEST_EXPORT_GHOST = 4_320
         private const val REQUEST_IMPORT_GHOST = 4_321
-        private const val REQUEST_EXPORT_RETRO_GHOST = 4_322
-        private const val REQUEST_IMPORT_RETRO_GHOST = 4_323
+        private const val REQUEST_IMPORT_MUSIC = 4_322
+        private const val REQUEST_EXPORT_RETRO_GHOST = 4_323
+        private const val REQUEST_IMPORT_RETRO_GHOST = 4_324
         private val GHOST_COURSE_IDS = intArrayOf(8,1,2,4,0,5,6,7,9,15,3,11,10,14,12,13,31,25,24,30,27,26,29,28,16,17,18,19,20,21,22,23)
         private val GHOST_COURSES = arrayOf("Luigi Circuit", "Moo Moo Meadows", "Mushroom Gorge", "Toad's Factory", "Mario Circuit", "Coconut Mall", "DK Summit", "Wario's Gold Mine", "Daisy Circuit", "Koopa Cape", "Grumble Volcano", "Maple Treeway", "Moonview Highway", "Dry Dry Ruins", "Bowser's Castle", "Rainbow Road", "GBA Shy Guy Beach", "SNES Ghost Valley 2", "SNES Mario Circuit 3", "GBA Bowser Castle 3", "N64 Sherbet Land", "N64 Mario Raceway", "N64 DK's Jungle Parkway", "N64 Bowser's Castle", "GCN Peach Beach", "GCN Mario Circuit", "GCN Waluigi Stadium", "GCN DK Mountain", "DS Yoshi Falls", "DS Desert Hills", "DS Peach Gardens", "DS Delfino Square")
         private const val REQUEST_EXPORT_SAVE = 4_303

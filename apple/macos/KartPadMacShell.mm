@@ -926,15 +926,15 @@ static bool KPFullscreenAcrossNotch() {
 
     NSArray<NSArray<NSString *> *> *bindings = @[
       @[@"Steer", @"W A S D"],
-      @[@"Accelerate / confirm", @"U or Return"],
-      @[@"Brake / reverse / back", @"M or Delete"],
-      @[@"Drift / manual hop", @"E"],
-      @[@"Use item", @"Left Shift (Classic L)"],
+      @[@"Accelerate / confirm", @"Return"],
+      @[@"Brake / reverse / back", @"Backspace (Delete)"],
+      @[@"Drift / manual hop", @"Left Option"],
+      @[@"Use item", @"Left Control"],
       @[@"Tricks / menu directions", @"Arrow keys"],
       @[@"Start / pause", @"Space"],
-      @[@"Select / minus", @"Tab"],
-      @[@"Classic X / Y", @"X / C"],
-      @[@"Classic ZL / ZR", @"Z / V"],
+      @[@"Rear view", @"Left Shift"],
+      @[@"GameCube X / Y", @"Q / E"],
+      @[@"Right stick", @"I J K L"],
       @[@"Settings (also in fullscreen)", @"⌘, or F10 / Fn–F10"],
     ];
     NSMutableArray<NSView *> *rows = [NSMutableArray array];

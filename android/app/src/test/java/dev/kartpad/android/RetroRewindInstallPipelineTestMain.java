@@ -34,7 +34,7 @@ public final class RetroRewindInstallPipelineTestMain {
             Path archive = Files.write(temporary.resolve("archive.zip"), new byte[] {1});
             byte[] artifact = "verified".getBytes(StandardCharsets.UTF_8);
             var contract = new RetroRewindInstallValidator.Contract(
-                    RetroRewindRelease.VERSION,
+                    RetroRewindRelease.PACK_VERSION,
                     RetroRewindRelease.ROOT,
                     List.of(new RetroRewindInstallValidator.ArtifactRequirement(
                             "Binaries/Code.pul", artifact.length, sha256(artifact))));
@@ -200,7 +200,7 @@ public final class RetroRewindInstallPipelineTestMain {
     private static void writeTree(Path staging, byte[] artifact) throws IOException {
         Path root = staging.resolve(RetroRewindRelease.ROOT);
         Files.createDirectories(root.resolve("Binaries"));
-        Files.writeString(root.resolve("version.txt"), RetroRewindRelease.VERSION + "\n");
+        Files.writeString(root.resolve("version.txt"), RetroRewindRelease.PACK_VERSION + "\n");
         Files.write(root.resolve("Binaries/Code.pul"), artifact);
     }
 

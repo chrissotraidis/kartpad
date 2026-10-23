@@ -56,7 +56,7 @@ int main() {
       ApplyControllerButtonMapping(kGamepadSouth, swapped) == kGamepadEast &&
           ApplyControllerButtonMapping(kGamepadEast, swapped) == kGamepadSouth,
       "assigning a used physical button must swap game assignments");
-  const ControllerButtonMapping invalid{12, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  const ControllerButtonMapping invalid{14, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
   passed &= Require(!IsValidControllerButtonMapping(invalid) &&
                         ApplyControllerButtonMapping(kGamepadSouth, invalid) ==
                             kGamepadSouth,
@@ -124,6 +124,11 @@ int main() {
                         WpadMotorCommandEnablesRumble(kWpadMotorRumble) &&
                         !WpadMotorCommandEnablesRumble(2),
                     "only the WPAD rumble command may enable controller output");
+  passed &= Require(DeviceRumbleActive(true, false, true) &&
+                        !DeviceRumbleActive(true, true, true) &&
+                        !DeviceRumbleActive(true, false, false) &&
+                        !DeviceRumbleActive(false, false, true),
+                    "only a connected controller without a motor may vibrate the device");
 
   RawGamepadState axes;
   axes.connected = true;

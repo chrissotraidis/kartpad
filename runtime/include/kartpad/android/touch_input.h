@@ -30,10 +30,11 @@ struct TouchInputState {
 };
 
 // The Android UI thread publishes held state. Rising button edges are retained
-// until the guest scheduler consumes them, so a short tap cannot disappear
-// between KPAD samples.
+// until each guest reader consumes them. KPAD and unified WPAD status are
+// sampled separately; neither may steal a short tap from the other.
+enum class TouchInputReader { Kpad, UnifiedWpad };
 void PublishTouchInput(TouchInputState state) noexcept;
-[[nodiscard]] TouchInputState ConsumeTouchInput() noexcept;
+[[nodiscard]] TouchInputState ConsumeTouchInput(TouchInputReader reader = TouchInputReader::Kpad) noexcept;
 [[nodiscard]] bool IsTouchInputConnected() noexcept;
 void ClearTouchInput() noexcept;
 

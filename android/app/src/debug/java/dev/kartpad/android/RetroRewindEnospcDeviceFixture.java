@@ -31,7 +31,7 @@ final class RetroRewindEnospcDeviceFixture {
             try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(archive))) {
                 addDirectory(zip, RetroRewindRelease.ROOT + "/");
                 addFile(zip, RetroRewindRelease.ROOT + "/version.txt",
-                        (RetroRewindRelease.VERSION + "\n").getBytes(StandardCharsets.UTF_8));
+                        (RetroRewindRelease.PACK_VERSION + "\n").getBytes(StandardCharsets.UTF_8));
                 addDirectory(zip, RetroRewindRelease.ROOT + "/fixture/");
                 addFile(zip, RetroRewindRelease.ROOT + "/" + CURRENT_PATH, CURRENT_CONTENT);
             }
@@ -68,7 +68,7 @@ final class RetroRewindEnospcDeviceFixture {
             require(Files.size(archive) == archiveBytes, "ENOSPC archive size changed");
             RetroRewindInstallValidator.Contract replacement =
                     new RetroRewindInstallValidator.Contract(
-                            RetroRewindRelease.VERSION,
+                            RetroRewindRelease.PACK_VERSION,
                             RetroRewindRelease.ROOT,
                             Collections.singletonList(
                                     new RetroRewindInstallValidator.ArtifactRequirement(
@@ -129,7 +129,7 @@ final class RetroRewindEnospcDeviceFixture {
 
     private static RetroRewindInstallValidator.Contract currentContract() {
         return new RetroRewindInstallValidator.Contract(
-                RetroRewindRelease.VERSION,
+                RetroRewindRelease.PACK_VERSION,
                 RetroRewindRelease.ROOT,
                 Collections.singletonList(
                         new RetroRewindInstallValidator.ArtifactRequirement(

@@ -3,7 +3,7 @@ project(KartPadRendererProbe LANGUAGES CXX)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 find_package(Threads REQUIRED)
 find_package(Dawn REQUIRED CONFIG NO_CMAKE_FIND_ROOT_PATH)
-set(KARTPAD_AURORA_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../../ref/upstream/Wiicompiled/aurora-main" CACHE PATH "Pinned Aurora source")
+set(KARTPAD_AURORA_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../../vendor/runtimes/android/aurora-main" CACHE PATH "Pinned Aurora source")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shader_helpers.h"
   COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/generate_shader.py"
     "${KARTPAD_AURORA_SOURCE}/lib/gx/shader.cpp" "${CMAKE_CURRENT_BINARY_DIR}/shader_helpers.h"

@@ -618,7 +618,9 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         self.assertIn("statusPtr + 0x32, static_cast<uint16_t>(rightStickY)", patch)
         patch = runtime_source('android', 'runtime/src/hle/input/kpad.cpp')
         self.assertIn('"kartpad/android/touch_input.h"', patch)
-        self.assertIn("ConsumeTouchInput()", patch)
+        self.assertIn("ConsumeTouchInput(reader)", patch)
+        self.assertIn("ReadAndroidTouchInput(chan, kartpad::android::TouchInputReader::Kpad)", patch)
+        self.assertIn("ReadAndroidTouchInput(chan, kartpad::android::TouchInputReader::UnifiedWpad)", patch)
         self.assertIn("CoreButtonsForClassic(touchInput.buttons)", patch)
 
     def test_game_build_selects_dual_preparation_for_a_dual_graph(self) -> None:

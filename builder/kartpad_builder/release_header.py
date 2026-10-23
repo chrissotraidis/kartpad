@@ -20,6 +20,7 @@ def render_retro_rewind_header(profile_data: dict) -> str:
     xml = config["riivolutionXml"]
     values = {
         "KARTPAD_RR_VERSION": config["version"],
+        "KARTPAD_RR_PACK_VERSION": config.get("packVersion", config["version"]),
         "KARTPAD_RR_VERSION_MANIFEST_URL": config["versionManifestUrl"],
         "KARTPAD_RR_ROOT": config["root"],
         "KARTPAD_RR_ARCHIVE_URL": archive["url"],

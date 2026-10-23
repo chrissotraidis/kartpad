@@ -228,6 +228,9 @@ profiles:
         - section: Retro Rewind
           option: Pack
           choice: 1
+        - section: Retro Rewind
+          option: My Stuff
+          choice: 4
 """
     path.write_text(text)
 
@@ -296,6 +299,11 @@ def translate(
     retro: RetroRewindInputs,
 ) -> None:
     shards = output / "build_shards/shards.cmake"
+    guards = [("scripts/inject-retro-rel-report-guard.py", "func_8000A440.cpp")]
+    texture_guard = ("scripts/inject-mkw-texture-link-guard.py", "func_802289DC.cpp")
+    if any(item["script"] == texture_guard[0]
+           for item in profile.data["translation"].get("injectors", [])):
+        guards.append(texture_guard)
     expected_generated = profile.data["translation"]["expectedGeneratedFunctions"]
     expected_base = profile.data["translation"]["expectedBaseFunctions"]
     expected_retro = profile.data["translation"]["expectedRetroFunctions"]
@@ -309,9 +317,10 @@ def translate(
             or "set(MKW_HAVE_RETRO_REWIND_SHARDS ON)" not in graph
         ):
             raise BuildError("cached translation failed profile validation")
-        guard = _script(repo / "scripts/inject-retro-rel-report-guard.py")
-        run(guard + ["--verify", str(output / "functions" / "func_8000A440.cpp")])
-        run(guard + ["--verify-shards", str(output / "build_shards")])
+        for script, function in guards:
+            guard = _script(repo / script)
+            run(guard + ["--verify", str(output / "functions" / function)])
+            run(guard + ["--verify-shards", str(output / "build_shards")])
         print(f"Reused validated translation: {output}")
         return
     translator = prepare_translator(repo)
@@ -337,10 +346,11 @@ def translate(
     if mod_blob.is_file() and ".globl _k" not in mod_blob.read_text():
         _add_underscore_aliases(mod_blob, "k")
     run([dotnet, str(translator), "emit-build-shards", "--project", str(manifest), "--profile", "retro-rewind", "--base-metadata", str(metadata), "--base-functions-dir", str(output / "functions"), "--native-source-dir", str(repo / "build/wiicompiled-fpscr/runtime/src"), "--resolved-profile", str(mod_output / "resolved_dispatch_profile.json"), "--retro-cpp-dir", str(mod_output / "cpp"), "--out", str(output / "build_shards")])
-    guard = _script(repo / "scripts/inject-retro-rel-report-guard.py")
-    run(guard + ["--inject-shards", str(output / "build_shards")])
-    run(guard + ["--verify", str(output / "functions" / "func_8000A440.cpp")])
-    run(guard + ["--verify-shards", str(output / "build_shards")])
+    for script, function in guards:
+        guard = _script(repo / script)
+        run(guard + ["--inject-shards", str(output / "build_shards")])
+        run(guard + ["--verify", str(output / "functions" / function)])
+        run(guard + ["--verify-shards", str(output / "build_shards")])
     count = len(list((output / "functions").glob("func_*.cpp")))
     graph = shards.read_text()
     if (

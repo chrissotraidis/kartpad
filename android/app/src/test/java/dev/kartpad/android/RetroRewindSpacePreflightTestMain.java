@@ -76,14 +76,14 @@ public final class RetroRewindSpacePreflightTestMain {
                 RetroRewindRelease.ARCHIVE_BYTES + RetroRewindRelease.UPDATE_BYTES,
                 RetroRewindRelease.MAXIMUM_EXPANDED_BYTES + RetroRewindRelease.UPDATE_MAXIMUM_EXPANDED_BYTES);
         expect(production.isReady(), "production requirements overflowed");
-        expect(production.requiredFilesBytes == 4_472_702_153L,
+        expect(production.requiredFilesBytes == 4_407_790_010L,
                 "production shared-store requirement drifted");
         var productionCached = RetroRewindSpacePreflight.evaluate(
                 Long.MAX_VALUE, Long.MAX_VALUE, true,
                 RetroRewindRelease.ARCHIVE_BYTES + RetroRewindRelease.UPDATE_BYTES,
                 RetroRewindRelease.MAXIMUM_EXPANDED_BYTES + RetroRewindRelease.UPDATE_MAXIMUM_EXPANDED_BYTES,
                 RetroRewindRelease.ARCHIVE_BYTES);
-        expect(productionCached.requiredFilesBytes == 2_533_839_432L,
+        expect(productionCached.requiredFilesBytes == 2_468_435_456L,
                 "production cached-archive requirement drifted");
     }
 

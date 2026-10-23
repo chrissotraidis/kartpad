@@ -19,6 +19,8 @@ constexpr uint64_t Pack(const ControllerButtonMapping& mapping) noexcept {
 
 std::atomic<uint64_t> g_mapping{Pack(kDefaultControllerButtonMapping)};
 std::atomic<bool> g_autoAccelerate{false};
+std::atomic<bool> g_rumble{true};
+std::atomic<int> g_rumbleStrength{100};
 std::array<kartpad::input::AutoAccelerateLatch, 4> g_autoAccelerateLatches{};
 
 }  // namespace
@@ -42,6 +44,19 @@ ControllerButtonMapping ReadControllerButtonMapping() noexcept {
 
 void PublishControllerAutoAccelerate(const bool enabled) noexcept {
   g_autoAccelerate.store(enabled, std::memory_order_release);
+}
+
+void PublishControllerRumble(const bool enabled, const int strengthPercent) noexcept {
+  g_rumbleStrength.store(std::clamp(strengthPercent, 0, 200), std::memory_order_release);
+  g_rumble.store(enabled, std::memory_order_release);
+}
+
+bool ControllerRumbleEnabled() noexcept {
+  return g_rumble.load(std::memory_order_acquire);
+}
+
+float ControllerRumbleStrength() noexcept {
+  return static_cast<float>(g_rumbleStrength.load(std::memory_order_acquire)) / 100.0f;
 }
 
 uint32_t ApplyControllerAutoAccelerate(const uint32_t chan,

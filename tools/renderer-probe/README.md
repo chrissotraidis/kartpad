@@ -13,7 +13,8 @@ Its package is `dev.kartpad.rendererprobe`; installing it does not replace
 
 ## Run
 
-Download the audited Android diagnostic APK (retired).
+Version 0.3.0 is an unpublished developer candidate. The previous public
+diagnostic APK is retired; no new player test is requested.
 
 You do not need to run KartPad first. This separate app supplies all of its
 own synthetic inputs.
@@ -22,8 +23,10 @@ Open **KartPad Renderer Check**, tap **Run GPU Check**, then **Share Results**.
 Keep the app open during the test. Post the text to the relevant issue after
 reviewing it. Include whether Original, Retro Rewind, or both show corruption.
 
-In version 0.2.0, four compute variants and four indexed-draw variants
-compare 4,096 values each against independent CPU expectations (32,768 total):
+In version 0.3.0, four compute variants and eight indexed-draw variants
+compare 4,096 values each against independent CPU expectations (49,152 total).
+Each draw variant compares storage-buffer bone-index fetching with a native
+`Uint32` vertex attribute, using these uniform/robustness combinations:
 
 - Scalar uniform array, bounds protection disabled.
 - Vector-packed uniform array, bounds protection disabled.
@@ -32,8 +35,9 @@ compare 4,096 values each against independent CPU expectations (32,768 total):
 
 WebGPU validation remains enabled in every variant. Each robustness mode uses a
 fresh adapter and device; the selected backend is Vulkan on Android and Metal on macOS.
-Software adapters are rejected before device creation because the pinned Dawn
-library aborts in its SwiftShader device-toggle setup. There is no fallback
+The maintained Android Dawn dependency includes the SwiftShader device-toggle
+fix. Reports explicitly identify software adapters; their results cannot establish
+a hardware-specific graphics fix or performance gain. There is no fallback
 to a different graphics backend. GPU callbacks have a
 five-second timeout; shader compilation and driver calls can take longer.
 
@@ -54,7 +58,8 @@ Field numbers in a mismatch report mean:
 | 15 | big-endian finite float |
 
 The new draw variants issue indexed triangles through vertex and fragment stages.
-They use separate packed vertex-index and attribute storage buffers, signed
+They use separate packed vertex-index and attribute storage buffers, a padded
+bone-index vertex slot (storage-pulled or native attribute), signed
 big-endian positions, the current Aurora 80-byte uniform prefix, 20 indexed
 position matrices, dynamic uniform offsets, RGBA8 textures, and four queued
 updates of shared buffers/textures before readback. The CPU expects one
@@ -96,9 +101,10 @@ the exact extracted helpers. The generator reads only Aurora's `shader.cpp`.
 KartPad probe code is GPL-3.0-only; extracted Aurora code retains its MIT license.
 The APK includes root GPL, Aurora, Dawn, and NDK toolchain notices.
 
-The `licenses/` copies come from Dawn source
-`13abc3bc8ea2d3c2050f9e77a12d012108ceee24` and the existing pinned Abseil
-source. They cover Dawn and the relevant bundled/header dependencies; no game
+The build uses the same hash-verified Android Dawn archive as KartPad, through
+`prepare-android-dependencies.sh` and `dependencies.lock.json`. Its current Dawn
+cache identity is `5b8cc623f665a44645e77fa0a2a730c749333de4`.
+The `licenses/` copies were compared with that archive and remain identical. They cover Dawn and the relevant bundled/header dependencies; no game
 runtime or game content is linked. Android's static C++ runtime is covered by
 the packaged NDK toolchain notices.
 
@@ -106,3 +112,9 @@ An excluded `kartpad_renderer_probe_cli` target is available for authorized
 ADB development. It runs the same probe without a Java UI, so a locked screen
 does not prevent the synthetic GPU check. Do not substitute CLI acceptance
 for testing the APK's buttons and sharing flow.
+
+## 14 October development result
+
+The CLI passes all 49,152 checks on Android 14 ARM64 Vulkan SwiftShader,
+with validation enabled and zero mismatches. The APK compiles. This is synthetic
+software-GPU evidence only, not Adreno acceptance or an APK sharing-flow check.

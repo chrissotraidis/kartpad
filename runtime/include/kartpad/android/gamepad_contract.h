@@ -20,6 +20,8 @@ enum GamepadButton : uint32_t {
   kGamepadDpadRight = 1u << 11,
   kGamepadLeftTrigger = 1u << 12,
   kGamepadRightTrigger = 1u << 13,
+  kGamepadLeftStick = 1u << 14,
+  kGamepadRightStick = 1u << 15,
 };
 
 enum ClassicButton : uint32_t {
@@ -62,6 +64,14 @@ inline constexpr uint32_t kWpadMotorRumble = 1;
 
 inline constexpr bool WpadMotorCommandEnablesRumble(uint32_t command) {
   return command == kWpadMotorRumble;
+}
+
+// Player one's device vibrates in place of a connected controller that has no
+// motor of its own, such as a handheld's built-in controls. Touch-only play
+// stays quiet, and a controller that rumbles itself keeps the device still.
+inline constexpr bool DeviceRumbleActive(bool requested, bool controllerRumbled,
+                                         bool controllerConnected) {
+  return requested && !controllerRumbled && controllerConnected;
 }
 
 inline float NormalizeStickAxis(int16_t raw) {

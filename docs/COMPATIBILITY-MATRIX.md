@@ -32,11 +32,36 @@ pass; actual PowerVR Vulkan launch/race acceptance remains open.
 - `closed-historical`: the linked issue is closed upstream; evidence is retained
   for history but does not represent technical acceptance or active work.
 
-## Current matrix
+## Latest observations: 14 October 2026
+
+Older rows below retain their build-specific evidence. These observations come
+from the [current triage review](ISSUE-TRIAGE-2026-10-14.md).
+
+| Target / build | Path and observation | State | Next step |
+| --- | --- | --- | --- |
+| Honor MTN-NX3, Adreno 810, API 36; 0.7.15/260 and 0.8.1/263 | #470: Retro runtime logs show low FPS and high main-thread occupancy at 1×. 0.8.1 also reaches thermal status 3. No pending shaders in the slow samples; both use automatic all-draw repack | `reproduced-open` | Investigate equivalent warmed work with #339; no new log request |
+| AYN Thor Max; 0.8.1 | #202: race photos still show bands; one includes visible status/navigation bars | `reproduced-open` | Verify SDL fullscreen correction locally, then Thor confirmation after a release |
+| Android 14/API 34 and Android 16/API 36 emulators; baseline main and private candidate | API 34 baseline has FORCE_NOT_FULLSCREEN and bands. Candidate fixtures retain FULLSCREEN/IMMERSIVE_STICKY across launch, resume and bar swipe on both APIs. Actual-game API 34 reaches a race; both APIs retain fullscreen and process through mouse/idle, Home/resume and swipe without the baseline JNI abort | `candidate-awaiting-device` | Normal fresh folder import and first-process race now pass on API 34; complete final release checks and Thor confirmation. Emulator behavior is not Thor acceptance |
+| OnePlus OPD2403, Android 16/API 36; 0.8.1/263 | #472: faces visible but bodies missing; reporter says all graphics options tried. GPU/driver not supplied | `awaiting-reporter` | One reviewed diagnostic log requested; keep separate from #104/#301 until matched |
+| Moto G85, Adreno 619; 0.8.1/263 | #301: missing bodies persist; supplied log has native_uniforms=false and matrix_rows=false. Reporter says Dolphin renders the bodies | `reproduced-open` | Candidate 2 investigation; no repeat settings test. Freeze without input remains separate |
+| Galaxy S24 Ultra, Adreno 750; 0.8.1/263 | #104: matrix_rows=true and native_uniforms=true, bodies still invisible | `reproduced-open` | Candidate 2; no more logs requested |
+| iPad A16, reporter says iPadOS 26.6.1; app version unverified | #380 follow-up uses third-party IPA and DATA download, without a PadMint build | `unverified` | Explain supported build route; does not confirm or refute the 0.8.1 picker on a supported app |
+
+Follow-up: API 34 also passes normal fresh folder import, first-process license
+creation/race and Home/resume after the short-tap correction. Renderer probe 3
+passes 49,152 synthetic checks on Vulkan SwiftShader; that result is not an
+Adreno device row. [Scope and evidence](artifacts/2026-10-14/android-input-cpu-renderer.md).
+The new M1 Mac / PadMint 0.5.1 report #475 fails certificate validation during
+preflight; the interpreter-selection candidate is tested with fixtures, with
+reporter confirmation still pending.
+
+## Historical matrix
 
 **These rows record evidence up to 22 September (0.4.x and early 0.5 builds).**
-The current release is 0.7.10; per-device state for it is in
-[KNOWN-ISSUES.md](KNOWN-ISSUES.md). Newer evidence: the OnePlus 15 (Adreno 8xx)
+The current release is [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1);
+per-device state for it is in
+[KNOWN-ISSUES.md](KNOWN-ISSUES.md). Evidence added after these rows, and before
+0.8.1, included: the OnePlus 15 (Adreno 8xx)
 draws correctly with Automatic on 0.7.10 (#316, reporter-confirmed), and the
 Moto G54 (PowerVR BXM-8-256) reaches a race on 0.7.10 with no shader over its
 inter-stage limit of 14, which rules that cause out (#304).
@@ -71,7 +96,7 @@ old requests do not authorize more reporter testing during the current hold.
 | `galaxy-z-fold-8-adreno-840` | Android; public v0.4.16-android.2; 2x, 4:3, Renderer Validation disabled | Original geometry/textures | Current-release comparison still reproduces vertex/road-texture corruption. Reporter additionally supplied surface-loss, pipeline-stall/vertex-buffer-mismatch and draw-recovery frame-drop lines; this remains device-specific evidence, not an Adreno-wide cause | `reproduced-open` | [#102](https://github.com/chrissotraidis/kartpad/issues/102); [current follow-up](artifacts/2026-09-12/issue102-current-fold-followup.md) | Keep separate from S24 character corruption; correlate one failing actual draw before changing source |
 | `xiaomi-25057rn09g-issue215` | Xiaomi 25057RN09G; Android 15/API 35; 0.4.16-android.2/build 65; GPU/driver unconfirmed | Original and Retro launch/exit | Reporter confirms both profiles reach a black screen and return to Android home at the “about to play” boundary | `awaiting-reporter` | [#215](https://github.com/chrissotraidis/kartpad/issues/215); [boundary confirmation](https://github.com/chrissotraidis/kartpad/issues/215#issuecomment-5648868060) | Obtain one short matching redacted exit result if available; no reinstall/data clear/game files or shared-cause inference |
 | `galaxy-tab-a-2020-issue216` | Galaxy Tab A (8.4-inch, 2020); One UI 3.1; Android 11/API 30; reported 0.4.16 Android, exact build unconfirmed; GPU/driver unconfirmed | Original and Retro game launch; black surface/touch controls then exit | Reporter sees black video with touch controls before repeated exits; this does not establish a renderer fault, import completion or OS exit class | `awaiting-reporter` | [#216](https://github.com/chrissotraidis/kartpad/issues/216); [posted reply](https://github.com/chrissotraidis/kartpad/issues/216#issuecomment-5643186097) | Await the existing chooser-versus-Android-home, profile/import completion and one redacted exit result request; no reinstall/data clear/game files or shared-cause inference |
-| `honor-lgn-nx3` | Android 16/API 36; public 0.4.16-android.2/code 65 | Original/Retro launch after RMCP01 ZIP install | Canonical #208 remains open; closed #209/#210 and #224–#232 repeat report ID `KP-A1063B73` and the same HONOR target. No exit class, profile or import completion is established | `awaiting-reporter` | [#208](https://github.com/chrissotraidis/kartpad/issues/208); [closed-duplicate reconciliation](../build/maintenance/reviews/2026-09-13-issue-cleanup.md) | Use the canonical #208 response: chooser versus Android home, selected profile, import completion and one redacted exit result; do not repeat the request on closed reposts |
+| `honor-lgn-nx3` | Android 16/API 36; public 0.4.16-android.2/code 65 | Original/Retro launch after RMCP01 ZIP install | Canonical #208 remains open; closed #209/#210 and #224–#232 repeat report ID `KP-A1063B73` and the same HONOR target. No exit class, profile or import completion is established | `awaiting-reporter` | [#208](https://github.com/chrissotraidis/kartpad/issues/208); [closed-duplicate reconciliation](https://github.com/chrissotraidis/kartpad/issues/208) | Use the canonical #208 response: chooser versus Android home, selected profile, import completion and one redacted exit result; do not repeat the request on closed reposts |
 | `honor-x7c-issue235` | Android; KartPad 0.4.16; Original 1.0 WBFS; API/GPU unconfirmed | Startup after import; black screen with touch controls | Reporter confirms a black screen with interactive controls followed by return to Android home after about 3–5 seconds. This is not merged with the `KP-A1063B73` HONOR cluster because the device and report identity differ | `awaiting-reporter` | [#235](https://github.com/chrissotraidis/kartpad/issues/235); [follow-up](https://github.com/chrissotraidis/kartpad/issues/235#issuecomment-5649349014); [intake](artifacts/2026-09-12/issue234-235-intake.md) | Keep as a classified native launch/render exit; obtain one matching redacted exit result if available, without reinstall or data clear |
 | `oppo-cph2669-issue236` | Android 14/API 34; KartPad 0.4.16-android.2/build 65; GPU unconfirmed | Original/base startup after load | OPPO A40 reporter confirms a repeatable black screen followed by return to Android home; report IDs `KP-1A994DB0` and corroborating `KP-7A65FAE2` | `awaiting-reporter` | [#236](https://github.com/chrissotraidis/kartpad/issues/236); [#237 corroboration](https://github.com/chrissotraidis/kartpad/issues/237); [intake](artifacts/2026-09-12/issue236-oppo-launch-intake.md) | Keep as a distinct native/OS-exit case; obtain one matching redacted exit result if available, without reinstall or data clear |
 | `galaxy-s25-ultra-sm-s938b-issue234` | Android; KartPad 0.4.16-android.2/build 65; GPU/driver unconfirmed | Same-device Wheel Witch save-backup restoration; save, rating/Mii and online identity | Reporter clarified that the data came from a Wheel Witch save backup on the same phone. Mii/name/rating are absent, online shows a different console identity, and vanilla Mario Kart requests new save data after country settings change | `awaiting-reporter` | [#234](https://github.com/chrissotraidis/kartpad/issues/234); [clarification](https://github.com/chrissotraidis/kartpad/issues/234#issuecomment-5647599209); [intake](artifacts/2026-09-12/issue234-235-intake.md) | Reproduce or inspect the same-device backup-restore path without exposing private saves; keep save content, rating companion and identity as separate subcases |

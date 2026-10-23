@@ -348,3 +348,29 @@ replay movement and the short cold Solo race segment pass after correction.
 Longer Original rendering stability, iPhone picker/native acceptance and
 physical-device gameplay remain separate gates. These receipts do not announce
 an app release or shipped menus.
+
+## 23 October integration with current main
+
+Merged main `d136cd60` into the draft. Android's soundtrack import and Retro
+ghost export had both assigned request code `4322`; soundtrack import keeps
+that published code, while Retro ghost export/import use `4323`/`4324` and
+separate result handlers. Apple document-picker cancellation now clears both
+the Retro ghost selection and the soundtrack-import flag.
+
+Validation on the merged source passes:
+
+- Four ghost Python tests, including production JNI import/export and Unicode,
+  Original save preservation, and a new request-code uniqueness check. Injecting
+  the original collision makes that regression fail.
+- Catalog, Original/Retro transfer and early/late Android config tests under
+  ASAN/UBSAN; Apple Foundation ghost and existing player-identity contracts.
+- Seven existing Android/iOS document-picker contract tests and Android
+  `:app:compileDebugKotlin` with the verified locked dependencies. The first
+  Kotlin invocation lacked the required dependency-root environment variables;
+  the configured invocation succeeds.
+
+These are source and host checks. The earlier native receipts used Retro Rewind
+6.12.8; they do not establish acceptance on current 6.13.4. Current-pack native
+transfer/replay, custom courses, variants, the other modes, sustained Original
+rendering and physical iPhone picker/gameplay remain open. PR #375 stays draft
+and issue #295 stays open; this integration creates no release.

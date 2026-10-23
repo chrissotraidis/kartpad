@@ -25,6 +25,7 @@ manifest="$translation_root/build_shards/shards.cmake"
 [[ -f "$manifest" ]] || { echo "ERROR: missing translation: $manifest" >&2; exit 1; }
 [[ -f "$runtime_lib" ]] || { echo "ERROR: missing app runtime library: $runtime_lib" >&2; exit 1; }
 python3 "$repo_root/scripts/inject-retro-rel-report-guard.py" --verify-shards "$translation_root/build_shards"
+python3 "$repo_root/scripts/inject-mkw-texture-link-guard.py" --verify-shards "$translation_root/build_shards"
 
 version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$repo_root/version.json")"
 jobs="${KARTPAD_GAME_PACK_JOBS:-${CMAKE_BUILD_PARALLEL_LEVEL:-4}}"

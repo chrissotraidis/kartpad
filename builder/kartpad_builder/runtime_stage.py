@@ -15,6 +15,7 @@ import urllib.request
 from pathlib import Path
 
 from .release_header import render_retro_rewind_header
+from . import net
 from .errors import BuildError
 
 SSE2NEON_URL = "https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
@@ -31,8 +32,12 @@ def _sse2neon(repo: Path) -> Path:
     if not cached.is_file() or _sha256(cached) != SSE2NEON_SHA256:
         cached.parent.mkdir(parents=True, exist_ok=True)
         partial = cached.with_suffix(".partial")
-        with urllib.request.urlopen(SSE2NEON_URL) as response:
-            partial.write_bytes(response.read())
+
+        def attempt() -> None:
+            with urllib.request.urlopen(SSE2NEON_URL, timeout=net.TIMEOUT) as response:
+                partial.write_bytes(response.read())
+
+        net.retrying(SSE2NEON_URL, "sse2neon.h", attempt)
         if _sha256(partial) != SSE2NEON_SHA256:
             raise ValueError("sse2neon hash mismatch")
         partial.replace(cached)

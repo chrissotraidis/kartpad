@@ -1,7 +1,9 @@
 #include <jni.h>
 #include <SDL3/SDL_hints.h>
+#include <SDL3/SDL_system.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 
 #include "kartpad/android/controller_mapping.hpp"
@@ -70,7 +72,7 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerMapping(
   if (env->ExceptionCheck()) return;
   kartpad::android::ControllerButtonMapping mapping{};
   for (std::size_t index = 0; index < mapping.size(); ++index) {
-    if (raw[index] < 0 || raw[index] >= 12) return;
+    if (raw[index] < 0 || raw[index] >= static_cast<jint>(kartpad::android::kMappablePhysicalButtons.size())) return;
     mapping[index] = static_cast<uint8_t>(raw[index]);
   }
   kartpad::android::PublishControllerButtonMapping(mapping);
@@ -80,6 +82,42 @@ extern "C" JNIEXPORT void JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerAutoAccelerate(
     JNIEnv*, jobject, jboolean enabled) {
   kartpad::android::PublishControllerAutoAccelerate(enabled == JNI_TRUE);
+}
+
+namespace {
+// KartPadDeviceRumble.setActive, resolved on the UI thread: the game thread's
+// class loader cannot find app classes.
+std::atomic<jclass> g_deviceRumbleClass{nullptr};
+std::atomic<jmethodID> g_deviceRumbleSetActive{nullptr};
+std::atomic<bool> g_deviceRumbleActive{false};
+}  // namespace
+
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeApplyControllerRumble(
+    JNIEnv* env, jobject, jboolean enabled, jint strengthPercent) {
+  if (g_deviceRumbleClass.load(std::memory_order_acquire) == nullptr) {
+    if (jclass local = env->FindClass("dev/kartpad/android/KartPadDeviceRumble")) {
+      const jmethodID setActive = env->GetStaticMethodID(local, "setActive", "(Z)V");
+      if (setActive != nullptr) {
+        g_deviceRumbleSetActive.store(setActive, std::memory_order_release);
+        g_deviceRumbleClass.store(static_cast<jclass>(env->NewGlobalRef(local)),
+                                  std::memory_order_release);
+      }
+      env->DeleteLocalRef(local);
+    }
+    if (env->ExceptionCheck()) env->ExceptionClear();
+  }
+  kartpad::android::PublishControllerRumble(enabled == JNI_TRUE, strengthPercent);
+}
+
+void kartpad::android::SetDeviceRumble(const bool active) noexcept {
+  if (g_deviceRumbleActive.exchange(active, std::memory_order_acq_rel) == active) return;
+  const jclass target = g_deviceRumbleClass.load(std::memory_order_acquire);
+  const jmethodID setActive = g_deviceRumbleSetActive.load(std::memory_order_acquire);
+  auto* env = static_cast<JNIEnv*>(SDL_GetAndroidJNIEnv());
+  if (target == nullptr || setActive == nullptr || env == nullptr) return;
+  env->CallStaticVoidMethod(target, setActive, active ? JNI_TRUE : JNI_FALSE);
+  if (env->ExceptionCheck()) env->ExceptionClear();
 }
 
 #include "kartpad/ghost/rkg.h"

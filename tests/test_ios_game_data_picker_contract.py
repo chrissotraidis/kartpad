@@ -101,5 +101,25 @@ class IOSGameDataPickerContractTests(unittest.TestCase):
         self.assertEqual(source.count("KartPadGameDataRootsInDocuments(&error)"), 1)
 
 
+    def test_import_waits_for_the_picker_and_always_reports_back(self) -> None:
+        # #380: on devices, Open in the folder picker looked like it did nothing. The
+        # first-launch folder import uses a folder-only picker, and both import paths
+        # present progress only after the picker has closed and report back even if
+        # that alert was never shown.
+        source = (REPO / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()
+        scan = source.split("- (void)chooseDocumentsRoot {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn("[self presentGameDataFolderPicker];", scan)
+        self.assertNotIn("[self presentGameDataPicker];", scan)
+        self.assertEqual(
+            source.count("initForOpeningContentTypes:@[UTTypeFolder] asCopy:NO"), 2)
+        for start in ("- (void)startImport:(NSURL *)url deleteAfterwards:(BOOL)deleteAfterwards {",
+                      "- (void)importExtractedGameDataFromURL:(NSURL *)url"):
+            body = source.split(start, 1)[1].split("\n}\n", 1)[0]
+            self.assertIn("KartPadPresentAfterPickerCloses(", body)
+            self.assertIn("KartPadDismissThen(progress, ^{", body)
+            self.assertNotIn("presentViewController:progress", body)
+            self.assertNotIn("dismissViewControllerAnimated", body)
+
+
 if __name__ == "__main__":
     unittest.main()

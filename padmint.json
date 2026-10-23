@@ -103,12 +103,16 @@
         {
           "stage": "preflight",
           "command": [
-            "/bin/bash",
-            "{repo}/scripts/build-user-ipa.sh",
+            "{python}",
+            "-m",
+            "kartpad_builder.cli",
             "bootstrap",
             "--target",
             "macos"
-          ]
+          ],
+          "env": {
+            "PYTHONPATH": "{repo}/builder"
+          }
         },
         {
           "stage": "translate",
@@ -118,7 +122,7 @@
             "--image",
             "{disc}",
             "--retro-root",
-            "{repo}/private/builder/retro-rewind-downloads/6.13.1-extracted/RetroRewind6",
+            "{repo}/private/builder/retro-rewind-downloads/6.13.4-extracted/RetroRewind6",
             "--payload",
             "{repo}/private/builder/retro-rewind-downloads/payload.RMCPD00.bin"
           ],
@@ -130,22 +134,9 @@
           "stage": "compile",
           "command": [
             "/bin/bash",
-            "{repo}/scripts/build-macos-app.sh",
+            "{repo}/scripts/build-padmint-macos.sh",
             "{repo}/private/self-build/retro-rewind/translation",
-            "{work}/macos-source",
-            "{work}/macos-build",
-            "{work}/KartPad.app",
-            "dual"
-          ]
-        },
-        {
-          "stage": "package",
-          "command": [
-            "/usr/bin/ditto",
-            "-c",
-            "-k",
-            "--keepParent",
-            "{work}/KartPad.app",
+            "{work}",
             "{output}"
           ]
         }
@@ -214,7 +205,7 @@
     }
   },
   "requirements": {
-    "disk_gb": 60,
+    "disk_gb": 16,
     "tools": [
       {
         "name": "git",

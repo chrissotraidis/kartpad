@@ -1,6 +1,7 @@
 """Exercise the production JNI with exact file IO, SAF state inputs and UTF-8."""
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -10,6 +11,18 @@ JDK = Path(os.environ.get("KARTPAD_TEST_JDK", str(ROOT / ".android-bootstrap/jdk
 
 
 class RetroGhostJNI(unittest.TestCase):
+    def test_android_document_request_codes_do_not_overlap(self):
+        # Music and Retro ghost export both originally used 4322. Duplicate
+        # request codes route a picker result to the wrong transfer operation.
+        activity = (ROOT / "android/app/src/main/java/dev/kartpad/android/KartPadActivity.kt").read_text()
+        declarations = re.findall(r"private const val (REQUEST_\w+) = ([\d_]+)", activity)
+        codes = {}
+        for name, value in declarations:
+            code = int(value.replace("_", ""))
+            self.assertNotIn(code, codes, f"{name} and {codes.get(code)} share picker request {code}")
+            codes[code] = name
+        self.assertTrue({"REQUEST_IMPORT_MUSIC", "REQUEST_EXPORT_RETRO_GHOST", "REQUEST_IMPORT_RETRO_GHOST"}.issubset(codes.values()))
+
     def test_catalog_import_export_pending_and_unicode(self):
         with tempfile.TemporaryDirectory(prefix="kartpad-retro-jni-") as temporary:
             task = Path(temporary)

@@ -83,7 +83,7 @@ SSE2NEON_SHA256 = "44b9fa3dec3a52ea473246e04b9f692a4e5b0ed654299eef7fe7ec3049e22
 ANDROID_TRACE_HEADER = "aurora-main/lib/kartpad_android_trace_scope.h"
 
 
-def verify(repo: Path, platform: str, destination: Path) -> str:
+def verify(repo: Path, platform: str, destination: Path, *, allow_missing_generated: bool = False) -> str:
     source, actual = source_checkout(repo, platform, initialize=False)
     if not destination.is_dir() or destination.is_symlink():
         raise ValueError(f"missing prepared source: {destination}; prepare a fresh runtime source")
@@ -94,7 +94,8 @@ def verify(repo: Path, platform: str, destination: Path) -> str:
     present = {p.relative_to(destination).as_posix() for p in destination.rglob("*")
                if p.is_file() or p.is_symlink()}
     expected = set(files) | generated
-    if present != expected:
+    missing = expected - present
+    if present - expected or missing - (generated if allow_missing_generated else set()):
         raise ValueError(f"prepared source files differ (missing={sorted(expected - present)}, extra={sorted(present - expected)}); prepare a fresh runtime source")
     for name, original in files.items():
         if name in generated:
@@ -109,16 +110,18 @@ def verify(repo: Path, platform: str, destination: Path) -> str:
         if not matches:
             raise ValueError(f"prepared source differs: {name}; edit maintained source and prepare a fresh runtime source")
     for name in generated:
-        if (destination / name).is_symlink():
+        path = destination / name
+        if any(parent.is_symlink() for parent in (path, *path.parents)
+               if parent == destination or destination in parent.parents):
             raise ValueError(f"unexpected generated source symlink: {name}; prepare a fresh runtime source")
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "builder"))
     from kartpad_builder.release_header import render_retro_rewind_header
     profile = json.loads((repo / "builder/profiles/mkwii-rmcp01-rev0.json").read_text())
-    if (destination / PROFILE_HEADER).read_bytes() != render_retro_rewind_header(profile).encode():
+    if PROFILE_HEADER not in missing and (destination / PROFILE_HEADER).read_bytes() != render_retro_rewind_header(profile).encode():
         raise ValueError("prepared release profile header differs; prepare a fresh runtime source")
-    if hashlib.sha256((destination / SSE2NEON_HEADER).read_bytes()).hexdigest() != SSE2NEON_SHA256:
+    if SSE2NEON_HEADER not in missing and hashlib.sha256((destination / SSE2NEON_HEADER).read_bytes()).hexdigest() != SSE2NEON_SHA256:
         raise ValueError("prepared sse2neon header differs from pinned dependency; prepare a fresh runtime source")
-    if platform == "android" and (destination / ANDROID_TRACE_HEADER).read_bytes() != (repo / "runtime/include/kartpad/android/trace_scope.h").read_bytes():
+    if platform == "android" and ANDROID_TRACE_HEADER not in missing and (destination / ANDROID_TRACE_HEADER).read_bytes() != (repo / "runtime/include/kartpad/android/trace_scope.h").read_bytes():
         raise ValueError("prepared Android trace header differs; prepare a fresh runtime source")
     return actual
 
@@ -126,12 +129,18 @@ def verify(repo: Path, platform: str, destination: Path) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true", help="Reject stale or modified prepared source before building")
+    parser.add_argument("--allow-missing-generated", action="store_true",
+                        help="With --verify, allow missing generated headers before safely restoring them")
     parser.add_argument("platform", choices=PLATFORMS)
     parser.add_argument("destination", type=Path)
     args = parser.parse_args()
     try:
-        operation = verify if args.verify else stage
-        revision = operation(Path(__file__).resolve().parents[1], args.platform, args.destination)
+        if args.allow_missing_generated and not args.verify:
+            parser.error("--allow-missing-generated requires --verify")
+        repo = Path(__file__).resolve().parents[1]
+        revision = (verify(repo, args.platform, args.destination,
+                           allow_missing_generated=args.allow_missing_generated)
+                    if args.verify else stage(repo, args.platform, args.destination))
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"ERROR: {error}\n")
     print(f"{'Verified' if args.verify else 'Staged'} maintained {args.platform} runtime at {revision}: {args.destination}")

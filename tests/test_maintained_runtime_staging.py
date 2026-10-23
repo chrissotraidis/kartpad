@@ -134,6 +134,24 @@ class MaintainedRuntimeStagingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "update its KartPad gitlink deliberately"):
             STAGING.verify(self.repo, "ios", self.destination)
 
+    def test_retry_verification_only_allows_missing_generated_headers(self):
+        self.prepare_for_verification()
+        (self.destination / STAGING.SSE2NEON_HEADER).unlink()
+        self.assertEqual(STAGING.verify(self.repo, "ios", self.destination,
+                                       allow_missing_generated=True), self.revision)
+        with self.assertRaisesRegex(ValueError, "prepared source files differ"):
+            STAGING.verify(self.repo, "ios", self.destination)
+        (self.destination / "src/main.cpp").unlink()
+        with self.assertRaisesRegex(ValueError, "prepared source files differ"):
+            STAGING.verify(self.repo, "ios", self.destination, allow_missing_generated=True)
+
+    def test_retry_verification_still_rejects_modified_generated_headers(self):
+        self.prepare_for_verification()
+        (self.destination / STAGING.SSE2NEON_HEADER).unlink()
+        (self.destination / STAGING.PROFILE_HEADER).write_text("personal edit")
+        with self.assertRaisesRegex(ValueError, "prepared release profile header differs"):
+            STAGING.verify(self.repo, "ios", self.destination, allow_missing_generated=True)
+
     def test_verify_android_trace_matches_current_repo_header(self):
         android = self.source.with_name("android")
         self.source.rename(android)

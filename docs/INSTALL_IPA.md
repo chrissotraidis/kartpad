@@ -7,6 +7,13 @@ to 0.7.13 also had a ready-to-play IPA; it won't get updates.) What changed in
 each version is on the
 [releases page](https://github.com/chrissotraidis/kartpad/releases).
 
+> **KartPad says "Needs your PadMint build"?** You installed the
+> `ios-for-padmint.ipa` from the releases page, or installed it over an older
+> copy. That file is the app without the game code, so it can't play by itself.
+> Build your copy with PadMint (step 1 below) and install it over this one with
+> the same sideloading tool and Apple ID. Game data you already imported and
+> your saves stay, so you won't need to import again.
+
 ## What you need
 
 - A computer to build the IPA with PadMint. The candidate Intel Mac route
@@ -79,10 +86,16 @@ the folder again and reimport.
 2. Choose **Import from Extracted Folder…** and pick the folder in the Files
    window. KartPad copies the game data into its own storage and leaves your
    folder untouched.
+   If the dialog is **Game Data Import Failed** and tells you to save
+   `common-key.bin` in **On My iPhone/iPad → KartPad**, you picked an ISO or
+   WBFS. Tap OK. You do not need that key; go back and choose **Import from
+   Extracted Folder…**.
 3. Tap **Play Game**.
 
 For **Retro Rewind**, tap **Set Up Game** on its card. KartPad downloads and
-installs the official Retro Rewind 6.12.8 pack (about 1.7 GB).
+installs official Retro Rewind 6.13.4 (the full pack, about 1.9 GB). Moving
+up from an earlier Retro Rewind downloads the full pack again; your Retro saves
+and ghosts stay.
 
 ### Using a disc image instead
 

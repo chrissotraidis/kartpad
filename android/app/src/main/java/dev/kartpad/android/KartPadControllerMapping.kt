@@ -2,11 +2,12 @@ package dev.kartpad.android
 
 import android.content.Context
 
-/** Persisted controller mapping for game buttons and D-pad Up. */
+/** Persisted game-action mapping; physical stick clicks are optional inputs. */
 internal object KartPadControllerMapping {
-    val gameButtonNames = arrayOf("A — Accelerate / Confirm", "B — Drift / Back", "X — Rear View", "Y", "ZR — Rear View", "R — Drift", "D-pad Up", "D-pad Down", "D-pad Left", "D-pad Right", "L — Use Item", "R — Right Trigger")
+    val gameButtonNames = arrayOf("A — Accelerate / Confirm", "B — Drift / Back", "X — Rear View", "Y", "ZR — Rear View", "R — Drift", "D-pad Up — Trick / Wheelie", "D-pad Down", "D-pad Left", "D-pad Right", "L — Use Item", "R — Right Trigger")
     val physicalButtonNames = arrayOf(
         "A", "B", "X", "Y", "Left Shoulder", "Right Shoulder", "D-pad Up", "D-pad Down", "D-pad Left", "D-pad Right", "Left Trigger", "Right Trigger",
+        "L3 — Left Stick Click", "R3 — Right Stick Click",
     )
     private val defaults = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
     private const val PREFERENCES = "kartpad_controller_mapping_v3"
@@ -36,7 +37,7 @@ internal object KartPadControllerMapping {
 
     fun assign(context: Context, game: Int, physical: Int, keepOtherAssignments: Boolean = false): IntArray {
         val mapping = load(context)
-        if (game !in mapping.indices || physical !in mapping.indices) return mapping
+        if (game !in mapping.indices || physical !in physicalButtonNames.indices) return mapping
         val other = mapping.indexOf(physical)
         val previous = mapping[game]
         mapping[game] = physical
@@ -59,5 +60,5 @@ internal object KartPadControllerMapping {
     }
 
     private fun isValid(mapping: IntArray): Boolean =
-        mapping.size == defaults.size && mapping.all { it in defaults.indices }
+        mapping.size == defaults.size && mapping.all { it in physicalButtonNames.indices }
 }

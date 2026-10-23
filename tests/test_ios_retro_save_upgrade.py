@@ -19,6 +19,8 @@ class RetroSaveUpgrade(unittest.TestCase):
         activation = source[source.index('  NSString *installedParent =', source.index('+ (BOOL)installArchiveAtURL:')):
                             source.index('  NSURL *installedURL =', source.index('+ (BOOL)installArchiveAtURL:'))]
         program = r'''#import <Foundation/Foundation.h>
+#include <cstring>
+#define KARTPAD_RR_ROOT "RetroRewind6"
 ''' + errors + helpers + r'''
 static BOOL activate(NSString *supportRoot, NSString *stageParent, NSError **error) {
   NSFileManager *files = NSFileManager.defaultManager;
@@ -44,6 +46,9 @@ int main(int argc, char **argv) { @autoreleasepool {
   NSString *ghostPath = @"RetroRewind/riivolution/save/RetroWFC/RMCP/ghosts/1.rkg";
   put(root,ghostPath,ghost);
   put(root,@"RetroRewind/RetroRewind6/version.txt",[@"6.12.8" dataUsingEncoding:NSUTF8StringEncoding]);
+  NSData *music = [@"RSTM player music" dataUsingEncoding:NSUTF8StringEncoding];
+  NSString *musicPath = @"RetroRewind/RetroRewind6/MyStuff/104_N.brstm";
+  put(root,musicPath,music);
   NSString *stage = [root stringByAppendingPathComponent:@"RetroRewind.import-test"];
   NSData *version = [@"6.13.1" dataUsingEncoding:NSUTF8StringEncoding];
   put(stage,@"RetroRewind6/version.txt",version);
@@ -52,6 +57,8 @@ int main(int argc, char **argv) { @autoreleasepool {
   for (NSString *path in paths) assert([[NSData dataWithContentsOfFile:[root stringByAppendingPathComponent:path]] isEqual:save]);
   assert([[NSData dataWithContentsOfFile:[root stringByAppendingPathComponent:ghostPath]] isEqual:ghost]);
   assert([[NSData dataWithContentsOfFile:[root stringByAppendingPathComponent:@"RetroRewind/RetroRewind6/version.txt"]] isEqual:version]);
+  // Player music beside the pack survives the update (#441).
+  assert([[NSData dataWithContentsOfFile:[root stringByAppendingPathComponent:musicPath]] isEqual:music]);
   // A destination conflict must not replace the live pack or any of its saves.
   put(stage,@"RetroRewind6/version.txt",ghost);
   put(stage,@"riivolution/save",ghost);

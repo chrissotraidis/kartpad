@@ -14,7 +14,7 @@ a = p.parse_args()
 sdk = Path(os.environ.get('ANDROID_HOME', Path.home() / 'Library/Android/sdk'))
 bt = sdk / 'build-tools/36.0.0'
 badging = subprocess.check_output([bt/'aapt2', 'dump', 'badging', a.apk], text=True)
-assert "name='dev.kartpad.rendererprobe' versionCode='2' versionName='0.2.0'" in badging
+assert "name='dev.kartpad.rendererprobe' versionCode='3' versionName='0.3.0'" in badging
 assert "native-code: 'arm64-v8a'" in badging
 assert 'application-debuggable' not in badging and 'uses-permission' not in badging
 subprocess.run([bt/'zipalign', '-c', '-P', '16', '4', a.apk], check=True)
@@ -24,7 +24,7 @@ assert 'certificate SHA-256 digest: c1dbe0a0d72d830a5779476b346a750d0a37515adef9
 assert cert.count('certificate SHA-256 digest:') == 1
 notices = {
     'assets/notices/LICENSE': ROOT/'LICENSE',
-    'assets/notices/Aurora-MIT.txt': ROOT/'ref/upstream/Wiicompiled/aurora-main/LICENSE',
+    'assets/notices/Aurora-MIT.txt': ROOT/'vendor/runtimes/android/aurora-main/LICENSE',
     'assets/notices/NDK-toolchain.txt': sdk/'ndk/29.0.14206865/NOTICE.toolchain',
 }
 for file in (ROOT/"tools/renderer-probe/licenses").glob("*.txt"):

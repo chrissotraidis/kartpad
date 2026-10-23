@@ -225,6 +225,61 @@ BOOL KartPadPreserveRetroRewindSaves(NSString *installedParent,
       [destination stringByAppendingPathComponent:@"save"], error);
 }
 
+// Player music beside the pack (RetroRewind6/MyStuff) is copied into the
+// staged pack's own, normally empty, MyStuff folder.
+BOOL KartPadPreserveRetroRewindMusic(NSString *installedParent,
+                                     NSString *stageParent, NSError **error) {
+  NSFileManager *files = NSFileManager.defaultManager;
+  NSString *pack = [NSString stringWithUTF8String:KARTPAD_RR_ROOT];
+  NSString *source = [[installedParent stringByAppendingPathComponent:pack]
+      stringByAppendingPathComponent:@"MyStuff"];
+  NSDictionary *attributes = [files attributesOfItemAtPath:source error:nil];
+  if (attributes == nil) return YES;
+  if (![attributes[NSFileType] isEqualToString:NSFileTypeDirectory])
+    return KartPadRetroRewindFail(error, 37, @"The existing Retro Rewind music folder is invalid.");
+  NSString *destination = [[stageParent stringByAppendingPathComponent:pack]
+      stringByAppendingPathComponent:@"MyStuff"];
+  if (![files fileExistsAtPath:destination] &&
+      ![files createDirectoryAtPath:destination withIntermediateDirectories:NO
+                         attributes:nil error:error]) return NO;
+  NSArray *entries = [files contentsOfDirectoryAtPath:source error:error];
+  if (entries == nil) return NO;
+  for (NSString *entry in entries) {
+    NSString *target = [destination stringByAppendingPathComponent:entry];
+    NSDictionary *existing = [files attributesOfItemAtPath:target error:nil];
+    if (existing != nil) {
+      if (![existing[NSFileType] isEqualToString:NSFileTypeRegular] ||
+          ![files removeItemAtPath:target error:error]) {
+        return error != nullptr && *error != nil ? NO :
+            KartPadRetroRewindFail(error, 37, @"The Retro Rewind music could not be preserved.");
+      }
+    }
+    if (!KartPadCopyRetroSaveTree([source stringByAppendingPathComponent:entry], target, error))
+      return NO;
+  }
+  return YES;
+}
+
+BOOL KartPadIsRetroMusicName(NSString *name) {
+  static NSRegularExpression *pattern = [NSRegularExpression
+      regularExpressionWithPattern:@"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}\\.brstm$"
+                           options:NSRegularExpressionCaseInsensitive error:nil];
+  return name.length > 0 &&
+      [pattern numberOfMatchesInString:name options:0 range:NSMakeRange(0, name.length)] == 1;
+}
+
+constexpr uint64_t kKartPadMaxMusicBytes = 64ull << 20;
+
+// Returns NO for a name or file that isn't Retro Rewind music.
+BOOL KartPadWriteRetroMusic(NSString *directory, NSString *name, NSData *data) {
+  if (!KartPadIsRetroMusicName(name) || data.length < 4 ||
+      data.length > kKartPadMaxMusicBytes || memcmp(data.bytes, "RSTM", 4) != 0) return NO;
+  NSString *target = [directory stringByAppendingPathComponent:name];
+  NSDictionary *existing = [NSFileManager.defaultManager attributesOfItemAtPath:target error:nil];
+  if (existing != nil && ![existing[NSFileType] isEqualToString:NSFileTypeRegular]) return NO;
+  return [data writeToFile:target options:NSDataWritingAtomic error:nil];
+}
+
 BOOL KartPadFileMatches(NSString *path, uint64_t expectedBytes,
                         const char *expectedHash, NSError **error) {
   NSDictionary<NSFileAttributeKey, id> *attributes =
@@ -432,6 +487,12 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
   return [NSString stringWithUTF8String:KARTPAD_RR_VERSION];
 }
 
+// Some official packs have a version.txt that lags the release feed. The profile
+// pins that exact value alongside the Code.pul and XML hashes when needed.
++ (NSString *)requiredPackVersion {
+  return [NSString stringWithUTF8String:KARTPAD_RR_PACK_VERSION];
+}
+
 + (NSURL *)officialVersionManifestURL {
   return [NSURL URLWithString:
       [NSString stringWithUTF8String:KARTPAD_RR_VERSION_MANIFEST_URL]];
@@ -460,7 +521,8 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
                                                error:nil];
   NSString *trimmed = [version
       stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
-  return trimmed.length == 0 ? nil : trimmed;
+  if (trimmed.length == 0) return nil;
+  return [trimmed isEqualToString:self.requiredPackVersion] ? self.requiredVersion : trimmed;
 }
 
 + (BOOL)validateInstalledRoot:(NSString *)root error:(NSError **)error {
@@ -481,7 +543,7 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
   if (version == nil ||
       ![[version stringByTrimmingCharactersInSet:
           NSCharacterSet.whitespaceAndNewlineCharacterSet]
-          isEqualToString:self.requiredVersion]) {
+          isEqualToString:self.requiredPackVersion]) {
     if (error != nullptr) {
       *error = readError ?: KartPadRetroRewindError(11,
           [NSString stringWithFormat:
@@ -603,6 +665,11 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
       workError == nil) {
     workError = KartPadRetroRewindError(36, @"The Retro Rewind saves could not be preserved.");
   }
+  if (workError == nil &&
+      !KartPadPreserveRetroRewindMusic(installedParent, stageParent, &workError) &&
+      workError == nil) {
+    workError = KartPadRetroRewindError(37, @"The Retro Rewind music could not be preserved.");
+  }
   NSString *rollback = [supportRoot stringByAppendingPathComponent:
       [NSString stringWithFormat:@"RetroRewind.rollback-%@",
                                  NSUUID.UUID.UUIDString]];
@@ -633,6 +700,98 @@ static BOOL KartPadDownloadRetroUpdate(NSString *destination,
   KartPadRemoveRetroRewindRollbacks();
   if (progress != nil) progress(@"Retro Rewind is ready.", 1.0);
   return YES;
+}
+
++ (NSString *)customMusicPath {
+  return [self.installedRootPath stringByAppendingPathComponent:@"MyStuff"];
+}
+
++ (NSUInteger)customMusicCount {
+  NSUInteger count = 0;
+  NSString *directory = self.customMusicPath;
+  for (NSString *entry in [NSFileManager.defaultManager contentsOfDirectoryAtPath:directory error:nil]) {
+    NSDictionary *attributes = [NSFileManager.defaultManager
+        attributesOfItemAtPath:[directory stringByAppendingPathComponent:entry] error:nil];
+    if ([attributes[NSFileType] isEqualToString:NSFileTypeRegular] && KartPadIsRetroMusicName(entry))
+      count += 1;
+  }
+  return count;
+}
+
++ (BOOL)importMusicFromURL:(NSURL *)url
+                     added:(NSUInteger *)added
+                   skipped:(NSUInteger *)skipped
+                     error:(NSError **)error {
+  *added = 0;
+  *skipped = 0;
+  NSFileManager *files = NSFileManager.defaultManager;
+  NSString *extension = url.pathExtension.lowercaseString;
+  BOOL zip = [extension isEqualToString:@"zip"];
+  if (!zip && ![extension isEqualToString:@"brstm"])
+    return KartPadRetroRewindFail(error, 38, @"Choose .brstm music files or a .zip of them.");
+  NSDictionary *pack = [files attributesOfItemAtPath:self.installedRootPath error:nil];
+  if (![pack[NSFileType] isEqualToString:NSFileTypeDirectory])
+    return KartPadRetroRewindFail(error, 38, @"Set up Retro Rewind first, then add music.");
+  NSString *directory = self.customMusicPath;
+  NSDictionary *existing = [files attributesOfItemAtPath:directory error:nil];
+  if (existing == nil) {
+    if (![files createDirectoryAtPath:directory withIntermediateDirectories:NO attributes:nil error:error])
+      return NO;
+  } else if (![existing[NSFileType] isEqualToString:NSFileTypeDirectory]) {
+    return KartPadRetroRewindFail(error, 37, @"The Retro Rewind music folder is invalid.");
+  }
+
+  if (!zip) {
+    NSNumber *size = nil;
+    [url getResourceValue:&size forKey:NSURLFileSizeKey error:nil];
+    NSData *data = size.unsignedLongLongValue <= kKartPadMaxMusicBytes
+        ? [NSData dataWithContentsOfURL:url options:0 error:nil] : nil;
+    if (KartPadWriteRetroMusic(directory, url.lastPathComponent, data)) *added = 1; else *skipped = 1;
+    return YES;
+  }
+
+  void *reader = mz_zip_reader_create();
+  if (reader == nullptr || mz_zip_reader_open_file(reader, url.fileSystemRepresentation) != MZ_OK) {
+    if (reader != nullptr) mz_zip_reader_delete(&reader);
+    return KartPadRetroRewindFail(error, 38, @"That ZIP could not be opened.");
+  }
+  for (int32_t status = mz_zip_reader_goto_first_entry(reader); status == MZ_OK;
+       status = mz_zip_reader_goto_next_entry(reader)) {
+    mz_zip_file *info = nullptr;
+    if (mz_zip_reader_entry_get_info(reader, &info) != MZ_OK || info == nullptr ||
+        info->filename == nullptr || mz_zip_reader_entry_is_dir(reader) == MZ_OK) continue;
+    NSString *path = [[NSString alloc] initWithBytes:info->filename length:info->filename_size
+                                            encoding:NSUTF8StringEncoding];
+    NSString *name = [path stringByReplacingOccurrencesOfString:@"\\" withString:@"/"].lastPathComponent;
+    if (path == nil || [path containsString:@"__MACOSX"] ||
+        ![name.lowercaseString hasSuffix:@".brstm"]) continue;
+    NSData *data = nil;
+    if ((uint64_t)info->uncompressed_size >= 4 &&
+        (uint64_t)info->uncompressed_size <= kKartPadMaxMusicBytes &&
+        (info->flag & MZ_ZIP_FLAG_ENCRYPTED) == 0) {
+      NSMutableData *buffer = [NSMutableData dataWithLength:(NSUInteger)info->uncompressed_size];
+      if (mz_zip_reader_entry_save_buffer(reader, buffer.mutableBytes, (int32_t)buffer.length) == MZ_OK)
+        data = buffer;
+    }
+    if (KartPadWriteRetroMusic(directory, name, data)) *added += 1; else *skipped += 1;
+  }
+  mz_zip_reader_close(reader);
+  mz_zip_reader_delete(&reader);
+  if (*added == 0 && *skipped == 0)
+    return KartPadRetroRewindFail(error, 38, @"That ZIP has no .brstm music files.");
+  return YES;
+}
+
++ (NSUInteger)removeCustomMusic {
+  NSUInteger removed = 0;
+  NSString *directory = self.customMusicPath;
+  for (NSString *entry in [NSFileManager.defaultManager contentsOfDirectoryAtPath:directory error:nil]) {
+    NSString *path = [directory stringByAppendingPathComponent:entry];
+    NSDictionary *attributes = [NSFileManager.defaultManager attributesOfItemAtPath:path error:nil];
+    if ([attributes[NSFileType] isEqualToString:NSFileTypeRegular] && KartPadIsRetroMusicName(entry) &&
+        [NSFileManager.defaultManager removeItemAtPath:path error:nil]) removed += 1;
+  }
+  return removed;
 }
 
 @end

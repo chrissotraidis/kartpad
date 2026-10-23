@@ -13,8 +13,6 @@ runtime_source="$(absolute_from_repo "${2:-build/g7-game-runtime-source}")"
 runtime_build="$(absolute_from_repo "${3:-build/g7-game-runtime-build}")"
 product="${4:-base}"
 dawn_archive="${repo_root}/build/dependency-cache/dawn-darwin-arm64-v20260603.191052.tar.gz"
-sse2neon_url="https://raw.githubusercontent.com/DLTcollab/sse2neon/13a42df35dc7fcc94f987568e7274a998bb6cc86/sse2neon.h"
-sse2neon_sha256="44b9fa3dec3a52ea473246e04b9f692a4e5b0ed654299eef7fe7ec3049e223e0"
 
 case "${product}" in
   base) product_target="WiiCompiled" ;;
@@ -33,39 +31,38 @@ if [[ ! -f "${translation_root}/build_shards/shards.cmake" ]]; then
 fi
 python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify \
   "${translation_root}/functions/func_8000A440.cpp"
+python3 "${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify \
+  "${translation_root}/functions/func_802289DC.cpp"
 python3 "${repo_root}/scripts/inject-retro-rel-report-guard.py" --verify-shards \
+  "${translation_root}/build_shards"
+python3 "${repo_root}/scripts/inject-mkw-texture-link-guard.py" --verify-shards \
   "${translation_root}/build_shards"
 if [[ ! -f "${dawn_archive}" ]]; then
   echo "ERROR: missing pinned Dawn archive: ${dawn_archive}" >&2
   exit 1
 fi
-if [[ -e "${runtime_source}" || -e "${runtime_build}" ]]; then
-  echo "ERROR: output already exists; choose fresh output paths" >&2
+if [[ -L "${runtime_source}" || -L "${runtime_build}" ]]; then
+  echo "ERROR: runtime source/build must not be symlinks; choose fresh output paths" >&2
+  exit 1
+fi
+if [[ -e "${runtime_build}" ]] &&
+   { [[ ! -d "${runtime_source}" || ! -d "${runtime_build}" ||
+        ! -f "${runtime_build}/CMakeCache.txt" || -L "${runtime_build}/CMakeCache.txt" ]] ||
+     ! grep -Fqx "CMAKE_HOME_DIRECTORY:INTERNAL=${runtime_source}" "${runtime_build}/CMakeCache.txt"; }; then
+  echo "ERROR: existing build does not belong to this runtime source; choose fresh output paths" >&2
   exit 1
 fi
 
-mkdir -p "$(dirname "${runtime_source}")"
-python3 "${repo_root}/scripts/stage-maintained-runtime.py" macos "${runtime_source}"
-PYTHONPATH="${repo_root}/builder" python3 -m kartpad_builder.release_header \
-  "${repo_root}/builder/profiles/mkwii-rmcp01-rev0.json" \
-  "${runtime_source}/third_party/kartpad-profile/kartpad_retro_rewind_release.h"
-
-mkdir -p "${runtime_source}/third_party/sse2neon"
-cached_sse2neon="${repo_root}/build/dependency-cache/sse2neon-${sse2neon_sha256}.h"
-if [[ -f "${cached_sse2neon}" ]] &&
-   [[ "$(shasum -a 256 "${cached_sse2neon}" | awk '{print $1}')" == "${sse2neon_sha256}" ]]; then
-  cp "${cached_sse2neon}" "${runtime_source}/third_party/sse2neon/sse2neon.h"
-else
-  curl --fail --location --silent --show-error \
-    "${sse2neon_url}" -o "${runtime_source}/third_party/sse2neon/sse2neon.h"
-  mkdir -p "$(dirname "${cached_sse2neon}")"
-  cp "${runtime_source}/third_party/sse2neon/sse2neon.h" "${cached_sse2neon}"
+if [[ ! -e "${runtime_source}" ]]; then
+  mkdir -p "$(dirname "${runtime_source}")"
+  python3 "${repo_root}/scripts/stage-maintained-runtime.py" macos "${runtime_source}"
 fi
-actual_sse2neon_sha256="$(shasum -a 256 "${runtime_source}/third_party/sse2neon/sse2neon.h" | awk '{print $1}')"
-if [[ "${actual_sse2neon_sha256}" != "${sse2neon_sha256}" ]]; then
-  echo "ERROR: sse2neon hash mismatch: ${actual_sse2neon_sha256}" >&2
-  exit 1
-fi
+# A repeated PadMint run shares this source and its CMake/Ninja cache. Restore
+# missing generated headers after an interrupted download, then reject any
+# stale or edited source before compiling; never remove an existing workspace.
+python3 "${repo_root}/scripts/stage-maintained-runtime.py" --verify --allow-missing-generated macos "${runtime_source}"
+PYTHONPATH="${repo_root}/builder" python3 -m kartpad_builder.runtime_stage extras "${runtime_source}"
+python3 "${repo_root}/scripts/stage-maintained-runtime.py" --verify macos "${runtime_source}"
 
 # Mach-O C symbols have a leading underscore. The translator's assembly blob
 # labels are emitted in ELF/COFF spelling, so publish both spellings without

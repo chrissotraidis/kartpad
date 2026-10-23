@@ -1,26 +1,30 @@
 # KartPad Android
 
-Android is a supported community platform. Prebuilt APK downloads have been
-retired; the last published release was `v0.5.0 / code135` (no longer
-available). A build-it-yourself Android path is in progress.
-Read [installation, update safety and known limits](../docs/INSTALL_ANDROID.md)
-and the [current release notes](../docs/releases/v0.5.0.md).
+Android is a supported platform. Players install the ready-to-play APK from the
+[latest release](https://github.com/chrissotraidis/kartpad/releases/latest)
+(currently [KartPad 0.8.1](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.1)).
+Installing over an older KartPad keeps saves. Read
+[installation](../docs/INSTALL_ANDROID.md),
+[known issues](../docs/KNOWN-ISSUES.md) and
+[current status](../docs/STATUS.md).
 Sustained 60 FPS and complete device/controller coverage are not claimed.
 
-The next source candidate adds RVZ import through Android's system picker.
-The public code135 APK accepts ISO/WBFS. Both paths require the supported
-RMCP01 revision0 image; RVZ reduces source-image size, not extracted installed
-data. Candidate evidence and limits are in the
-[overnight work report](../docs/artifacts/2026-09-21/README.md).
+The published app imports an extracted game-data folder, or an ISO, WBFS or RVZ
+with your own Wii common key. An extracted folder needs no key. RVZ reduces the
+disc-image size, not the installed game data.
+
+A game pack for the published APK is described in
+[the builder guide](../docs/BUILDER.md). Maintainer packaging is in
+[Android publication](../docs/RELEASING_ANDROID.md).
 
 ## Historical full-app build recipe: v0.4.17-android.1
 
-The recipe below intentionally checks out the older release and its matching
-inputs. It is not a recipe for reproducing the current code135 APK. Its
+The recipe below intentionally checks out that older release and its matching
+inputs. It does not build KartPad 0.8.1. Its
 [source delivery and reconstruction record](../docs/artifacts/2026-09-13/android-source-delivery.md)
 supplies that version's dependency/runtime source and exact partition metadata.
 
-The current scripts target macOS ARM64, with Xcode command-line tools, Python 3,
+That recipe's scripts target macOS ARM64, with Xcode command-line tools, Python 3,
 and the pinned Builder/Android dependencies. Linux/Windows host builds are not
 documented as validated. Allow substantial disk space for dependencies and the
 private translated graph; the installed app's size is not the build-space cost.
