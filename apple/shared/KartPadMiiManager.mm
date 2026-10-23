@@ -417,9 +417,7 @@ static BOOL KartPadStageLicenseChange(NSString *profileIdentifier,
                                      NSUInteger selectedSlot = NSNotFound,
                                      NSData *selectedId = nil) {
   NSFileManager *files = NSFileManager.defaultManager;
-  if (KartPadHasPendingSaveRestore() || [files fileExistsAtPath:PendingGhostPath()] || [files fileExistsAtPath:PendingPath()] ||
-      [files fileExistsAtPath:PendingIdentityPath()] ||
-      [files fileExistsAtPath:PendingLicensePath()]) {
+  if (KartPadHasPendingMiiChanges()) {
     if (error != nullptr) {
       *error = ManagerError(13,
           "Restart KartPad to apply the pending identity change first.");

@@ -66,6 +66,12 @@ class TransferStorage {
     return bytes;
   }
 
+  static void SyncDirectory(const fs::path& path) {
+    FileDescriptor directory{::open(path.c_str(), O_RDONLY | O_CLOEXEC)};
+    Require(directory.value >= 0 && ::fsync(directory.value) == 0,
+        "Retro ghost directory could not be synchronized");
+  }
+
   // Build a complete temporary file, then rename it without replacing
   // any existing entry. A crash exposes either the complete file or no file.
   void WriteNew(const fs::path& target, std::span<const uint8_t> bytes) const {
@@ -92,9 +98,7 @@ class TransferStorage {
       Require(published == 0,
           "Retro ghost destination already exists or is unavailable");
       // Synchronize the new directory entry before finalizing the request.
-      FileDescriptor directory{::open(target.parent_path().c_str(), O_RDONLY | O_CLOEXEC)};
-      Require(directory.value >= 0 && ::fsync(directory.value) == 0,
-          "Retro ghost directory could not be synchronized");
+      SyncDirectory(target.parent_path());
     } catch (...) {
       ::unlink(temporary.c_str());
       throw;
@@ -210,6 +214,9 @@ public:
     if (fs::exists(target)) {
       Require(Read(target, GhostBytes) == std::vector<uint8_t>(ghost.begin(), ghost.end()),
           "Retro ghost filename was taken; cancel the pending import and choose it again");
+      // Publication may have succeeded before its directory sync failed. Keep
+      // the retryable request until that same durability step succeeds.
+      SyncDirectory(target.parent_path());
     } else {
       CheckFolder(destination, ghost);
       Directories(folder);

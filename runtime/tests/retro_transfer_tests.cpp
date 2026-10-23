@@ -1,4 +1,21 @@
+#include <cerrno>
+#include <sys/stat.h>
+#include <unistd.h>
+
+// Inject only directory-sync failures without adding a production test hook.
+static bool failDirectorySync = false;
+static unsigned directorySyncAttempts = 0;
+static int TestFsync(int fd) {
+  struct stat status{};
+  if (::fstat(fd, &status) == 0 && S_ISDIR(status.st_mode)) {
+    ++directorySyncAttempts;
+    if (failDirectorySync) { errno = EIO; return -1; }
+  }
+  return ::fsync(fd);
+}
+#define fsync TestFsync
 #include "kartpad/ghost/retro_transfer.h"
+#undef fsync
 #include "retro_catalog_fixture.h"
 #include "retro_ghost_fixture.h"
 
@@ -111,6 +128,23 @@ int main() {
   Write(folder / name, ghost);
   Require(storage.Apply() && !storage.HasPending(), "completed import not retryable");
 
+  // A rename can publish the ghost before syncing its directory fails. Every
+  // retry must finish that sync before deleting the only pending request.
+  storage.Stage(ghost, 0x106, 0, 1, catalog.identity); request = ReadFile(pending);
+  std::snprintf(name, sizeof(name), "%06x.rkg", Read32(request, 16) & 0xffffffu);
+  const auto durableTarget = root / "NAND" / catalog.Select(0x106, 0, 1).directory / name;
+  failDirectorySync = true;
+  Reject([&] { storage.Apply(); });
+  Require(storage.HasPending() && ReadFile(durableTarget) == ghost,
+      "failed directory sync lost the request or published ghost");
+  const auto attempts = directorySyncAttempts;
+  Reject([&] { storage.Apply(); });
+  Require(directorySyncAttempts == attempts + 1 && storage.HasPending() &&
+      ReadFile(durableTarget) == ghost, "retry skipped directory sync or changed storage");
+  failDirectorySync = false;
+  Require(storage.Apply() && !storage.HasPending() && ReadFile(durableTarget) == ghost,
+      "directory sync recovery did not finish the import");
+
   // Native code skips any comparison with the bundled expert's stored CRC.
   const auto custom = catalog.Select(0x104, 0, 2);
   Write(root / "RetroRewind/RetroRewind6" / custom.expertPath, ghost);
@@ -127,6 +161,6 @@ int main() {
   Reject([&] { storage.Stage(ghost, 0x105, 0, 0, catalog.identity); });
   Require(ReadFile(original) == progress && ReadFile(retro) == progress &&
       ReadFile(separate) == progress, "failure changed save data");
-  std::cout << "Retro staging: four modes, variants, compressed/uncompressed exact round-trip, saves/leaderboards, duplicates, collisions, retries, stale/corrupt requests, experts, capacity and symlink guards passed\n";
+  std::cout << "Retro staging: four modes, variants, compressed/uncompressed exact round-trip, saves/leaderboards, duplicates, collisions, durable retries, stale/corrupt requests, experts, capacity and symlink guards passed\n";
   fs::remove_all(root);
 }
