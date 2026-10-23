@@ -4321,7 +4321,10 @@ static void KartPadApplySoundLevels(BOOL persist) {
     _choosingMiiImport = NO;
     if (url == nil) return;
     NSError *readError = nil;
-    NSData *data = [NSData dataWithContentsOfURL:url options:0 error:&readError];
+    NSNumber *size = nil;
+    [url getResourceValue:&size forKey:NSURLFileSizeKey error:&readError];
+    NSData *data = size.unsignedLongLongValue == 74
+        ? [NSData dataWithContentsOfURL:url options:0 error:&readError] : nil;
     NSString *name = nil;
     NSError *importError = nil;
     BOOL imported = data != nil &&
@@ -4330,7 +4333,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
     if (!imported) {
       NSError *shownError = readError ?: importError;
       [self showIntegrationAlert:@"Mii Import Failed"
-                         message:shownError.localizedDescription ?: @"The selected file could not be imported."];
+                         message:shownError.localizedDescription ?: @"A Mii file must contain exactly 74 bytes."];
       return;
     }
     [self showIntegrationAlert:@"Mii Import Scheduled"
