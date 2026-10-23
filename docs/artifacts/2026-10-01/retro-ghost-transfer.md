@@ -357,6 +357,12 @@ that published code, while Retro ghost export/import use `4323`/`4324` and
 separate result handlers. Apple document-picker cancellation now clears both
 the Retro ghost selection and the soundtrack-import flag.
 
+Independent review also found that the existing Apple save-restore picker did
+not attach its delegate. Completion/cancellation therefore left a stale save
+selection that could capture a subsequent ghost import. Separate commit
+`f30dc179` attaches the delegate only to the save-opening picker; export pickers
+keep their existing behavior and do not receive import callbacks.
+
 Validation on the merged source passes:
 
 - Four ghost Python tests, including production JNI import/export and Unicode,
@@ -368,6 +374,13 @@ Validation on the merged source passes:
   `:app:compileDebugKotlin` with the verified locked dependencies. The first
   Kotlin invocation lacked the required dependency-root environment variables;
   the configured invocation succeeds.
+- The new Foundation harness executes the production picker methods with small
+  UIKit stand-ins: save completion/cancellation followed by Original/Retro ghost
+  import, music cancellation followed by ghost import, and export delegate
+  isolation pass. It reproduces the missing delegate on unmodified main and
+  passes with the standalone save fix. This checks callback routing, not UIKit
+  presentation or device behavior; the six existing iOS picker checks also pass
+  after the fix.
 
 These are source and host checks. The earlier native receipts used Retro Rewind
 6.12.8; they do not establish acceptance on current 6.13.4. Current-pack native
