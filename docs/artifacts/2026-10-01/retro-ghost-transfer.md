@@ -387,3 +387,11 @@ These are source and host checks. The earlier native receipts used Retro Rewind
 transfer/replay, custom courses, variants, the other modes, sustained Original
 rendering and physical iPhone picker/gameplay remain open. PR #375 stays draft
 and issue #295 stays open; this integration creates no release.
+
+Later on 23 October, merged main `46dc3535` after #506–#508: the standalone
+save-picker fix, bounded Mii reads with Apple picker CI, and Android diagnostic
+session labels. The only conflict was the shared picker harness; main's newer
+version was retained and passes with this draft's Retro path enabled, including
+the Mii read bounds. The six existing iOS picker contracts and production
+Android `:app:compileDebugKotlin` also pass. Ghost storage and replay behavior
+are unchanged, and the native/device acceptance gates above remain open.

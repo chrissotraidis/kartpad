@@ -1,0 +1,23 @@
+name: Apple document pickers
+on:
+  pull_request:
+    paths: &paths
+      - 'apple/ios/KartPadRuntimeOverlayHost.mm'
+      - 'tests/test_apple_ghost_picker_routing.py'
+      - 'tests/test_ios_game_data_picker_contract.py'
+      - '.github/workflows/apple-document-pickers.yml'
+  push:
+    branches: [main]
+    paths: *paths
+permissions:
+  contents: read
+jobs:
+  picker-routing:
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise production import callbacks and picker contracts
+        run: |
+          /usr/bin/python3 -B -m unittest discover -s tests -p test_apple_ghost_picker_routing.py -v
+          /usr/bin/python3 -B -m unittest discover -s tests -p test_ios_game_data_picker_contract.py -v
