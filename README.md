@@ -175,10 +175,11 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.5** (build 267) updates Retro Rewind to **6.13.4**, adds Android
-rumble strength and L3/R3 controller mappings for tricks, and shortens the
-optional touch item hold to 0.67 seconds on Android and iPhone/iPad.
-See the [release notes](docs/releases/v0.8.5.md).
+**KartPad 0.8.6** (build 268) fixes PadMint builds, which stopped in preflight
+for everyone after an upstream change, compiles the Android game code with a
+race profile for about 12% less game-thread CPU in emulator tests, and fixes
+the iPhone/iPad save restore picker. Retro Rewind stays at **6.13.4**.
+See the [release notes](docs/releases/v0.8.6.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained

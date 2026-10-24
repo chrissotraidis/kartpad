@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Game-thread CPU per frame in Grand Prix race 1 (Luigi Circuit, 12 racers, player idle).
+# KP_BENCH_COURSE=mario races Mario Circuit instead (Flower Cup, unlocked on the bench save).
 set -euo pipefail
 export KP_SERIAL=${KP_SERIAL:-emulator-5554}
 A="$HOME/Library/Android/sdk/platform-tools/adb -s $KP_SERIAL"
@@ -8,7 +9,12 @@ label=${1:-run}; window=${2:-30}
 $A shell am force-stop dev.kartpad.android; sleep 1
 $A logcat -c
 $A shell am start -n dev.kartpad.android/.KartPadLaunchActivity >/dev/null 2>&1; sleep 6
-$UI tap 2007 398 w10 A w3 A w4 A w3 A w2 A w2 A w2 A w2 A w2 A w2 A w2 A w2
+if [[ "${KP_BENCH_COURSE:-luigi}" == mario ]]; then
+  # The eighth A reaches Select Cup; one stick step right is Flower Cup.
+  $UI tap 2007 398 w10 A w3 A w4 A w3 A w2 A w2 A w2 A w2 A w4 swipe 300 840 490 840 250 w2 A w2 A w2 A w2 A w2
+else
+  $UI tap 2007 398 w10 A w3 A w4 A w3 A w2 A w2 A w2 A w2 A w2 A w2 A w2 A w2
+fi
 sleep 55
 P=$($A shell pidof dev.kartpad.android | tr -d '\r')
 T=$($A logcat -d --pid=$P -s KartPadPerf | tail -1 | awk '{print $4}')
