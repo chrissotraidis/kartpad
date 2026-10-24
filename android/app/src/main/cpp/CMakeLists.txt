@@ -112,6 +112,10 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   # Keep JNI exports, but bind calls to functions defined in this same product
   # locally. Function-only binding preserves external data-symbol semantics.
   target_link_options(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE "-Wl,-Bsymbolic-functions")
+  # Android 9's libandroid.so also exports __emutls_get_address. Listing
+  # libc++_shared.so first makes this runtime and the game pack bind the same
+  # emulated-TLS copy; otherwise the pack never sees the CPU context.
+  target_link_options(${KARTPAD_GAME_RUNTIME_TARGET} BEFORE PRIVATE "-lc++_shared")
   target_sources(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     kartpad_touch_input_jni.cpp
     kartpad_runtime_settings_jni.cpp

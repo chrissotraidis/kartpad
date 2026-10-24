@@ -190,6 +190,14 @@ for runtime in "${runtime_libraries[@]}"; do
     echo "ERROR: $runtime dependency set differs from the allowlist" >&2
     exit 1
   }
+  # Android 9's libandroid.so exports its own __emutls_get_address; the runtime
+  # must reach libc++_shared.so's copy first, as the game pack does.
+  first_needed="$(printf '%s\n' "$dynamic" |
+    sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | head -1)"
+  [[ "$first_needed" == libc++_shared.so ]] || {
+    echo "ERROR: $runtime must list libc++_shared.so first (found $first_needed)" >&2
+    exit 1
+  }
   # The game pack links to libmain.so by name, so both runtimes keep that name.
   [[ "$dynamic" == *"Library soname: [libmain.so]"* ]] || {
     echo "ERROR: $runtime is not named libmain.so" >&2
