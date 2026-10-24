@@ -25,6 +25,14 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
    `llvm-profdata merge` from the same NDK). A stale profile still builds but
    optimizes less. The profile is derived from running the game: keep it
    private, like the pack. PadMint player builds do not use it.
+   From 0.8.6 the app also carries the WiiCompiled 0.9 graphics layer as a
+   second runtime that players can choose in Display → Graphics Engine. Build
+   it from the same prepared runtime source and pack fingerprint with
+   `scripts/build-android-wiicompiled-runtime.sh <runtime-source> <dir>
+   <fingerprint>`, pass `-PkartpadWiiCompiledRuntime=<dir>` to the bundle build,
+   and pass its native build to `package-coordinated-assets.py
+   --android-wiicompiled-build`. The audits check it like `libmain.so`. Race on
+   both engines before release.
 4. Derive the universal APK with `scripts/derive-android-release-apk.sh`, using
    the persistent private release key. The key and password stay outside Git;
    maintain a secure independent backup. Never rotate the key merely to make a

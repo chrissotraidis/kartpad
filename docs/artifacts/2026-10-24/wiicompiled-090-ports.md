@@ -57,8 +57,9 @@ All four runtimes unless noted:
   behaviour change for KartPad's platforms.
 - v0.9.0's Aurora base swap to aurora-wiicompiled (655 commits, including a new
   render worker). KartPad's forks keep their maintained Aurora with about 100
-  platform patches; migrating needs its own project with device testing. Its
-  fog `fsel` fix was already in every fork.
+  platform patches. Android adds the new layer beside it as a choice
+  ([record](aurora-wiicompiled-layer.md)); Apple platforms keep the classic
+  layer for now. Its fog `fsel` fix was already in every fork.
 - Launcher, packaging and version-only commits; `3ff1473` (Linux Wii mappings);
   `0b12fc8` (upstream setup version in logs).
 - macOS/tvOS: `9d182f8` (PSQ fallbacks moved to a new file; this fork's CMake

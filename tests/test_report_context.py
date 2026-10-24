@@ -92,6 +92,7 @@ object KartPadTouchSettings {
  fun aspectMode(context: android.content.Context) = 0
 }
 object KartPadRendererDiagnostics { fun enabled(context: android.content.Context) = true }
+object KartPadNativeRuntime { fun engine(filesDir: java.io.File) = "classic" }
 ''',
             "Test.kt": r'''package dev.kartpad.android
 import java.nio.file.Files

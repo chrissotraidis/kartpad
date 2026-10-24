@@ -65,6 +65,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('record', 'source-record', 'artifacts', 'source', 'android-build', 'ios-build', 'mac-build', 'dolphin', 'dawn', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    # The Android app's second runtime: the WiiCompiled graphics layer's native build.
+    parser.add_argument('--android-wiicompiled-build', type=Path)
     args = parser.parse_args()
     if args.output.exists():
         parser.error('Output directory already exists; preserve prior assets')
@@ -108,9 +110,16 @@ def main():
         'zstd-BSD.txt': 'zstd-src/LICENSE',
     }.items():
         data = [(build / '_deps' / relative).read_bytes() for build in (args.android_build, args.ios_build, args.mac_build)]
-        if data[0] != data[1] or data[0] != data[2]:
+        if args.android_wiicompiled_build is not None:
+            data.append((args.android_wiicompiled_build / '_deps' / relative).read_bytes())
+        if any(notice != data[0] for notice in data[1:]):
             parser.error(f'Platform dependency notices differ: {label}')
         extras['ThirdPartyLicenses/' + label] = data[0]
+    if args.android_wiicompiled_build is not None:
+        # The WiiCompiled graphics layer links its own zlib; the classic one uses Android's.
+        extras['ThirdPartyLicenses/zlib.txt'] = (args.android_wiicompiled_build / '_deps/zlib-src/LICENSE.md').read_bytes()
+        if (REPO / 'vendor/runtimes/android/aurora-wiicompiled/LICENSE').read_bytes() != extras['ThirdPartyLicenses/Aurora-MIT.txt']:
+            parser.error('WiiCompiled graphics layer license differs from Aurora-MIT.txt')
     sdl = (args.ios_build / '_deps/sdl-src/LICENSE.txt').read_bytes()
     if sdl != (args.mac_build / '_deps/sdl-src/LICENSE.txt').read_bytes():
         parser.error('Apple SDL notices differ')

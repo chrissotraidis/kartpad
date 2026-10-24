@@ -87,6 +87,9 @@ class KartPadActivity : SDLActivity() {
 
     override fun createSDLSurface(context: Context): SDLSurface = KartPadSurface(context)
 
+    // Classic or WiiCompiled graphics; see KartPadNativeRuntime.
+    override fun getLibraries(): Array<String> = arrayOf("SDL3", KartPadNativeRuntime.libraryFor(this))
+
     override fun loadLibraries() {
         saveRestoreStartupError?.let { throw IllegalStateException(it) }
         super.loadLibraries()
@@ -706,7 +709,10 @@ class KartPadActivity : SDLActivity() {
     )
 
     private fun showDisplayMenu() = showKartPadMenuPage(
-        "Display", listOf(
+        "Display", listOfNotNull(
+            if (KartPadNativeRuntime.isAvailable()) MenuRow("Graphics Engine", R.drawable.ic_kartpad_display, submenu = true) {
+                closeKartPadMenu(::showGraphicsEngineSettings)
+            } else null,
             MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
             MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
             MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true) { closeKartPadMenu(::showFpsSizeSettings) },
@@ -989,6 +995,32 @@ class KartPadActivity : SDLActivity() {
                 applyDisplaySettings()
                 hideGameSystemBars()
                 dialog.dismiss()
+            }
+            .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showGraphicsEngineSettings() {
+        val current = KartPadNativeRuntime.engines.indexOf(KartPadNativeRuntime.engine(filesDir))
+        AlertDialog.Builder(this)
+            .setTitle("Graphics Engine")
+            .setSingleChoiceItems(KartPadNativeRuntime.labels, current) { dialog, which ->
+                dialog.dismiss()
+                if (which == current) return@setSingleChoiceItems
+                runCatching { KartPadNativeRuntime.setEngine(filesDir, KartPadNativeRuntime.engines[which]) }
+                    .onFailure {
+                        AlertDialog.Builder(this).setTitle("Graphics Engine")
+                            .setMessage("The setting could not be saved. Please try again.")
+                            .setPositiveButton("OK", null).show()
+                        return@setSingleChoiceItems
+                    }
+                AlertDialog.Builder(this)
+                    .setTitle("Restart to Switch")
+                    .setMessage("The game starts again with the ${KartPadNativeRuntime.labels[which]} engine. " +
+                        "Saves and settings are unchanged. You can switch back here or on the KartPad start screen.")
+                    .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
+                    .setNegativeButton("Later", null)
+                    .show()
             }
             .setNegativeButton("Back", null)
             .show()

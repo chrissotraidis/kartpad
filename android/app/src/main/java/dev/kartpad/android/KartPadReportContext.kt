@@ -95,6 +95,7 @@ internal object KartPadReportContext {
             .put("retro_code_validation", "not_rechecked_for_report")
             .put("resolution_scale", KartPadTouchSettings.resolutionScale(context))
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
+            .put("graphics_engine", KartPadNativeRuntime.engine(context.filesDir))
             .put("renderer_validation", activeRendererValidation ?: JSONObject.NULL)
             .put("renderer_validation_configured", KartPadRendererDiagnostics.enabled(context))
     }

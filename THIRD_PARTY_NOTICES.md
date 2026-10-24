@@ -20,6 +20,8 @@ WorkManager (Apache-2.0), rather than Apple's Metal/GameController host paths.
 |---|---|---|
 | [WiiCompiled](https://github.com/patchzyy/Wiicompiled), by [patchzyy](https://github.com/patchzyy) | `83463764b8acda394e058b0c689a10b8561fc380` | GPLv3; ahead-of-time translator and runtime, including KartPad modifications |
 | Aurora | vendored by the WiiCompiled pin | MIT; GX compatibility and Dawn integration |
+| aurora-wiicompiled | `patchzyy/aurora-wiicompiled` `dd399416` with KartPad changes, in `vendor/runtimes/android/aurora-wiicompiled` | MIT; the Android app's optional WiiCompiled 0.9 graphics layer |
+| zlib | fetched by the WiiCompiled graphics layer | zlib; compression for that layer's image and font libraries |
 | libco, byuu and the higan team | vendored by the WiiCompiled pin | ISC; Android cooperative contexts. `valgrind.h` retains its separate BSD-style notice. See `vendor/runtimes/android/runtime/third_party/libco/LICENSE`. |
 | Dawn | Apple: `v20260603.191052`; Android: `dawn-android-20260919.1`, identity `b0fd045b0a694eb07ac3fcf0d741f8697b935856` | Chromium/Dawn upstream terms; Metal and Vulkan WebGPU implementations; Android changes and rebuild recipe are in the source delivery |
 | Dolphin | `4f8af23db516d8b6e9cd00e7b261a65b026514a8` | GPL-2.0-or-later aggregate compatible with GPL-3.0; DiscIO and hardware/HLE-derived integration |
