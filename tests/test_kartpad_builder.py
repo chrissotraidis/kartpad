@@ -539,6 +539,44 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaisesRegex(BuildError, "incomplete .*bootstrap again"):
                 _verify_checkout(root, dependency)
 
+    def test_pinned_clone_survives_a_folder_turned_into_a_submodule_upstream(self) -> None:
+        # WiiCompiled 0.9.0 replaced the tracked aurora-main folder of the pinned commit with
+        # a submodule; checking out upstream's newest commit first then blocked the pinned one.
+        import subprocess
+        from kartpad_builder.bootstrap import _clone_pinned, _verify_checkout
+
+        def git(*args: str, cwd: Path) -> str:
+            return subprocess.run(["git", "-c", "protocol.file.allow=always", *args], cwd=cwd, check=True,
+                                  capture_output=True, text=True).stdout.strip()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            identity = ("-c", "user.name=t", "-c", "user.email=t@example.invalid")
+            aurora = root / "aurora"
+            git("init", "-q", "-b", "main", str(aurora), cwd=root)
+            (aurora / "os.h").write_text("submodule\n")
+            git("add", ".", cwd=aurora)
+            git(*identity, "commit", "-qm", "aurora", cwd=aurora)
+            upstream = root / "upstream"
+            git("init", "-q", "-b", "main", str(upstream), cwd=root)
+            (upstream / "aurora-main").mkdir()
+            (upstream / "aurora-main/os.h").write_text("tracked\n")
+            git("add", ".", cwd=upstream)
+            git(*identity, "commit", "-qm", "pinned", cwd=upstream)
+            pinned = git("rev-parse", "HEAD", cwd=upstream)
+            tree = git("rev-parse", "HEAD^{tree}", cwd=upstream)
+            git("rm", "-rq", "aurora-main", cwd=upstream)
+            git("submodule", "add", "-q", str(aurora), "aurora-main", cwd=upstream)
+            git(*identity, "commit", "-qm", "aurora-main becomes a submodule", cwd=upstream)
+
+            dependency = {"name": "WiiCompiled", "repository": str(upstream), "commit": pinned,
+                          "tree": tree, "path": "ref/upstream/Wiicompiled"}
+            checkout = root / "game" / dependency["path"]
+            checkout.parent.mkdir(parents=True)
+            _clone_pinned(dependency, checkout)
+            _verify_checkout(root / "game", dependency)
+            self.assertEqual((checkout / "aurora-main/os.h").read_text(), "tracked\n")
+
     def test_app_bootstrap_initializes_the_translator_gitlink(self) -> None:
         # The Mac/IPA translate step stages vendor/wiicompiled; a clean
         # PadMint checkout failed when bootstrap prepared only the runtimes.
