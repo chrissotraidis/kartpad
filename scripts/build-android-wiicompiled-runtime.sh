@@ -42,6 +42,5 @@ done
 [[ -f "$library" ]] || { echo "ERROR: the WiiCompiled runtime build was not found" >&2; exit 1; }
 mkdir -p "$output/arm64-v8a"
 cp "$library" "$output/arm64-v8a/libmain_wiicompiled.so"
-# For scripts/package-coordinated-assets.py --android-wiicompiled-build.
 echo "Native build: $native_build"
 echo "WiiCompiled runtime: $output/arm64-v8a/libmain_wiicompiled.so"
