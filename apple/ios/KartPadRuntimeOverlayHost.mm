@@ -3675,6 +3675,11 @@ static void KartPadApplySoundLevels(BOOL persist) {
           message:@"Fully close and reopen KartPad to restore the default online service. Original Mario Kart Wii's original service is closed; Retro Rewind uses Retro WFC."];
       return;
     }
+    if (KartPad::Network::IsPublicWfcDomain(host.UTF8String ?: "")) {
+      [weakSelf showMultiplayerMessage:@"Not a Private Server"
+          message:@"Retro Rewind already connects to Retro WFC. This setting is only for your own Wii server, so clear the field and save to use the default."];
+      return;
+    }
     if (!KartPad::Network::ValidPrivateWfcHost(host.UTF8String ?: "")) {
       [weakSelf showMultiplayerMessage:@"Invalid Server Address"
           message:@"Enter a hostname or IPv4 address only, without a URL scheme, path, port, or spaces."];
