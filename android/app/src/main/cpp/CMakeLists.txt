@@ -77,7 +77,9 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
     "-fmacro-prefix-map=${KARTPAD_GAME_RUNTIME_SOURCE}=wiicompiled-runtime")
   list(PREPEND CMAKE_PREFIX_PATH "${DAWN_ANDROID_ROOT}")
   set(Dawn_DIR "${DAWN_ANDROID_ROOT}/lib/cmake/Dawn" CACHE PATH "" FORCE)
-  set(MKW_AURORA_DIR "${KARTPAD_GAME_RUNTIME_SOURCE}/aurora-main" CACHE PATH "" FORCE)
+  # aurora-main is the classic graphics layer; aurora-wiicompiled is WiiCompiled 0.9's.
+  set(KARTPAD_AURORA_DIR "aurora-main" CACHE STRING "Graphics layer folder in the runtime source")
+  set(MKW_AURORA_DIR "${KARTPAD_GAME_RUNTIME_SOURCE}/${KARTPAD_AURORA_DIR}" CACHE PATH "" FORCE)
   if(KARTPAD_TRANSLATED_SHARD_MANIFEST)
     set(MKW_TRANSLATED_SHARD_MANIFEST
       "${KARTPAD_TRANSLATED_SHARD_MANIFEST}" CACHE FILEPATH "" FORCE)

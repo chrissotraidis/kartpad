@@ -20,7 +20,8 @@ final class RetroRewindArchiveExtractor {
      */
     private static final class NativeLibrary {
         static {
-            System.loadLibrary("main");
+            // The game Activity may already run the other runtime build; never load a second one.
+            KartPadNativeRuntime.ensureLoaded();
         }
 
         private NativeLibrary() {}
