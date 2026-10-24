@@ -20,6 +20,16 @@ pack fingerprint. `KartPadNativeRuntime` picks the library from the player's
 choice (a file read fresh by the start screen and the game process), so a
 process only ever loads one.
 
+If two starts in a row on the beta end before it has run for a minute, the
+next start uses Classic and says so; choosing an engine again resets the count.
+Phones with a Qualcomm SoC get an Adreno warning before switching.
+
+Both layers keep pipeline recipes in `pipeline_cache.db` and Dawn's shader
+blobs in `dawn_cache.db`. Rows are loaded by exact type and version, and the
+two layers never share one (Clear 3 and 5, GX 19 and 14, RmlUi only in the
+new layer), so neither reads the other's data. Each layer deletes the other's
+older-versioned rows, so the first races after a switch compile more shaders.
+
 ## What the new layer has
 
 aurora-wiicompiled `dd399416` plus these KartPad changes (fork commit

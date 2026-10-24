@@ -140,6 +140,14 @@ class KartPadActivity : SDLActivity() {
         super.onCreate(savedInstanceState)
         KartPadExitDiagnostics.mark(this, runtimeProfile)
         if (mBrokenLibraries) return
+        if (KartPadNativeRuntime.fellBackToClassic) {
+            android.widget.Toast.makeText(this,
+                "The WiiCompiled graphics beta closed twice while starting, so KartPad is using Classic graphics. " +
+                    "You can try the beta again in Display → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
+        }
+        // A minute of play means this start worked; see KartPadNativeRuntime.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            { KartPadNativeRuntime.markStarted(filesDir) }, KartPadNativeRuntime.HEALTHY_RUN_MS)
         nativeEnableActivityRecreation()
         inputManager = getSystemService(InputManager::class.java)
         runDebugRetroRewindExtractionFixture()
@@ -956,6 +964,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun restartToGameSelector() {
+        KartPadNativeRuntime.markStarted(filesDir)
         kartPadOverlay.clearTouchInput()
         val chooser = Intent(this, KartPadChooserActivity::class.java).apply {
             putExtra(KartPadChooserActivity.EXTRA_SKIP_PREFERRED_GAME, true)
@@ -1017,7 +1026,10 @@ class KartPadActivity : SDLActivity() {
                 AlertDialog.Builder(this)
                     .setTitle("Restart to Switch")
                     .setMessage("The game starts again with the ${KartPadNativeRuntime.labels[which]} engine. " +
-                        "Saves and settings are unchanged. You can switch back here or on the KartPad start screen.")
+                        "Saves and settings are unchanged. You can switch back here or on the KartPad start screen." +
+                        (if (which == 1 && KartPadNativeRuntime.isLikelyAdreno())
+                            "\n\nThis phone has a Qualcomm Adreno GPU. The beta doesn't have KartPad's Adreno fixes yet, " +
+                                "so characters or track textures may be missing. Switch back to Classic if they are." else ""))
                     .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
                     .setNegativeButton("Later", null)
                     .show()
