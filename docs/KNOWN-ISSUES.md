@@ -7,6 +7,13 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Setup and game data
 
+- **Fixed in 0.8.6: every PadMint build of 0.8.5 stopped in preflight with
+  `WiiCompiled does not match dependencies.lock.json`.** On 23 October the
+  upstream WiiCompiled project turned one of its folders into a submodule, and
+  0.8.5's setup could no longer check out the version KartPad pins. 0.8.6
+  checks out the pinned version directly. Build 0.8.6 with PadMint; you don't
+  need to delete anything, because a new release gets a fresh source folder.
+  [#509](https://github.com/chrissotraidis/kartpad/issues/509)
 - **Mac build stops at `CERTIFICATE_VERIFY_FAILED` before compiling.** A
   secure download failed its certificate check. The 0.8.1 recipe could switch
   from PadMint's own Python to another one on PATH during setup; 0.8.3 keeps
