@@ -676,6 +676,8 @@ open class KartPadChooserActivity : Activity() {
                         showStatus(if (pausedProfile() != null)
                             "$engine on next launch. Fully close KartPad from Recents and reopen it; Resume keeps the current graphics."
                             else if (which == 0) "$engine from the next game start."
+                            else if (KartPadNativeRuntime.isLikelyAdreno())
+                                "$engine from the next game start. This phone has a Qualcomm Adreno GPU, and the beta doesn't have KartPad's Adreno fixes yet; switch back to Classic if characters or track textures are missing."
                             else "$engine from the next game start. If anything looks wrong, switch back to Classic here.")
                     }
                     .onFailure { showStatus("The graphics setting could not be saved. Please try again.") }
