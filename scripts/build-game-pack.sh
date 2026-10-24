@@ -9,6 +9,11 @@
 #   OUTPUT            where to write the game pack (keep it private; never publish it)
 # Android loads the pack from the app's storage; on iPhone the pack goes inside
 # the app (scripts/add-game-pack-to-ipa.sh).
+#
+# Maintainer Android builds may set KARTPAD_GAME_PACK_PGO (off by default):
+#   generate          instrumented pack for recording a profile (tools/android-perf)
+#   use=PROFILE       profile-guided pack from a private .profdata of that recording
+# The profile is derived from running the game: keep it private like the pack.
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
@@ -35,10 +40,11 @@ if [[ "$platform" == android ]]; then
   sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
   ndk="$sdk_root/ndk/$KARTPAD_ANDROID_NDK"
   [[ -f "$ndk/build/cmake/android.toolchain.cmake" ]] || { echo "ERROR: Android NDK $KARTPAD_ANDROID_NDK not found under $sdk_root" >&2; exit 1; }
+  # The pack is stripped, so skip the NDK's default -g (about half the compile time).
+  release_flags="-O3 -DNDEBUG -g0"
   toolchain=(-DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake"
     -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM="android-$KARTPAD_ANDROID_MIN_SDK" -DANDROID_STL=c++_shared
-    # The pack is stripped, so skip the NDK's default -g (about half the compile time).
-    "-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -g0" "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -g0")
+    "-DCMAKE_C_FLAGS_RELEASE=$release_flags")
   built="libkartpad_game.so"
 else
   definitions="KARTPAD_UNOBSERVED_FP_STATUS=1"
@@ -46,6 +52,32 @@ else
     -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=16.0)
   built="libkartpad_game.dylib"
 fi
+
+pgo_flags=()
+case "${KARTPAD_GAME_PACK_PGO:-}" in
+  "") [[ "$platform" != android ]] || pgo_flags=("-DCMAKE_CXX_FLAGS_RELEASE=$release_flags") ;;
+  generate|use=*)
+    [[ "$platform" == android ]] || { echo "ERROR: KARTPAD_GAME_PACK_PGO is for Android packs only" >&2; exit 64; }
+    mkdir -p "$work"
+    if [[ "$KARTPAD_GAME_PACK_PGO" == generate ]]; then
+      # Retro Rewind's retro_mod shards take over 45 minutes each when
+      # instrumented, so they are recorded without counters.
+      printf '%s\n' '!src:*/retro_mod/*' > "$work/pgo-instrument.list"
+      clang="$ndk/toolchains/llvm/prebuilt/$(uname -s | tr '[:upper:]' '[:lower:]')-x86_64/bin/clang++"
+      "$clang" --target="aarch64-linux-android$KARTPAD_ANDROID_MIN_SDK" -O2 -fPIC -c \
+        "$repo_root/tools/android-perf/pgo_dump.cpp" -o "$work/pgo_dump.o"
+      pgo_flags=("-DCMAKE_CXX_FLAGS_RELEASE=$release_flags -fprofile-instr-generate -fprofile-list=$work/pgo-instrument.list"
+        "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=-fprofile-instr-generate $work/pgo_dump.o")
+    else
+      profile="${KARTPAD_GAME_PACK_PGO#use=}"
+      [[ -f "$profile" ]] || { echo "ERROR: missing PGO profile: $profile" >&2; exit 1; }
+      profile="$(cd "$(dirname "$profile")" && pwd)/$(basename "$profile")"
+      pgo_flags=("-DCMAKE_CXX_FLAGS_RELEASE=$release_flags -fprofile-instr-use=$profile")
+      echo "Profile-guided pack: $profile ($(shasum -a 256 "$profile" | cut -c1-16))"
+    fi
+    ;;
+  *) echo "ERROR: KARTPAD_GAME_PACK_PGO must be generate or use=PROFILE" >&2; exit 64 ;;
+esac
 
 # The runtime supplies headers and the pack project; no graphics libraries are built.
 stage="$work/$(date +%Y%m%d-%H%M%S)"
@@ -55,6 +87,7 @@ KARTPAD_PREPARE_PLATFORM="$platform" KARTPAD_PREPARE_ONLY=1 KARTPAD_PREPARE_WITH
 fingerprint="$(PYTHONPATH="$repo_root/builder" python3 -m kartpad_builder.pack_fingerprint "$platform" "$stage/runtime")"
 
 cmake -S "$stage/runtime/game_pack" -B "$stage/build" -G Ninja "${toolchain[@]}" \
+  ${pgo_flags[@]+"${pgo_flags[@]}"} \
   -DCMAKE_BUILD_TYPE=Release \
   -DMKW_TRANSLATED_SHARD_MANIFEST="$manifest" \
   -DMKW_GAME_PACK_RUNTIME="$runtime_lib" \

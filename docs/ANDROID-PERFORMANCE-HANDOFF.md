@@ -1,10 +1,27 @@
 # Android performance: where we stand
 
-Updated 14 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 24 October 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 24 October: PGO ships in 0.8.6's Android pack
+
+The Android release pack is now profile-guided (`KARTPAD_GAME_PACK_PGO` in
+`scripts/build-game-pack.sh`). The profile covers Original and Retro Rewind
+races. On unprofiled Mario Circuit, every PGO run used less game-thread CPU
+than its alternating baseline; the two quiet-host pairs show about **12% less**
+(7.81 → 6.91 ms/frame), and the pack is 13% smaller. Emulator only; no phone was
+measured. PadMint player builds are unchanged until a profile may be published
+for them. [Record and limits](artifacts/2026-10-24/pgo-release.md).
+
+Next candidate from #504's Odin 3 log (fast Snapdragon 8 Elite, median 16.7 ms
+but p95 20–31 ms with no shader queue): the game thread's Performance Hint
+session targets the whole 16.67 ms frame and reports only that thread's CPU
+time, so a power-saving governor may lower clocks until the work nearly fills
+the frame. A tighter target or adding the frame worker to the session needs a
+phone that shows the hitches; it is not testable on the emulator.
 
 ## Release context
 
@@ -115,7 +132,7 @@ alias them. Desktop builds use a compile-time base and pay none of this.
 | Pass `ctx` to the FP adapters instead of a TLS lookup | TLS samples 10.4% → 2.5%; no measurable frame-time change | Rejected; patch kept |
 | Exact fast path for normal FP results | Inlined: `.text` +12%, about 10% **slower**. Out of line: no change | Rejected; patch kept |
 | Flat-memory locals (read both globals once per function) | `.text` −6.4% (116.4 → 109.0 MB); −1.4% user time over 8 pairs, inside the noise | **Candidate:** needs a phone A/B |
-| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the training race: game thread **7.88 → 6.40 ms/frame (−19%)**, an upper bound. On 14 October, unprofiled Mario Circuit also favors PGO: later windows **6.90–6.94 ms** versus baseline **7.73–8.68 ms**; traffic/camera and host variation limit precision, and code grows 9% | **Candidate:** unprofiled-course direction confirmed; still needs Retro coverage, final-runtime/phone validation and a distribution decision. [Full cross-track record](artifacts/2026-10-14/pgo-cross-track.md) |
+| Profile-guided optimization (PGO) of the game pack | 12 October, quiet Mac, 4 alternating cold-boot rounds on the training race: game thread **7.88 → 6.40 ms/frame (−19%)**, an upper bound. On 14 October, unprofiled Mario Circuit also favors PGO. On 24 October, a three-session Original + Retro Rewind profile: quiet pairs on unprofiled Mario Circuit **7.81 → 6.91 ms (−12%)**, pack 13% smaller | **Shipped in 0.8.6 (Android APK).** PadMint builds need a published profile first. [24 October record](artifacts/2026-10-24/pgo-release.md) |
 
 Patches and the PGO dump source are in [`tools/android-perf`](../tools/android-perf/README.md).
 
@@ -152,17 +169,11 @@ Rules learned the hard way:
 
 ## Next steps, in order
 
-1. **Broaden the PGO check.** Measured −19% on the profiled bench race (above).
-   - Mario Circuit is now reached with a floating-stick drag and tested with
-     both packs. The direction persists, but traffic/camera variation limits
-     precision. Next collect a broader profile including Retro Rewind and
-     repeat on the final runtime; retain per-run screenshots and host activity.
-   - Then decide how it ships: the APK can be built with a profile, but
-     PadMint builds would need a published `.profdata` (function names and
-     counts derived from running the game; Chris to decide). Apply it to the
-     translated game-pack build that actually ships, retaining the pack
-     fingerprint/export checks; changing only a local profiling graph is not
-     release integration.
+1. **PGO for PadMint builds.** The Android APK ships with it from 0.8.6.
+   iPhone, iPad and Mac builds would need a published `.profdata` (function
+   names and counts derived from running the game; Chris to decide), and a
+   profile recorded on the Apple runtime. Re-record the Android profile with
+   every translation change (`KP_BENCH_COURSE=mario` keeps an unprofiled check).
 2. **Phone A/B for flat-memory locals** (and optionally the explicit-context
    change). If it gains, implement it properly:
    - **Translator:** emit an entry macro before `goto <entry>` in

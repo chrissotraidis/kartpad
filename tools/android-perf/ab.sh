@@ -34,7 +34,9 @@ boot() {
     kill -0 "$emulator_pid" 2>/dev/null && (( SECONDS < deadline )) || { echo 'Emulator boot failed' >&2; exit 1; }
     sleep 2
   done
-  "${A[@]}" root >/dev/null; sleep 3; "${A[@]}" wait-for-device; sleep 20
+  # adbd can refuse the first root restart on a busy host.
+  for _ in 1 2 3 4 5; do "${A[@]}" root >/dev/null 2>&1 && break; sleep 5; done
+  sleep 3; "${A[@]}" wait-for-device; sleep 20
 }
 for i in $(seq 1 "$n"); do
   for v in "$a" "$b"; do
