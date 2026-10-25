@@ -4690,6 +4690,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
 extern "C" bool KartPadMobileEnsureGameDataAvailable() {
   KartPadSystemDiagnosticsStart();
   KartPadApplyPrivateServerAtLaunch();
+  KartPadApplyCountryAtLaunch();
   NSError *miiError = nil;
   if (!KartPadApplyPendingMiiDatabase(&miiError)) {
     NSLog(@"[KartPad] pending Mii changes were not applied: %@",

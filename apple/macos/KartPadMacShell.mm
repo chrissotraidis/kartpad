@@ -1418,6 +1418,7 @@ void KartPadMacShellInstall(void) {
 
 bool KartPadMacShellPrepareGameData(void) {
   KartPadApplyPrivateServerAtLaunch();
+  KartPadApplyCountryAtLaunch();
   @autoreleasepool {
     const std::filesystem::path configPath = RuntimeConfigFile::ResolveConfigPath();
     const bool hadConfig = std::filesystem::exists(configPath);

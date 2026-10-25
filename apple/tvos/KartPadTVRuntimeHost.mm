@@ -572,6 +572,7 @@ UIButton *KartPadTVButton(NSString *title, UIColor *color,
 
 extern "C" bool KartPadMobileEnsureGameDataAvailable() {
   KartPadApplyPrivateServerAtLaunch();
+  KartPadApplyCountryAtLaunch();
   SunPadDiagnosticsStart();
   if (!NSThread.isMainThread) {
     __block BOOL available = NO;
