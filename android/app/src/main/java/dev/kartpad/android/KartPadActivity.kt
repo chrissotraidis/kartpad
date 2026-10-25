@@ -719,13 +719,53 @@ class KartPadActivity : SDLActivity() {
         showBack = true,
     )
 
-    private fun showDisplayMenu() = showKartPadMenuPage(
+    private fun showDisplayMenu(): Unit = showKartPadMenuPage(
         "Display", listOfNotNull(
             if (KartPadNativeRuntime.isAvailable()) MenuRow("Graphics Engine", R.drawable.ic_kartpad_display, submenu = true) {
                 closeKartPadMenu(::showGraphicsEngineSettings)
             } else null,
             MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
             MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
+            MenuRow(
+                "30 FPS Races",
+                R.drawable.ic_kartpad_speedometer,
+                checked = KartPadTouchSettings.thirtyFpsRaces(this),
+            ) {
+                val enabled = !KartPadTouchSettings.thirtyFpsRaces(this)
+                KartPadTouchSettings.setThirtyFpsRaces(this, enabled)
+                applyDisplaySettings()
+                if (enabled) {
+                    closeKartPadMenu {
+                        AlertDialog.Builder(this)
+                            .setTitle("30 FPS Races")
+                            .setMessage("Races use the game's own 30 FPS mode, the one it uses for 3 and 4 players. The race runs at normal speed while drawing half as often, so a phone that slows down at 60 FPS can play at full speed. Starts with the next race. Time Trials and ghost races stay at 60 FPS.")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
+                } else {
+                    showDisplayMenu()
+                }
+            },
+            MenuRow(
+                "Simpler Computer Karts",
+                R.drawable.ic_kartpad_speedometer,
+                checked = KartPadTouchSettings.simplerComputerKarts(this),
+            ) {
+                val enabled = !KartPadTouchSettings.simplerComputerKarts(this)
+                KartPadTouchSettings.setSimplerComputerKarts(this, enabled)
+                applyDisplaySettings()
+                if (enabled) {
+                    closeKartPadMenu {
+                        AlertDialog.Builder(this)
+                            .setTitle("Simpler Computer Karts")
+                            .setMessage("Computer-controlled karts use the simpler models the game uses in split-screen, which saves a lot of work in a 12-kart race. They look less detailed and their drivers don't animate. Your kart, ghosts and online players are unchanged. Starts with the next race.")
+                            .setPositiveButton("OK", null)
+                            .show()
+                    }
+                } else {
+                    showDisplayMenu()
+                }
+            },
             MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true) { closeKartPadMenu(::showFpsSizeSettings) },
             MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAppIconSettings) },
             MenuRow("Android Graphics Diagnostics…", R.drawable.ic_kartpad_display) { closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) } },
@@ -992,6 +1032,8 @@ class KartPadActivity : SDLActivity() {
             KartPadTouchSettings.aspectMode(this),
             KartPadTouchSettings.resolutionScale(this),
         )
+        if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
+        if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
     }
 
     private fun showAspectRatioSettings() {
@@ -2785,6 +2827,8 @@ class KartPadActivity : SDLActivity() {
     )
 
     private external fun nativeApplySoundLevels(music: Float, sounds: Float)
+    private external fun nativeApplyThirtyFpsRaces(enabled: Boolean)
+    private external fun nativeApplySimplerComputerKarts(enabled: Boolean)
 
     private external fun nativeTestDiagnosticCrash()
     private external fun nativeEnableActivityRecreation()
