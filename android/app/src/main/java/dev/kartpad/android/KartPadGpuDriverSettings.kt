@@ -33,7 +33,8 @@ internal object KartPadGpuDriverSettings {
     private val hookLibraries =
         listOf("libmain_hook.so", "libhook_impl.so", "libfile_redirect_hook.so", "libgsl_alloc_hook.so")
     private val environment =
-        listOf("KARTPAD_GPU_DRIVER_DIR", "KARTPAD_GPU_DRIVER_LIB", "KARTPAD_GPU_HOOK_DIR", "KARTPAD_GPU_TMP_DIR")
+        listOf("KARTPAD_GPU_DRIVER_DIR", "KARTPAD_GPU_DRIVER_LIB", "KARTPAD_GPU_HOOK_DIR", "KARTPAD_GPU_TMP_DIR",
+            "KARTPAD_GPU_DRIVER_STARTS")
 
     /** True when this start went back to the phone's driver because the chosen one kept failing. */
     @Volatile
@@ -112,6 +113,8 @@ internal object KartPadGpuDriverSettings {
             Os.setenv("KARTPAD_GPU_DRIVER_LIB", driver.library, true)
             Os.setenv("KARTPAD_GPU_HOOK_DIR", hooksDir(context).absolutePath + "/", true)
             Os.setenv("KARTPAD_GPU_TMP_DIR", tmp.absolutePath + "/", true)
+            // The runtime marks this file failed if graphics can't start with the driver.
+            Os.setenv("KARTPAD_GPU_DRIVER_STARTS", starts.absolutePath, true)
             // Counted now, cleared by markStarted once the game has run for a minute.
             starts.writeText((failed + 1).toString())
         }.onFailure { environment.forEach { name -> Os.unsetenv(name) } }

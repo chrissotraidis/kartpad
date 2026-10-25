@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 
 #include <atomic>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -114,9 +115,27 @@ extern "C" void KartPadLoadCustomGpuDriver() {
     Report("loaded", "ok", driverLib);
 }
 
+extern "C" bool KartPadCustomGpuDriverActive() {
+    return g_vulkanOverride.load(std::memory_order_acquire) != nullptr;
+}
+
+// Graphics could not start with the player's driver. Mark the app's start counter as failed so
+// the next start uses the phone's own driver straight away (KartPadGpuDriverSettings.kt).
+extern "C" void KartPadCustomGpuDriverFailed() {
+    Report("failed", "graphics_start", Env("KARTPAD_GPU_DRIVER_LIB"));
+    const char* starts = Env("KARTPAD_GPU_DRIVER_STARTS");
+    if (starts == nullptr) return;
+    if (std::FILE* file = std::fopen(starts, "w")) {
+        std::fputs("99", file);
+        std::fclose(file);
+    }
+}
+
 #else
 
 extern "C" void KartPadLoadCustomGpuDriver() {}
+extern "C" bool KartPadCustomGpuDriverActive() { return false; }
+extern "C" void KartPadCustomGpuDriverFailed() {}
 
 #endif
 

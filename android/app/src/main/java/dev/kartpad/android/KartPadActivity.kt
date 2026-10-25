@@ -151,7 +151,7 @@ class KartPadActivity : SDLActivity() {
         }
         if (KartPadGpuDriverSettings.fellBackToSystem) {
             android.widget.Toast.makeText(this,
-                "The game closed twice while starting with the GPU driver you chose, so KartPad is using the phone's driver. " +
+                "The GPU driver you chose didn't start the game, so KartPad is using the phone's driver. " +
                     "You can choose a driver again in Display → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
         // A minute of play means this start worked; see KartPadNativeRuntime.
@@ -1101,7 +1101,7 @@ class KartPadActivity : SDLActivity() {
         AlertDialog.Builder(this)
             .setTitle("Restart to Switch")
             .setMessage("The game starts again with the driver you chose. Saves and settings are unchanged. " +
-                "If the game closes twice while starting, KartPad goes back to the phone's driver.")
+                "If an installed driver doesn't start the game, KartPad goes back to the phone's driver by itself.")
             .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
             .setNegativeButton("Later", null)
             .show()
