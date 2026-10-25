@@ -100,6 +100,15 @@ if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libmain_wiicompiled.so; th
   expected_native_members="$(printf '%s\n' "$expected_native_members" lib/arm64-v8a/libmain_wiicompiled.so | sort)"
 fi
 has_discio=0
+# libadrenotools' hook libraries, for a GPU driver the player installs, ship as one set.
+gpu_hooks=(libhook_impl.so libmain_hook.so libfile_redirect_hook.so libgsl_alloc_hook.so)
+has_gpu_hooks=0
+if printf '%s\n' "$members" | grep -Eq '^lib/arm64-v8a/lib(hook_impl|main_hook|file_redirect_hook|gsl_alloc_hook)\.so$'; then
+  has_gpu_hooks=1
+  for hook in "${gpu_hooks[@]}"; do
+    expected_native_members="$(printf '%s\n' "$expected_native_members" "lib/arm64-v8a/$hook" | sort)"
+  done
+fi
 if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libkartpad_discio.so; then
   has_discio=1
   # A stale prebuilt disc reader shipped in 0.5.1 without RVZ support (#314).
@@ -171,6 +180,7 @@ if [[ "$has_discio" == 1 ]]; then
 fi
 [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || audit_libraries+=(libkartpad_game.so)
 audit_libraries+=("${runtime_libraries[@]:1}")
+[[ "$has_gpu_hooks" != 1 ]] || audit_libraries+=("${gpu_hooks[@]}")
 for library in "${audit_libraries[@]}"; do
   unzip -p "$apk" "lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |
@@ -209,6 +219,32 @@ for runtime in "${runtime_libraries[@]}"; do
     exit 1
   fi
 done
+# A runtime built with the GPU driver loader needs its hooks; the hooks carry their own C++
+# runtime so they load in adrenotools' linker namespace.
+for runtime in "${runtime_libraries[@]}"; do
+  if grep -a -F -q adrenotools-libvulkan "$audit_root/$runtime" && [[ "$has_gpu_hooks" != 1 ]]; then
+    echo "ERROR: $runtime loads GPU drivers but the APK has no hook libraries" >&2
+    exit 1
+  fi
+done
+if [[ "$has_gpu_hooks" == 1 ]]; then
+  for hook in "${gpu_hooks[@]}"; do
+    hook_dynamic="$("$readelf" -d -l "$audit_root/$hook")"
+    hook_needed="$(printf '%s\n' "$hook_dynamic" |
+      sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
+    expected_hook_needed="$(printf '%s\n' libandroid.so libc.so libdl.so liblog.so libm.so | sort)"
+    [[ "$hook" == libhook_impl.so ]] ||
+      expected_hook_needed="$(printf '%s\n' "$expected_hook_needed" libhook_impl.so | sort)"
+    [[ "$hook_needed" == "$expected_hook_needed" ]] || {
+      echo "ERROR: $hook dependency set differs from the allowlist" >&2
+      exit 1
+    }
+    if ! printf '%s\n' "$hook_dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
+      echo "ERROR: $hook does not have a non-executable stack" >&2
+      exit 1
+    fi
+  done
+fi
 if [[ "$has_discio" == 1 ]]; then
   discio_dynamic="$("$readelf" -d -l "$audit_root/libkartpad_discio.so")"
   discio_needed="$(printf '%s\n' "$discio_dynamic" |

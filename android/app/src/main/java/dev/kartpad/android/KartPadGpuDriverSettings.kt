@@ -129,6 +129,11 @@ internal object KartPadGpuDriverSettings {
             val edit = preferences(context).edit()
             if (driver == null) edit.remove("driver") else edit.putString("driver", driver.dir.name)
             check(edit.commit())
+            // Dawn's saved Vulkan pipeline data belongs to the previous driver. Drivers should
+            // reject another driver's data, but old Adreno drivers are the ones this is for.
+            // The engine's own list of shaders (pipeline_cache.db) is driver-independent and stays.
+            val cache = File(context.cacheDir, "KartPad")
+            for (name in listOf("dawn_cache.db", "dawn_cache.db-wal", "dawn_cache.db-shm")) File(cache, name).delete()
         }.isSuccess
 
     fun show(activity: Activity, onChanged: () -> Unit) {
