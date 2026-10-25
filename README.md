@@ -176,9 +176,12 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 ### Current release
 
 **KartPad 0.8.6** (build 268) fixes PadMint builds, which stopped in preflight
-for everyone after an upstream change, compiles the Android game code with a
-race profile for about 12% less game-thread CPU in emulator tests, and fixes
-the iPhone/iPad save restore picker. Retro Rewind stays at **6.13.4**.
+for everyone after an upstream change, gives the game your country for the
+online flag and globe, and brings in WiiCompiled's fixes through v0.9.0. On
+Android it adds 30 FPS Races, Simpler Computer Karts, custom GPU drivers for
+Snapdragon phones, faster game code (about 12% less game-thread CPU in emulator
+tests) and an opt-in WiiCompiled 0.9 graphics engine beta next to the default
+Classic engine. Retro Rewind stays at **6.13.4**.
 See the [release notes](docs/releases/v0.8.6.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and

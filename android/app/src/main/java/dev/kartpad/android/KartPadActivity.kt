@@ -147,12 +147,12 @@ class KartPadActivity : SDLActivity() {
         if (KartPadNativeRuntime.fellBackToClassic) {
             android.widget.Toast.makeText(this,
                 "The WiiCompiled graphics beta closed twice while starting, so KartPad is using Classic graphics. " +
-                    "You can try the beta again in Display → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
+                    "You can try the beta again in Graphics & Performance → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
         }
         if (KartPadGpuDriverSettings.fellBackToSystem) {
             android.widget.Toast.makeText(this,
                 "The GPU driver you chose didn't start the game, so KartPad is using the phone's driver. " +
-                    "You can choose a driver again in Display → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
+                    "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
         // A minute of play means this start worked; see KartPadNativeRuntime.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
