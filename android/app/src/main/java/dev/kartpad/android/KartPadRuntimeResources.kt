@@ -12,6 +12,7 @@ internal object KartPadRuntimeResources {
     private val files = listOf(
         "dsp/dsp_coef.bin",
         "pipeline/initial_pipeline_cache.db",
+        "pipeline/initial_pipeline_cache_wiicompiled.db",
         "wii/README.md",
         "wii/shared2/wc24/misc.bin",
         "wii/shared2/wc24/nwc24dl.bin",

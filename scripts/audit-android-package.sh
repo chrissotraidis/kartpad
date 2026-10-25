@@ -141,6 +141,7 @@ if [[ -n "$asset_members" ]]; then
     assets/ThirdPartyLicenses/Minizip-NG.txt \
     assets/dsp/dsp_coef.bin \
     assets/pipeline/initial_pipeline_cache.db \
+    assets/pipeline/initial_pipeline_cache_wiicompiled.db \
     assets/wii/README.md \
     assets/wii/shared2/wc24/mbox/Readme.txt \
     assets/wii/shared2/wc24/mbox/wc24recv.ctl \
