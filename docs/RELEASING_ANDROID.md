@@ -26,7 +26,7 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
    optimizes less. The profile is derived from running the game: keep it
    private, like the pack. PadMint player builds do not use it.
    From 0.8.6 the app also carries the WiiCompiled 0.9 graphics layer as a
-   second runtime that players can choose in Display → Graphics Engine. Build
+   second runtime that players can choose in Graphics & Performance → Graphics Engine. Build
    it from the same prepared runtime source and pack fingerprint with
    `scripts/build-android-wiicompiled-runtime.sh <runtime-source> <dir>
    <fingerprint>`, and pass `-PkartpadWiiCompiledRuntime=<dir>` to the bundle
