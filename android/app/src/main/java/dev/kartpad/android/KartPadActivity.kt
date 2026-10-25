@@ -131,7 +131,10 @@ class KartPadActivity : SDLActivity() {
             }
             KartPadRuntimeResources.install(this)
             configureRuntimeProfile()
-            if (!identityStartupChecked) KartPadPrivateServerSettings.configureLaunch(this)
+            if (!identityStartupChecked) {
+                KartPadPrivateServerSettings.configureLaunch(this)
+                KartPadCountrySetting.configureLaunch(this)
+            }
             configureDebugLocalWfcRoute()
             configureDebugRkgInput()
             configureDebugStateTrace()
@@ -1078,6 +1081,7 @@ class KartPadActivity : SDLActivity() {
         val retro = runtimeProfile == "retro_rewind"
         val choices = mutableListOf("Local Split-Screen…", "Controller Setup…")
         if (retro) choices += "Retro WFC Friend Rooms…"
+        choices += "Country…"
         choices += "Experimental Server Settings…"
         AlertDialog.Builder(this)
             .setTitle("Multiplayer")
@@ -1086,6 +1090,14 @@ class KartPadActivity : SDLActivity() {
                 menuButton.post {
                     when (choices[index]) {
                         "Controller Setup…" -> showControllerPlayers()
+                        "Country…" -> KartPadCountrySetting.show(this) {
+                            AlertDialog.Builder(this)
+                                .setTitle("Country Saved")
+                                .setMessage("Your flag and globe position change after KartPad restarts. Saves, ghosts and friends stay.")
+                                .setNegativeButton("Later", null)
+                                .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
+                                .show()
+                        }
                         "Experimental Server Settings…" -> KartPadPrivateServerSettings.show(this)
                         "Local Split-Screen…" -> showParityBoundary("Local Split-Screen",
                             "Pair Android-supported controllers, assign Player 1–4 in Controller Setup, then choose Multiplayer in the game. Press the mapped A button on each pad at Register Controllers. Touch shares Player 1. PlayStation defaults: Cross = A, Circle = B, Square = X, Triangle = Y; Customize Face Buttons changes these positions.")

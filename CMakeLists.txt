@@ -423,6 +423,12 @@ if(BUILD_TESTING)
     target_compile_options(kartpad_private_wfc_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME kartpad.network.private-wfc COMMAND kartpad_private_wfc_tests)
 
+    add_executable(kartpad_wii_country_tests runtime/tests/wii_country_tests.cpp)
+    target_include_directories(kartpad_wii_country_tests PRIVATE runtime/include)
+    target_compile_features(kartpad_wii_country_tests PRIVATE cxx_std_20)
+    target_compile_options(kartpad_wii_country_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME kartpad.system.wii-country COMMAND kartpad_wii_country_tests)
+
     add_executable(kartpad_local_wfc_test_route_tests
       runtime/tests/local_wfc_test_route_tests.cpp)
     target_include_directories(kartpad_local_wfc_test_route_tests PRIVATE runtime/include)

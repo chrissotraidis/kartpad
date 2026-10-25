@@ -67,7 +67,7 @@
       {"function": "func_802289DC.cpp", "script": "scripts/inject-mkw-texture-link-guard.py"}
     ],
     "expectedGeneratedFunctions": 29637,
-    "expectedBaseFunctions": 29065,
+    "expectedBaseFunctions": 29064,
     "expectedRetroFunctions": 4139
   },
   "retroRewind": {
