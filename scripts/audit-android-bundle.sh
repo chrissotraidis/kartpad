@@ -108,6 +108,16 @@ if printf '%s\n' "$members" | grep -Fxq base/lib/arm64-v8a/libmain_wiicompiled.s
   runtime_libraries+=(libmain_wiicompiled.so)
   expected_native_members="$(printf '%s\n' "$expected_native_members" base/lib/arm64-v8a/libmain_wiicompiled.so | sort)"
 fi
+# libadrenotools' hook libraries, for a GPU driver the player installs, ship as one set;
+# audit-android-package.sh checks their dependencies in the derived APK.
+gpu_hooks=(libhook_impl.so libmain_hook.so libfile_redirect_hook.so libgsl_alloc_hook.so)
+has_gpu_hooks=0
+if printf '%s\n' "$members" | grep -Eq '^base/lib/arm64-v8a/lib(hook_impl|main_hook|file_redirect_hook|gsl_alloc_hook)\.so$'; then
+  has_gpu_hooks=1
+  for hook in "${gpu_hooks[@]}"; do
+    expected_native_members="$(printf '%s\n' "$expected_native_members" "base/lib/arm64-v8a/$hook" | sort)"
+  done
+fi
 # The ready-to-play app (KARTPAD_ANDROID_ALLOW_GAME_PACK=1) also carries the game pack:
 # KartPad's translated game code. Every other check still applies to it.
 if [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" == 1 ]]; then
@@ -148,6 +158,7 @@ mkdir -p "$audit_root"
 aab_libraries=(libSDL3.so libc++_shared.so libkartpad_discio.so libmain.so)
 [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || aab_libraries+=(libkartpad_game.so)
 aab_libraries+=("${runtime_libraries[@]:1}")
+[[ "$has_gpu_hooks" != 1 ]] || aab_libraries+=("${gpu_hooks[@]}")
 for library in "${aab_libraries[@]}"; do
   unzip -p "$bundle" "base/lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |

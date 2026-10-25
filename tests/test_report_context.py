@@ -93,6 +93,7 @@ object KartPadTouchSettings {
 }
 object KartPadRendererDiagnostics { fun enabled(context: android.content.Context) = true }
 object KartPadNativeRuntime { fun engine(filesDir: java.io.File) = "classic" }
+object KartPadGpuDriverSettings { fun selectedName(context: android.content.Context): String? = null }
 ''',
             "Test.kt": r'''package dev.kartpad.android
 import java.nio.file.Files
@@ -134,6 +135,7 @@ fun main() {
   val exported = KartPadReportContext.snapshot(context, null)
   check(exported.isNull("renderer_validation"))
   check(exported.getBoolean("renderer_validation_configured"))
+  check(exported.getString("gpu_driver") == "system")
   val inGame = KartPadReportContext.snapshot(context, "base", false)
   check(!inGame.getBoolean("renderer_validation"))
   check(inGame.getBoolean("renderer_validation_configured"))

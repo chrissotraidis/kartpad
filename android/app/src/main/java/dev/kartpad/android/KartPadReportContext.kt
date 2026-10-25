@@ -96,6 +96,7 @@ internal object KartPadReportContext {
             .put("resolution_scale", KartPadTouchSettings.resolutionScale(context))
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
             .put("graphics_engine", KartPadNativeRuntime.engine(context.filesDir))
+            .put("gpu_driver", KartPadGpuDriverSettings.selectedName(context) ?: "system")
             .put("renderer_validation", activeRendererValidation ?: JSONObject.NULL)
             .put("renderer_validation_configured", KartPadRendererDiagnostics.enabled(context))
     }

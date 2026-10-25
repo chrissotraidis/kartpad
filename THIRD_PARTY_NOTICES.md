@@ -30,6 +30,8 @@ WorkManager (Apache-2.0), rather than Apple's Metal/GameController host paths.
 | Mbed TLS | `4.1.1` | Apache-2.0 OR GPL-2.0-or-later; Android native TLS primitive |
 | Minizip-NG | Dolphin-pinned source | zlib; tvOS Retro Rewind archive extraction |
 | WiimotePairPlus | `8e7f9b12db2da520e4f868305c4861cdf58fa15f` | GPL-2.0-or-later; experimental macOS Wii Remote Bluetooth pairing flow derived from Dolphin WiimotePair |
+| [libadrenotools](https://github.com/bylaws/libadrenotools) and [linkernsbypass](https://github.com/bylaws/liblinkernsbypass), by Billy Laws | `8fae8ce254dfc1344527e05301e43f37dea2df80` and `aa3975893d83ef1bc84c321ec60c65fbf1287887`, vendored in `android/third_party/adrenotools` | BSD-2-Clause (text below); Android only: loads a GPU driver the player installs |
+| [DriftDroid](https://github.com/dorPXP/driftdroid), by dorPXP | `8b33d31016a8b8735fe35b4fb633c491d33774c6` (1.3.0) | GPL-3.0; Android "Simpler Computer Karts" and the GPU driver picker are adapted from it |
 | Abseil, Dear ImGui, fmt, FreeType, libpng, Tracy, xxHash, zstd | exact package-build inputs | Their included upstream license files apply |
 
 The published repository and tag provide KartPad's integration source,
@@ -58,3 +60,34 @@ KartPad's platform runtime source is maintained in the actual
 licenses and notices. KartPad's translator changes are maintained on the fork's
 `kartpad-translator` branch, pinned at `vendor/wiicompiled/`. See [source maintenance](docs/source-maintenance/README.md)
 for exact source ownership, upstream identity and contribution workflow.
+
+## libadrenotools and linkernsbypass license
+
+Both carry the same BSD 2-Clause License:
+
+```text
+BSD 2-Clause License
+
+Copyright (c) 2021, Billy Laws
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
