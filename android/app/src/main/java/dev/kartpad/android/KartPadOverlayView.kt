@@ -62,6 +62,9 @@ class KartPadOverlayView(context: Context) : View(context) {
     private var insetTop = 0
     private var insetRight = 0
     private var insetBottom = 0
+    // The KartPad ⋯ button, in this view's coordinates. It sits above these controls, so Start
+    // keeps clear of it: the button's top margin includes the hidden status bar, these insets don't.
+    private val menuButtonFrame = RectF()
     private var leftX = 0f
     private var leftY = 0f
     private var rightX = 0f
@@ -113,6 +116,14 @@ class KartPadOverlayView(context: Context) : View(context) {
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
         buildControls()
         reloadCustomSettings()
+    }
+
+    fun setMenuButtonFrame(left: Float, top: Float, right: Float, bottom: Float) {
+        if (menuButtonFrame.left == left && menuButtonFrame.top == top &&
+            menuButtonFrame.right == right && menuButtonFrame.bottom == bottom
+        ) return
+        menuButtonFrame.set(left, top, right, bottom)
+        invalidate()
     }
 
     @Suppress("DEPRECATION")
@@ -993,10 +1004,23 @@ class KartPadOverlayView(context: Context) : View(context) {
                 safe.left + controlWidth * 0.5f,
                 safe.right - controlWidth * 0.5f,
             )
-            val boundedCenterY = centerY.coerceIn(
+            var boundedCenterY = centerY.coerceIn(
                 safe.top + controlHeight * 0.5f,
                 safe.bottom - controlHeight * 0.5f,
             )
+            if (control.id == "Start" && !menuButtonFrame.isEmpty) {
+                val gap = dp(6f)
+                val overlaps = boundedCenterX - controlWidth * 0.5f < menuButtonFrame.right + gap &&
+                    boundedCenterX + controlWidth * 0.5f > menuButtonFrame.left - gap &&
+                    boundedCenterY - controlHeight * 0.5f < menuButtonFrame.bottom + gap &&
+                    boundedCenterY + controlHeight * 0.5f > menuButtonFrame.top - gap
+                if (overlaps) {
+                    boundedCenterY = min(
+                        menuButtonFrame.bottom + gap + controlHeight * 0.5f,
+                        safe.bottom - controlHeight * 0.5f,
+                    )
+                }
+            }
             val dpadCell = dp(if (tabletDefaults) 48f else 36f) * combinedScale
             val adjustedCenterX = boundedCenterX + when (control.id) {
                 "DpadLeft" -> -dpadCell

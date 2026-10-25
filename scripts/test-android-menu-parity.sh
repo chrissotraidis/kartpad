@@ -175,9 +175,9 @@ top=(
   "KartPad"
   "Return to KartPad Menu"
   "Multiplayer…"
-  "Show FPS Counter"
   "Controls"
   "Display"
+  "Graphics & Performance"
   "Game Data & Saves"
   "Report a Problem…"
 )
@@ -202,8 +202,14 @@ start_menu
 tap_label "Display"
 sleep 1
 dump_tree
-assert_labels "FPS Counter Size" "Aspect Ratio" "Render Resolution" "Android Graphics Diagnostics…"
-assert_icon_count 4
+assert_labels "Show FPS Counter" "FPS Counter Size" "Aspect Ratio" "Render Resolution" "App Icon"
+assert_icon_count 5
+
+start_menu
+tap_label "Graphics & Performance"
+sleep 1
+dump_tree
+assert_labels "30 FPS Races" "Simpler Computer Karts" "Graphics Diagnostics…"
 
 start_menu
 tap_label "Game Data & Saves"
@@ -232,6 +238,9 @@ for label in "Open GitHub Draft" "Share Report…" "Back to Game"; do
 done
 
 start_menu
+tap_label "Display"
+sleep 1
+dump_tree
 fps_before="$("$adb" exec-out run-as dev.kartpad.android \
   cat shared_prefs/kartpad_touch_controls.xml 2>/dev/null || true)"
 if grep -Eq '<boolean name="show_fps" value="false"[[:space:]]*/>' \
@@ -417,4 +426,4 @@ print(
 PY
 fi
 
-echo "Android menu parity passed: lane=$lane top=8 controls=5 display=4 data=7 actions=17 safe-insets=pass"
+echo "Android menu parity passed: lane=$lane top=8 controls=5 display=5 graphics=3 data=7 actions=17 safe-insets=pass"

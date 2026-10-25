@@ -133,6 +133,7 @@ expected_asset_members="$(printf '%s\n' \
   base/assets/ThirdPartyLicenses/Minizip-NG.txt \
   base/assets/dsp/dsp_coef.bin \
   base/assets/pipeline/initial_pipeline_cache.db \
+  base/assets/pipeline/initial_pipeline_cache_wiicompiled.db \
   base/assets/wii/README.md \
   base/assets/wii/shared2/wc24/mbox/Readme.txt \
   base/assets/wii/shared2/wc24/mbox/wc24recv.ctl \

@@ -35,6 +35,9 @@ class IOSMenuLifecycleContractTests(unittest.TestCase):
         self.assertLess(runtime.index("[controlItems addObject:motionSteering]"), controls)
         self.assertLess(runtime.index("[displayItems addObject:aspectRatio]"), display)
         self.assertLess(runtime.index("[displayItems addObject:renderResolution]"), display)
+        # Show FPS Counter lives in Display, first, as on Android (docs/SETTINGS.md).
+        self.assertLess(runtime.index("[displayItems addObject:fpsCounter]"),
+                        runtime.index("[displayItems addObject:aspectRatio]"))
 
         root_start = runtime.index(
             "NSMutableArray<UIMenuElement *> *children = [NSMutableArray array];"
@@ -43,7 +46,6 @@ class IOSMenuLifecycleContractTests(unittest.TestCase):
         root = runtime[root_start:root_end]
         expected_order = [
             "[children addObject:multiplayer]",
-            "[children addObject:fpsCounter]",
             "[children addObject:controls]",
             "[children addObject:display]",
             "[children addObject:gameData]",
@@ -51,6 +53,7 @@ class IOSMenuLifecycleContractTests(unittest.TestCase):
         ]
         offsets = [root.index(value) for value in expected_order]
         self.assertEqual(offsets, sorted(offsets))
+        self.assertNotIn("[children addObject:fpsCounter]", root)
 
     def test_inherited_refresh_cannot_restore_the_sunpad_menu(self) -> None:
         runtime = (REPO / "apple/ios/KartPadRuntimeOverlayHost.mm").read_text()

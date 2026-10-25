@@ -18,7 +18,9 @@ internal object KartPadCharacterGraphicsTestDialog {
                 AlertDialog.Builder(context)
                     .setTitle(if (saved) "Restart Required" else "Setting Not Saved")
                     .setMessage(if (saved)
-                        "Saved: ${selected.label}. Fully close KartPad and reopen it before checking the same character screen. These options are for characters that appear broken or stretched, mostly on Snapdragon phones. They are experimental and may run slower. If characters look wrong or the game misbehaves, choose Automatic."
+                        "Saved: ${selected.label}. Fully close KartPad and reopen it before checking the same character screen. These options are for characters that appear broken or stretched, mostly on Snapdragon phones. They are experimental and may run slower. If characters look wrong or the game misbehaves, choose Automatic." +
+                            (if (KartPadNativeRuntime.engine(context.filesDir) == KartPadNativeRuntime.WIICOMPILED)
+                                "\n\nYou're using the WiiCompiled 0.9 (Beta) graphics engine. It only uses the native uniform buffers part of these options; the rest apply to Classic." else "")
                     else "The previous setting is unchanged. Please try again.")
                     .setPositiveButton("OK", null).show()
             }.show()
