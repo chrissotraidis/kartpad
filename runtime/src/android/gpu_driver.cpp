@@ -115,27 +115,26 @@ extern "C" void KartPadLoadCustomGpuDriver() {
     Report("loaded", "ok", driverLib);
 }
 
-extern "C" bool KartPadCustomGpuDriverActive() {
-    return g_vulkanOverride.load(std::memory_order_acquire) != nullptr;
-}
-
-// Graphics could not start with the player's driver. Mark the app's start counter as failed so
-// the next start uses the phone's own driver straight away (KartPadGpuDriverSettings.kt).
-extern "C" void KartPadCustomGpuDriverFailed() {
+// Graphics could not start. If that was with the player's driver, mark the app's start counter
+// failed so the next start uses the phone's own driver (KartPadGpuDriverSettings.kt), and return
+// a note for the error message; otherwise an empty note.
+extern "C" const char* KartPadGpuDriverStartFailedNote() {
+    if (g_vulkanOverride.load(std::memory_order_acquire) == nullptr) return "";
     Report("failed", "graphics_start", Env("KARTPAD_GPU_DRIVER_LIB"));
-    const char* starts = Env("KARTPAD_GPU_DRIVER_STARTS");
-    if (starts == nullptr) return;
-    if (std::FILE* file = std::fopen(starts, "w")) {
-        std::fputs("99", file);
-        std::fclose(file);
+    if (const char* starts = Env("KARTPAD_GPU_DRIVER_STARTS")) {
+        if (std::FILE* file = std::fopen(starts, "w")) {
+            std::fputs("99", file);
+            std::fclose(file);
+        }
     }
+    return "\n\nThis start used the GPU driver you chose. KartPad will use the phone's own driver the next "
+           "time you start the game.";
 }
 
 #else
 
 extern "C" void KartPadLoadCustomGpuDriver() {}
-extern "C" bool KartPadCustomGpuDriverActive() { return false; }
-extern "C" void KartPadCustomGpuDriverFailed() {}
+extern "C" const char* KartPadGpuDriverStartFailedNote() { return ""; }
 
 #endif
 
