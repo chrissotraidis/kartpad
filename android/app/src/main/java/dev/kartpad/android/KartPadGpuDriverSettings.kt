@@ -136,7 +136,9 @@ internal object KartPadGpuDriverSettings {
             // reject another driver's data, but old Adreno drivers are the ones this is for.
             // The engine's own list of shaders (pipeline_cache.db) is driver-independent and stays.
             val cache = File(context.cacheDir, "KartPad")
-            for (name in listOf("dawn_cache.db", "dawn_cache.db-wal", "dawn_cache.db-shm")) File(cache, name).delete()
+            for (base in listOf("dawn_cache.db", "dawn_cache_wiicompiled.db")) {
+                for (suffix in listOf("", "-wal", "-shm")) File(cache, base + suffix).delete()
+            }
         }.isSuccess
 
     fun show(activity: Activity, onChanged: () -> Unit) {
