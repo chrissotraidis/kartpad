@@ -134,6 +134,7 @@ class KartPadActivity : SDLActivity() {
             if (!identityStartupChecked) {
                 KartPadPrivateServerSettings.configureLaunch(this)
                 KartPadCountrySetting.configureLaunch(this)
+                KartPadGpuDriverSettings.configureLaunch(this)
             }
             configureDebugLocalWfcRoute()
             configureDebugRkgInput()
@@ -148,9 +149,17 @@ class KartPadActivity : SDLActivity() {
                 "The WiiCompiled graphics beta closed twice while starting, so KartPad is using Classic graphics. " +
                     "You can try the beta again in Display → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
         }
+        if (KartPadGpuDriverSettings.fellBackToSystem) {
+            android.widget.Toast.makeText(this,
+                "The game closed twice while starting with the GPU driver you chose, so KartPad is using the phone's driver. " +
+                    "You can choose a driver again in Display → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
+        }
         // A minute of play means this start worked; see KartPadNativeRuntime.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-            { KartPadNativeRuntime.markStarted(filesDir) }, KartPadNativeRuntime.HEALTHY_RUN_MS)
+            {
+                KartPadNativeRuntime.markStarted(filesDir)
+                KartPadGpuDriverSettings.markStarted(this)
+            }, KartPadNativeRuntime.HEALTHY_RUN_MS)
         nativeEnableActivityRecreation()
         inputManager = getSystemService(InputManager::class.java)
         runDebugRetroRewindExtractionFixture()
@@ -726,6 +735,9 @@ class KartPadActivity : SDLActivity() {
             } else null,
             MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
             MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
+            if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null) {
+                MenuRow("GPU Driver", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showGpuDriverSettings) }
+            } else null,
             MenuRow(
                 "30 FPS Races",
                 R.drawable.ic_kartpad_speedometer,
@@ -1080,6 +1092,18 @@ class KartPadActivity : SDLActivity() {
                     .show()
             }
             .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showGpuDriverSettings() = KartPadGpuDriverSettings.show(this, ::onGpuDriverChanged)
+
+    private fun onGpuDriverChanged() {
+        AlertDialog.Builder(this)
+            .setTitle("Restart to Switch")
+            .setMessage("The game starts again with the driver you chose. Saves and settings are unchanged. " +
+                "If the game closes twice while starting, KartPad goes back to the phone's driver.")
+            .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
+            .setNegativeButton("Later", null)
             .show()
     }
 
@@ -1979,6 +2003,10 @@ class KartPadActivity : SDLActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == KartPadGpuDriverSettings.REQUEST_PICK_ZIP) {
+            if (resultCode == RESULT_OK) KartPadGpuDriverSettings.onZipPicked(this, data?.data, ::onGpuDriverChanged)
+            return
+        }
         if (requestCode == REQUEST_IMPORT_MUSIC) {
             if (resultCode != RESULT_OK || data == null) return
             val clip = data.clipData

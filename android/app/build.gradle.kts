@@ -149,6 +149,10 @@ android {
                 cppFlags += listOf("-std=c++20", "-fvisibility=hidden")
                 if (androidNativeTarget != null) {
                     targets += listOf(androidNativeTarget)
+                    if (gameRuntimeSource != null) {
+                        // libadrenotools' hook libraries, loaded only with a player-installed GPU driver.
+                        targets += listOf("hook_impl", "main_hook", "file_redirect_hook", "gsl_alloc_hook")
+                    }
                 }
             }
         }
