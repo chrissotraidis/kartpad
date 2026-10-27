@@ -12,6 +12,7 @@ on:
       - 'tests/test_staging_map_lifecycle.py'
       - 'tests/test_staging_capacity.py'
       - 'tests/test_android_controller_routing.py'
+      - 'tests/test_android_beta_resolution.py'
       - 'scripts/test-android-gx-vertex-snapshot.py'
       - 'scripts/test-android-keyboard-expiry.py'
       - 'scripts/test-android-aram-window.py'
@@ -41,6 +42,7 @@ on:
       - 'tests/test_staging_map_lifecycle.py'
       - 'tests/test_staging_capacity.py'
       - 'tests/test_android_controller_routing.py'
+      - 'tests/test_android_beta_resolution.py'
       - 'scripts/test-android-gx-vertex-snapshot.py'
       - 'scripts/test-android-keyboard-expiry.py'
       - 'scripts/test-android-aram-window.py'
@@ -86,6 +88,7 @@ jobs:
           python3 -B -m unittest discover -s tests -p test_staging_map_lifecycle.py -v
           python3 -B -m unittest discover -s tests -p test_staging_capacity.py -v
           python3 -B -m unittest discover -s tests -p test_android_controller_routing.py -v
+          python3 -B -m unittest discover -s tests -p test_android_beta_resolution.py -v
           python3 -B -m unittest discover -s tests -p test_efb_readback_lifecycle.py -v
           python3 -B -m unittest discover -s tests -p test_sleep_timer_reentry.py -v
           for platform in android ios macos tvos; do
