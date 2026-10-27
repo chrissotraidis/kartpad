@@ -12,6 +12,11 @@ int main() {
     for (const char *host : {"", "http://localhost", "localhost:80", "host/path", "host name",
                             "-host", "host-", "a..b", ".host", "host.", "user@host", "host\n"})
         check(!ValidPrivateWfcHost(host), "invalid private address accepted");
+    for (const char *host : {"play.rwfc.net", "PLAY.RWFC.NET", "rwfc.net", "nas.play.rwfc.net",
+                            "nintendowifi.net", "naswii.nintendowifi.net"})
+        check(!ValidPrivateWfcHost(host), "public service accepted as a private server");
+    for (const char *host : {"myrwfc.net", "rwfc.net.example.org", "nintendowifi.network"})
+        check(ValidPrivateWfcHost(host), "unrelated private address rejected as public");
     unsetenv(kPrivateWfcHostEnvironment);
     check(RoutePrivateWfcHost("naswii.nintendowifi.net") == "naswii.nintendowifi.net",
           "default server unexpectedly redirected");
@@ -26,6 +31,8 @@ int main() {
         check(RoutePrivateWfcHost(host) == host, "unrelated DNS or peer address redirected");
     setenv(kPrivateWfcHostEnvironment, "https://invalid/path", 1);
     check(!PrivateWfcRoutesHost("naswii.nintendowifi.net"), "invalid persisted route enabled");
+    setenv(kPrivateWfcHostEnvironment, "play.rwfc.net", 1);
+    check(!PrivateWfcRoutesHost("gpcm.gs.play.rwfc.net"), "persisted public-service route enabled");
     unsetenv(kPrivateWfcHostEnvironment);
     return failures ? 1 : 0;
 }

@@ -382,6 +382,11 @@ UIButton *KartPadTVButton(NSString *title, UIColor *color,
       style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
     NSString *host = [editor.textFields.firstObject.text stringByTrimmingCharactersInSet:
         NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    if (KartPad::Network::IsPublicWfcDomain(host.UTF8String ?: "")) {
+      [weakSelf showFailure:@"Retro Rewind already connects to Retro WFC. This setting is only for your own Wii server, so leave it empty."
+          error:nil retry:^{ [weakSelf showPrivateServer]; }];
+      return;
+    }
     if (!KartPad::Network::ValidPrivateWfcHost(host.UTF8String ?: "")) {
       [weakSelf showFailure:@"Enter a hostname or IPv4 address without a URL scheme, path, port, or spaces."
           error:nil retry:^{ [weakSelf showPrivateServer]; }];
