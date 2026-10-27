@@ -1,12 +1,12 @@
 # Next-build candidate: beta resolution and #522
 
-27 October 2026. Local preparation only; no push, release, tag or upstream merge.
+27 October 2026. Tested locally, then prepared for review in [KartPad #522](https://github.com/chrissotraidis/kartpad/pull/522) and [Android runtime #9](https://github.com/chrissotraidis/wiicompiled/pull/9). No release, tag or upstream merge.
 
 ## Source
 
 - Candidate branch: `codex/next-build-resolution`, based on main `5c9af806c02733f238520b405f886ae45b5aa37e`.
 - #522 is cherry-picked as `f1682dd5` (original `1a28cabc89152aca2164119ae8e60c2ee810d057`). It rejects Nintendo/Retro WFC names in the experimental private-server setting; those services already have their normal connection paths.
-- Android runtime branch: `codex/beta-resolution-resize`, commit `4be10fabb9d978cf908819d4f0516d10c78cdd30`. This commit is local and must be made available in the runtime remote before publishing a parent commit that references it.
+- Android runtime branch: `codex/beta-resolution-resize`, commit `4be10fabb9d978cf908819d4f0516d10c78cdd30`, pushed before the parent PR update so the gitlink is fetchable.
 - The reused worktree is `/Users/chrissotraidis/.codex/worktrees/kartpad-release-086`. The dirty primary checkout was left untouched. Both local branches and private build artifacts remain here.
 
 The beta's synthetic resize event previously notified consumers of a new size without queuing render-target recreation. It now calls the existing deferred resize path, just like a native window resize. GPU resources are still recreated at the GX frame boundary. Classic rendering and crash fallback behavior are unchanged.
@@ -40,4 +40,4 @@ Private artifacts are ignored under `private/next-build-resolution/`, including 
 
 SHA-256: `efec3ce4829538523e22222ec0077ba1da023db0820077b1e9f758c013166397`.
 
-Before a later authorized release: integrate the runtime commit and candidate branch, rebuild the matching game pack (#522 changes the runtime fingerprint), run the normal release checks and PadMint player-check, and obtain physical-device acceptance. Do not reuse build 268's game pack or publish this diagnostic-signed APK. #522 remains open upstream; the local cherry-pick does not merge or close it.
+Before a later authorized release: merge runtime #9 into `kartpad-android` and the combined KartPad #522 into `main`, rebuild the matching game pack (#522 changes the runtime fingerprint), run the normal release checks and PadMint player-check, and obtain physical-device acceptance. Do not reuse build 268's game pack or publish this diagnostic-signed APK. The existing #522 branch now carries the combined candidate; both PRs remain unmerged.
