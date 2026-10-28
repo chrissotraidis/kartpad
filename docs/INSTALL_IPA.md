@@ -139,6 +139,9 @@ Miis live in KartPad's private storage instead. Use **••• → Game Data & 
 Manage Saves…** to back up or restore a save. Deleting KartPad deletes them, so
 update in place and back up before changing tools or Apple IDs.
 
+Follow the [iPhone/iPad save-transfer guide](SUPPORT.md#iphone-and-ipad-save-transfer)
+for export and restore steps and what a save backup includes.
+
 ## Report a problem
 
 Open **••• → Report a Problem… → Save or Share Report…**. Review it before
