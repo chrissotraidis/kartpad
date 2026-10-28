@@ -461,6 +461,25 @@ Those settings applied to Sunshine-specific CPU-clock and 60 FPS behavior and di
 </details>
 
 <details>
+<summary>Can I extract or transfer my KartPad data on iPhone or iPad?</summary>
+
+**Yes, you can export and restore saves.** Use **0.8.6 or newer** for the iOS
+save-picker fix. During a game, open **••• → Game
+Data & Saves → Manage Saves…**, choose Original Mario Kart Wii, Retro Rewind
+or Retro Rewind (Separate Save), then **Export Save Backup…** to save
+`rksys.dat` to Files. On the destination, back up its existing save, choose
+the matching profile and **Restore Save Backup… → Choose rksys.dat…**, then
+fully close KartPad from the app switcher and reopen it.
+
+This transfers that profile's save, not the whole app: it does not include
+game files, settings, Miis, console identity or Retro Rewind's separate rating
+file. Keep the source installation until you have checked the restored
+progress. See [iPhone/iPad save transfer](docs/SUPPORT.md#iphone-and-ipad-save-transfer)
+for the steps and limits.
+
+</details>
+
+<details>
 <summary>Do saves survive an update, and can I transfer Retro ratings?</summary>
 
 Supported in-place updates preserve saves; **do not uninstall or clear app data**. Keep backups and the same signing identity/bundle ID. Android private previews have a different signer and need a planned migration. Raw save backups do not include every companion file: Android preview 1 adds matched offline Retro rating restore, and the reporter confirmed that workflow succeeded. Mii transfer and online/server synchronization remain separate unfinished work. See [save and rating transfer](docs/SUPPORT.md).
