@@ -10,7 +10,12 @@ for 0.8.0.
 **Update 29 October.** The owner requested a complete open-issue pass for the
 next release, expanding the older three-item order below. See the
 [31-issue disposition](ISSUE-TRIAGE-2026-10-29.md) for actual fixes, checks and
-remaining work. Draft #536 contains the release-preparation fixes; #375 is
+remaining work. The four runtime PRs are merged, and their exact pins passed
+full Android/iOS builds and clean Mac/iOS PadMint player builds.
+[Build evidence](artifacts/2026-10-29/integrated-ios.md) and
+[character-renderer results](artifacts/2026-10-29/character-renderer.md) distinguish
+local validation from the unresolved device reports. Draft #536 contains the
+release-preparation fixes; #375 is
 updated to current main with passing checks but retains its gameplay gates.
 The public release remains 0.8.6. This pass does not publish a release or change
 the device restrictions below.

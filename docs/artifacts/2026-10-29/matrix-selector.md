@@ -18,7 +18,7 @@ The GPU experiment used Android Classic source at
 `4be10fabb9d978cf908819d4f0516d10c78cdd30`, with the new ROM-free regression added
 before changing production code. Candidate
 `6e3ce40fba8faab8adbddad7933af67018e3d78c` contains that regression and the correction
-([runtime draft PR #11](https://github.com/chrissotraidis/wiicompiled/pull/11)).
+([merged runtime PR #11](https://github.com/chrissotraidis/wiicompiled/pull/11)).
 The test linked the actual FIFO decoder, shader generator and renderer, using
 macOS Metal through pinned Dawn `v20260603.191052` and system SDL3 `3.4.14`.
 
@@ -37,7 +37,7 @@ platform source variants or Android hardware.
 | [tvOS](https://github.com/chrissotraidis/wiicompiled/pull/13) | `7d525c5ae22bc259df7f90aa72dd1a7b0fbee6a6` | `c66293ab2240282ebfaadc7b67be4bf96a9d921b` |
 
 The macOS baseline includes the independent controller correction on the same
-draft branch; the previous KartPad macOS gitlink was
+runtime branch; the previous KartPad macOS gitlink was
 `7171f95776ada9545124946d315aec2894a85b99`. The matrix patch itself changes only
 shader selector expressions and interpolation readers on each Apple branch.
 
