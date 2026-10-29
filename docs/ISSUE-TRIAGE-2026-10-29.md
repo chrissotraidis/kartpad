@@ -10,7 +10,7 @@ Reviewed 29 October 2026 against all 31 open issues and their complete comment h
 | [#531 Phone-only WBFS import](https://github.com/chrissotraidis/kartpad/issues/531) | **Small candidate fix; larger importer deferred** | Fix the reproduced storage-error misclassification now: ZIP import preserves ordinary I/O/ENOSPC instead of calling every I/O failure a damaged ZIP. Tests cover damaged CRC/truncation, nested ENOSPC, provider failure, staging cleanup and installed data/save preservation. The strengthened fixture injects header and partial-payload failures after asserting real staged writes; the corrected source passes and the original source fails. This does **not** implement WBFS extraction. Backend/key policy, split parts, real-disc validation and physical Android acceptance remain explicit proposal decisions. |
 | [#530 iPad allocation failure](https://github.com/chrissotraidis/kartpad/issues/530) | **Needs reporter/build evidence and device** | Exact source error is failure to reserve the flat 4 GiB guest address range, before normal guest RAM allocation. It is not evidence of low disk space or a graphics-setting problem. The Oct 29 reply asks how the app was built/signed/installed. Apple's [Extended Virtual Addressing entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.kernel.extended-virtual-addressing) is a concrete signing capability to investigate. The app is built unsigned and player-signed; that capability is not configured in the inspected iOS build sources. Whether it resolves this device is untested. Check the installed signing route before changing the allocator; this is separate from the physical RAM limit. |
 | [#520 Retro WFC 61070](https://github.com/chrissotraidis/kartpad/issues/520) | **Merged, unreleased prevention; reporter result open** | #522 refuses Retro WFC/Nintendo hosts in the private-server override. 0.8.6 workaround is Use Default and full restart, already explained. Preserve the distinction between this concrete configuration mistake and other 61070 causes. Await the existing connection result; validate the guard in the release candidate. |
-| [#510 S10 Lite slows across cups](https://github.com/chrissotraidis/kartpad/issues/510) | **Shipped options; sustained-session investigation** | Reporter already supplied three 0.8.6 logs. Both optional race reductions were off. Same-session PSS rises roughly 992 → 1,385 → 2,063 MiB while performance falls across different courses; that does not prove a leak or cache cause. Four 60-second windows in one emulator process show stable memory on one repeat visit, then 45.85 MiB retained after Mario Circuit and return to Luigi, with 54 more compiled pipelines. This short idle sequence did not reproduce the slowdown and does not replace the longer eight-repeat/real-device comparison. The new collector preserves process identity and evidence; no cache eviction change or repeated log request. |
+| [#510 S10 Lite slows across cups](https://github.com/chrissotraidis/kartpad/issues/510) | **Shipped options; sustained-session investigation** | Reporter already supplied three 0.8.6 logs. Both optional race reductions were off. Same-session PSS rises roughly 992 → 1,385 → 2,063 MiB while performance falls across different courses; that does not prove a leak or cache cause. The rebuilt candidate completed nine Luigi visits in one 26-minute process; the last five ended at 362–365 MiB. A separate mixed-course process went from 323.4 MiB on Luigi to 556.4 MiB after Mario/Peach Beach/Sherbet Land and return to Luigi, then 322.7 MiB after restart with disk caches retained. This reproduces process-lifetime retention locally, not the phone slowdown or a proven leak. Competing host work excludes timing conclusions. Pipeline/shader and retained texture ownership need attribution; no eviction change or repeated log request. See [integrated evidence](artifacts/2026-10-29/integrated-android.md). |
 | [#504 Odin 3 Max hitches](https://github.com/chrissotraidis/kartpad/issues/504) | **Needs affected-device timing validation** | Two supplied logs show uneven later race pacing with an empty shader queue, distinct from a loading compilation wait. 1× was already tried. PGO shipped but is not proof of a pacing fix. Next useful work is matched frame-production/scheduling measurement on a reproducing device; no repeated resolution sweep or unsupported performance-hint change. |
 | [#493 Retro cup completion crash](https://github.com/chrissotraidis/kartpad/issues/493) | **Needs reporter evidence** | OPPO CPH2625 report has a report ID, not the failed-session log. The existing Spanish reply already explains selecting the actual crashed session and asks cup/cc. No crash trace exists in the thread. Await that single requested failed-session record; no speculative results/save fix and no repeated cup runs. Reply in Spanish when evidence arrives. |
 | [#492 HONOR floating heads](https://github.com/chrissotraidis/kartpad/issues/492) | **Unresolved graphics; candidate investigation only** | Reporter tried the old modes; no response to the later 0.8.4 bone-index experiment. New runtime matrix-selector correction has synthetic GPU evidence, not HONOR acceptance. Keep this device separate from other Adreno cases. Compare a concrete candidate's character select and race on this device when available, without another broad settings round. |
@@ -36,9 +36,9 @@ Reviewed 29 October 2026 against all 31 open issues and their complete comment h
 | [#91 DSU phone controllers](https://github.com/chrissotraidis/kartpad/issues/91) | **Larger feature, concrete tester recorded** | No DSU client exists. Initial target is Apple TV 4K third generation + one iPhone/DSUController feeding Player 1 buttons and calibrated tilt. Implementation must include packet validation, stale-input release, source ownership and tvOS startup gate together. Multi-phone slots/motion-only pairing follow separately. No test build or date; no repeated setup questions. |
 | [#90 Original Wiimmfi](https://github.com/chrissotraidis/kartpad/issues/90) | **Larger integration scope** | No matching compiled patch/authentication path exists. A patched ISO, host override or MAC field cannot implement this alone. Retro WFC success is not Original Wiimmfi acceptance. Keep request open without a release commitment or private NAND/identity upload request. |
 
-## Changes prepared for review
+## Release-preparation changes
 
-[Parent draft #536](https://github.com/chrissotraidis/kartpad/pull/536) contains
+[Parent PR #536](https://github.com/chrissotraidis/kartpad/pull/536) contains
 mobile bloom control, actionable certificate errors, ZIP I/O error preservation,
 controller discovery diagnostics and the exact runtime pins below. The collector
 and this disposition support release validation; they are not performance fixes.
@@ -58,13 +58,20 @@ The affected S24 draw samples do not exercise this defect.
 
 [Mobile menu and short-session evidence](artifacts/2026-10-29/mobile-bloom-and-session.md)
 records the earlier incremental Android run, whose runtime/game pack predates
-these pins. The subsequent full integrated builds now pass with all four pins:
-normal Android Classic/Beta plus PGO pack, normal iOS app and clean Mac/iOS
-PadMint player builds. The [iOS record](artifacts/2026-10-29/integrated-ios.md)
-distinguishes the audit-passing no-game-code base IPA from the private personal
-IPA, which is not publishable. Fresh/update Android and longer-session results
-are being recorded separately. These checks do not establish physical-device
-acceptance or authorize a release.
+these pins. The subsequent normal Android Classic/Beta and PGO pack builds,
+normal iOS app build, and clean Mac/iOS PadMint player builds passed with the
+new pins. No full native tvOS build was performed in this pass.
+
+The [iOS record](artifacts/2026-10-29/integrated-ios.md) distinguishes the
+audit-passing no-game-code base IPA from the private personal IPA, which is not
+publishable. The [Mac record](artifacts/2026-10-29/integrated-macos.md) covers
+driven Original/Retro race smoke checks in an isolated profile. The
+[stale Mac icon](artifacts/2026-10-29/macos-icon.md) is corrected; an icon-only
+repack passed package and signature checks. The
+[Android record](artifacts/2026-10-29/integrated-android.md) covers passing
+fresh/update imports, Original/Retro Classic/Beta race gates, and the complete
+repeated-course and mixed-course/restart memory comparisons. These checks do
+not establish physical-device acceptance or authorize a release.
 
 The [extended character-renderer investigation](artifacts/2026-10-29/character-renderer.md)
 adds five actual GPU fixtures across five supported Metal paths and compares

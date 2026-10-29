@@ -29,9 +29,18 @@ found that `pipeline_cache.cpp` retains compiled pipelines until renderer
 shutdown; changing scenes resets recording without evicting those objects.
 The logs' compiled-pipeline count grows from 1,015 to 1,368 to 1,823 at the
 export endpoints. **Pipeline retention is a candidate, not a diagnosed cause.**
-The display-list cache has entry/byte bounds, texture-object and bind-group
-caches retire idle entries, and reported framebuffer-copy storage is only a
-few MiB. No cache policy was changed on this evidence.
+The display-list cache has entry/command-payload bounds, and texture-object
+metadata and bind-group caches retire idle entries. This does **not** bound all
+GPU texture lifetime: the source review at the integrated `6e3ce40` pin found a
+2,048-slot texture identity memo and a 256-slot source front cache that retain
+strong texture references. A stale identity binding can keep a texture alive
+after its object metadata is pruned; the source-cache eviction also waits until
+that handle has no other owners. The identity memo releases on replacement or
+shutdown, rather than every course load. This is documented fixed-capacity
+retention, not a demonstrated leak. Framebuffer-copy telemetry covers only those
+copy resources, so a small copy pool cannot exclude other texture retention.
+No cache policy was changed on this evidence. The next memory attribution
+should count retained static textures/bytes as well as compiled pipelines.
 
 Next test, with fixed Classic engine, character, vehicle and settings:
 
@@ -56,12 +65,15 @@ telemetry, and retains before/after screenshots without overwriting old ones.
 Emulator host graphics memory is a separate known confounder, so
 any emulator finding still needs a reproducing physical-device comparison.
 
-A bounded first check is now complete: one repeated Luigi visit, one Mario visit
-and a return to Luigi, with four 60-second windows in the same process. Repeat
-Luigi ended at 579.24 MiB PSS; returning after Mario ended at 625.09 MiB, with
-54 more compiled pipelines. The short idle-start-line sequence did not reproduce
-the slowdown. It does not complete the longer protocol above or identify a leak.
-See the [exact settings, measurements and limits](artifacts/2026-10-29/mobile-bloom-and-session.md#bounded-same-process-check-for-510).
+The first short check is preserved in the [earlier record](artifacts/2026-10-29/mobile-bloom-and-session.md#bounded-same-process-check-for-510). The subsequent full integrated candidate now completes the longer local comparison:
+
+- Nine Luigi visits in one process over **26 minutes**: PSS ended at 342.4 MiB initially, then 362–365 MiB across the last five visits. Pipelines grew from 473 to 499. The display-list cache cycled within its 16,384-entry / 8 MiB logical command-payload thresholds; those thresholds exclude allocator and fixed-record overhead.
+- A separate process sampled Luigi → Mario Circuit → Peach Beach → Sherbet Land → Luigi over about **17 minutes**. End-of-window PSS was **323.4 → 371.4 → 519.3 → 557.3 → 556.4 MiB**; compiled pipelines were **502 → 555 → 690 → 735 → 735**. The copy pool stayed between 5.4 and 5.9 MiB.
+- Restarting, keeping disk caches and settings, returned Luigi to **322.7 MiB**, with 504 pipelines and a 5.4 MiB copy pool. This reproduces about **233 MiB of process-lifetime retention** after different courses, without a continuing rise over the last repeated-Luigi visits.
+
+This does not isolate a leak, a particular cache owner, or the phone slowdown. Pipeline count and memory move together while texture/allocator state also changes. The GP opponent roster/RNG was not fixed. Each window follows short actual acceleration and stationary warm sampling, not a completed race or cup. Other local work contended for the host, so timing/FPS fields are retained only as raw evidence and are excluded from performance conclusions. The owner has no affected phone available and requested continued local validation. The next useful test is memory attribution across pipeline/shader and retained texture ownership, rather than a blind eviction policy or another settings sweep.
+
+[Full artifact, protocol, memory tables and limitations](artifacts/2026-10-29/integrated-android.md).
 
 ## 24 October: PGO ships in 0.8.6's Android pack
 
@@ -82,11 +94,13 @@ phone that shows the hitches; it is not testable on the emulator.
 
 ## Release context
 
-- Public: **0.8.1** (build 263, 13 October), tagged at `12bf9dd6`.
-  Automatic restored the 0.7.15 path for Adreno 6xx/7xx after 0.8.0 hid
-  characters on some previously working devices. Adreno 8xx keeps its earlier
-  all-draw repack policy.
-- 0.8.0 and 0.8.1 contain no general CPU optimization from this page.
+- Public: **0.8.6** (build 268, 25 October), tagged at `8cd1a68c`. Android PGO,
+  the vertex-repack reduction, 30 FPS Races and Simpler Computer Karts have
+  shipped. None establishes a fix for #510’s sustained slowdown.
+- Historical 0.8.1 restored the 0.7.15 Automatic path for Adreno 6xx/7xx after
+  0.8.0 hid characters on some previously working devices. Adreno 8xx keeps its
+  earlier all-draw repack policy. The 0.8.0/0.8.1 binaries contain no general
+  CPU optimization from this page.
 
 ## New regression evidence (#470, 14 October)
 

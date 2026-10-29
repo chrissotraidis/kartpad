@@ -7,8 +7,12 @@ The four Classic runtime correction PRs are merged. The integrated source at
 The parent [#536](https://github.com/chrissotraidis/kartpad/pull/536) adds mobile
 bloom control, import/build error handling and Mac controller diagnostics.
 The [31-issue disposition](ISSUE-TRIAGE-2026-10-29.md) records the exact scope.
-Missing characters and long-session slowdown remain unresolved; passing local
-renderer probes and package builds do not establish a fix on affected devices.
+The Mac exports now use the current red-K icon. Fresh/update Android and
+Original/Retro Classic/Beta race checks passed; the isolated Mac reached both
+game modes. The [longer memory comparison](artifacts/2026-10-29/integrated-android.md)
+reproduced about 233 MiB retained after different courses and reclaimed by
+restart. Missing characters and phone slowdown remain unresolved; local tests
+do not establish a fix on affected devices.
 The public release is still **0.8.6**; no new release is published by this work.
 
 ## Current status: 25 October 2026

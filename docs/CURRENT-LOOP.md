@@ -14,7 +14,10 @@ remaining work. The four runtime PRs are merged, and their exact pins passed
 full Android/iOS builds and clean Mac/iOS PadMint player builds.
 [Build evidence](artifacts/2026-10-29/integrated-ios.md) and
 [character-renderer results](artifacts/2026-10-29/character-renderer.md) distinguish
-local validation from the unresolved device reports. Draft #536 contains the
+local validation from the unresolved device reports. The
+[longer Android comparison](artifacts/2026-10-29/integrated-android.md) reproduces
+about 233 MiB of process-lifetime retention after different courses, reclaimed
+on restart; it does not establish the phone slowdown’s cause. PR #536 contains the
 release-preparation fixes; #375 is
 updated to current main with passing checks but retains its gameplay gates.
 The public release remains 0.8.6. This pass does not publish a release or change

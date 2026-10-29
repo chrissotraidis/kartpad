@@ -1,5 +1,9 @@
 # Mobile bloom and same-process diagnostics: 29 October 2026
 
+The later [integrated Android record](integrated-android.md) supersedes this
+earlier incremental build for integration and longer-session claims. The
+measurements below remain a historical receipt of the earlier candidate.
+
 ## Scope
 
 The Android bloom setting (#535) was exercised in real Original Mario Kart Wii
