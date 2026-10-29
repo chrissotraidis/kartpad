@@ -1,5 +1,20 @@
 # KartPad status
 
+## Next release preparation: 29 October 2026
+
+The four Classic runtime correction PRs are merged. The integrated source at
+`c3829dfc` passed full Android/iOS builds and clean Mac/iOS PadMint player builds.
+The parent [#536](https://github.com/chrissotraidis/kartpad/pull/536) adds mobile
+bloom control, import/build error handling and Mac controller diagnostics.
+The [31-issue disposition](ISSUE-TRIAGE-2026-10-29.md) records the exact scope.
+The Mac exports now use the current red-K icon. Fresh/update Android and
+Original/Retro Classic/Beta race checks passed; the isolated Mac reached both
+game modes. The [longer memory comparison](artifacts/2026-10-29/integrated-android.md)
+reproduced about 233 MiB retained after different courses and reclaimed by
+restart. Missing characters and phone slowdown remain unresolved; local tests
+do not establish a fix on affected devices.
+The public release is still **0.8.6**; no new release is published by this work.
+
 ## Current status: 25 October 2026
 
 **0.8.6 (build 268), 25 October:** fixes PadMint builds of every target, which stopped in preflight after upstream WiiCompiled turned `aurora-main` into a submodule (#509); gives the game a console country for the online flag and globe (#511); adds Android 30 FPS Races, Simpler Computer Karts and custom GPU drivers on a new ⋯ → Graphics & Performance page; ships the WiiCompiled 0.9 graphics engine on Android as an opt-in beta beside the default Classic engine; ports WiiCompiled fixes through v0.9.0; compiles the Android game pack with a race profile (about 12% less game-thread CPU on an unprofiled course in emulator pairs, pack 13% smaller; [record](artifacts/2026-10-24/pgo-release.md)); and includes the iPhone/iPad save-picker fix (#506), bounded Mii reads (#507) and diagnostic session labels (#508). See the [release notes](releases/v0.8.6.md).

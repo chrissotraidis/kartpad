@@ -303,7 +303,23 @@ int main(){@autoreleasepool {
  assert([KPButtonLabel(nullptr,SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) isEqual:@"LB"]);
  TestModifierCapture(second);
  TestClassicKeyboard(second);
- SDL_CloseGamepad(testPad);testPad=nullptr;SDL_DetachVirtualJoystick(id);SDL_Quit();
+ assert([KPControllerDiagnostics() containsString:@"Profile test; gamepad=yes; opened=yes"]);
+ SDL_CloseGamepad(testPad);testPad=nullptr;
+ // A recognized but unopened controller must remain visible in diagnostics.
+ NSString *unopened=KPControllerDiagnostics();
+ assert([unopened containsString:@"Detected controllers: 0"]);
+ assert([unopened containsString:@"Profile test; gamepad=yes; opened=no"]);
+ assert(SDL_GetGamepadFromID(id)==nullptr); // reporting must not open it
+ SDL_VirtualJoystickDesc rawDesc{};SDL_INIT_INTERFACE(&rawDesc);
+ rawDesc.type=SDL_JOYSTICK_TYPE_FLIGHT_STICK;rawDesc.naxes=2;rawDesc.nbuttons=2;
+ rawDesc.name="Raw\ncontroller test";
+ SDL_JoystickID rawID=SDL_AttachVirtualJoystick(&rawDesc);assert(rawID);
+ assert(!SDL_IsGamepad(rawID));
+ assert([KPControllerDiagnostics() containsString:@"Raw controller test; gamepad=no; opened=no"]);
+ SDL_DetachVirtualJoystick(rawID);SDL_DetachVirtualJoystick(id);
+ NSString *detached=KPControllerDiagnostics();
+ assert(![detached containsString:@"Profile test"] && ![detached containsString:@"Raw controller test"]);
+ SDL_Quit();
  [[NSFileManager defaultManager] removeItemAtURL:testRoot error:nil];
  puts("PASS: profile round trip, legacy secondary bindings, dead zones, shared bindings, A OR RT via virtual SDL input, clear, corrupt-file preservation, Xbox labels");
 }}

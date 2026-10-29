@@ -31,6 +31,7 @@ Outputs go to `build/perf/` (ignored).
 | `pack-variant.sh NAME FROM` | Rebuilds only the game pack against `v-FROM`'s app, honouring `KARTPAD_GAME_PACK_PGO` (`generate` or `use=PROFILE`) |
 | `deploy.sh NAME` | Installs `v-NAME` over the current install (data kept) and pushes its pack and fingerprint |
 | `bench.sh LABEL SECONDS` | Starts the app, drives it into Grand Prix race 1 (Luigi Circuit, player idle), waits 55 s, then reports game-thread user and kernel CPU per frame |
+| `capture-window.py --serial SERIAL --pid PID --label LABEL --course COURSE --seconds 60 --out build/perf/WINDOW.json` | Samples an already-running race without restarting KartPad or clearing logs; retains screenshots, numeric telemetry and PSS, rejecting process changes or existing output files |
 | `ab.sh OUT A B ROUNDS` | Alternates A and B, cold-booting the emulator before every run, and records the emulator's host memory |
 | `ui.py` | Taps, buttons, window dumps and screenshots over adb (`KP_SERIAL`) |
 | `agg.py`, `topfuncs.py`, `insnkind.py`, `lines.py`, `kernelcallers.py` | simpleperf analysis: buckets, top translated functions, sampled instruction kinds, source lines inside a function, user callers of kernel time |
@@ -58,6 +59,16 @@ bump an idle kart, changing its camera. Do not silently compare a menu, another
 track, an idle demo, or a compiling frame with a warmed race, and do not discard
 only one variant's traffic-affected runs. The existing `bench.sh` follows the
 Luigi Circuit route; another track needs separate verified navigation.
+
+For sustained-session reports such as #510, navigate through the game menus
+and call `capture-window.py` on each visit, using the same game PID and a new
+output path each time. Keep the character, vehicle, engine, resolution and
+settings fixed. Confirm the course in both saved screenshots; the course
+argument is only an operator label. The helper rejects PID reuse or restarts,
+excludes pre-window log records and drops the first overlapping CPU interval.
+It does not launch the app, clear caches or logs, or infer a leak from growth.
+Memory sampling itself can affect timing; this is diagnostic evidence, not a
+release benchmark. Use a quiet host for emulator captures.
 
 ## Profiling a running race
 

@@ -27,6 +27,10 @@ case "$package_format" in
   *) echo "ERROR: KARTPAD_ANDROID_PACKAGE_FORMAT must be apk, apk-release or aab" >&2; exit 64 ;;
 esac
 out_root="${1:-$repo_root/build/android-app}"
+case "$out_root" in
+  /*) ;;
+  *) out_root="$repo_root/$out_root" ;;
+esac
 stage="$out_root/$(date +%Y%m%d-%H%M%S)"
 runtime_source="$stage/runtime"
 discio_jni_root="${KARTPAD_DISCIO_JNI_ROOT:-$repo_root/build/dolphin-android-discio-jni}"

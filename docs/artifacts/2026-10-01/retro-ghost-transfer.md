@@ -548,3 +548,30 @@ This removes the merge conflict and checks the current code paths; it does not
 replace the earlier build, native picker or replay receipts with new gameplay
 acceptance. The wider course/variant/mode and Apple gameplay gates above remain
 open. No artifact or release was published.
+
+
+## 29 October: refresh after #536
+
+Merged main `aa41e7e132442455f1632af8f4e9e32b74fb6c33`, including #536 and
+its four runtime pins. The only conflict was the Android settings JNI include
+block. Both the config-reload entry point and the bloom header/functions are
+retained. Android's Retro ghost and GPU-driver result handlers remain separate,
+with distinct request codes. No ghost behavior was changed by this refresh.
+
+Focused checks on the refreshed source pass:
+
+- The full production settings JNI translation unit passes an NDK ARM64 syntax
+  check against the newly pinned runtime headers, without the old precompiled
+  header. Production Android Kotlin compilation passes with retained offline
+  dependencies. These checks do not link or package a new native app.
+- All five ghost Python/JVM tests, both cold-config startup orders, the synthetic
+  Retro catalog, strict-warning ASAN/UBSAN Original/Retro transfer tests and
+  Apple Foundation identity/Retro manager tests pass.
+- Bloom persistence and failed-save handling pass for both mobile runtimes;
+  all 35 Android menu contracts and the save-picker runner contract pass.
+
+No gameplay, system picker or native replay session was repeated for this
+refresh. The earlier 6.13.4 Luigi Circuit/base/150 replay receipt remains scoped
+to its recorded build. Wider courses, nonbase variants, other modes, sustained
+Original rendering and Apple/device transfer and replay remain open. PR #375
+stays draft; this refresh does not create an app release.

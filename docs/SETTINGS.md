@@ -6,7 +6,7 @@ Android and iPhone/iPad use the same hierarchy for shared controls. The table de
 | --- | --- |
 | Main | Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance (Android); Sound; Game Data & Saves; Report a Problem |
 | Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
-| Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; App Icon |
+| Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; Disable Bloom; App Icon |
 | Graphics & Performance (Android) | Graphics Engine; 30 FPS Races; Simpler Computer Karts; GPU Driver (Snapdragon); Graphics Diagnostics |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Import or Reimport Wii Disc Image; Import from Extracted Folder; Remove Stored Game Data |
 
@@ -44,6 +44,8 @@ Motion steering supports calibration and sensitivity. **Controls → Shake to Tr
 On the released 0.7.14, iPhone/iPad shake input is inside Motion Steering, and Android has tilt steering only.
 
 FPS Counter Size offers Small, Medium and Large on both platforms. Render Resolution can reduce GPU workload; it does not fix a CPU bottleneck or guarantee a faster race. Start with 1x Native on Android.
+
+**Disable Bloom** (Android and iPhone/iPad, next release) is under **Display**. It removes the glow around bright areas when the next scene loads and keeps that choice after restarting KartPad. Bloom stays enabled by default. Mac already offers the same setting under **KartPad → Settings… → Graphics** (also **Game → Game Settings…**).
 
 ## Saves and reports
 

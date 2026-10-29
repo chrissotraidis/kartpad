@@ -493,6 +493,7 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
             "Experimental Wii Remote + Nunchuk…",
             "Aspect Ratio",
             "Render Resolution",
+            "Disable Bloom",
             "Import or Reimport Wii Disc Image…",
             "Import from Extracted Folder…",
             "Remove Stored Game Data…",
@@ -506,7 +507,7 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         self.assertIn("TEST_MENU", runner)
         self.assertNotIn("shell pm clear dev.kartpad.android", runner)
         self.assertIn("expected_fps_value", runner)
-        self.assertIn("top=8 controls=5 display=5 graphics=3 data=7 actions=17", runner)
+        self.assertIn("top=8 controls=5 display=6 graphics=3 data=7 actions=18", runner)
         self.assertIn("assert_icon_count 7", runner)
         self.assertIn("assert_icon_count 5", runner)
         self.assertIn("assert_icon_count 7", runner)

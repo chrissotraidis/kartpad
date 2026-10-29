@@ -20,3 +20,8 @@ FetchContent_Declare(SDL URL "${sdl_url}" URL_HASH "${sdl_hash}"
     -P "${runtime}/aurora-main/cmake/AuroraSDL3Patches.cmake"
   EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(SDL)
+
+add_executable(wii_classic_mapping_test
+  "${runtime}/aurora-main/tests/wii_classic_mapping_test.cpp")
+target_compile_features(wii_classic_mapping_test PRIVATE cxx_std_20)
+target_link_libraries(wii_classic_mapping_test PRIVATE SDL3::SDL3)

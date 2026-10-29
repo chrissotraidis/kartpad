@@ -7,6 +7,7 @@ on:
       - 'vendor/runtimes/macos'
       - 'tests/macos/**'
       - 'scripts/test-macos-controller-profiles.sh'
+      - 'scripts/test-macos-controller-assignment.py'
       - 'scripts/audit-macos-package.sh'
       - 'tests/test_macos_package_contract.py'
       - '.github/workflows/macos-controller-panel.yml'
@@ -37,7 +38,12 @@ jobs:
       - name: Build pinned SDL without game assets
         run: |
           cmake -S tests/macos/controller-panel-deps -B "$RUNNER_TEMP/controller-panel" -DCMAKE_BUILD_TYPE=Release
-          cmake --build "$RUNNER_TEMP/controller-panel" --target SDL3-static --parallel 3
+          cmake --build "$RUNNER_TEMP/controller-panel" --target SDL3-static wii_classic_mapping_test --parallel 3
+      - name: Exercise Wii extension reconnect and Classic D-pad mapping
+        run: |
+          /usr/bin/python3 -B vendor/runtimes/macos/aurora-main/tests/test_wii_extension_port.py
+          /usr/bin/python3 -B scripts/test-macos-controller-assignment.py
+          "$RUNNER_TEMP/controller-panel/wii_classic_mapping_test"
       - name: Exercise keyboard reset, remap persistence calls, and controller profiles
         run: scripts/test-macos-controller-profiles.sh "$RUNNER_TEMP/controller-panel" vendor/runtimes/macos/runtime
       - name: Keep package audit markers aligned with current native sources

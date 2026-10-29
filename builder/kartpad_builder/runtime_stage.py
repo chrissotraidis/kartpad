@@ -87,7 +87,11 @@ def main() -> int:
     parser.add_argument("what", choices=("extras",), help="extras: release header and sse2neon")
     parser.add_argument("destination", type=Path)
     args = parser.parse_args()
-    stage_extras(Path(__file__).resolve().parents[2], args.destination)
+    try:
+        stage_extras(Path(__file__).resolve().parents[2], args.destination)
+    except BuildError as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        return 1
     return 0
 
 
