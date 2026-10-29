@@ -15,10 +15,14 @@ iPhone/iPad.
    with PadMint, quit KartPad and replace the app; your settings and saves stay.
    The Mac build needs PadMint 0.5.1 or newer and Xcode (install it from the
    App Store and open it once). PadMint supplies the other build tools.
-   A PadMint 0.5.1 build can stop during the first tool download, before
-   compilation starts ([#475](https://github.com/chrissotraidis/kartpad/issues/475)).
-   That is not an out-of-memory failure or a rejected disc. Keep certificate
-   verification on. PadMint 0.5.2's notes do not include a fix for it.
+   If a download stops with `CERTIFICATE_VERIFY_FAILED` or "unable to get local
+   issuer certificate" ([#532](https://github.com/chrissotraidis/kartpad/issues/532)),
+   start PadMint using `PadMint.command` from its Mac download, which uses
+   Apple's Python. If you deliberately use Python from python.org, run
+   `Install Certificates.command` in its folder under Applications first.
+   If the check still fails, check your Mac's date and certificate updates, or
+   ask your network administrator about HTTPS access. Keep certificate
+   verification enabled and retry; your disc and completed downloads can stay.
 2. If macOS says it can't check the app, choose **Done**, then
    open **System Settings → Privacy & Security** and choose **Open Anyway**.
    The app isn't notarized by Apple, which is why macOS asks. Don't turn off

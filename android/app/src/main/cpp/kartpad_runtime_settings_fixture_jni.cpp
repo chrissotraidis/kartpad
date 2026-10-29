@@ -10,6 +10,7 @@ std::atomic<bool> g_show_fps{false};
 std::atomic<int> g_fps_size{0};
 std::atomic<int> g_aspect_mode{-1};
 std::atomic<int> g_resolution_milli{-1};
+std::atomic<bool> g_bloom_disabled{false};
 
 }  // namespace
 
@@ -47,4 +48,16 @@ Java_dev_kartpad_android_KartPadActivity_nativeDebugDisplaySettings(
                 g_aspect_mode.load(std::memory_order_acquire),
                 g_resolution_milli.load(std::memory_order_acquire) / 1000.0);
   return env->NewStringUTF(result);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeIsBloomDisabled(JNIEnv*, jobject) {
+  return g_bloom_disabled.load() ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeSetBloomDisabled(
+    JNIEnv*, jobject, jboolean disabled) {
+  g_bloom_disabled.store(disabled == JNI_TRUE);
+  return JNI_TRUE;
 }

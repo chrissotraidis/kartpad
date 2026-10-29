@@ -8,6 +8,7 @@
 
 #include "kartpad/android/controller_mapping.hpp"
 #include "kartpad/android/runtime_settings.hpp"
+#include "kartpad/graphics/bloom_setting.hpp"
 
 // The runtime's live sound-category levels (runtime/src/music_attenuation.cpp, in this library).
 // Declared here rather than including the runtime header, which isn't on this target's path.
@@ -54,6 +55,17 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplyDisplaySettings(
       .aspect_mode = static_cast<int>(aspect_mode),
       .resolution_scale = static_cast<float>(resolution_scale),
   });
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeIsBloomDisabled(JNIEnv*, jobject) {
+  return kartpad::graphics::BloomDisabled() ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeSetBloomDisabled(
+    JNIEnv*, jobject, jboolean disabled) {
+  return kartpad::graphics::SetBloomDisabled(disabled == JNI_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
 
 // Takes effect when the next race picks its frame rate.

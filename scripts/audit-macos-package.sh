@@ -32,6 +32,13 @@ test "$(plutil -extract NSBluetoothAlwaysUsageDescription raw "${plist}")" = \
   "KartPad uses Bluetooth to pair and connect an experimental Wii Remote and Nunchuk."
 test -x "${executable}"
 test -f "${contents}/Resources/${icon_name%.icns}.icns"
+# The Mac export is a byte-for-byte copy of the shared default icon at 1024px.
+# Comparing only the bundle to its ICNS misses a branding update not exported for Mac.
+if ! cmp -s "${repo_root}/branding/exports/macos/KartPadIcon-1024.png" \
+    "${repo_root}/apple/ios/Assets.xcassets/AppIcon.appiconset/KartPadIcon-1024.png"; then
+  echo "macOS icon exports are stale; run scripts/generate-macos-icon-assets.sh" >&2
+  exit 65
+fi
 cmp "${contents}/Resources/${icon_name%.icns}.icns" "${repo_root}/branding/exports/KartPad.icns"
 test "$(readlink "${contents}/MacOS/dsp_coef.bin")" = \
   "../Resources/Runtime/dsp_coef.bin"

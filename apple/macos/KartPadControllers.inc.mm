@@ -612,6 +612,34 @@ extern "C" bool KartPadControllersVisible() { return KPControllers().panel.visib
 static NSString *KPControllerDiagnostics() {
   NSMutableString *text = [NSMutableString stringWithFormat:@"Controller subsystem: %@\nDetected controllers: %u\n",
     (SDL_WasInit(SDL_INIT_GAMEPAD) & SDL_INIT_GAMEPAD) ? @"initialized" : @"not initialized", PADCount()];
+  // PADCount only includes pads opened by the runtime. Extension reconnects
+  // can fail before that point, so retain SDL's view without opening devices.
+  int count = 0;
+  SDL_JoystickID *ids = SDL_GetJoysticks(&count);
+  if (ids) {
+    int recognized = 0, opened = 0;
+    NSMutableString *devices = [NSMutableString string];
+    for (int i = 0; i < count; ++i) {
+      const bool gamepad = SDL_IsGamepad(ids[i]);
+      const bool isOpen = gamepad && SDL_GetGamepadFromID(ids[i]) != nullptr;
+      recognized += gamepad;
+      opened += isOpen;
+      if (i >= 16) continue;
+      const char *rawName = SDL_GetJoystickNameForID(ids[i]);
+      NSString *name = rawName ? [NSString stringWithUTF8String:rawName] : nil;
+      name = name ?: @"Unknown controller";
+      name = [[name componentsSeparatedByCharactersInSet:NSCharacterSet.controlCharacterSet] componentsJoinedByString:@" "];
+      if (name.length > 128) name = [name substringToIndex:128];
+      [devices appendFormat:@"SDL device %d: %@; gamepad=%s; opened=%s\n",
+        i, name, gamepad ? "yes" : "no", isOpen ? "yes" : "no"];
+    }
+    [text appendFormat:@"SDL joysticks: %d; recognized gamepads: %d; opened gamepads: %d\n", count, recognized, opened];
+    [text appendString:devices];
+    if (count > 16) [text appendString:@"SDL device details limited to 16 entries\n"];
+    SDL_free(ids);
+  } else {
+    [text appendString:@"SDL joystick enumeration unavailable\n"];
+  }
   for (unsigned i=0;i<PADCount();++i) {
     SDL_Gamepad *pad=PADGetSDLGamepadForIndex(i); if(!pad)continue;
     int port=-1;

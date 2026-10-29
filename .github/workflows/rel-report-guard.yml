@@ -34,6 +34,7 @@ on:
       - 'tests/test_build_provenance.py'
       - 'tests/test_source_submodule_inputs.py'
       - 'builder/**'
+      - 'tests/test_download_retries.py'
       - 'tests/test_runtime_stage_retry.py'
       - 'tests/test_retro_rel_report_guard.py'
       - 'tests/fixtures/rel_report/**'
@@ -73,6 +74,7 @@ on:
       - 'tests/test_build_provenance.py'
       - 'tests/test_source_submodule_inputs.py'
       - 'builder/**'
+      - 'tests/test_download_retries.py'
       - 'tests/test_runtime_stage_retry.py'
       - 'tests/test_retro_rel_report_guard.py'
       - 'tests/fixtures/rel_report/**'
@@ -102,7 +104,9 @@ jobs:
           CXX: clang++
         run: python3 -B -m unittest discover -s tests -p 'test_retro_rel_report_guard.py' -v
       - name: Builder integration
-        run: bash scripts/test-kartpad-builder.sh
+        run: |
+          bash scripts/test-kartpad-builder.sh
+          python3 -B -m unittest discover -s tests -p 'test_download_retries.py' -v
       - name: Malformed model texture links
         env:
           CXX: clang++
