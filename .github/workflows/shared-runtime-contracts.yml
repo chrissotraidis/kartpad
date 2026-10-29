@@ -14,6 +14,9 @@ on:
       - 'tests/test_android_controller_routing.py'
       - 'tests/test_android_beta_resolution.py'
       - 'tests/test_mobile_bloom.py'
+      - 'tests/test_android_capture_window.py'
+      - 'tests/test_gx_matrix_selectors.py'
+      - 'tools/android-perf/capture-window.py'
       - 'runtime/include/kartpad/graphics/bloom_setting.hpp'
       - 'scripts/test-android-gx-vertex-snapshot.py'
       - 'scripts/test-android-keyboard-expiry.py'
@@ -46,6 +49,9 @@ on:
       - 'tests/test_android_controller_routing.py'
       - 'tests/test_android_beta_resolution.py'
       - 'tests/test_mobile_bloom.py'
+      - 'tests/test_android_capture_window.py'
+      - 'tests/test_gx_matrix_selectors.py'
+      - 'tools/android-perf/capture-window.py'
       - 'runtime/include/kartpad/graphics/bloom_setting.hpp'
       - 'scripts/test-android-gx-vertex-snapshot.py'
       - 'scripts/test-android-keyboard-expiry.py'
@@ -94,6 +100,8 @@ jobs:
           python3 -B -m unittest discover -s tests -p test_android_controller_routing.py -v
           python3 -B -m unittest discover -s tests -p test_android_beta_resolution.py -v
           python3 -B -m unittest discover -s tests -p test_mobile_bloom.py -v
+          python3 -B -m unittest discover -s tests -p test_android_capture_window.py -v
+          python3 -B -m unittest discover -s tests -p test_gx_matrix_selectors.py -v
           python3 -B -m unittest discover -s tests -p test_efb_readback_lifecycle.py -v
           python3 -B -m unittest discover -s tests -p test_sleep_timer_reentry.py -v
           for platform in android ios macos tvos; do
