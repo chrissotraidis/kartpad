@@ -6,10 +6,12 @@ import android.provider.DocumentsContract
 import android.util.AtomicFile
 import java.io.File
 import java.io.FileOutputStream
+import java.io.EOFException
 import java.io.IOException
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.zip.ZipInputStream
+import java.util.zip.ZipException
 
 /** Crash-safe storage transaction for user-selected extracted RMCP01 game data. */
 internal object KartPadGameDataStorage {
@@ -187,7 +189,12 @@ internal object KartPadGameDataStorage {
                 }
             } catch (error: IOException) {
                 android.util.Log.w("KartPadGameData", "Zip import failed", error)
-                throw IllegalArgumentException(DAMAGED_ZIP)
+                // A failed storage write (especially ENOSPC) isn't a damaged
+                // archive. Keep its cause so the UI can explain how to recover.
+                if (error is ZipException || error is EOFException) {
+                    throw IllegalArgumentException(DAMAGED_ZIP)
+                }
+                throw error
             }
             val root = gameRoot ?: throw IllegalArgumentException(
                 "This zip doesn't contain Mario Kart Wii game data. Zip the folder Dolphin's Extract Entire Disc made.",
