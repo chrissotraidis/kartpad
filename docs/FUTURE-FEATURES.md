@@ -149,17 +149,18 @@ commit it to the next build or establish hardware support.
 
 ## Android custom Vulkan driver comparison
 
-**Status:** Investigation proposal from [#104](https://github.com/chrissotraidis/kartpad/issues/104); no implementation or release commitment.
+**Status:** Driver import and selection shipped in [0.8.6](releases/v0.8.6.md).
+On supported Snapdragon devices, **⋯ → Graphics & Performance → GPU Driver**
+accepts AdrenoTools driver packages (`.zip`), including compatible
+[Mesa Turnip](https://docs.mesa3d.org/drivers/freedreno.html) packages. Select the
+installed driver, save, and restart through the app's prompt. KartPad retains
+the phone's driver as the default and falls back if the selected driver cannot
+start graphics.
 
-[Mesa Turnip](https://docs.mesa3d.org/drivers/freedreno.html) is an alternative
-Vulkan implementation for Adreno. KartPad currently uses its existing Vulkan
-loading path and offers no custom-driver import/selection. Downloading a driver
-ZIP does not change the driver used by KartPad.
-
-A bounded pilot would first establish compatibility with the exact Android
-device, loader and pinned Dawn build, then compare the same failing scene with
-the system driver and the alternative. Preserve a working system-driver
-fallback. Such a comparison may isolate vendor-dependent behavior; it would
-not alone prove whether the original defect belongs to KartPad or the driver.
-Do not substitute this proposal for the ongoing actual-draw investigation or
-ask reporters to modify their system drivers.
+This is a comparison option, not a confirmed fix for missing characters.
+The S24 reporter [tried Turnip and Adreno drivers without success](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324);
+that report does not include a log identifying which driver actually loaded.
+A useful comparison needs the same failing scene and the active driver from
+its diagnostic log. Keep the actual-draw investigation in
+[#104](https://github.com/chrissotraidis/kartpad/issues/104) open; neither a failed
+driver experiment nor a successful one alone establishes the defect's cause.

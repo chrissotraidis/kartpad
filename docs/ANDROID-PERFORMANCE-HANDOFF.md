@@ -1,10 +1,57 @@
 # Android performance: where we stand
 
-Updated 24 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 29 October 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 29 October: sustained slowdown on Galaxy S10 Lite (#510)
+
+**Release preparation, not acceptance.** The reporter's
+[three 0.8.6 logs](https://github.com/chrissotraidis/kartpad/issues/510#issuecomment-6399035109)
+cover one Original runtime session across Banana, Flower and Star Cups.
+**30 FPS Races** and **Simpler Computer Karts** are both logged off. The
+[follow-up](https://github.com/chrissotraidis/kartpad/issues/510#issuecomment-6488481275)
+explains that updating does not enable them and keeps the sustained slowdown
+open.
+
+At the three export endpoints, same-process PSS is approximately **992 MiB,
+1,385 MiB and 2,063 MiB**. The retained frame windows are mostly around 60 FPS
+in the first two logs; the third has a median sampled rate of about 42 FPS.
+These are capped trailing windows, not whole-cup benchmarks. Android reports
+only no or light thermal throttling, with none at the final endpoint. Different
+courses, accumulated caches and time spent playing are confounded; this does
+not prove a leak or rule out device power management.
+
+A source review of Classic Aurora at the 0.8.6 Android runtime pin `b2a5de4`
+found that `pipeline_cache.cpp` retains compiled pipelines until renderer
+shutdown; changing scenes resets recording without evicting those objects.
+The logs' compiled-pipeline count grows from 1,015 to 1,368 to 1,823 at the
+export endpoints. **Pipeline retention is a candidate, not a diagnosed cause.**
+The display-list cache has entry/byte bounds, texture-object and bind-group
+caches retire idle entries, and reported framebuffer-copy storage is only a
+few MiB. No cache policy was changed on this evidence.
+
+Next test, with fixed Classic engine, character, vehicle and settings:
+
+1. Warm Luigi Circuit and record a 60-second baseline. Re-enter the same course
+   eight times through the game menus, keeping the same runtime process alive;
+   sample the same point on each visit and confirm the course with screenshots.
+2. In a separate session, visit several different courses, return to Luigi
+   Circuit, and repeat the identical sample. Then restart KartPad, retain its
+   disk caches, and sample Luigi Circuit once more.
+3. Compare same-process PSS, CPU per present, FPS, thermal status, compiled and
+   queued pipelines, display-list entries and copy-resource metrics. Growth on
+   identical revisits points beyond ordinary new-course caching; growth mainly
+   with new pipelines warrants investigating their retention. Compare Luigi
+   with Luigi before attributing a slower later course to accumulated state.
+
+`tools/android-perf/bench.sh` currently force-stops KartPad before every run,
+and `ab.sh` cold-boots the emulator between trials. Reuse their navigation and
+sampling only with the restart removed from this test; confirm the PID stays
+unchanged. Emulator host graphics memory is a separate known confounder, so
+any emulator finding still needs a reproducing physical-device comparison.
 
 ## 24 October: PGO ships in 0.8.6's Android pack
 

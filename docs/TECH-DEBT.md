@@ -122,11 +122,14 @@ Android work. Source links identify the relevant issue or follow-up. Existing
   a comparison key, not a diagnosis. Passing synthetic probes does not clear the
   actual game; clean output on another Samsung device does not clear all Adreno
   devices either.
-- The S24 reporter asked about Turnip. The
-  [existing response](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5581427321)
-  records that KartPad has no custom-driver loading option. Keep a possible
-  alternate-driver experiment separate from available installation advice;
-  downloading a driver ZIP is not a working KartPad workaround.
+- Custom driver import and selection shipped in **0.8.6**, under **⋯ →
+  Graphics & Performance → GPU Driver** on supported Snapdragon devices.
+  The [September response](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-5581427321)
+  predates that feature. The S24 reporter
+  [reports no improvement with Turnip or Adreno drivers](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324),
+  without a log confirming the active driver. Driver selection remains a
+  comparison tool, not an established missing-character fix; keep the loaded
+  driver and any fallback visible when evaluating results.
 - **#101 is an iPhone 15 Pro Max Fill Screen report**, and **#100 begins with
   iPhone/iPad external video loss**. They provide related design/investigation
   context, not additional Android failure counts. The device-free “all devices”
