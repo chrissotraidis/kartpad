@@ -47,10 +47,13 @@ Next test, with fixed Classic engine, character, vehicle and settings:
    with new pipelines warrants investigating their retention. Compare Luigi
    with Luigi before attributing a slower later course to accumulated state.
 
-`tools/android-perf/bench.sh` currently force-stops KartPad before every run,
-and `ab.sh` cold-boots the emulator between trials. Reuse their navigation and
-sampling only with the restart removed from this test; confirm the PID stays
-unchanged. Emulator host graphics memory is a separate known confounder, so
+`tools/android-perf/bench.sh` force-stops KartPad before every run,
+and `ab.sh` cold-boots the emulator between trials. Use the new
+[`capture-window.py`](../tools/android-perf/capture-window.py) on an already
+running game for this test. It preserves the process and logs, verifies both
+PID and process start time, records PSS plus new numeric frame/cache/CPU
+telemetry, and retains before/after screenshots without overwriting old ones.
+Emulator host graphics memory is a separate known confounder, so
 any emulator finding still needs a reproducing physical-device comparison.
 
 ## 24 October: PGO ships in 0.8.6's Android pack
