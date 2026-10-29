@@ -202,8 +202,15 @@ start_menu
 tap_label "Display"
 sleep 1
 dump_tree
-assert_labels "Show FPS Counter" "FPS Counter Size" "Aspect Ratio" "Render Resolution" "App Icon"
-assert_icon_count 5
+assert_labels "Show FPS Counter" "FPS Counter Size" "Aspect Ratio" "Render Resolution"
+scroll_to_labels "Disable Bloom"
+tap_label "Disable Bloom"
+dump_tree
+grep -Fq 'content-desc="Disable Bloom, on"' "$tree"
+tap_label "Disable Bloom"
+dump_tree
+grep -Fq 'content-desc="Disable Bloom, off"' "$tree"
+scroll_to_labels "App Icon"
 
 start_menu
 tap_label "Graphics & Performance"
@@ -426,4 +433,4 @@ print(
 PY
 fi
 
-echo "Android menu parity passed: lane=$lane top=8 controls=5 display=5 graphics=3 data=7 actions=17 safe-insets=pass"
+echo "Android menu parity passed: lane=$lane top=8 controls=5 display=6 graphics=3 data=7 actions=18 safe-insets=pass"

@@ -20,6 +20,7 @@
 #include "audio_backend.h"
 #include "music_attenuation.h"
 #include "runtime_config.h"
+#include "kartpad/graphics/bloom_setting.hpp"
 
 #import <SDL3/SDL_properties.h>
 #import <SDL3/SDL_video.h>
@@ -2854,6 +2855,22 @@ static void KartPadApplySoundLevels(BOOL persist) {
   [displayItems addObject:[UIMenu menuWithTitle:@"FPS Counter Size" children:sizes]];
   if (aspectRatio != nil) [displayItems addObject:aspectRatio];
   if (renderResolution != nil) [displayItems addObject:renderResolution];
+  UIAction *disableBloom = [UIAction actionWithTitle:@"Disable Bloom"
+      image:[UIImage systemImageNamed:@"sun.max"] identifier:@"dev.kartpad.disable-bloom"
+      handler:^(__kindof UIAction *action) {
+    if (!kartpad::graphics::SetBloomDisabled(!kartpad::graphics::BloomDisabled())) {
+      UIViewController *presenter = KartPadVisibleViewController(weakSelf.window);
+      UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Could Not Save Setting"
+          message:@"The bloom setting could not be saved. Please try again."
+          preferredStyle:UIAlertControllerStyleAlert];
+      [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+      [presenter presentViewController:alert animated:YES completion:nil];
+    }
+    [weakSelf refreshMenuButton];
+  }];
+  disableBloom.subtitle = @"Applies when the next scene loads.";
+  disableBloom.state = kartpad::graphics::BloomDisabled() ? UIMenuElementStateOn : UIMenuElementStateOff;
+  [displayItems addObject:disableBloom];
   if (UIApplication.sharedApplication.supportsAlternateIcons) {
     // Original KartPad artwork only (see branding/PROVENANCE.md). nil is the default icon.
     NSArray<NSString *> *iconTitles = @[@"Red K", @"Circuit", @"Mono"];

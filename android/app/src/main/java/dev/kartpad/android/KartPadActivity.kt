@@ -758,6 +758,19 @@ class KartPadActivity : SDLActivity() {
                 detail = RESOLUTION_LABELS[resolutionIndex()]) {
                 closeKartPadMenu(::showResolutionSettings)
             },
+            MenuRow("Disable Bloom", R.drawable.ic_kartpad_display,
+                switchOn = nativeIsBloomDisabled(),
+                detail = "Removes the glow around bright areas. Applies when the next scene loads.") {
+                if (nativeSetBloomDisabled(!nativeIsBloomDisabled())) {
+                    showDisplayMenu()
+                } else {
+                    closeKartPadMenu {
+                        AlertDialog.Builder(this).setTitle("Could Not Save Setting")
+                            .setMessage("The bloom setting could not be saved. Please try again.")
+                            .setPositiveButton("OK", null).show()
+                    }
+                }
+            },
             MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true,
                 detail = KartPadAppIcon.titles[KartPadAppIcon.current(this)]) {
                 closeKartPadMenu(::showAppIconSettings)
@@ -2897,6 +2910,8 @@ class KartPadActivity : SDLActivity() {
     )
 
     private external fun nativeApplySoundLevels(music: Float, sounds: Float)
+    private external fun nativeIsBloomDisabled(): Boolean
+    private external fun nativeSetBloomDisabled(disabled: Boolean): Boolean
     private external fun nativeApplyThirtyFpsRaces(enabled: Boolean)
     private external fun nativeApplySimplerComputerKarts(enabled: Boolean)
 
