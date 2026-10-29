@@ -760,7 +760,7 @@ class KartPadActivity : SDLActivity() {
             },
             MenuRow("Disable Bloom", R.drawable.ic_kartpad_display,
                 switchOn = nativeIsBloomDisabled(),
-                detail = "Removes the glow around bright areas. Applies when the next scene loads.") {
+                detail = "Removes bright-area glow. Applies at the next scene.") {
                 if (nativeSetBloomDisabled(!nativeIsBloomDisabled())) {
                     showDisplayMenu()
                 } else {

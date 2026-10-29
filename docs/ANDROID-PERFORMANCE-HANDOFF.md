@@ -56,6 +56,13 @@ telemetry, and retains before/after screenshots without overwriting old ones.
 Emulator host graphics memory is a separate known confounder, so
 any emulator finding still needs a reproducing physical-device comparison.
 
+A bounded first check is now complete: one repeated Luigi visit, one Mario visit
+and a return to Luigi, with four 60-second windows in the same process. Repeat
+Luigi ended at 579.24 MiB PSS; returning after Mario ended at 625.09 MiB, with
+54 more compiled pipelines. The short idle-start-line sequence did not reproduce
+the slowdown. It does not complete the longer protocol above or identify a leak.
+See the [exact settings, measurements and limits](artifacts/2026-10-29/mobile-bloom-and-session.md#bounded-same-process-check-for-510).
+
 ## 24 October: PGO ships in 0.8.6's Android pack
 
 The Android release pack is now profile-guided (`KARTPAD_GAME_PACK_PGO` in
