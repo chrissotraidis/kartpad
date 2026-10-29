@@ -1,6 +1,7 @@
-// PGO experiment only: Android kills app processes without running atexit, so
-// write the instrumented pack's counters from a timer thread. Counters reset
-// 75 s after load (inside the first race) and are written 90 s later.
+// PGO recording only (KARTPAD_GAME_PACK_PGO=generate): Android kills app
+// processes without running atexit, so a timer thread writes the counters.
+// They reset 75 s after load, which skips startup, then the cumulative profile
+// is rewritten every 30 s so one session can record several races.
 #include <chrono>
 #include <thread>
 extern "C" int __llvm_profile_write_file(void);
@@ -12,9 +13,11 @@ struct KartPadPgoDump {
         std::thread([] {
             std::this_thread::sleep_for(std::chrono::seconds(75));
             __llvm_profile_reset_counters();
-            std::this_thread::sleep_for(std::chrono::seconds(90));
             __llvm_profile_set_filename("/data/data/dev.kartpad.android/files/kp-pgo.profraw");
-            __llvm_profile_write_file();
+            for (;;) {
+                std::this_thread::sleep_for(std::chrono::seconds(30));
+                __llvm_profile_write_file();
+            }
         }).detach();
     }
 } g_kartPadPgoDump;

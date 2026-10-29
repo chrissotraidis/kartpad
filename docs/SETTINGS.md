@@ -4,12 +4,13 @@ Android and iPhone/iPad use the same hierarchy for shared controls. The table de
 
 | Menu | Options, in order |
 | --- | --- |
-| Main | Return to KartPad Menu; Multiplayer; Show FPS Counter; Controls; Display; Game Data & Saves; Report a Problem |
+| Main | Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance (Android); Sound; Game Data & Saves; Report a Problem |
 | Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
-| Display | Aspect Ratio; Render Resolution; FPS Counter Size |
+| Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; App Icon |
+| Graphics & Performance (Android) | Graphics Engine; 30 FPS Races; Simpler Computer Karts; GPU Driver (Snapdragon); Graphics Diagnostics |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Import or Reimport Wii Disc Image; Import from Extracted Folder; Remove Stored Game Data |
 
-Android also has Sound in the main menu (iPhone/iPad support is pending in #420) and Android Graphics Diagnostics under Display. This is device-specific troubleshooting, not an Apple setting. Native file pickers and Retro Rewind installation workflows differ between platforms.
+On Android, on/off settings show a switch and a one-line description, and tapping one flips it without leaving the menu; settings with choices show the current choice under their name. Graphics & Performance holds Android-only options. The Mac keeps the same settings in its menu bar and Settings window. Native file pickers and Retro Rewind installation workflows differ between platforms.
 
 ## Time Trial Ghosts
 

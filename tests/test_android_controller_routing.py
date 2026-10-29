@@ -49,9 +49,8 @@ struct Preference {PortPreferenceState state=PortPreferenceState::Unset; Control
 std::array<Preference,4> g_portPreferences;
 std::map<int,GameController> g_GameControllers;
 std::mutex g_standardGamepadBridgeMutex;
-enum class IdentityMatch {None,Fallback,Exact};
-IdentityMatch identity_match(const ControllerIdentity& s,const ControllerIdentity& c) {
-  return s.id!=0 && s.id==c.id ? IdentityMatch::Exact : IdentityMatch::None;}
+int identity_score(const ControllerIdentity& s,const ControllerIdentity& c) {
+  return s.id!=0 && s.id==c.id ? 2 : 0;}
 ControllerIdentity controller_identity(const GameController& c) {return {c.identity};}
 ''' + function(text, 'bool port_reserved(uint32_t port)') + '\n' +
             function(text, 'static GameController* resolve_standard_gamepad(') + '\n' +
@@ -103,18 +102,21 @@ int main() {
 #include <cstdint>
 #include <map>
 using Uint32=uint32_t;
+#include <string>
+#include <vector>
 constexpr int PAD_MAX_CONTROLLERS=4;
 struct GameController {void* m_controller; int32_t m_playerIndex; int identity=0;};
 enum class PortPreferenceState {Unset,None,Controller};
-struct ControllerIdentity {int id=0;};
+struct ControllerIdentity {int id=0; std::string path; int32_t slot=-1;};
 struct Preference {PortPreferenceState state=PortPreferenceState::Unset; ControllerIdentity identity;};
 std::array<Preference,4> g_portPreferences;
 std::map<Uint32,GameController> g_GameControllers;
-enum class IdentityMatch {None,Fallback,Exact};
-IdentityMatch identity_match(const ControllerIdentity& s,const ControllerIdentity& c) {
-  return s.id!=0 && s.id==c.id ? IdentityMatch::Exact : IdentityMatch::None;}
+constexpr int kScoreGuid=2;
+int identity_score(const ControllerIdentity& s,const ControllerIdentity& c) {
+  return s.id!=0 && s.id==c.id ? kScoreGuid : 0;}
 ControllerIdentity controller_identity(const GameController& c) {return {c.identity};}
 void ensure_port_preferences_loaded() {}
+void save_port_preferences() {}
 int32_t SDL_GetGamepadPlayerIndex(void*) {return -1;}
 void SDL_SetGamepadPlayerIndex(void*,int32_t) {}
 const char* SDL_GetGamepadName(void*) {return "pad";}

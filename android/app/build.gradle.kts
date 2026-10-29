@@ -22,6 +22,15 @@ require(!gamePackApp || packFingerprint?.matches(Regex("[0-9a-f]{64}")) == true)
 // in. Android installs it with the app's other native libraries; nothing to import.
 val bundledGamePack = providers.gradleProperty("kartpadBundledGamePack").orNull
 require(bundledGamePack == null || gamePackApp) { "kartpadBundledGamePack needs kartpadGamePackApp" }
+// Second game runtime: a folder with arm64-v8a/libmain_wiicompiled.so, the same runtime built
+// on the WiiCompiled 0.9 graphics layer (aurora-wiicompiled). Players choose it in Display.
+val wiiCompiledRuntime = providers.gradleProperty("kartpadWiiCompiledRuntime").orNull
+require(wiiCompiledRuntime == null || gamePackApp) { "kartpadWiiCompiledRuntime needs kartpadGamePackApp" }
+// Graphics layer the native build compiles: aurora-main (classic) or aurora-wiicompiled.
+val auroraDir = providers.gradleProperty("kartpadAuroraDir").getOrElse("aurora-main")
+require(auroraDir == "aurora-main" || auroraDir == "aurora-wiicompiled") {
+    "kartpadAuroraDir must be aurora-main or aurora-wiicompiled"
+}
 val androidNativeTarget = providers.gradleProperty("kartpadAndroidNativeTarget").orNull
 val discIoJniRoot = providers.gradleProperty("kartpadDiscIoJniRoot").orNull
 val kartpadDiagnosticRelease = providers.gradleProperty("kartpadDiagnosticRelease")
@@ -103,6 +112,7 @@ android {
         buildConfigField("boolean", "GAME_PACK_APP", gamePackApp.toString())
         buildConfigField("String", "PACK_FINGERPRINT", "\"${packFingerprint ?: ""}\"")
         buildConfigField("boolean", "BUNDLED_GAME_PACK", (bundledGamePack != null).toString())
+        buildConfigField("boolean", "WIICOMPILED_RUNTIME", (wiiCompiledRuntime != null).toString())
         buildConfigField("boolean", "DISC_IMAGE_IMPORT", (discIoJniRoot != null).toString())
 
         ndk {
@@ -125,6 +135,7 @@ android {
                         "-DMKW_GAME_PACK=APP",
                         "-DKARTPAD_APP_VERSION=$kartpadVersionName",
                         "-DKARTPAD_PACK_FINGERPRINT=$packFingerprint",
+                        "-DKARTPAD_AURORA_DIR=$auroraDir",
                     )
                 } else if (gameRuntimeSource != null || translatedShardManifest != null) {
                     require(gameRuntimeSource != null && translatedShardManifest != null) {
@@ -138,6 +149,10 @@ android {
                 cppFlags += listOf("-std=c++20", "-fvisibility=hidden")
                 if (androidNativeTarget != null) {
                     targets += listOf(androidNativeTarget)
+                    if (gameRuntimeSource != null) {
+                        // libadrenotools' hook libraries, loaded only with a player-installed GPU driver.
+                        targets += listOf("hook_impl", "main_hook", "file_redirect_hook", "gsl_alloc_hook")
+                    }
                 }
             }
         }
@@ -187,6 +202,11 @@ android {
     if (bundledGamePack != null) {
         sourceSets.named("main") {
             jniLibs.srcDir(file(bundledGamePack))
+        }
+    }
+    if (wiiCompiledRuntime != null) {
+        sourceSets.named("main") {
+            jniLibs.srcDir(file(wiiCompiledRuntime))
         }
     }
 

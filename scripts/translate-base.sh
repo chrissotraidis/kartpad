@@ -61,5 +61,5 @@ function_count="$(find "${functions}" -name 'func_*.cpp' -type f | wc -l | tr -d
   echo "ERROR: expected 29637 translated functions, found ${function_count}" >&2
   exit 70
 }
-rg -q '^set\(MKW_BASE_FUNCTION_COUNT 29065\)$' "${shards}/shards.cmake"
+rg -q '^set\(MKW_BASE_FUNCTION_COUNT 29064\)$' "${shards}/shards.cmake"
 echo "Generated validated private RMCP01 base graph: ${function_count} functions"

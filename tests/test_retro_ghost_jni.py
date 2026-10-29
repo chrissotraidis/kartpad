@@ -21,6 +21,9 @@ class RetroGhostJNI(unittest.TestCase):
             code = int(value.replace("_", ""))
             self.assertNotIn(code, codes, f"{name} and {codes.get(code)} share picker request {code}")
             codes[code] = name
+        driver = (ROOT / "android/app/src/main/java/dev/kartpad/android/KartPadGpuDriverSettings.kt").read_text()
+        driver_code = int(re.search(r"const val REQUEST_PICK_ZIP = (0x[\da-fA-F]+)", driver).group(1), 16)
+        self.assertNotIn(driver_code, codes, "GPU driver picker collides with a ghost/data picker")
         self.assertTrue({"REQUEST_IMPORT_MUSIC", "REQUEST_EXPORT_RETRO_GHOST", "REQUEST_IMPORT_RETRO_GHOST"}.issubset(codes.values()))
 
     def test_catalog_import_export_pending_and_unicode(self):

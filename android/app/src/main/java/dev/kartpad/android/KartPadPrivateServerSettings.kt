@@ -10,7 +10,12 @@ import android.widget.EditText
 internal object KartPadPrivateServerSettings {
     private const val ENVIRONMENT = "KARTPAD_PRIVATE_WFC_HOST"
     private fun preferences(context: Context) = context.getSharedPreferences("kartpad_private_wfc", Context.MODE_PRIVATE)
-    fun validHost(host: String): Boolean = host.length in 1..253 && host.split('.').all {
+    /** Mirrors IsPublicWfcDomain: Retro Rewind already reaches Retro WFC (#520). */
+    fun publicServiceHost(host: String): Boolean {
+        val lowered = host.lowercase().removeSuffix(".")
+        return listOf("nintendowifi.net", "rwfc.net").any { lowered == it || lowered.endsWith(".$it") }
+    }
+    fun validHost(host: String): Boolean = host.length in 1..253 && !publicServiceHost(host) && host.split('.').all {
         it.length in 1..63 && it.first() != '-' && it.last() != '-' &&
             it.all { c -> c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c == '-' }
     }
@@ -36,7 +41,8 @@ internal object KartPadPrivateServerSettings {
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val host = field.text.toString().trim()
-                if (!validHost(host)) { field.error = "Enter a hostname or IPv4 address, without a scheme, port or path." }
+                if (publicServiceHost(host)) { field.error = "Retro Rewind already connects to Retro WFC. This is only for your own Wii server; tap Use Default." }
+                else if (!validHost(host)) { field.error = "Enter a hostname or IPv4 address, without a scheme, port or path." }
                 else if (!preferences(activity).edit().putString("host", host).commit()) { field.error = "Could not save the setting." }
                 else dialog.dismiss()
             }

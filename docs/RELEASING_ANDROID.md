@@ -17,6 +17,21 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
    Choose an explicit version name and forward version code for the candidate;
    record the actual ABI, minimum API, target SDK and non-debuggable status. Retain the unsigned AAB privately and audit it. Do not
    reuse the old candidate if native source changes after testing.
+   From 0.8.6 the bundled game pack is profile-guided: build it with
+   `KARTPAD_GAME_PACK_PGO=use=private/pgo/<profile>.profdata
+   scripts/build-game-pack.sh android …`. Record a new profile whenever the
+   translation, translator or compiler changes (`tools/android-perf`:
+   `KARTPAD_GAME_PACK_PGO=generate`, Original and Retro Rewind races, then
+   `llvm-profdata merge` from the same NDK). A stale profile still builds but
+   optimizes less. The profile is derived from running the game: keep it
+   private, like the pack. PadMint player builds do not use it.
+   From 0.8.6 the app also carries the WiiCompiled 0.9 graphics layer as a
+   second runtime that players can choose in Graphics & Performance → Graphics Engine. Build
+   it from the same prepared runtime source and pack fingerprint with
+   `scripts/build-android-wiicompiled-runtime.sh <runtime-source> <dir>
+   <fingerprint>`, and pass `-PkartpadWiiCompiledRuntime=<dir>` to the bundle
+   build. The audits check it like `libmain.so`; `THIRD_PARTY_NOTICES.md` lists
+   its extra dependency (zlib). Race on both engines before release.
 4. Derive the universal APK with `scripts/derive-android-release-apk.sh`, using
    the persistent private release key. The key and password stay outside Git;
    maintain a secure independent backup. Never rotate the key merely to make a

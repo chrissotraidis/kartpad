@@ -2838,8 +2838,8 @@ static void KartPadApplySoundLevels(BOOL persist) {
                    children:controlItems];
 
   NSMutableArray<UIMenuElement *> *displayItems = [NSMutableArray array];
-  if (aspectRatio != nil) [displayItems addObject:aspectRatio];
-  if (renderResolution != nil) [displayItems addObject:renderResolution];
+  // Same Display menu, in the same order, as Android and the Mac (docs/SETTINGS.md).
+  if (fpsCounter != nil) [displayItems addObject:fpsCounter];
   NSMutableArray *sizes=[NSMutableArray array];
   NSArray *sizeNames=@[@"Small",@"Medium",@"Large"];
   for (NSInteger index=0;index<3;++index) {
@@ -2852,6 +2852,8 @@ static void KartPadApplySoundLevels(BOOL persist) {
     [sizes addObject:size];
   }
   [displayItems addObject:[UIMenu menuWithTitle:@"FPS Counter Size" children:sizes]];
+  if (aspectRatio != nil) [displayItems addObject:aspectRatio];
+  if (renderResolution != nil) [displayItems addObject:renderResolution];
   if (UIApplication.sharedApplication.supportsAlternateIcons) {
     // Original KartPad artwork only (see branding/PROVENANCE.md). nil is the default icon.
     NSArray<NSString *> *iconTitles = @[@"Red K", @"Circuit", @"Mono"];
@@ -2888,7 +2890,6 @@ static void KartPadApplySoundLevels(BOOL persist) {
     if (weakSelf.mainMenuRequested) weakSelf.mainMenuRequested();
   }]];
   [children addObject:multiplayer];
-  if (fpsCounter != nil) [children addObject:fpsCounter];
   [children addObject:controls];
   [children addObject:display];
   [children addObject:[UIAction actionWithTitle:@"Sound…"
@@ -3674,6 +3675,11 @@ static void KartPadApplySoundLevels(BOOL persist) {
       [NSUserDefaults.standardUserDefaults removeObjectForKey:@"KartPadPrivateWfcHost"];
       [weakSelf showMultiplayerMessage:@"Default Service Selected"
           message:@"Fully close and reopen KartPad to restore the default online service. Original Mario Kart Wii's original service is closed; Retro Rewind uses Retro WFC."];
+      return;
+    }
+    if (KartPad::Network::IsPublicWfcDomain(host.UTF8String ?: "")) {
+      [weakSelf showMultiplayerMessage:@"Not a Private Server"
+          message:@"Retro Rewind already connects to Retro WFC. This setting is only for your own Wii server, so clear the field and save to use the default."];
       return;
     }
     if (!KartPad::Network::ValidPrivateWfcHost(host.UTF8String ?: "")) {
@@ -4768,6 +4774,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
 extern "C" bool KartPadMobileEnsureGameDataAvailable() {
   KartPadSystemDiagnosticsStart();
   KartPadApplyPrivateServerAtLaunch();
+  KartPadApplyCountryAtLaunch();
   NSError *miiError = nil;
   if (!KartPadApplyPendingMiiDatabase(&miiError)) {
     NSLog(@"[KartPad] pending Mii changes were not applied: %@",

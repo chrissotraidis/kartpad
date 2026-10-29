@@ -89,6 +89,9 @@ class KartPadActivity : SDLActivity() {
 
     override fun createSDLSurface(context: Context): SDLSurface = KartPadSurface(context)
 
+    // Classic or WiiCompiled graphics; see KartPadNativeRuntime.
+    override fun getLibraries(): Array<String> = arrayOf("SDL3", KartPadNativeRuntime.libraryFor(this))
+
     override fun loadLibraries() {
         saveRestoreStartupError?.let { throw IllegalStateException(it) }
         super.loadLibraries()
@@ -140,7 +143,11 @@ class KartPadActivity : SDLActivity() {
             }
             KartPadRuntimeResources.install(this)
             configureRuntimeProfile()
-            if (!identityStartupChecked) KartPadPrivateServerSettings.configureLaunch(this)
+            if (!identityStartupChecked) {
+                KartPadPrivateServerSettings.configureLaunch(this)
+                KartPadCountrySetting.configureLaunch(this)
+                KartPadGpuDriverSettings.configureLaunch(this)
+            }
             configureDebugLocalWfcRoute()
             configureDebugRkgInput()
             configureDebugStateTrace()
@@ -149,6 +156,22 @@ class KartPadActivity : SDLActivity() {
         super.onCreate(savedInstanceState)
         KartPadExitDiagnostics.mark(this, runtimeProfile)
         if (mBrokenLibraries) return
+        if (KartPadNativeRuntime.fellBackToClassic) {
+            android.widget.Toast.makeText(this,
+                "The WiiCompiled graphics beta closed twice while starting, so KartPad is using Classic graphics. " +
+                    "You can try the beta again in Graphics & Performance → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
+        }
+        if (KartPadGpuDriverSettings.fellBackToSystem) {
+            android.widget.Toast.makeText(this,
+                "The GPU driver you chose didn't start the game, so KartPad is using the phone's driver. " +
+                    "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
+        }
+        // A minute of play means this start worked; see KartPadNativeRuntime.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                KartPadNativeRuntime.markStarted(filesDir)
+                KartPadGpuDriverSettings.markStarted(this)
+            }, KartPadNativeRuntime.HEALTHY_RUN_MS)
         nativeEnableActivityRecreation()
         inputManager = getSystemService(InputManager::class.java)
         runDebugRetroRewindExtractionFixture()
@@ -579,11 +602,27 @@ class KartPadActivity : SDLActivity() {
             setMargins(0, dp(8), dp(12), 0)
         }
         mLayout.addView(menuButton, params)
+        menuButton.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> reportMenuButtonFrame() }
+        if (::kartPadOverlay.isInitialized) {
+            kartPadOverlay.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> reportMenuButtonFrame() }
+        }
         menuButton.setOnApplyWindowInsetsListener { _, insets ->
             applyMenuSafeInsets(insets)
             insets
         }
         menuButton.requestApplyInsets()
+    }
+
+    /** Start on the touch overlay keeps clear of the ⋯ button wherever the insets put it. */
+    private fun reportMenuButtonFrame() {
+        if (!::menuButton.isInitialized || !::kartPadOverlay.isInitialized) return
+        val button = IntArray(2)
+        val overlay = IntArray(2)
+        menuButton.getLocationInWindow(button)
+        kartPadOverlay.getLocationInWindow(overlay)
+        val left = (button[0] - overlay[0]).toFloat()
+        val top = (button[1] - overlay[1]).toFloat()
+        kartPadOverlay.setMenuButtonFrame(left, top, left + menuButton.width, top + menuButton.height)
     }
 
     @Suppress("DEPRECATION")
@@ -651,20 +690,14 @@ class KartPadActivity : SDLActivity() {
                 MenuRow("Multiplayer…", R.drawable.ic_kartpad_multiplayer) {
                     closeKartPadMenu(::showMultiplayer)
                 },
-                MenuRow(
-                    "Show FPS Counter",
-                    R.drawable.ic_kartpad_speedometer,
-                    checked = KartPadTouchSettings.showFps(this),
-                ) {
-                    val show = !KartPadTouchSettings.showFps(this)
-                    setShowFps(show)
-                    showKartPadMenu()
-                },
                 MenuRow("Controls", R.drawable.ic_kartpad_gamecontroller, submenu = true) {
                     showControlsMenu()
                 },
                 MenuRow("Display", R.drawable.ic_kartpad_display, submenu = true) {
                     showDisplayMenu()
+                },
+                MenuRow("Graphics & Performance", R.drawable.ic_kartpad_speedometer, submenu = true) {
+                    showGraphicsMenu()
                 },
                 MenuRow("Sound…", R.drawable.ic_kartpad_speaker) {
                     closeKartPadMenu(::showSoundSettings)
@@ -718,15 +751,70 @@ class KartPadActivity : SDLActivity() {
         showBack = true,
     )
 
-    private fun showDisplayMenu() = showKartPadMenuPage(
+    // Display holds the same settings as on iPhone, iPad and Mac.
+    private fun showDisplayMenu(): Unit = showKartPadMenuPage(
         "Display", listOf(
-            MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAspectRatioSettings) },
-            MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showResolutionSettings) },
-            MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true) { closeKartPadMenu(::showFpsSizeSettings) },
-            MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true) { closeKartPadMenu(::showAppIconSettings) },
-            MenuRow("Android Graphics Diagnostics…", R.drawable.ic_kartpad_display) { closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) } },
+            MenuRow("Show FPS Counter", R.drawable.ic_kartpad_speedometer,
+                switchOn = KartPadTouchSettings.showFps(this)) {
+                setShowFps(!KartPadTouchSettings.showFps(this))
+                showDisplayMenu()
+            },
+            MenuRow("FPS Counter Size", R.drawable.ic_kartpad_speedometer, submenu = true,
+                detail = FPS_SIZE_LABELS[KartPadTouchSettings.fpsSize(this).coerceIn(FPS_SIZE_LABELS.indices)]) {
+                closeKartPadMenu(::showFpsSizeSettings)
+            },
+            MenuRow("Aspect Ratio", R.drawable.ic_kartpad_display, submenu = true,
+                detail = ASPECT_LABELS[KartPadTouchSettings.aspectMode(this).coerceIn(ASPECT_LABELS.indices)]) {
+                closeKartPadMenu(::showAspectRatioSettings)
+            },
+            MenuRow("Render Resolution", R.drawable.ic_kartpad_display, submenu = true,
+                detail = RESOLUTION_LABELS[resolutionIndex()]) {
+                closeKartPadMenu(::showResolutionSettings)
+            },
+            MenuRow("App Icon", R.drawable.ic_kartpad_display, submenu = true,
+                detail = KartPadAppIcon.titles[KartPadAppIcon.current(this)]) {
+                closeKartPadMenu(::showAppIconSettings)
+            },
         ), showBack = true,
     )
+
+    // Android-only graphics and speed options, kept out of Display.
+    private fun showGraphicsMenu(): Unit = showKartPadMenuPage(
+        "Graphics & Performance", listOfNotNull(
+            if (KartPadNativeRuntime.isAvailable()) MenuRow("Graphics Engine", R.drawable.ic_kartpad_display,
+                submenu = true, detail = KartPadNativeRuntime.label(filesDir)) {
+                closeKartPadMenu(::showGraphicsEngineSettings)
+            } else null,
+            MenuRow("30 FPS Races", R.drawable.ic_kartpad_speedometer,
+                switchOn = KartPadTouchSettings.thirtyFpsRaces(this),
+                detail = "Races at normal speed, drawn at 30 FPS. For phones that slow down. From the next race.") {
+                KartPadTouchSettings.setThirtyFpsRaces(this, !KartPadTouchSettings.thirtyFpsRaces(this))
+                applyDisplaySettings()
+                showGraphicsMenu()
+            },
+            MenuRow("Simpler Computer Karts", R.drawable.ic_kartpad_speedometer,
+                switchOn = KartPadTouchSettings.simplerComputerKarts(this),
+                detail = "Computer karts use split-screen models. Saves CPU. From the next race.") {
+                KartPadTouchSettings.setSimplerComputerKarts(this, !KartPadTouchSettings.simplerComputerKarts(this))
+                applyDisplaySettings()
+                showGraphicsMenu()
+            },
+            if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null) {
+                MenuRow("GPU Driver", R.drawable.ic_kartpad_display, submenu = true,
+                    detail = KartPadGpuDriverSettings.selectedName(this) ?: "Phone's driver") {
+                    closeKartPadMenu(::showGpuDriverSettings)
+                }
+            } else null,
+            MenuRow("Graphics Diagnostics…", R.drawable.ic_kartpad_display,
+                detail = "Character fixes for Snapdragon phones") {
+                closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) }
+            },
+        ), showBack = true,
+    )
+
+    private fun resolutionIndex(): Int = RESOLUTION_SCALES.indices.firstOrNull {
+        kotlin.math.abs(RESOLUTION_SCALES[it] - KartPadTouchSettings.resolutionScale(this)) < 0.01f
+    } ?: RESOLUTION_SCALES.indexOfFirst { it == 1f }
 
     private fun showGameDataMenu() = showKartPadMenuPage(
         "Game Data & Saves", listOf(
@@ -813,7 +901,10 @@ class KartPadActivity : SDLActivity() {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         setPadding(dp(13), 0, dp(10), 0)
-        contentDescription = row.title
+        contentDescription = when (row.switchOn) {
+            null -> listOfNotNull(row.title, row.detail).joinToString(", ")
+            else -> "${row.title}, ${if (row.switchOn) "on" else "off"}"
+        }
         isClickable = true
         isFocusable = true
         background = android.graphics.drawable.StateListDrawable().apply {
@@ -828,36 +919,60 @@ class KartPadActivity : SDLActivity() {
             imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(38, 38, 40))
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, LinearLayout.LayoutParams(dp(22), dp(22)).apply { marginEnd = dp(12) })
-        addView(TextView(this@KartPadActivity).apply {
-            text = row.title
-            textSize = 16f
-            maxLines = 2
-            ellipsize = TextUtils.TruncateAt.END
-            setTextColor(Color.rgb(22, 22, 24))
+        val texts = LinearLayout(this@KartPadActivity).apply {
+            orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
-        if (row.checked || row.submenu) addView(TextView(this@KartPadActivity).apply {
-            text = if (row.checked) "✓" else "›"
-            textSize = if (row.checked) 18f else 28f
-            setTextColor(Color.rgb(55, 55, 58))
-            gravity = Gravity.CENTER
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, LinearLayout.LayoutParams(dp(24), ViewGroup.LayoutParams.MATCH_PARENT))
+            addView(TextView(this@KartPadActivity).apply {
+                text = row.title
+                textSize = 16f
+                maxLines = 2
+                ellipsize = TextUtils.TruncateAt.END
+                setTextColor(Color.rgb(22, 22, 24))
+            })
+            row.detail?.let { detail ->
+                addView(TextView(this@KartPadActivity).apply {
+                    text = detail
+                    textSize = 13f
+                    maxLines = 2
+                    ellipsize = TextUtils.TruncateAt.END
+                    setTextColor(Color.rgb(98, 98, 104))
+                })
+            }
+        }
+        addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        when {
+            row.switchOn != null -> addView(Switch(this@KartPadActivity).apply {
+                // Shows the state only; the whole row is the control.
+                isChecked = row.switchOn
+                isClickable = false
+                isFocusable = false
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                .apply { marginStart = dp(8) })
+            row.submenu -> addView(TextView(this@KartPadActivity).apply {
+                text = "›"
+                textSize = 28f
+                setTextColor(Color.rgb(55, 55, 58))
+                gravity = Gravity.CENTER
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(dp(24), ViewGroup.LayoutParams.MATCH_PARENT))
+        }
         setOnClickListener { row.action() }
     }
 
     private fun kartPadMenuRowHeight(row: MenuRow): Int {
-        val trailingWidth = if (row.checked || row.submenu) 24 else 0
-        val availableTextWidth = dp(320 - 13 - 10 - 22 - 12 - trailingWidth)
-        val paint = Paint().apply {
-            textSize = sp(16f)
+        val trailingWidth = when {
+            row.switchOn != null -> 60
+            row.submenu -> 24
+            else -> 0
         }
-        val lineCount = ceil(paint.measureText(row.title) / availableTextWidth)
-            .toInt()
-            .coerceIn(1, 2)
-        val scaledLineHeight = sp(21f)
-        return maxOf(dp(44), dp(12) + (scaledLineHeight * lineCount).roundToInt())
+        val availableTextWidth = dp(320 - 13 - 10 - 22 - 12 - trailingWidth).toFloat()
+        fun lines(text: String, size: Float) = ceil(Paint().apply { textSize = sp(size) }.measureText(text) /
+            availableTextWidth).toInt().coerceIn(1, 2)
+        val titleHeight = sp(21f) * lines(row.title, 16f)
+        val detailHeight = row.detail?.let { sp(17f) * lines(it, 13f) } ?: 0f
+        return maxOf(dp(44), dp(12) + (titleHeight + detailHeight).roundToInt())
     }
 
     private fun closeKartPadMenu(action: () -> Unit) {
@@ -871,7 +986,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun showFpsSizeSettings() {
-        val labels = arrayOf("Small", "Medium", "Large")
+        val labels = FPS_SIZE_LABELS
         AlertDialog.Builder(this)
             .setTitle("FPS Counter Size")
             .setSingleChoiceItems(labels, KartPadTouchSettings.fpsSize(this)) { dialog, which ->
@@ -963,6 +1078,7 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun restartToGameSelector() {
+        KartPadNativeRuntime.markStarted(filesDir)
         kartPadOverlay.clearTouchInput()
         val chooser = Intent(this, KartPadChooserActivity::class.java).apply {
             putExtra(KartPadChooserActivity.EXTRA_SKIP_PREFERRED_GAME, true)
@@ -987,14 +1103,12 @@ class KartPadActivity : SDLActivity() {
             KartPadTouchSettings.aspectMode(this),
             KartPadTouchSettings.resolutionScale(this),
         )
+        if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
+        if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
     }
 
     private fun showAspectRatioSettings() {
-        val labels = arrayOf(
-            "Original 4:3",
-            "16:9 (Experimental)",
-            "Fill Screen (Experimental)",
-        )
+        val labels = ASPECT_LABELS
         AlertDialog.Builder(this)
             .setTitle("Aspect Ratio")
             .setSingleChoiceItems(labels, KartPadTouchSettings.aspectMode(this)) { dialog, which ->
@@ -1004,6 +1118,47 @@ class KartPadActivity : SDLActivity() {
                 dialog.dismiss()
             }
             .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showGraphicsEngineSettings() {
+        val current = KartPadNativeRuntime.engines.indexOf(KartPadNativeRuntime.engine(filesDir))
+        AlertDialog.Builder(this)
+            .setTitle("Graphics Engine")
+            .setSingleChoiceItems(KartPadNativeRuntime.labels, current) { dialog, which ->
+                dialog.dismiss()
+                if (which == current) return@setSingleChoiceItems
+                runCatching { KartPadNativeRuntime.setEngine(filesDir, KartPadNativeRuntime.engines[which]) }
+                    .onFailure {
+                        AlertDialog.Builder(this).setTitle("Graphics Engine")
+                            .setMessage("The setting could not be saved. Please try again.")
+                            .setPositiveButton("OK", null).show()
+                        return@setSingleChoiceItems
+                    }
+                AlertDialog.Builder(this)
+                    .setTitle("Restart to Switch")
+                    .setMessage("The game starts again with the ${KartPadNativeRuntime.labels[which]} engine. " +
+                        "Saves and settings are unchanged. You can switch back here or on the KartPad start screen." +
+                        (if (which == 1 && KartPadNativeRuntime.isLikelyAdreno())
+                            "\n\nThis phone has a Qualcomm Adreno GPU. The beta doesn't have KartPad's Adreno fixes yet, " +
+                                "so characters or track textures may be missing. Switch back to Classic if they are." else ""))
+                    .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
+                    .setNegativeButton("Later", null)
+                    .show()
+            }
+            .setNegativeButton("Back", null)
+            .show()
+    }
+
+    private fun showGpuDriverSettings() = KartPadGpuDriverSettings.show(this, ::onGpuDriverChanged)
+
+    private fun onGpuDriverChanged() {
+        AlertDialog.Builder(this)
+            .setTitle("Restart to Switch")
+            .setMessage("The game starts again with the driver you chose. Saves and settings are unchanged. " +
+                "If an installed driver doesn't start the game, KartPad goes back to the phone's driver by itself.")
+            .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
+            .setNegativeButton("Later", null)
             .show()
     }
 
@@ -1027,8 +1182,8 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun showResolutionSettings() {
-        val labels = arrayOf("0.5× (Lowest detail)", "0.75× (Lower detail)", "1× (Native)", "1.5×", "2×", "3×", "4×")
-        val scales = floatArrayOf(0.5f, 0.75f, 1f, 1.5f, 2f, 3f, 4f)
+        val labels = RESOLUTION_LABELS
+        val scales = RESOLUTION_SCALES
         val selected = scales.indexOfFirst {
             kotlin.math.abs(it - KartPadTouchSettings.resolutionScale(this)) < 0.01f
         }.let { if (it >= 0) it else scales.indexOfFirst { scale -> scale == 1f } }
@@ -1047,6 +1202,7 @@ class KartPadActivity : SDLActivity() {
         val retro = runtimeProfile == "retro_rewind"
         val choices = mutableListOf("Local Split-Screen…", "Controller Setup…")
         if (retro) choices += "Retro WFC Friend Rooms…"
+        choices += "Country…"
         choices += "Experimental Server Settings…"
         AlertDialog.Builder(this)
             .setTitle("Multiplayer")
@@ -1055,6 +1211,14 @@ class KartPadActivity : SDLActivity() {
                 menuButton.post {
                     when (choices[index]) {
                         "Controller Setup…" -> showControllerPlayers()
+                        "Country…" -> KartPadCountrySetting.show(this) {
+                            AlertDialog.Builder(this)
+                                .setTitle("Country Saved")
+                                .setMessage("Your flag and globe position change after KartPad restarts. Saves, ghosts and friends stay.")
+                                .setNegativeButton("Later", null)
+                                .setPositiveButton("Restart to Selector") { _, _ -> restartToGameSelector() }
+                                .show()
+                        }
                         "Experimental Server Settings…" -> KartPadPrivateServerSettings.show(this)
                         "Local Split-Screen…" -> showParityBoundary("Local Split-Screen",
                             "Pair Android-supported controllers, assign Player 1–4 in Controller Setup, then choose Multiplayer in the game. Press the mapped A button on each pad at Register Controllers. Touch shares Player 1. PlayStation defaults: Cross = A, Circle = B, Square = X, Triangle = Y; Customize Face Buttons changes these positions.")
@@ -1990,6 +2154,10 @@ class KartPadActivity : SDLActivity() {
                 }
             return
         }
+        if (requestCode == KartPadGpuDriverSettings.REQUEST_PICK_ZIP) {
+            if (resultCode == RESULT_OK) KartPadGpuDriverSettings.onZipPicked(this, data?.data, ::onGpuDriverChanged)
+            return
+        }
         if (requestCode == REQUEST_IMPORT_MUSIC) {
             if (resultCode != RESULT_OK || data == null) return
             val clip = data.clipData
@@ -2838,6 +3006,8 @@ class KartPadActivity : SDLActivity() {
     )
 
     private external fun nativeApplySoundLevels(music: Float, sounds: Float)
+    private external fun nativeApplyThirtyFpsRaces(enabled: Boolean)
+    private external fun nativeApplySimplerComputerKarts(enabled: Boolean)
 
     private external fun nativeTestDiagnosticCrash()
     private external fun nativeEnableActivityRecreation()
@@ -2871,6 +3041,11 @@ class KartPadActivity : SDLActivity() {
         private const val REQUEST_IMPORT_MUSIC = 4_322
         private const val REQUEST_EXPORT_RETRO_GHOST = 4_323
         private const val REQUEST_IMPORT_RETRO_GHOST = 4_324
+        private val FPS_SIZE_LABELS = arrayOf("Small", "Medium", "Large")
+        private val ASPECT_LABELS = arrayOf("Original 4:3", "16:9 (Experimental)", "Fill Screen (Experimental)")
+        private val RESOLUTION_LABELS =
+            arrayOf("0.5× (Lowest detail)", "0.75× (Lower detail)", "1× (Native)", "1.5×", "2×", "3×", "4×")
+        private val RESOLUTION_SCALES = floatArrayOf(0.5f, 0.75f, 1f, 1.5f, 2f, 3f, 4f)
         private val GHOST_COURSE_IDS = intArrayOf(8,1,2,4,0,5,6,7,9,15,3,11,10,14,12,13,31,25,24,30,27,26,29,28,16,17,18,19,20,21,22,23)
         private val GHOST_COURSES = arrayOf("Luigi Circuit", "Moo Moo Meadows", "Mushroom Gorge", "Toad's Factory", "Mario Circuit", "Coconut Mall", "DK Summit", "Wario's Gold Mine", "Daisy Circuit", "Koopa Cape", "Grumble Volcano", "Maple Treeway", "Moonview Highway", "Dry Dry Ruins", "Bowser's Castle", "Rainbow Road", "GBA Shy Guy Beach", "SNES Ghost Valley 2", "SNES Mario Circuit 3", "GBA Bowser Castle 3", "N64 Sherbet Land", "N64 Mario Raceway", "N64 DK's Jungle Parkway", "N64 Bowser's Castle", "GCN Peach Beach", "GCN Mario Circuit", "GCN Waluigi Stadium", "GCN DK Mountain", "DS Yoshi Falls", "DS Desert Hills", "DS Peach Gardens", "DS Delfino Square")
         private const val REQUEST_EXPORT_SAVE = 4_303
@@ -2936,11 +3111,17 @@ class KartPadActivity : SDLActivity() {
 
     private data class MiiRecord(val slot: Int, val name: String, val creator: String)
     private data class NativeController(val instance: Long, val player: Int, val name: String)
+    /**
+     * One row of the ⋯ menu. [switchOn] makes it an on/off setting: the row shows a switch and
+     * tapping it flips the setting in place. [detail] is a second line: the current choice for a
+     * submenu, or what a switch does.
+     */
     private data class MenuRow(
         val title: String,
         val icon: Int,
-        val checked: Boolean = false,
+        val switchOn: Boolean? = null,
         val submenu: Boolean = false,
+        val detail: String? = null,
         val action: () -> Unit,
     )
 }

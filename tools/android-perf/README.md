@@ -28,6 +28,7 @@ Outputs go to `build/perf/` (ignored).
 | Script | What it does |
 |---|---|
 | `build-variant.sh NAME` | Builds an optimized, profileable, debug-signed `<current-version>-perf` app that loads a pushed game pack, plus a game pack for the current runtime working tree, into `build/perf/v-NAME`. Keeps the unstripped `libmain` for profiling. Any build failure stops the script |
+| `pack-variant.sh NAME FROM` | Rebuilds only the game pack against `v-FROM`'s app, honouring `KARTPAD_GAME_PACK_PGO` (`generate` or `use=PROFILE`) |
 | `deploy.sh NAME` | Installs `v-NAME` over the current install (data kept) and pushes its pack and fingerprint |
 | `bench.sh LABEL SECONDS` | Starts the app, drives it into Grand Prix race 1 (Luigi Circuit, player idle), waits 55 s, then reports game-thread user and kernel CPU per frame |
 | `ab.sh OUT A B ROUNDS` | Alternates A and B, cold-booting the emulator before every run, and records the emulator's host memory |

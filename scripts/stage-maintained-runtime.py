@@ -43,8 +43,9 @@ def source_checkout(repo: Path, platform: str, *, initialize: bool) -> tuple[Pat
 def maintained_files(source: Path) -> dict[str, Path]:
     # Copy only tracked source. Local edits/deletions are supported and enter the
     # builder fingerprint; new files must be git-added in the source submodule.
+    # aurora-wiicompiled (Android) is the optional second graphics layer.
     paths = subprocess.check_output(
-        ["git", "-C", str(source), "ls-files", "-z", "--", "runtime", "aurora-main"]
+        ["git", "-C", str(source), "ls-files", "-z", "--", "runtime", "aurora-main", "aurora-wiicompiled"]
     ).decode().split("\0")
     if not (source / "runtime/CMakeLists.txt").is_file():
         raise ValueError(f"missing maintained runtime source: {source}")

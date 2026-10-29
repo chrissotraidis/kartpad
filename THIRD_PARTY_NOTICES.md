@@ -20,6 +20,8 @@ WorkManager (Apache-2.0), rather than Apple's Metal/GameController host paths.
 |---|---|---|
 | [WiiCompiled](https://github.com/patchzyy/Wiicompiled), by [patchzyy](https://github.com/patchzyy) | `83463764b8acda394e058b0c689a10b8561fc380` | GPLv3; ahead-of-time translator and runtime, including KartPad modifications |
 | Aurora | vendored by the WiiCompiled pin | MIT; GX compatibility and Dawn integration |
+| aurora-wiicompiled | `patchzyy/aurora-wiicompiled` `dd399416` with KartPad changes, in `vendor/runtimes/android/aurora-wiicompiled` | MIT; the Android app's optional WiiCompiled 0.9 graphics layer |
+| zlib | fetched by the WiiCompiled graphics layer | zlib; compression for that layer's image and font libraries |
 | libco, byuu and the higan team | vendored by the WiiCompiled pin | ISC; Android cooperative contexts. `valgrind.h` retains its separate BSD-style notice. See `vendor/runtimes/android/runtime/third_party/libco/LICENSE`. |
 | Dawn | Apple: `v20260603.191052`; Android: `dawn-android-20260919.1`, identity `b0fd045b0a694eb07ac3fcf0d741f8697b935856` | Chromium/Dawn upstream terms; Metal and Vulkan WebGPU implementations; Android changes and rebuild recipe are in the source delivery |
 | Dolphin | `4f8af23db516d8b6e9cd00e7b261a65b026514a8` | GPL-2.0-or-later aggregate compatible with GPL-3.0; DiscIO and hardware/HLE-derived integration |
@@ -28,6 +30,8 @@ WorkManager (Apache-2.0), rather than Apple's Metal/GameController host paths.
 | Mbed TLS | `4.1.1` | Apache-2.0 OR GPL-2.0-or-later; Android native TLS primitive |
 | Minizip-NG | Dolphin-pinned source | zlib; tvOS Retro Rewind archive extraction |
 | WiimotePairPlus | `8e7f9b12db2da520e4f868305c4861cdf58fa15f` | GPL-2.0-or-later; experimental macOS Wii Remote Bluetooth pairing flow derived from Dolphin WiimotePair |
+| [libadrenotools](https://github.com/bylaws/libadrenotools) and [linkernsbypass](https://github.com/bylaws/liblinkernsbypass), by Billy Laws | `8fae8ce254dfc1344527e05301e43f37dea2df80` and `aa3975893d83ef1bc84c321ec60c65fbf1287887`, vendored in `android/third_party/adrenotools` | BSD-2-Clause (text below); Android only: loads a GPU driver the player installs |
+| [DriftDroid](https://github.com/dorPXP/driftdroid), by dorPXP | `8b33d31016a8b8735fe35b4fb633c491d33774c6` (1.3.0) | GPL-3.0; Android "Simpler Computer Karts" and the GPU driver picker are adapted from it |
 | Abseil, Dear ImGui, fmt, FreeType, libpng, Tracy, xxHash, zstd | exact package-build inputs | Their included upstream license files apply |
 
 The published repository and tag provide KartPad's integration source,
@@ -56,3 +60,34 @@ KartPad's platform runtime source is maintained in the actual
 licenses and notices. KartPad's translator changes are maintained on the fork's
 `kartpad-translator` branch, pinned at `vendor/wiicompiled/`. See [source maintenance](docs/source-maintenance/README.md)
 for exact source ownership, upstream identity and contribution workflow.
+
+## libadrenotools and linkernsbypass license
+
+Both carry the same BSD 2-Clause License:
+
+```text
+BSD 2-Clause License
+
+Copyright (c) 2021, Billy Laws
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```

@@ -52,6 +52,7 @@ class Overlay {
  val pointerOwners=mutableMapOf<Int,String>()
  val mainHandler=Scheduler()
  val GAS_LOCK_DELAY_MS=1000L
+ val ITEM_LOCK_DELAY_MS=670L
  var published=false
  var itemPublished=false
  fun updateGasAccessibility() {}

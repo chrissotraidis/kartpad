@@ -311,7 +311,7 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         native = (REPO / "android/app/src/main/cpp/kartpad_runtime_settings_jni.cpp").read_text()
         for title in (
             '"KartPad"', '"Return to KartPad Menu"', '"Multiplayer…"',
-            '"Show FPS Counter"', '"Controls"', '"Display"',
+            '"Show FPS Counter"', '"Controls"', '"Display"', '"Graphics & Performance"',
             '"FPS Counter Size"', '"Small"', '"Medium"', '"Large"',
             '"Game Data & Saves"', '"Controller Player Setup…"',
             '"Controller Button Mapping…"',
@@ -360,7 +360,8 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         self.assertIn("showGameDataMenu()", activity)
         self.assertIn("rows.map(::kartPadMenuRowHeight)", activity)
         self.assertIn("TypedValue.COMPLEX_UNIT_SP", activity)
-        self.assertIn("paint.measureText(row.title)", activity)
+        self.assertIn("lines(row.title, 16f)", activity)
+        self.assertIn("switchOn = KartPadTouchSettings.thirtyFpsRaces(this)", activity)
         self.assertIn("maxLines = 2", activity)
         self.assertIn("TextUtils.TruncateAt.END", activity)
         self.assertIn("R.drawable.ic_kartpad_gamecontroller", activity)
@@ -505,10 +506,9 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         self.assertIn("TEST_MENU", runner)
         self.assertNotIn("shell pm clear dev.kartpad.android", runner)
         self.assertIn("expected_fps_value", runner)
-        self.assertIn("top=8 controls=5 display=4 data=7 actions=17", runner)
+        self.assertIn("top=8 controls=5 display=5 graphics=3 data=7 actions=17", runner)
         self.assertIn("assert_icon_count 7", runner)
         self.assertIn("assert_icon_count 5", runner)
-        self.assertIn("assert_icon_count 4", runner)
         self.assertIn("assert_icon_count 7", runner)
         for icon in ("hand", "gyroscope", "antenna", "refresh", "trash", "mii"):
             self.assertIn(f"R.drawable.ic_kartpad_{icon}", activity)

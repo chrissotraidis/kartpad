@@ -527,3 +527,24 @@ Wider native mode/course/variant import/export and matching-recording replay,
 sustained Original rendering, full-game Apple transfer/replay and physical-device
 picker/gameplay remain open. Earlier native receipts above describe 6.12.8; this
 section records the narrower current 6.13.4 check. PR #375 remains draft and issue #295 remains open.
+
+## 29 October: current-main integration
+
+Merged main through `b624689d`, including the 0.8.6 runtime pins and the newer
+Android GPU-driver picker. The activity-result conflict retains both the Retro
+import/export branch and the GPU-driver branch, with separate early returns.
+The picker request-code regression now checks the GPU-driver request as well as
+the activity's existing music, save and ghost requests.
+
+On this merged source, the five ghost Python/JVM checks, synthetic catalog
+check, strict-warning ASAN/UBSAN ghost and Retro transfer tests, Apple Foundation
+identity/Retro manager tests, production Android Kotlin compilation and both
+Android cold-configuration cases pass. Kotlin compilation uses the release's
+cached dependencies and excludes packaging/provenance generation. All five
+submodules were advanced to the exact merged gitlinks before the cold-config
+check.
+
+This removes the merge conflict and checks the current code paths; it does not
+replace the earlier build, native picker or replay receipts with new gameplay
+acceptance. The wider course/variant/mode and Apple gameplay gates above remain
+open. No artifact or release was published.

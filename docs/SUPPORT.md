@@ -35,6 +35,46 @@ KartPad's validated profile remains RMCP01, disc 0, revision 0. The separate
 [#203 compatibility request](https://github.com/chrissotraidis/kartpad/issues/203)
 still needs a verified translation profile before a playable candidate exists.
 
+## iPhone and iPad save transfer
+
+KartPad's iOS save manager exports and restores a profile's raw `rksys.dat`.
+Use **0.8.6 or newer** for restores: 0.8.6 fixes the iOS save picker so the
+selected backup reaches KartPad. See the [release notes](releases/v0.8.6.md).
+
+1. Finish your race and let the game save. Open **••• → Game Data & Saves →
+   Manage Saves…** while the game is open.
+2. Choose **Original Mario Kart Wii**, **Retro Rewind**, or **Retro Rewind
+   (Separate Save)**. Use the last option only if you enabled Separate Save
+   in Retro Rewind. Each profile needs its own backup.
+3. Choose **Export Save Backup…** and save `rksys.dat` to Files, such as
+   iCloud Drive. Keep different profiles in separately named folders so their
+   identically named files do not overwrite one another. Export requires an
+   existing, valid save for the selected profile.
+4. Copy the backup to the destination device, or make it available there
+   through Files. Set up KartPad and its game data on that device separately.
+   Export any existing destination progress before replacing it.
+5. On the destination, open **Manage Saves…**, choose the matching profile,
+   then **Restore Save Backup… → Choose rksys.dat…** and select the backup.
+6. After **Save Restore Scheduled**, fully close KartPad from the app switcher
+   and reopen it. Returning to the KartPad menu and resuming is not a restart.
+   KartPad validates the save and backs up an existing destination save before
+   replacing it. Check the expected licenses and progress offline, keeping the
+   source installation and exported backup until you have verified the result.
+
+**What this transfers:** only the selected profile's `rksys.dat`, containing
+its licenses and saved progress. This is not a full app-data export: it does
+not include game assets, settings, the Mii database, console identity or Retro
+Rewind's separate `RRRating.pul`. iOS does not have Android's **Restore Retro
+Ratings…** action. Save-format validation does not establish a complete online
+identity/rating migration or compatibility with a different region or mod.
+
+The **On My iPhone/iPad → KartPad** folder exposes Documents, not the private
+storage holding live saves and installed game content. Copying that folder
+alone is not a full backup. If you need to move more than a save, include your
+KartPad version, installation method and destination when asking for help.
+Do not uninstall the source app or share saves, identity files or game data
+publicly.
+
 ## Android save transfer
 
 KartPad stores saves in Android's **internal app-private storage**, so its save
@@ -115,7 +155,8 @@ On Mac, **Data → Show KartPad Data** opens KartPad's support directory. Quit
 the game before backing it up. On Apple TV, use
 [`backup-tvos-state.sh`](../scripts/backup-tvos-state.sh) as described in the
 [testing guide](TVOS-TESTING.md); its cache storage can be purged by tvOS.
-Android's save-picker instructions do not imply the same UI exists on Apple.
+For iPhone/iPad, follow the [iOS save-transfer steps](#iphone-and-ipad-save-transfer)
+above; Android's rating-restore action is not available there.
 
 ## Display and performance
 

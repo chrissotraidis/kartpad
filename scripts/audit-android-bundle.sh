@@ -102,6 +102,22 @@ expected_native_members="$(printf '%s\n' \
   base/lib/arm64-v8a/libc++_shared.so \
   base/lib/arm64-v8a/libkartpad_discio.so \
   base/lib/arm64-v8a/libmain.so | sort)"
+# The second game runtime (the WiiCompiled graphics layer) gets every libmain.so check.
+runtime_libraries=(libmain.so)
+if printf '%s\n' "$members" | grep -Fxq base/lib/arm64-v8a/libmain_wiicompiled.so; then
+  runtime_libraries+=(libmain_wiicompiled.so)
+  expected_native_members="$(printf '%s\n' "$expected_native_members" base/lib/arm64-v8a/libmain_wiicompiled.so | sort)"
+fi
+# libadrenotools' hook libraries, for a GPU driver the player installs, ship as one set;
+# audit-android-package.sh checks their dependencies in the derived APK.
+gpu_hooks=(libhook_impl.so libmain_hook.so libfile_redirect_hook.so libgsl_alloc_hook.so)
+has_gpu_hooks=0
+if printf '%s\n' "$members" | grep -Eq '^base/lib/arm64-v8a/lib(hook_impl|main_hook|file_redirect_hook|gsl_alloc_hook)\.so$'; then
+  has_gpu_hooks=1
+  for hook in "${gpu_hooks[@]}"; do
+    expected_native_members="$(printf '%s\n' "$expected_native_members" "base/lib/arm64-v8a/$hook" | sort)"
+  done
+fi
 # The ready-to-play app (KARTPAD_ANDROID_ALLOW_GAME_PACK=1) also carries the game pack:
 # KartPad's translated game code. Every other check still applies to it.
 if [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" == 1 ]]; then
@@ -117,6 +133,7 @@ expected_asset_members="$(printf '%s\n' \
   base/assets/ThirdPartyLicenses/Minizip-NG.txt \
   base/assets/dsp/dsp_coef.bin \
   base/assets/pipeline/initial_pipeline_cache.db \
+  base/assets/pipeline/initial_pipeline_cache_wiicompiled.db \
   base/assets/wii/README.md \
   base/assets/wii/shared2/wc24/mbox/Readme.txt \
   base/assets/wii/shared2/wc24/mbox/wc24recv.ctl \
@@ -141,6 +158,8 @@ audit_root="$repo_root/.android-bootstrap/audit-aab"
 mkdir -p "$audit_root"
 aab_libraries=(libSDL3.so libc++_shared.so libkartpad_discio.so libmain.so)
 [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || aab_libraries+=(libkartpad_game.so)
+aab_libraries+=("${runtime_libraries[@]:1}")
+[[ "$has_gpu_hooks" != 1 ]] || aab_libraries+=("${gpu_hooks[@]}")
 for library in "${aab_libraries[@]}"; do
   unzip -p "$bundle" "base/lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |
@@ -150,34 +169,38 @@ for library in "${aab_libraries[@]}"; do
   fi
 done
 
-dynamic="$($readelf -d -l "$audit_root/libmain.so")"
-needed="$(printf '%s\n' "$dynamic" |
-  sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
-expected_needed="$(printf '%s\n' \
-  libc++_shared.so libc.so libdl.so libm.so libSDL3.so \
-  libandroid.so liblog.so libz.so | sort)"
-[[ "$needed" == "$expected_needed" ]] || {
-  echo "ERROR: AAB libmain.so dependency set differs from the allowlist" >&2
-  exit 1
-}
-[[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-bundle.sh: check failed (line 161)" >&2; exit 1; }
-printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$' || {
-  echo "ERROR: AAB libmain.so does not have a non-executable stack" >&2
-  exit 1
-}
-main_symbols="$($readelf --wide --dyn-syms "$audit_root/libmain.so")"
-sdl_symbols="$($readelf --wide --dyn-syms "$audit_root/libSDL3.so")"
-[[ "$main_symbols" == *" SDL_main"* ]] || fail=1
-for symbol in \
-  Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation \
-  Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation \
-  Java_dev_kartpad_android_RetroRewindArchiveExtractor_nativeExtract; do
-  [[ "$main_symbols" == *" $symbol"* ]] || fail=1
+for runtime in "${runtime_libraries[@]}"; do
+  dynamic="$($readelf -d -l "$audit_root/$runtime")"
+  needed="$(printf '%s\n' "$dynamic" |
+    sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
+  expected_needed="$(printf '%s\n' \
+    libc++_shared.so libc.so libdl.so libm.so libSDL3.so \
+    libandroid.so liblog.so libz.so | sort)"
+  [[ "$needed" == "$expected_needed" ]] || {
+    echo "ERROR: AAB $runtime dependency set differs from the allowlist" >&2
+    exit 1
+  }
+  [[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-bundle.sh: check failed (line 161)" >&2; exit 1; }
+  printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$' || {
+    echo "ERROR: AAB $runtime does not have a non-executable stack" >&2
+    exit 1
+  }
+  main_symbols="$($readelf --wide --dyn-syms "$audit_root/$runtime")"
+  [[ "$main_symbols" == *" SDL_main"* ]] || fail=1
+  # The game pack links to libmain.so by name, so both runtimes keep that name.
+  [[ "$dynamic" == *"Library soname: [libmain.so]"* ]] || fail=1
+  for symbol in \
+    Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation \
+    Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation \
+    Java_dev_kartpad_android_RetroRewindArchiveExtractor_nativeExtract; do
+    [[ "$main_symbols" == *" $symbol"* ]] || fail=1
+  done
+  [[ "${fail:-0}" == 0 ]] || {
+    echo "ERROR: AAB $runtime is missing an expected export" >&2
+    exit 1
+  }
 done
-[[ "${fail:-0}" == 0 ]] || {
-  echo "ERROR: AAB libmain.so is missing an expected export" >&2
-  exit 1
-}
+sdl_symbols="$($readelf --wide --dyn-syms "$audit_root/libSDL3.so")"
 [[ "$sdl_symbols" == *" JNI_OnLoad@@"* ]] || {
   echo "ERROR: AAB libSDL3.so is missing JNI registration" >&2
   exit 1
@@ -200,7 +223,11 @@ import zipfile
 suffix = b"PRIVATE KEY-----"
 markers = [b"-----" + boundary + b" " + kind + suffix
            for boundary in (b"BEGIN", b"END") for kind in (b"", b"EC ", b"RSA ")]
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    names = set(archive.namelist())
 expected = {"base/lib/arm64-v8a/libmain.so": 2}
+if "base/lib/arm64-v8a/libmain_wiicompiled.so" in names:
+    expected["base/lib/arm64-v8a/libmain_wiicompiled.so"] = 2
 for library, copies in list(expected.items()):
     name = library.rsplit("/", 1)[1]
     expected["BUNDLE-METADATA/com.android.tools.build.debugsymbols/arm64-v8a/" + name + ".sym"] = copies

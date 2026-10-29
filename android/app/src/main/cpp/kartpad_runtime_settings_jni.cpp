@@ -30,6 +30,11 @@ void SetUiVolume(float volume) noexcept;
 void SetVoicesVolume(float volume) noexcept;
 }  // namespace MusicAttenuation
 
+// "30 FPS races" (runtime/src/hle/frame_rate_lock.cpp, in this library).
+extern "C" void RuntimeSetThirtyFpsRaces(bool enabled) noexcept;
+// "Simpler computer karts" (runtime/src/hle/low_detail_karts.cpp, in this library).
+extern "C" void RuntimeSetLowDetailComputerKarts(bool enabled) noexcept;
+
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kartpad_android_KartPadActivity_nativeEnableActivityRecreation(
     JNIEnv*, jobject) {
@@ -61,6 +66,24 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplyDisplaySettings(
       .aspect_mode = static_cast<int>(aspect_mode),
       .resolution_scale = static_cast<float>(resolution_scale),
   });
+}
+
+// Takes effect when the next race picks its frame rate.
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeApplyThirtyFpsRaces(
+    JNIEnv*, jobject, jboolean enabled) {
+  RuntimeSetThirtyFpsRaces(enabled == JNI_TRUE);
+  std::printf("[KartPadFrameRate] thirty_fps_races=%s\n", enabled == JNI_TRUE ? "on" : "off");
+  std::fflush(stdout);
+}
+
+// Takes effect when the next race loads its karts.
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeApplySimplerComputerKarts(
+    JNIEnv*, jobject, jboolean enabled) {
+  RuntimeSetLowDetailComputerKarts(enabled == JNI_TRUE);
+  std::printf("[KartPadKarts] simpler_computer_karts=%s\n", enabled == JNI_TRUE ? "on" : "off");
+  std::fflush(stdout);
 }
 
 extern "C" JNIEXPORT void JNICALL

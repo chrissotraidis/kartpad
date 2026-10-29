@@ -603,6 +603,16 @@ open class KartPadChooserActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
             addView(label("On launch:", 13f, true), LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(8) })
             addView(preferenceButton)
+            if (KartPadNativeRuntime.isAvailable()) {
+                addView(label("Graphics:", 13f, true), LinearLayout.LayoutParams(-2, -2).apply {
+                    marginStart = dp(16)
+                    marginEnd = dp(8)
+                })
+                addView(link(KartPadNativeRuntime.label(filesDir) + "  ⌄") { showGraphicsEngine() }.apply {
+                    setTextColor(primaryTextColor)
+                    contentDescription = "Graphics: " + KartPadNativeRuntime.label(filesDir)
+                })
+            }
         }
         val footer = LinearLayout(this).apply {
             orientation = if (largeText || config.screenWidthDp < 650) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
@@ -648,6 +658,29 @@ open class KartPadChooserActivity : Activity() {
                         dialog.dismiss()
                         showStatus("The preferred game could not be saved. Please try again.")
                     }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showGraphicsEngine() {
+        val current = KartPadNativeRuntime.engines.indexOf(KartPadNativeRuntime.engine(filesDir))
+        AlertDialog.Builder(this)
+            .setTitle("Graphics Engine")
+            .setSingleChoiceItems(KartPadNativeRuntime.labels, current) { dialog, which ->
+                dialog.dismiss()
+                runCatching { KartPadNativeRuntime.setEngine(filesDir, KartPadNativeRuntime.engines[which]) }
+                    .onSuccess {
+                        rebuildContent()
+                        val engine = if (which == 0) "Classic graphics" else "WiiCompiled 0.9 graphics (beta)"
+                        showStatus(if (pausedProfile() != null)
+                            "$engine on next launch. Fully close KartPad from Recents and reopen it; Resume keeps the current graphics."
+                            else if (which == 0) "$engine from the next game start."
+                            else if (KartPadNativeRuntime.isLikelyAdreno())
+                                "$engine from the next game start. This phone has a Qualcomm Adreno GPU, and the beta doesn't have KartPad's Adreno fixes yet; switch back to Classic if characters or track textures are missing."
+                            else "$engine from the next game start. If anything looks wrong, switch back to Classic here.")
+                    }
+                    .onFailure { showStatus("The graphics setting could not be saved. Please try again.") }
             }
             .setNegativeButton("Cancel", null)
             .show()

@@ -2,6 +2,7 @@ package dev.kartpad.android
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
@@ -267,8 +268,24 @@ internal class RetroRewindInstallActivity : Activity() {
         status.text = "Retro Rewind is ready"
         detail.text = "Installed version ${RetroRewindRelease.VERSION} passed KartPad's pinned checks."
         progress.visibility = View.GONE
-        primary.visibility = View.GONE
+        primary.text = "Back to Game Selection"
+        primary.contentDescription = primary.text
+        primary.setOnClickListener { openGameSelection() }
+        primary.visibility = View.VISIBLE
         cancel.visibility = View.GONE
+    }
+
+    /**
+     * Back to the game selector, where Retro Rewind is now ready to play. The selector runs in its
+     * own process; this one ends, because a game already loaded here must restart to switch.
+     */
+    private fun openGameSelection() {
+        startActivity(
+            Intent(this, KartPadChooserActivity::class.java)
+                .putExtra(KartPadChooserActivity.EXTRA_SKIP_PREFERRED_GAME, true)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+        )
+        window.decorView.postDelayed({ kotlin.system.exitProcess(0) }, 250L)
     }
 
     private fun renderFixtureComplete() {
@@ -287,6 +304,7 @@ internal class RetroRewindInstallActivity : Activity() {
         progress.visibility = View.GONE
         primary.text = "Download official pack"
         primary.contentDescription = primary.text
+        primary.setOnClickListener { requestNotificationPermissionOrInstall() }
         primary.visibility = View.VISIBLE
         cancel.visibility = View.GONE
     }
@@ -297,6 +315,7 @@ internal class RetroRewindInstallActivity : Activity() {
         progress.visibility = View.GONE
         primary.text = "Retry installation"
         primary.contentDescription = primary.text
+        primary.setOnClickListener { requestNotificationPermissionOrInstall() }
     }
 
     private fun friendlyError(error: String, latestVersion: String?): String = when {

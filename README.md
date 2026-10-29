@@ -175,10 +175,14 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.5** (build 267) updates Retro Rewind to **6.13.4**, adds Android
-rumble strength and L3/R3 controller mappings for tricks, and shortens the
-optional touch item hold to 0.67 seconds on Android and iPhone/iPad.
-See the [release notes](docs/releases/v0.8.5.md).
+**KartPad 0.8.6** (build 268) fixes PadMint builds, which stopped in preflight
+for everyone after an upstream change, gives the game your country for the
+online flag and globe, and brings in WiiCompiled's fixes through v0.9.0. On
+Android it adds 30 FPS Races, Simpler Computer Karts, custom GPU drivers for
+Snapdragon phones, faster game code (about 12% less game-thread CPU in emulator
+tests) and an opt-in WiiCompiled 0.9 graphics engine beta next to the default
+Classic engine. Retro Rewind stays at **6.13.4**.
+See the [release notes](docs/releases/v0.8.6.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
@@ -453,6 +457,25 @@ The first time a menu or course appears, KartPad prepares its graphics, which ca
 <summary>Why are the inherited experimental modes absent?</summary>
 
 Those settings applied to Sunshine-specific CPU-clock and 60 FPS behavior and did not affect KartPad’s Mario Kart Wii runtime. They were removed because they were misleading no-ops. Use actual display controls and the [performance guidance](docs/PERF.md).
+
+</details>
+
+<details>
+<summary>Can I extract or transfer my KartPad data on iPhone or iPad?</summary>
+
+**Yes, you can export and restore saves.** Use **0.8.6 or newer** for the iOS
+save-picker fix. During a game, open **••• → Game
+Data & Saves → Manage Saves…**, choose Original Mario Kart Wii, Retro Rewind
+or Retro Rewind (Separate Save), then **Export Save Backup…** to save
+`rksys.dat` to Files. On the destination, back up its existing save, choose
+the matching profile and **Restore Save Backup… → Choose rksys.dat…**, then
+fully close KartPad from the app switcher and reopen it.
+
+This transfers that profile's save, not the whole app: it does not include
+game files, settings, Miis, console identity or Retro Rewind's separate rating
+file. Keep the source installation until you have checked the restored
+progress. See [iPhone/iPad save transfer](docs/SUPPORT.md#iphone-and-ipad-save-transfer)
+for the steps and limits.
 
 </details>
 

@@ -24,6 +24,8 @@ internal object KartPadTouchSettings {
     private const val ITEM_HOLD = "item_hold"
     private const val MODERN_C_STICK = "modern_c_stick_horizontal"
     private const val SHOW_FPS = "show_fps"
+    private const val THIRTY_FPS_RACES = "thirty_fps_races"
+    private const val SIMPLER_COMPUTER_KARTS = "simpler_computer_karts"
     private const val FPS_SIZE = "fps_size"
     private const val ASPECT_MODE = "aspect_mode"
     private const val RESOLUTION_SCALE = "resolution_scale"
@@ -111,6 +113,22 @@ internal object KartPadTouchSettings {
 
     fun setShowFps(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(SHOW_FPS, value).apply()
+    }
+
+    /** Races in the game's own 30 FPS mode, for phones that can't hold 60 (#510, #339). Off by default. */
+    fun thirtyFpsRaces(context: Context): Boolean = preferences(context)
+        .getBoolean(THIRTY_FPS_RACES, false)
+
+    fun setThirtyFpsRaces(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(THIRTY_FPS_RACES, value).apply()
+    }
+
+    /** Computer karts use the game's split-screen models in single-screen races. Off by default. */
+    fun simplerComputerKarts(context: Context): Boolean = preferences(context)
+        .getBoolean(SIMPLER_COMPUTER_KARTS, false)
+
+    fun setSimplerComputerKarts(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(SIMPLER_COMPUTER_KARTS, value).apply()
     }
 
     fun fpsSize(context: Context): Int = preferences(context)

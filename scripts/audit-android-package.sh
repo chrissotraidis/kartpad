@@ -93,7 +93,22 @@ expected_native_members="$(printf '%s\n' \
   lib/arm64-v8a/libSDL3.so \
   lib/arm64-v8a/libc++_shared.so \
   lib/arm64-v8a/libmain.so | sort)"
+# The second game runtime (the WiiCompiled graphics layer) gets every libmain.so check.
+runtime_libraries=(libmain.so)
+if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libmain_wiicompiled.so; then
+  runtime_libraries+=(libmain_wiicompiled.so)
+  expected_native_members="$(printf '%s\n' "$expected_native_members" lib/arm64-v8a/libmain_wiicompiled.so | sort)"
+fi
 has_discio=0
+# libadrenotools' hook libraries, for a GPU driver the player installs, ship as one set.
+gpu_hooks=(libhook_impl.so libmain_hook.so libfile_redirect_hook.so libgsl_alloc_hook.so)
+has_gpu_hooks=0
+if printf '%s\n' "$members" | grep -Eq '^lib/arm64-v8a/lib(hook_impl|main_hook|file_redirect_hook|gsl_alloc_hook)\.so$'; then
+  has_gpu_hooks=1
+  for hook in "${gpu_hooks[@]}"; do
+    expected_native_members="$(printf '%s\n' "$expected_native_members" "lib/arm64-v8a/$hook" | sort)"
+  done
+fi
 if printf '%s\n' "$members" | grep -Fxq lib/arm64-v8a/libkartpad_discio.so; then
   has_discio=1
   # A stale prebuilt disc reader shipped in 0.5.1 without RVZ support (#314).
@@ -126,6 +141,7 @@ if [[ -n "$asset_members" ]]; then
     assets/ThirdPartyLicenses/Minizip-NG.txt \
     assets/dsp/dsp_coef.bin \
     assets/pipeline/initial_pipeline_cache.db \
+    assets/pipeline/initial_pipeline_cache_wiicompiled.db \
     assets/wii/README.md \
     assets/wii/shared2/wc24/mbox/Readme.txt \
     assets/wii/shared2/wc24/mbox/wc24recv.ctl \
@@ -164,6 +180,8 @@ if [[ "$has_discio" == 1 ]]; then
   audit_libraries+=(libkartpad_discio.so)
 fi
 [[ "${KARTPAD_ANDROID_ALLOW_GAME_PACK:-0}" != 1 ]] || audit_libraries+=(libkartpad_game.so)
+audit_libraries+=("${runtime_libraries[@]:1}")
+[[ "$has_gpu_hooks" != 1 ]] || audit_libraries+=("${gpu_hooks[@]}")
 for library in "${audit_libraries[@]}"; do
   unzip -p "$apk" "lib/arm64-v8a/$library" > "$audit_root/$library"
   if "$readelf" -l "$audit_root/$library" |
@@ -172,20 +190,61 @@ for library in "${audit_libraries[@]}"; do
     exit 1
   fi
 done
-dynamic="$("$readelf" -d -l "$audit_root/libmain.so")"
-needed="$(printf '%s\n' "$dynamic" |
-  sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
-expected_needed="$(printf '%s\n' \
-  libc++_shared.so libc.so libdl.so libm.so libSDL3.so \
-  libandroid.so liblog.so libz.so | sort)"
-[[ "$needed" == "$expected_needed" ]] || {
-  echo "ERROR: libmain.so dependency set differs from the allowlist" >&2
-  exit 1
-}
-[[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-package.sh: check failed (line 183)" >&2; exit 1; }
-if ! printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
-  echo "ERROR: libmain.so does not have a non-executable stack" >&2
-  exit 1
+for runtime in "${runtime_libraries[@]}"; do
+  dynamic="$("$readelf" -d -l "$audit_root/$runtime")"
+  needed="$(printf '%s\n' "$dynamic" |
+    sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
+  expected_needed="$(printf '%s\n' \
+    libc++_shared.so libc.so libdl.so libm.so libSDL3.so \
+    libandroid.so liblog.so libz.so | sort)"
+  [[ "$needed" == "$expected_needed" ]] || {
+    echo "ERROR: $runtime dependency set differs from the allowlist" >&2
+    exit 1
+  }
+  # Android 9's libandroid.so exports its own __emutls_get_address; the runtime
+  # must reach libc++_shared.so's copy first, as the game pack does.
+  first_needed="$(printf '%s\n' "$dynamic" |
+    sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | head -1)"
+  [[ "$first_needed" == libc++_shared.so ]] || {
+    echo "ERROR: $runtime must list libc++_shared.so first (found $first_needed)" >&2
+    exit 1
+  }
+  # The game pack links to libmain.so by name, so both runtimes keep that name.
+  [[ "$dynamic" == *"Library soname: [libmain.so]"* ]] || {
+    echo "ERROR: $runtime is not named libmain.so" >&2
+    exit 1
+  }
+  [[ "$dynamic" == *"GNU_RELRO"* ]] || { echo "audit-android-package.sh: check failed (line 183)" >&2; exit 1; }
+  if ! printf '%s\n' "$dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
+    echo "ERROR: $runtime does not have a non-executable stack" >&2
+    exit 1
+  fi
+done
+# A runtime built with the GPU driver loader needs its hooks; the hooks carry their own C++
+# runtime so they load in adrenotools' linker namespace.
+for runtime in "${runtime_libraries[@]}"; do
+  if grep -a -F -q adrenotools-libvulkan "$audit_root/$runtime" && [[ "$has_gpu_hooks" != 1 ]]; then
+    echo "ERROR: $runtime loads GPU drivers but the APK has no hook libraries" >&2
+    exit 1
+  fi
+done
+if [[ "$has_gpu_hooks" == 1 ]]; then
+  for hook in "${gpu_hooks[@]}"; do
+    hook_dynamic="$("$readelf" -d -l "$audit_root/$hook")"
+    hook_needed="$(printf '%s\n' "$hook_dynamic" |
+      sed -n 's/.*Shared library: \[\([^]]*\)\].*/\1/p' | sort)"
+    expected_hook_needed="$(printf '%s\n' libandroid.so libc.so libdl.so liblog.so libm.so | sort)"
+    [[ "$hook" == libhook_impl.so ]] ||
+      expected_hook_needed="$(printf '%s\n' "$expected_hook_needed" libhook_impl.so | sort)"
+    [[ "$hook_needed" == "$expected_hook_needed" ]] || {
+      echo "ERROR: $hook dependency set differs from the allowlist" >&2
+      exit 1
+    }
+    if ! printf '%s\n' "$hook_dynamic" | grep -Eq 'GNU_STACK .* RW  0x0$'; then
+      echo "ERROR: $hook does not have a non-executable stack" >&2
+      exit 1
+    fi
+  done
 fi
 if [[ "$has_discio" == 1 ]]; then
   discio_dynamic="$("$readelf" -d -l "$audit_root/libkartpad_discio.so")"
@@ -204,21 +263,23 @@ if [[ "$has_discio" == 1 ]]; then
     exit 1
   fi
 fi
-main_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libmain.so")"
-sdl_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libSDL3.so")"
-[[ "$main_symbols" == *" SDL_main"* ]] || {
-  echo "ERROR: libmain.so does not export SDL_main" >&2
-  exit 1
-}
-for symbol in \
-  Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation \
-  Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation \
-  Java_dev_kartpad_android_RetroRewindArchiveExtractor_nativeExtract; do
-  [[ "$main_symbols" == *" $symbol"* ]] || {
-    echo "ERROR: libmain.so does not export $symbol" >&2
+for runtime in "${runtime_libraries[@]}"; do
+  main_symbols="$("$readelf" --wide --dyn-syms "$audit_root/$runtime")"
+  [[ "$main_symbols" == *" SDL_main"* ]] || {
+    echo "ERROR: $runtime does not export SDL_main" >&2
     exit 1
   }
+  for symbol in \
+    Java_dev_kartpad_android_KartPadSurface_nativeBeginSurfaceMutation \
+    Java_dev_kartpad_android_KartPadSurface_nativeEndSurfaceMutation \
+    Java_dev_kartpad_android_RetroRewindArchiveExtractor_nativeExtract; do
+    [[ "$main_symbols" == *" $symbol"* ]] || {
+      echo "ERROR: $runtime does not export $symbol" >&2
+      exit 1
+    }
+  done
 done
+sdl_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libSDL3.so")"
 if [[ "$has_discio" == 1 ]]; then
   discio_symbols="$("$readelf" --wide --dyn-syms "$audit_root/libkartpad_discio.so")"
   [[ "$discio_symbols" == *" Java_dev_kartpad_android_KartPadDiscImageImporter_nativeExtract"* ]] || {
@@ -238,8 +299,8 @@ fi
 key_markers="$(grep -E -- '-----(BEGIN|END) (RSA |EC |OPENSSH )?PRIVATE KEY-----' \
   "$audit_root/apk.strings" | sort || true)"
 expected_key_markers=""
-# Every Android target links KartPad's pinned Mbed TLS 4 parser archives.
-key_marker_repetitions=2
+# Every Android runtime links KartPad's pinned Mbed TLS 4 parser archives.
+key_marker_repetitions=$((2 * ${#runtime_libraries[@]}))
 # The coreless disc-import library (libkartpad_discio.so) links no TLS code,
 # so it adds no parser strings.
 if (( key_marker_repetitions > 0 )); then

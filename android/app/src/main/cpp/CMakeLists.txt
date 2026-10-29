@@ -77,7 +77,9 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
     "-fmacro-prefix-map=${KARTPAD_GAME_RUNTIME_SOURCE}=wiicompiled-runtime")
   list(PREPEND CMAKE_PREFIX_PATH "${DAWN_ANDROID_ROOT}")
   set(Dawn_DIR "${DAWN_ANDROID_ROOT}/lib/cmake/Dawn" CACHE PATH "" FORCE)
-  set(MKW_AURORA_DIR "${KARTPAD_GAME_RUNTIME_SOURCE}/aurora-main" CACHE PATH "" FORCE)
+  # aurora-main is the classic graphics layer; aurora-wiicompiled is WiiCompiled 0.9's.
+  set(KARTPAD_AURORA_DIR "aurora-main" CACHE STRING "Graphics layer folder in the runtime source")
+  set(MKW_AURORA_DIR "${KARTPAD_GAME_RUNTIME_SOURCE}/${KARTPAD_AURORA_DIR}" CACHE PATH "" FORCE)
   if(KARTPAD_TRANSLATED_SHARD_MANIFEST)
     set(MKW_TRANSLATED_SHARD_MANIFEST
       "${KARTPAD_TRANSLATED_SHARD_MANIFEST}" CACHE FILEPATH "" FORCE)
@@ -110,6 +112,10 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
   # Keep JNI exports, but bind calls to functions defined in this same product
   # locally. Function-only binding preserves external data-symbol semantics.
   target_link_options(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE "-Wl,-Bsymbolic-functions")
+  # Android 9's libandroid.so also exports __emutls_get_address. Listing
+  # libc++_shared.so first makes this runtime and the game pack bind the same
+  # emulated-TLS copy; otherwise the pack never sees the CPU context.
+  target_link_options(${KARTPAD_GAME_RUNTIME_TARGET} BEFORE PRIVATE "-lc++_shared")
   target_sources(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     kartpad_touch_input_jni.cpp
     kartpad_runtime_settings_jni.cpp
@@ -122,6 +128,7 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
     "${KARTPAD_REPO_ROOT}/runtime/src/android/controller_mapping.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/android/scalar_fenv.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/android/diagnostic_log.cpp"
+    "${KARTPAD_REPO_ROOT}/runtime/src/android/gpu_driver.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/hle/net/android_mbedtls.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_extract.cpp"
     "${KARTPAD_REPO_ROOT}/runtime/src/retro_rewind/archive_path.cpp"
@@ -130,6 +137,17 @@ if(KARTPAD_GAME_RUNTIME_SOURCE)
     "${KARTPAD_REPO_ROOT}/runtime/include")
   target_link_libraries(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE
     MINIZIP::minizip mbedtls)
+  # Player-installed Vulkan drivers (Turnip, newer Qualcomm builds) through libadrenotools,
+  # BSD-2-Clause (runtime/src/android/gpu_driver.cpp). Dawn's own dlopen("libvulkan.so") is
+  # redirected to the loaded driver, so the shared Dawn package stays unchanged. The four hook
+  # libraries ship in the APK (app/build.gradle.kts adds them to the native targets) and carry
+  # their own C++ runtime so they load in adrenotools' namespace whatever else is loaded.
+  add_subdirectory("${KARTPAD_REPO_ROOT}/android/third_party/adrenotools" adrenotools EXCLUDE_FROM_ALL)
+  foreach(hook IN ITEMS hook_impl main_hook file_redirect_hook gsl_alloc_hook)
+    target_link_options(${hook} PRIVATE "-static-libstdc++")
+  endforeach()
+  target_link_libraries(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE adrenotools)
+  target_link_options(${KARTPAD_GAME_RUNTIME_TARGET} PRIVATE "-Wl,--wrap=dlopen" "-Wl,--wrap=dlclose")
 else()
   add_library(main SHARED
     fixture_main.cpp
