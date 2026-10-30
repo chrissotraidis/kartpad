@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.8.1** (15 October 2026). Each item links its GitHub
+Current for **KartPad 0.8.6** (25 October 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).
@@ -106,11 +106,11 @@ the [archive](archive/known-issues-through-2026-09.md).
   (an iPad and an iPhone) report it on real devices. 0.7.4 fixed the greyed-out
   Open button, but only in the Simulator. Workaround: put the folder (with
   `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
-  **Import from Extracted Folder…**. 0.8.1 opens a picker that only
+  **Import from Extracted Folder…**. 0.8.1 opened a picker that only
   chooses folders and always reports back after Open; it works in the
   Simulator, and a real device has to confirm it. The latest follow-up uses a
   third-party IPA and DATA download without a PadMint build, so it does not
-  yet test the supported 0.8.1 path. The `ios-for-padmint.ipa` alone cannot play
+  yet test the supported route. The `ios-for-padmint.ipa` alone cannot play
   the game; importing DATA does not supply the translated game code. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
 
 ## Graphics (Apple)
@@ -149,7 +149,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   Wii Remote Plus (`RVL-CNT-01-TR`) did not connect, and an original remote
   left Controller Settings when a Nunchuk or Classic Controller was attached
   ([#476](https://github.com/chrissotraidis/kartpad/issues/476)). Both are the
-  same Mac Wii Remote path.
+  same Mac Wii Remote path. The unreleased runtime corrects the Classic
+  Controller D-pad mapping, which was reading a hat the controller never
+  reports, and keeps a saved player slot when an extension changes the
+  remote's device ID. Neither has been checked on a physical controller yet.
 
 ## Online
 
@@ -188,10 +191,13 @@ iPhone, iPad and Mac can't update themselves: each new KartPad, and almost
 every Retro Rewind update, needs a new build from PadMint. From 0.8.0 the apps
 say when an update is out.
 
-An optional touch control that holds the item button ([#473](https://github.com/chrissotraidis/kartpad/issues/473))
-and a second screen on dual-screen Android devices ([#454](https://github.com/chrissotraidis/kartpad/issues/454))
-are requested and not in 0.8.1.
+A second screen on dual-screen Android devices
+([#454](https://github.com/chrissotraidis/kartpad/issues/454)) is requested and
+not released. The optional touch control that holds the item button shipped in
+0.8.5 ([#473](https://github.com/chrissotraidis/kartpad/issues/473)).
 
-Ghost import/export ([#295](https://github.com/chrissotraidis/kartpad/issues/295)), older iOS and macOS versions ([#300](https://github.com/chrissotraidis/kartpad/issues/300)),
+Retro Rewind ghost import/export ([#295](https://github.com/chrissotraidis/kartpad/issues/295)), older iOS and macOS versions ([#300](https://github.com/chrissotraidis/kartpad/issues/300)),
 AirPlay and external displays ([#100](https://github.com/chrissotraidis/kartpad/issues/100)), DSU controller apps ([#91](https://github.com/chrissotraidis/kartpad/issues/91)) and
 Wiimmfi ([#90](https://github.com/chrissotraidis/kartpad/issues/90)). They're open, with no release planned yet.
+Original Mario Kart Wii ghost export works from **Game Data & Saves**; only the
+Retro Rewind comparison-ghost transfer is still unfinished.
