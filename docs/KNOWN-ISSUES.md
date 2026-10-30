@@ -102,16 +102,19 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Setup on iPhone and iPad
 
-- **Choosing the extracted folder in Files: Open does nothing.** Two players
-  (an iPad and an iPhone) report it on real devices. 0.7.4 fixed the greyed-out
-  Open button, but only in the Simulator. Workaround: put the folder (with
-  `sys` and `files` directly inside) in **On My iPhone/iPad → KartPad**, then tap
-  **Import from Extracted Folder…**. 0.8.1 opened a picker that only
-  chooses folders and always reports back after Open; it works in the
-  Simulator, and a real device has to confirm it. The latest follow-up uses a
-  third-party IPA and DATA download without a PadMint build, so it does not
-  yet test the supported route. The `ios-for-padmint.ipa` alone cannot play
-  the game; importing DATA does not supply the translated game code. [#380](https://github.com/chrissotraidis/kartpad/issues/380)
+- **Choosing the extracted folder in Files: Open does nothing.** Players report
+  this on real iPhone and iPad hardware. **Import from Extracted Folder…** opens
+  a picker that only chooses folders and always reports back after Open, so a
+  current build should return an answer instead of stalling on Open; the
+  Simulator passes and device confirmation is still open. Two things to rule
+  out first: a folder still stored in the cloud that has not finished
+  downloading, and an app installed inside a sandboxing loader such as
+  LiveContainer, which is not a verified way to run KartPad. Workaround: put
+  the folder (with `sys` and `files` directly inside) in **On My iPhone/iPad →
+  KartPad**, then import it from there. The `ios-for-padmint.ipa` alone cannot
+  play the game; importing DATA does not supply the translated game code.
+  [#380](https://github.com/chrissotraidis/kartpad/issues/380),
+  [#539](https://github.com/chrissotraidis/kartpad/issues/539)
 
 ## Graphics (Apple)
 
