@@ -34,9 +34,19 @@ explanation was wrong; the drop came about a minute into a race on a cool
 phone. Classic doesn't use this pinning; on the same phone and scene it ran
 about 41 FPS.
 
-Open: the unpinned beta still dips below 60 at 4× (main thread 13–14 ms per
-frame). Not checked: Snapdragon, MediaTek or Exynos phones, or Retro Rewind
-races.
+Unpinned, the beta still ran 45–55 FPS in the owner's play. The next cause was
+the performance hint ([wiicompiled#17](https://github.com/chrissotraidis/wiicompiled/pull/17)).
+It reported only the game thread's CPU time, about 13 ms. The real frame took
+18–20 ms, because the game thread also waits on the FIFO and render threads. The
+governor therefore kept the mid cores around 1.1–1.8 GHz of 2.6. The hint now
+reports each frame's wall-clock work, minus VI pacing sleeps, and includes the
+`Aurora …` helper threads. Same phone, Luigi Circuit at 3×: the beta went from
+48–58 FPS (median 52.3) to 59–60 (median 59.9), with the mid cores at about
+2.0 GHz. Classic stayed at 60 with slightly higher clocks; its helper threads
+are named `SDLThread` and aren't in the session.
+
+Not checked: Snapdragon, MediaTek or Exynos phones, the beta at 4× after the
+hint fix, or battery and heat over a long session with the higher clocks.
 
 ## 29 October: sustained slowdown on Galaxy S10 Lite (#510)
 
