@@ -1,10 +1,42 @@
 # Android performance: where we stand
 
-Updated 29 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 31 October 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 31 October: the Android beta engine ran on one core
+
+The WiiCompiled 0.9 graphics layer (Android **Graphics Engine → WiiCompiled 0.9
+(Beta)**) pins the game thread, the GX FIFO thread and its render worker to the
+cores that share the highest-level cache with the core the game thread starts
+on. It reads that from `/sys/devices/system/cpu/cpuN/cache`. The owner's Pixel
+9 Pro XL (Tensor G4, Android 17) lists only each core's L1 there, so all three
+threads were pinned to one core: `Cpus_allowed_list: 4`, with about 21.7 million
+involuntary switches on the game thread and 21.2 million voluntary ones on the
+FIFO thread. Which core it is depends on where the game thread starts, so a
+launch can land on a little core.
+
+Timing builds of the 29 October integrated source, same phone, Luigi Circuit
+Grand Prix race, player idle, 4× render resolution, thermal status 0–1:
+
+| Beta build | Race FPS | Game-thread CPU per frame |
+| --- | --- | --- |
+| Pinned (0.8.6 behavior) | 19–22 | 20–23 ms |
+| Unpinned ([wiicompiled#16](https://github.com/chrissotraidis/wiicompiled/pull/16)) | 48–60, mostly mid-50s | 13–14 ms |
+
+The pinned build stayed near 20 FPS at 2× too, and the GPU clock sat at
+337–580 MHz of 940 MHz, so it wasn't GPU-bound. The display handoff didn't
+throttle it either: frame-slot, staging, acquire and present waits all stayed
+under 1 ms. Menus held 60 FPS either way. An earlier "phone warms up"
+explanation was wrong; the drop came about a minute into a race on a cool
+phone. Classic doesn't use this pinning; on the same phone and scene it ran
+about 41 FPS.
+
+Open: the unpinned beta still dips below 60 at 4× (main thread 13–14 ms per
+frame). Not checked: Snapdragon, MediaTek or Exynos phones, or Retro Rewind
+races.
 
 ## 29 October: sustained slowdown on Galaxy S10 Lite (#510)
 
