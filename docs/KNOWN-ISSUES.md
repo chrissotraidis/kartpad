@@ -133,9 +133,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
 - **Android, WiiCompiled 0.9 (Beta) engine: drops to 30 or 20 FPS once the
   phone warms up, in menus and races.** On a Pixel 9 Pro XL at 4× render
-  resolution, the beta held 60 FPS while the phone was cool, then fell to
-  exactly 30 FPS on character select and 20 FPS on Luigi Circuit after about
-  20 minutes of play. Classic slowed too, to about 41 FPS, but less. Because
+  resolution, the beta held 60 FPS while the phone was cool. About ten
+  minutes in, it fell to exactly 30 FPS on character select and 20 FPS on
+  Luigi Circuit, then recovered to about 55 FPS later in the same race.
+  Classic slowed too, to about 41 FPS, but less. Because
   the game's clock follows its frame rate, a lower frame rate also makes the
   race run in slow motion. If you see this, switch **⋯ → Graphics &
   Performance → Graphics Engine** to **Classic**, or lower **Render
