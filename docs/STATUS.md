@@ -15,7 +15,9 @@ restart. Missing characters and phone slowdown remain unresolved; local tests
 do not establish a fix on affected devices.
 The public release is still **0.8.6**; no new release is published by this work.
 
-## Current status: 25 October 2026
+## Current status: 31 October 2026
+
+**0.8.7 (build 272), prepared 31 October, not yet published:** makes the Android WiiCompiled 0.9 (Beta) engine much faster by no longer pinning its threads to one CPU core (#540) and by reporting real frame times to Android's performance hint (#542); fixes iPhone/iPad builds that couldn't start on some self-signed installs (#530, #541); adds Disable Bloom on Android, iPhone and iPad (#535); refuses Retro WFC and Nintendo addresses in the private-server setting (#520); and fixes the Mac Classic Controller D-pad (#306) and Wii Remote player slot (#476). See the [release notes](releases/v0.8.7.md).
 
 **0.8.6 (build 268), 25 October:** fixes PadMint builds of every target, which stopped in preflight after upstream WiiCompiled turned `aurora-main` into a submodule (#509); gives the game a console country for the online flag and globe (#511); adds Android 30 FPS Races, Simpler Computer Karts and custom GPU drivers on a new ⋯ → Graphics & Performance page; ships the WiiCompiled 0.9 graphics engine on Android as an opt-in beta beside the default Classic engine; ports WiiCompiled fixes through v0.9.0; compiles the Android game pack with a race profile (about 12% less game-thread CPU on an unprofiled course in emulator pairs, pack 13% smaller; [record](artifacts/2026-10-24/pgo-release.md)); and includes the iPhone/iPad save-picker fix (#506), bounded Mii reads (#507) and diagnostic session labels (#508). See the [release notes](releases/v0.8.6.md).
 
