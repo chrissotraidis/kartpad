@@ -72,6 +72,8 @@ class KartPadActivity : SDLActivity() {
     private var ghostLicense = -1
     private var ghostSlot = -1
     private var ghostDownloaded = false
+    private var retroGhostSelection: String? = null
+    private var retroGhostStartupError: String? = null
     private var saveDocumentProfile: String? = null
     private var saveRestoreStartupError: String? = null
     private lateinit var inputManager: InputManager
@@ -96,11 +98,20 @@ class KartPadActivity : SDLActivity() {
         // SDL catches library/startup failures and does not start the guest.
         // Resume never runs this hook, so pending edits apply only at cold launch.
         if (BuildConfig.GAME_RUNTIME && !identityStartupChecked) {
+            // The installer may have loaded libmain before updating Config.toml.
+            // Reload once before guest startup; resume retains its live settings.
+            nativeReloadRuntimeConfig()
             KartPadIdentityStorage.applyConsoleRecovery(filesDir)?.let { error ->
                 throw IllegalStateException(error)
             }
             KartPadIdentityStorage.applyPending(filesDir)?.let { error ->
                 throw IllegalStateException(error)
+            }
+            if (KartPadSaveStorage.hasPendingRetroGhost(filesDir)) {
+                // Failure retains the request and the existing ghost collection.
+                // Continue to the menu so the player can cancel or retry it.
+                runCatching { nativeRetroGhostPending(retroGhostRoot(), true) }
+                    .onFailure { retroGhostStartupError = it.message ?: "The pending import remains staged." }
             }
             identityStartupChecked = true
         }
@@ -115,6 +126,7 @@ class KartPadActivity : SDLActivity() {
         ghostLicense = savedInstanceState?.getInt("ghost_license", -1) ?: -1
         ghostSlot = savedInstanceState?.getInt("ghost_slot", -1) ?: -1
         ghostDownloaded = savedInstanceState?.getBoolean("ghost_downloaded", false) ?: false
+        retroGhostSelection = savedInstanceState?.getString("retro_ghost_selection")
         Os.setenv("KARTPAD_ANDROID_FILES_DIR", filesDir.absolutePath, true)
         Os.setenv("KARTPAD_ANDROID_CACHE_DIR", cacheDir.absolutePath, true)
         if (KartPadGamePack.required) {
@@ -454,6 +466,7 @@ class KartPadActivity : SDLActivity() {
         outState.putInt("ghost_license", ghostLicense)
         outState.putInt("ghost_slot", ghostSlot)
         outState.putBoolean("ghost_downloaded", ghostDownloaded)
+        outState.putString("retro_ghost_selection", retroGhostSelection)
         if (debugActivityRecreateRequested) {
             outState.putBoolean(DEBUG_STATE_ACTIVITY_RECREATE, true)
         }
@@ -1784,6 +1797,77 @@ class KartPadActivity : SDLActivity() {
     }
 
     private fun showGhostManager() {
+        retroGhostStartupError?.let {
+            retroGhostStartupError = null
+            showParityBoundary("Retro Ghost Import Retained", "$it Cancel the pending import here and choose its destination again.")
+        }
+        val actions = mutableListOf("Original Mario Kart Wii…", "Retro Rewind…")
+        if (KartPadSaveStorage.hasPendingRetroGhost(filesDir)) actions.add("Cancel Pending Retro Ghost Import")
+        AlertDialog.Builder(this).setTitle("Time Trial Ghosts")
+            .setItems(actions.toTypedArray()) { _, index ->
+                when (index) {
+                    0 -> showOriginalGhostManager()
+                    1 -> showRetroGhostManager()
+                    else -> runCatching { nativeRetroGhostPending(retroGhostRoot(), false) }
+                        .onFailure { showParityBoundary("Cancel Failed", it.message ?: "The pending import was retained.") }
+                }
+            }.setNegativeButton("Done", null).show()
+    }
+
+    private fun retroGhostRoot() = File(filesDir, "KartPad").absolutePath
+
+    private fun showRetroGhostManager() {
+        val catalog = runCatching { org.json.JSONObject(nativeRetroGhostCatalog(retroGhostRoot())) }
+            .getOrElse { showParityBoundary("Retro Ghosts Unavailable", it.message ?: "Install the supported Retro Rewind version first."); return }
+        val tracks = catalog.getJSONArray("tracks")
+        val ordered = (0 until tracks.length()).map { tracks.getJSONObject(it) }.sortedBy { it.getString("label") }
+        AlertDialog.Builder(this).setTitle("Choose Retro Track")
+            .setItems(ordered.map { it.getString("label") }.toTypedArray()) { _, index ->
+                val track = ordered[index]
+                val variants = track.getJSONArray("variants")
+                fun selectVariant(variant: Int) {
+                    AlertDialog.Builder(this).setTitle("Choose Time Trial Mode")
+                        .setItems(arrayOf("150cc", "200cc", "150cc Feather", "200cc Feather")) { _, mode ->
+                            val selection = org.json.JSONObject().put("identity", catalog.getString("identity"))
+                                .put("track", track.getInt("id")).put("variant", variants.getJSONObject(variant).getInt("index"))
+                                .put("mode", mode).put("label", variants.getJSONObject(variant).getString("label"))
+                            showRetroGhostActions(selection)
+                        }.setNegativeButton("Cancel", null).show()
+                }
+                if (variants.length() == 1) selectVariant(0)
+                else AlertDialog.Builder(this).setTitle("Choose Track Variant")
+                    .setItems((0 until variants.length()).map { variants.getJSONObject(it).getString("label") }.toTypedArray()) { _, variant -> selectVariant(variant) }
+                    .setNegativeButton("Cancel", null).show()
+            }.setNegativeButton("Cancel", null).show()
+    }
+
+    private fun showRetroGhostActions(selection: org.json.JSONObject) {
+        AlertDialog.Builder(this).setTitle(selection.getString("label"))
+            .setItems(arrayOf("Export a Ghost…", "Import Comparison Ghost…")) { _, action ->
+                if (action == 0) {
+                    val records = runCatching { nativeRetroGhostFiles(retroGhostRoot(), selection.getInt("track"), selection.getInt("variant"), selection.getInt("mode"), selection.getString("identity")) }
+                        .getOrElse { showParityBoundary("Ghost Export Failed", it.message ?: "The collection could not be read."); return@setItems }
+                    if (records.isEmpty()) { showParityBoundary("No Saved Ghosts", "No valid comparison or personal ghost files are saved for this Retro track, variant and mode."); return@setItems }
+                    AlertDialog.Builder(this).setTitle("Choose Ghost")
+                        .setItems(records) { _, index ->
+                            retroGhostSelection = selection.put("filename", records[index]).toString()
+                            startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE); type = "application/octet-stream"
+                                putExtra(Intent.EXTRA_TITLE, "KartPad-Retro-${records[index]}")
+                            }, REQUEST_EXPORT_RETRO_GHOST)
+                        }.setNegativeButton("Cancel", null).show()
+                } else AlertDialog.Builder(this).setTitle("Import Retro Comparison Ghost")
+                    .setMessage("Destination: ${selection.getString("label")} • ${arrayOf("150cc", "200cc", "150cc Feather", "200cc Feather")[selection.getInt("mode")]}. Use a ghost recorded for this Retro Rewind version, track, variant and mode. Importing does not convert ghosts between games or modes. A new comparison file is added after restart. Existing ghosts, records and both saves stay unchanged.")
+                    .setPositiveButton("Choose .rkg") { _, _ ->
+                        retroGhostSelection = selection.toString()
+                        startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"
+                        }, REQUEST_IMPORT_RETRO_GHOST)
+                    }.setNegativeButton("Cancel", null).show()
+            }.setNegativeButton("Done", null).show()
+    }
+
+    private fun showOriginalGhostManager() {
         val records = runCatching { KartPadIdentityStorage.records(filesDir, false).filter { it.profile == "original" } }.getOrDefault(emptyList())
         if (records.isEmpty()) { showParityBoundary("No Original Licenses", "Create a license in Original Mario Kart Wii first."); return }
         AlertDialog.Builder(this).setTitle("Original Time Trial Ghosts")
@@ -2058,6 +2142,31 @@ class KartPadActivity : SDLActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMPORT_RETRO_GHOST || requestCode == REQUEST_EXPORT_RETRO_GHOST) {
+            val selected = retroGhostSelection
+            retroGhostSelection = null
+            if (resultCode != RESULT_OK) return
+            val uri = data?.data ?: return
+            val result = runCatching {
+                val selection = org.json.JSONObject(selected ?: error("Choose the Retro destination again. No files were changed."))
+                val importing = requestCode == REQUEST_IMPORT_RETRO_GHOST
+                if (importing) require(!KartPadSaveStorage.hasPending(filesDir) && !KartPadIdentityStorage.hasPending(filesDir) && !KartPadMiiStorage.hasPending(filesDir)) { "Apply or cancel the pending data change first." }
+                val ghost = if (importing) contentResolver.openInputStream(uri)?.use { it.readBytesBounded(0x2800) }
+                    ?: error("The ghost could not be opened.") else null
+                val bytes = nativeRetroGhostTransfer(retroGhostRoot(), selection.getInt("track"), selection.getInt("variant"), selection.getInt("mode"), selection.getString("identity"), selection.optString("filename").takeIf { !importing }, ghost)
+                    ?: error("The ghost transfer could not be completed.")
+                if (!importing) contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) }
+                    ?: error("The destination could not be opened.")
+            }
+            result.onFailure { showParityBoundary("Retro Ghost Transfer Failed", it.message ?: "No existing ghosts or saves were changed.") }
+                .onSuccess {
+                    if (requestCode == REQUEST_IMPORT_RETRO_GHOST) AlertDialog.Builder(this)
+                        .setTitle("Retro Ghost Import Scheduled").setMessage("Restart to add this comparison ghost. Existing ghost files, leaderboard records and both Retro saves are unchanged.")
+                        .setPositiveButton("Restart Now") { _, _ -> restartToGameSelector() }.setNegativeButton("Later", null).show()
+                    else showParityBoundary("Ghost Exported", "The .rkg file was saved to your chosen location.")
+                }
+            return
+        }
         if (requestCode == KartPadGpuDriverSettings.REQUEST_PICK_ZIP) {
             if (resultCode == RESULT_OK) KartPadGpuDriverSettings.onZipPicked(this, data?.data, ::onGpuDriverChanged)
             return
@@ -2921,6 +3030,11 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeDebugDisplaySettings(): String
 
     private external fun nativeGhostTransfer(save: ByteArray, ghost: ByteArray?, license: Int, slot: Int, downloaded: Boolean): ByteArray?
+    private external fun nativeRetroGhostCatalog(root: String): String
+    private external fun nativeReloadRuntimeConfig()
+    private external fun nativeRetroGhostFiles(root: String, track: Int, variant: Int, mode: Int, identity: String): Array<String>
+    private external fun nativeRetroGhostTransfer(root: String, track: Int, variant: Int, mode: Int, identity: String, filename: String?, ghost: ByteArray?): ByteArray?
+    private external fun nativeRetroGhostPending(root: String, apply: Boolean)
     private external fun nativeApplyControllerMapping(mapping: IntArray)
     private external fun nativeApplyControllerAutoAccelerate(enabled: Boolean)
     private external fun nativeApplyControllerRumble(enabled: Boolean, strengthPercent: Int)
@@ -2940,6 +3054,8 @@ class KartPadActivity : SDLActivity() {
         private const val REQUEST_EXPORT_GHOST = 4_320
         private const val REQUEST_IMPORT_GHOST = 4_321
         private const val REQUEST_IMPORT_MUSIC = 4_322
+        private const val REQUEST_EXPORT_RETRO_GHOST = 4_323
+        private const val REQUEST_IMPORT_RETRO_GHOST = 4_324
         private val FPS_SIZE_LABELS = arrayOf("Small", "Medium", "Large")
         private val ASPECT_LABELS = arrayOf("Original 4:3", "16:9 (Experimental)", "Fill Screen (Experimental)")
         private val RESOLUTION_LABELS =
