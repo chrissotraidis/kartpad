@@ -132,14 +132,16 @@ the [archive](archive/known-issues-through-2026-09.md).
   usually helps little; resolutions above 1× still cost GPU time, so start at
   **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
 - **Android, WiiCompiled 0.9 (Beta) engine: much slower than Classic on many
-  phones, in menus and races (fixed in the next build).** The beta locked its
+  phones, in menus and races (fixed in 0.8.7).** The beta locked its
   game, graphics-command and render threads onto a single CPU core. On a Pixel
   9 Pro XL at 4× render resolution, a Luigi Circuit race ran at 19–22 FPS on
   0.8.6's beta and 48–60 FPS with the fix, with the phone cool both times.
   Lowering the resolution doesn't help, because the limit is that one core.
-  Because the game's clock follows its frame rate, the slowdown also makes
-  races run in slow motion. Until the next build, use **⋯ → Graphics &
-  Performance → Graphics Engine → Classic**.
+  Because the game's clock follows its frame rate, the slowdown also made
+  races run in slow motion. 0.8.7 also reports real frame times to Android, so
+  the phone raises its CPU speed when frames run long; on the same Pixel the
+  race then held 60 FPS at 3×. On 0.8.6, use **⋯ → Graphics & Performance →
+  Graphics Engine → Classic**.
 - **Honor Magic 8 Lite (Snapdragon 6 Gen 4):** much slower since the latest
   update. 0.8.3 cuts the CPU time of the vertex repack both logs show busy
   (27–34% less in large test cases, same output), but there's no phone
