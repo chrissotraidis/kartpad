@@ -16,6 +16,7 @@ NSString *const kEnabledKey = @"KartPadMotionSteeringEnabled";
 NSString *const kInvertedKey = @"KartPadMotionSteeringInverted";
 NSString *const kSensitivityKey = @"KartPadMotionSteeringSensitivity";
 NSString *const kShakeTricksEnabledKey = @"KartPadShakeTricksEnabled";
+NSString *const kShakeWithControllerKey = @"KartPadShakeWithController";
 
 double WrappedAngle(double value) {
   while (value > M_PI) value -= 2.0 * M_PI;
@@ -159,6 +160,14 @@ KartPadShakeAction KartPadShakeActionForSample(
 
 - (BOOL)isShakeTricksEnabled {
   return _shakeTricksEnabled.load(std::memory_order_relaxed);
+}
+
+- (BOOL)shakeWithController {
+  return [NSUserDefaults.standardUserDefaults boolForKey:kShakeWithControllerKey];
+}
+
+- (void)setShakeWithController:(BOOL)value {
+  [NSUserDefaults.standardUserDefaults setBool:value forKey:kShakeWithControllerKey];
 }
 
 - (void)setShakeTricksEnabled:(BOOL)enabled {

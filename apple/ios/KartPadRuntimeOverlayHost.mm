@@ -3499,8 +3499,9 @@ static void KartPadApplySoundLevels(BOOL persist) {
   if (controller == nil) return;
   KartPadMotionSteering *motion = [KartPadMotionSteering sharedSteering];
   NSString *message = motion.sensorAvailable
-      ? [NSString stringWithFormat:@"Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. Works without tilt steering. Physical controllers take priority.\n\nCurrent state: %@.",
-                                   motion.shakeTricksEnabled ? @"On" : @"Off"]
+      ? [NSString stringWithFormat:@"Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. Works without tilt steering. With a controller connected, shaking does nothing unless Shake with a Controller is on.\n\nShake to Trick: %@. Shake with a Controller: %@.",
+                                   motion.shakeTricksEnabled ? @"On" : @"Off",
+                                   motion.shakeWithController ? @"On" : @"Off"]
       : @"Shake input is unavailable on this device. You can still use D-pad Up.";
   UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Shake to Trick"
       message:message preferredStyle:UIAlertControllerStyleActionSheet];
@@ -3509,6 +3510,13 @@ static void KartPadApplySoundLevels(BOOL persist) {
         style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
       (void)action;
       motion.shakeTricksEnabled = !motion.shakeTricksEnabled;
+    }]];
+    [sheet addAction:[UIAlertAction actionWithTitle:motion.shakeWithController
+                                                        ? @"Turn Off Shake with a Controller"
+                                                        : @"Turn On Shake with a Controller"
+        style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+      (void)action;
+      motion.shakeWithController = !motion.shakeWithController;
     }]];
   }
   [sheet addAction:[UIAlertAction actionWithTitle:@"Continue Playing"
@@ -4854,10 +4862,14 @@ extern "C" bool KartPadMobileReadClassicInputForPlayer(
       kartpad::mobile::AdaptSunPadInput(source);
   KartPadMotionSteering *motion = [KartPadMotionSteering sharedSteering];
   const BOOL shakeTrick = player == 0 ? [motion consumeShakeTrick] : NO;
-  if (player == 0 &&
-      [KartPadPhysicalControllers sharedControllers].connectedControllerCount == 0) {
-    kartpad::mobile::ApplyMotionInput(adapted, motion.currentSteering,
-                                      shakeTrick);
+  if (player == 0) {
+    if ([KartPadPhysicalControllers sharedControllers].connectedControllerCount == 0) {
+      kartpad::mobile::ApplyMotionInput(adapted, motion.currentSteering,
+                                        shakeTrick);
+    } else if (motion.shakeWithController) {
+      // Tilt never steers over a controller; only the shake's D-pad Up is added.
+      kartpad::mobile::ApplyMotionInput(adapted, 0.0f, shakeTrick);
+    }
   }
   snapshot->buttons = adapted.buttons;
   snapshot->leftStickX = std::clamp(static_cast<float>(adapted.leftStickX) / 127.0f,

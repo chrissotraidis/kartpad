@@ -31,6 +31,8 @@ KartPadShakeAction KartPadShakeActionForSample(
 @property(nonatomic, assign) float sensitivity;
 @property(nonatomic, assign, getter=isShakeTricksEnabled)
     BOOL shakeTricksEnabled;
+/** Shake still presses D-pad Up while a controller is connected (clip-on controllers). */
+@property(nonatomic, assign) BOOL shakeWithController;
 @property(nonatomic, readonly, getter=isSensorAvailable) BOOL sensorAvailable;
 @property(nonatomic, readonly) float currentSteering;
 
