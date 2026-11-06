@@ -39,7 +39,7 @@ Controller Button Mapping supports D-pad directions and triggers, optional share
 
 **Touch item hold** (Android and iPhone/iPad) is beside it and off by default. With it on, holding touch L for 0.67 seconds keeps the item held behind your kart after you lift your finger, so you can steer and drift while trailing a shell or banana; L turns blue. Press L again to let go. Opening the menu or leaving the game lets go too. [#473](https://github.com/chrissotraidis/kartpad/issues/473)
 
-Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. Physical controllers take priority. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
+Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. With a controller connected, shaking does nothing unless **Shake with a Controller** is on (from 0.8.8, off by default); it then still presses D-pad Up, for clip-on controllers without motion sensors, while tilt steering stays off. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
 
 FPS Counter Size offers Small, Medium and Large on both platforms. Render Resolution can reduce GPU workload; it does not fix a CPU bottleneck or guarantee a faster race. Start with 1x Native on Android.
 

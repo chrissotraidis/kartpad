@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.8.6** (25 October 2026). Each item links its GitHub
+Current for **KartPad 0.8.8** (7 November 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).
@@ -142,6 +142,14 @@ the [archive](archive/known-issues-through-2026-09.md).
   the phone raises its CPU speed when frames run long; on the same Pixel the
   race then held 60 FPS at 3×. On 0.8.6, use **⋯ → Graphics & Performance →
   Graphics Engine → Classic**.
+- **Android: slow motion after several cups in a row, gone after restarting
+  KartPad.** KartPad keeps memory from each new course it loads and only gives
+  it back when the app restarts. A Galaxy S10 Lite log on 0.8.7 went from about
+  630 MB to 1.8 GB over three cups, rising at each new course, and Android had
+  closed KartPad for low memory in earlier sessions. Replaying the same course
+  doesn't add more. Which cache holds it is still being narrowed down. Until
+  it's fixed, close and reopen KartPad every two or three cups.
+  [#510](https://github.com/chrissotraidis/kartpad/issues/510)
 - **Honor Magic 8 Lite (Snapdragon 6 Gen 4):** much slower since the latest
   update. 0.8.3 cuts the CPU time of the vertex repack both logs show busy
   (27–34% less in large test cases, same output), but there's no phone
@@ -172,10 +180,14 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 - **Retro Rewind online says "Invalid pack version! Please update or reinstall
   your pack to log in. Error Code: 22010".** Retro WFC accepts only the current
-  Retro Rewind. Android updates Retro Rewind inside the app. iPhone, iPad and
-  Mac have it built in, so they need a new build: KartPad 0.8.6 with the latest PadMint,
-  for Retro Rewind 6.13.4. Retro Rewind updates almost always
-  change its game code, so this repeats with each one.
+  Retro Rewind, and KartPad compiles Retro Rewind's game code into the app, so
+  every platform needs a matching KartPad: 0.8.8 for Retro Rewind 6.13.5. On
+  Android, install the update over your current app; KartPad then downloads the
+  new pack. On iPhone, iPad and Mac, build 0.8.8 with the latest PadMint.
+  KartPad 0.8.7 and earlier can't sign in or install Retro Rewind since 6.13.5
+  came out ([#547](https://github.com/chrissotraidis/kartpad/issues/547)).
+  Retro Rewind updates almost always change its game code, so this repeats
+  with each one.
 - **Finding a room fails on mobile data** (error 86420) while Wi-Fi works. Many
   carriers block the direct player-to-player connections the game uses; use
   Wi-Fi or a VPN. [#405](https://github.com/chrissotraidis/kartpad/issues/405)
