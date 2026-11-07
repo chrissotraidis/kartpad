@@ -30,6 +30,7 @@ internal object KartPadTouchSettings {
     private const val ASPECT_MODE = "aspect_mode"
     private const val RESOLUTION_SCALE = "resolution_scale"
     private const val SHAKE_TRICKS = "shake_tricks_enabled"
+    private const val SHAKE_WITH_CONTROLLER = "shake_tricks_with_controller"
     private const val MOTION_ENABLED = "motion_steering_enabled"
     private const val MOTION_INVERTED = "motion_steering_inverted"
     private const val MOTION_SENSITIVITY = "motion_steering_sensitivity"
@@ -159,6 +160,14 @@ internal object KartPadTouchSettings {
 
     fun setShakeTricksEnabled(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(SHAKE_TRICKS, value).apply()
+    }
+
+    /** Shake still presses D-pad Up while a controller is connected (clip-on controllers). */
+    fun shakeWithController(context: Context): Boolean = preferences(context)
+        .getBoolean(SHAKE_WITH_CONTROLLER, false)
+
+    fun setShakeWithController(context: Context, value: Boolean) {
+        preferences(context).edit().putBoolean(SHAKE_WITH_CONTROLLER, value).apply()
     }
 
     fun motionEnabled(context: Context): Boolean = preferences(context)

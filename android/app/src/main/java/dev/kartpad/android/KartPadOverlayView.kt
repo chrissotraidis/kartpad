@@ -812,7 +812,8 @@ class KartPadOverlayView(context: Context) : View(context) {
     }
 
     fun triggerShakeTrick() {
-        if (controllerConnected || editingLayout || !hasWindowFocus() ||
+        if ((controllerConnected && !KartPadTouchSettings.shakeWithController(context)) ||
+            editingLayout || !hasWindowFocus() ||
             !KartPadTouchSettings.shakeTricksEnabled(context)) return
         shakeTrickHeld = true
         mainHandler.removeCallbacks(releaseShakeTrick)

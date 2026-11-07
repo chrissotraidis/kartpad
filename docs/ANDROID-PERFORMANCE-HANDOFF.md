@@ -1,10 +1,52 @@
 # Android performance: where we stand
 
-Updated 29 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 31 October 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 31 October: the Android beta engine ran on one core
+
+The WiiCompiled 0.9 graphics layer (Android **Graphics Engine → WiiCompiled 0.9
+(Beta)**) pins the game thread, the GX FIFO thread and its render worker to the
+cores that share the highest-level cache with the core the game thread starts
+on. It reads that from `/sys/devices/system/cpu/cpuN/cache`. The owner's Pixel
+9 Pro XL (Tensor G4, Android 17) lists only each core's L1 there, so all three
+threads were pinned to one core: `Cpus_allowed_list: 4`, with about 21.7 million
+involuntary switches on the game thread and 21.2 million voluntary ones on the
+FIFO thread. Which core it is depends on where the game thread starts, so a
+launch can land on a little core.
+
+Timing builds of the 29 October integrated source, same phone, Luigi Circuit
+Grand Prix race, player idle, 4× render resolution, thermal status 0–1:
+
+| Beta build | Race FPS | Game-thread CPU per frame |
+| --- | --- | --- |
+| Pinned (0.8.6 behavior) | 19–22 | 20–23 ms |
+| Unpinned ([wiicompiled#16](https://github.com/chrissotraidis/wiicompiled/pull/16)) | 48–60, mostly mid-50s | 13–14 ms |
+
+The pinned build stayed near 20 FPS at 2× too, and the GPU clock sat at
+337–580 MHz of 940 MHz, so it wasn't GPU-bound. The display handoff didn't
+throttle it either: frame-slot, staging, acquire and present waits all stayed
+under 1 ms. Menus held 60 FPS either way. An earlier "phone warms up"
+explanation was wrong; the drop came about a minute into a race on a cool
+phone. Classic doesn't use this pinning; on the same phone and scene it ran
+about 41 FPS.
+
+Unpinned, the beta still ran 45–55 FPS in the owner's play. The next cause was
+the performance hint ([wiicompiled#17](https://github.com/chrissotraidis/wiicompiled/pull/17)).
+It reported only the game thread's CPU time, about 13 ms. The real frame took
+18–20 ms, because the game thread also waits on the FIFO and render threads. The
+governor therefore kept the mid cores around 1.1–1.8 GHz of 2.6. The hint now
+reports each frame's wall-clock work, minus VI pacing sleeps, and includes the
+`Aurora …` helper threads. Same phone, Luigi Circuit at 3×: the beta went from
+48–58 FPS (median 52.3) to 59–60 (median 59.9), with the mid cores at about
+2.0 GHz. Classic stayed at 60 with slightly higher clocks; its helper threads
+are named `SDLThread` and aren't in the session.
+
+Not checked: Snapdragon, MediaTek or Exynos phones, the beta at 4× after the
+hint fix, or battery and heat over a long session with the higher clocks.
 
 ## 29 October: sustained slowdown on Galaxy S10 Lite (#510)
 
