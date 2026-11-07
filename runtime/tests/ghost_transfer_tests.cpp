@@ -23,5 +23,12 @@ int main(){
  auto expectedHeader=std::vector<uint8_t>(c.begin(),c.begin()+0x88);expectedHeader[12]&=0xf6;expectedHeader[13]=uint8_t((expectedHeader[13]&3u)|(7u<<2));
  Require(std::equal(expectedHeader.begin(),expectedHeader.end(),expanded.begin()),"ghost metadata changed beyond container and comparison type");
  for(size_t i=0;i<s.size();++i){bool allowed=(i>=16&&i<20)||(i>=0x27ffc&&i<0x28000)||(i>=0x78000&&i<0x7a800);Require(allowed||s[i]==expandedSave[i],"compressed import changed unrelated save data");}
+ // Match the native header predicate: zero dates are accepted; year >99 or
+ // month >12 must not be advertised as replayable merely because CRC is valid.
+ for(uint32_t date:{0u,99u<<13|12u<<9,100u<<13,13u<<9}){
+  auto dated=g;Write32(dated,8,date);Write32(dated,GhostBytes-4,Crc(std::span<const uint8_t>(dated).first(GhostBytes-4)));
+  bool accepted=true;try{(void)Validate(dated);}catch(...){accepted=false;}
+  Require(accepted==(date==0u||date==(99u<<13|12u<<9)),"native ghost date bounds differ");
+ }
  std::cout<<"Ghost checksums, bounds, compressed roundtrip and unrelated save preservation passed\n";
 }
