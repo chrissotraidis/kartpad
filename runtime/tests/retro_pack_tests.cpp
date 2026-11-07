@@ -32,7 +32,7 @@ template<class F> static void Reject(F&& call) {
 int main(int argc, char** argv) {
   Require(argc == 1 || argc == 3, "Usage: retro_pack_tests [private RetroRewind6 root version]");
   const std::string version = argc == 3 ? argv[2] : "synthetic";
-  Require(version == "synthetic" || version == "6.12.8" || version == "6.13.4", "Unknown pack fixture version");
+  Require(version == "synthetic" || version == "6.12.8" || version == "6.13.4" || version == "6.13.5", "Unknown pack fixture version");
   const size_t expectedExperts = version == "synthetic" ? 2 : version == "6.12.8" ? 373 : 394;
   char temporary[] = "/tmp/kartpad-retro-pack.XXXXXX";
   Require(::mkdtemp(temporary) != nullptr, "Temporary storage unavailable");

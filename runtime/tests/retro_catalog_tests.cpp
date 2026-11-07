@@ -84,8 +84,8 @@ static Bytes Read(const char* name) {
     return bytes;
 }
 static void Actual(const char* rt, const char* ct, const std::string& version) {
-    Check(version == "6.12.8" || version == "6.13.4", "Unknown pinned fixture version");
-    const bool current = version == "6.13.4";
+    Check(version == "6.12.8" || version == "6.13.4" || version == "6.13.5", "Unknown pinned fixture version");
+    const bool current = version != "6.12.8";
     auto catalog = ParseCatalog(Read(rt), Read(ct));
     Check(catalog.tracks.size() == (current ? 316u : 304u), "Pinned race track count differs");
     size_t variants = 0; for (const auto& track : catalog.tracks) variants += track.variants.size();

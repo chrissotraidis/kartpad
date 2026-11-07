@@ -17,6 +17,11 @@ FIXTURES = {
         "06aea3d6d4dab91c65f743c0958c365ea7e063061bcc2f78f7389fced90ed2ba",
         "831a63eab7fbf5642f0fb02b05e861278fef587ef1ae335e64e5c66721906c95",
     ),
+    # 6.13.5 changed ConfigCT.pul but kept the same tracks, variants and experts.
+    "6.13.5": (
+        "06aea3d6d4dab91c65f743c0958c365ea7e063061bcc2f78f7389fced90ed2ba",
+        "8458b5dd483a1d3fd630ba5ca4a93caecf9a197657a3c7faf7e3bed89e6bfe3d",
+    ),
 }
 
 
@@ -39,7 +44,7 @@ def main():
             fixtures.append(str(path))
         version = next((v for v, expected in FIXTURES.items() if tuple(hashes) == expected), None)
         if version is None:
-            raise SystemExit("Config pair does not match a pinned 6.12.8 or 6.13.4 fixture")
+            raise SystemExit("Config pair does not match a pinned 6.12.8, 6.13.4 or 6.13.5 fixture")
         fixtures.append(version)
     with tempfile.TemporaryDirectory(prefix="kartpad-retro-catalog-") as temporary:
         for test, arguments in (
