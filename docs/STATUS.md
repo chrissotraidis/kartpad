@@ -17,7 +17,7 @@ do not establish a fix on affected devices.
 
 ## Current status: 7 November 2026
 
-**0.8.8 (build 273), prepared 7 November, not yet published:** updates Retro Rewind to 6.13.5, which Retro WFC now requires (#547, #548), including the new call site for Android 30 FPS Races, and adds Shake with a Controller on Android, iPhone and iPad (#546). See the [release notes](releases/v0.8.8.md).
+**0.8.8 (build 273), 7 November:** updates Retro Rewind to 6.13.5, which Retro WFC now requires (#547, #548), including the new call site for Android 30 FPS Races, and adds Shake with a Controller on Android, iPhone and iPad (#546). See the [release notes](releases/v0.8.8.md).
 
 **0.8.7 (build 272), 1 November:** makes the Android WiiCompiled 0.9 (Beta) engine much faster by no longer pinning its threads to one CPU core (#540) and by reporting real frame times to Android's performance hint (#542); fixes iPhone/iPad builds that couldn't start on some self-signed installs (#530, #541); adds Disable Bloom on Android, iPhone and iPad (#535); refuses Retro WFC and Nintendo addresses in the private-server setting (#520); and fixes the Mac Classic Controller D-pad (#306) and Wii Remote player slot (#476). See the [release notes](releases/v0.8.7.md).
 
