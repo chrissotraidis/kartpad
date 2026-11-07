@@ -19,7 +19,7 @@ The projects are independently maintained.
   <img alt="Ahead-of-time static recompilation" src="https://img.shields.io/badge/PowerPC-static%20recompilation-FF9F0A">
   <img alt="macOS development target" src="https://img.shields.io/badge/macOS%20target-14%2B-0A84FF">
   <img alt="iPhone and iPad" src="https://img.shields.io/badge/platform-iPhone%20%2F%20iPad-0A84FF">
-  <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.13.4-FF375F">
+  <img alt="Retro Rewind supported" src="https://img.shields.io/badge/Retro%20Rewind-6.13.5-FF375F">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
   <a href="https://github.com/chrissotraidis/padmint"><img alt="Build KartPad with PadMint (optional)" src="https://img.shields.io/badge/PadMint-optional%20build-3EB489"></a>
   <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the KartPad Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
@@ -175,11 +175,11 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.7** (build 272) makes the Android WiiCompiled 0.9 (Beta)
-graphics engine much faster, fixes iPhone and iPad builds that stopped with
-`mmap iOS flat guest reservation failed` before the game started, and adds
-**Disable Bloom** on Android, iPhone and iPad. Retro Rewind stays at **6.13.4**.
-See the [release notes](docs/releases/v0.8.7.md).
+**KartPad 0.8.8** (build 273) updates Retro Rewind to **6.13.5**, so Retro
+Rewind installs and signs in to Retro WFC again (error 22010, "Invalid pack
+version"). It also adds **Shake with a Controller** on Android, iPhone and
+iPad, for clip-on controllers without motion sensors.
+See the [release notes](docs/releases/v0.8.8.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
@@ -195,7 +195,7 @@ Use KartPad for app/platform problems or when the cause is unclear.
 [Frequently asked questions](#frequently-asked-questions) · [Controls](docs/MULTIPLAYER.md) · [Save transfer and troubleshooting](docs/SUPPORT.md)
 
 - Choose **Mario Kart Wii** or **Retro Rewind** when KartPad opens. Retro
-  Rewind 6.13.4 content installs separately; KartPad requires a matching native
+  Rewind 6.13.5 content installs separately; KartPad requires a matching native
   profile when the mod updates. Follow your platform's setup guide above.
 - Touch controls, motion steering and controllers are available on mobile;
   Mac also supports keyboard input. Touch layouts can be moved, resized and
@@ -356,7 +356,7 @@ VPN ([#405](https://github.com/chrissotraidis/kartpad/issues/405)).
 <details>
 <summary>Does KartPad support Retro Rewind, and what if it updates?</summary>
 
-Yes, with the separately installed **6.13.4** content and matching app build.
+Yes, with the separately installed **6.13.5** content and matching app build.
 Retro Rewind updates often change the mod's game code (`Code.pul`), as well as
 its data. KartPad translates and compiles that code into native code when the
 app is built. When the mod's code changes, it needs a new KartPad build;

@@ -1498,7 +1498,8 @@ class KartPadActivity : SDLActivity() {
             setPadding(dp(24), dp(4), dp(24), dp(8))
             addView(settingsLabel(if (motionSteering.shakeSensorAvailable) {
                 "Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. " +
-                    "Works without tilt steering. Physical controllers take priority."
+                    "Works without tilt steering. With a controller connected, shaking does " +
+                    "nothing unless Shake with a Controller is on."
             } else {
                 "Shake input is unavailable on this device. You can still use D-pad Up."
             }))
@@ -1511,6 +1512,14 @@ class KartPadActivity : SDLActivity() {
                     motionSteering.setShakeTricksEnabled(checked)
                     // The dialog owns focus; sampling resumes when gameplay regains it.
                     motionSteering.stop()
+                }
+            })
+            addView(Switch(this@KartPadActivity).apply {
+                text = "Shake with a Controller"
+                isChecked = KartPadTouchSettings.shakeWithController(this@KartPadActivity)
+                isEnabled = motionSteering.shakeSensorAvailable
+                setOnCheckedChangeListener { _, checked ->
+                    KartPadTouchSettings.setShakeWithController(this@KartPadActivity, checked)
                 }
             })
         }
