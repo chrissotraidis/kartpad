@@ -796,7 +796,7 @@ class KartPadActivity : SDLActivity() {
             } else null,
             MenuRow("30 FPS Races", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.thirtyFpsRaces(this),
-                detail = "Races at normal speed, drawn at 30 FPS. For phones that slow down. From the next race.") {
+                detail = "Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race.") {
                 KartPadTouchSettings.setThirtyFpsRaces(this, !KartPadTouchSettings.thirtyFpsRaces(this))
                 applyDisplaySettings()
                 showGraphicsMenu()

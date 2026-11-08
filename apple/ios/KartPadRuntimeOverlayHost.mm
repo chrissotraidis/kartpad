@@ -2881,7 +2881,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
     }
     [weakSelf refreshMenuButton];
   }];
-  disableBloom.subtitle = @"Applies when the next scene loads.";
+  disableBloom.subtitle = @"Removes bright-area glow. Applies at the next scene.";
   disableBloom.state = kartpad::graphics::BloomDisabled() ? UIMenuElementStateOn : UIMenuElementStateOff;
   [displayItems addObject:disableBloom];
   if (UIApplication.sharedApplication.supportsAlternateIcons) {
@@ -3724,6 +3724,46 @@ static void KartPadApplySoundLevels(BOOL persist) {
   NSLog(@"[KartPad] current game resumed from main menu; frame %d -> %d", pausedFrame, g_gxFrameCount);
 }
 
+// The Wii console country (#511): the flag and globe position Mario Kart Wii shows online.
+// Same list and wording as Android's Multiplayer → Country…. KartPadApplyCountryAtLaunch reads
+// it, so it applies after KartPad is fully closed and reopened.
+- (void)showCountrySettings {
+  NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  NSString *saved = [defaults stringForKey:@"KartPadCountry"];
+  NSString *region = [NSLocale.currentLocale objectForKey:NSLocaleCountryCode];
+  NSString *current = KartPad::System::FindWiiCountry(saved.UTF8String ?: "") ? saved.uppercaseString
+      : (KartPad::System::FindWiiCountry(region.UTF8String ?: "") ? region.uppercaseString : nil);
+  NSString *(^name)(NSString *) = ^NSString *(NSString *code) {
+    return [NSLocale.currentLocale displayNameForKey:NSLocaleCountryCode value:code] ?: code;
+  };
+  NSMutableArray<NSString *> *codes = [NSMutableArray array];
+  for (const auto &country : KartPad::System::kWiiCountries) [codes addObject:@(country.iso)];
+  [codes sortUsingComparator:^NSComparisonResult(NSString *a, NSString *b) {
+    return [name(a) localizedCaseInsensitiveCompare:name(b)];
+  }];
+  UIAlertController *picker = [UIAlertController
+      alertControllerWithTitle:[NSString stringWithFormat:@"Country (now: %@)", current ? name(current) : @"none"]
+                       message:@"The flag and globe position the game shows online."
+                preferredStyle:UIAlertControllerStyleAlert];
+  __weak KartPadRuntimeOverlayHost *weakSelf = self;
+  void (^choose)(NSString *) = ^(NSString *code) {
+    if (code) [defaults setObject:code forKey:@"KartPadCountry"];
+    else [defaults removeObjectForKey:@"KartPadCountry"];
+    [weakSelf showMultiplayerMessage:@"Country Saved"
+        message:@"Fully close and reopen KartPad to change your flag and globe position. Saves, ghosts and friends stay."];
+  };
+  [picker addAction:[UIAlertAction actionWithTitle:@"Use Device's Region"
+      style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { choose(nil); }]];
+  for (NSString *code in codes) {
+    NSString *title = [code isEqualToString:saved.uppercaseString]
+        ? [NSString stringWithFormat:@"✓ %@", name(code)] : name(code);
+    [picker addAction:[UIAlertAction actionWithTitle:title
+        style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { choose(code); }]];
+  }
+  [picker addAction:[UIAlertAction actionWithTitle:@"Back" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentOverlayAlert:picker];
+}
+
 - (void)showPrivateServerSettings {
   UIViewController *controller = KartPadVisibleViewController(_window);
   if (controller == nil) return;
@@ -3781,7 +3821,13 @@ static void KartPadApplySoundLevels(BOOL persist) {
   UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Multiplayer"
       message:message preferredStyle:UIAlertControllerStyleAlert];
   __weak KartPadRuntimeOverlayHost *weakSelf = self;
-  [sheet addAction:[UIAlertAction actionWithTitle:@"Local Players & Controllers…"
+  // Same rows and order as Android's Multiplayer sheet.
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Local Split-Screen…"
+      style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [weakSelf showMultiplayerMessage:@"Local Split-Screen"
+        message:@"Pair controllers in Settings → Bluetooth, assign Player 1–4 in Controller Setup, then choose Multiplayer in the game. Press the mapped A button on each controller at Register Controllers."];
+  }]];
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Controller Setup…"
       style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
     [weakSelf gameOverlayRequestsControllerMapping:nil];
   }]];
@@ -3792,6 +3838,10 @@ static void KartPadApplySoundLevels(BOOL persist) {
           message:@"Retro Rewind uses Retro WFC. Connect there in the game, then open Friends and exchange friend codes with players using the same Retro Rewind version. The host creates a room; friends join from their roster.\n\nThis is Retro Rewind's in-game service. A custom server override may prevent connection. Native KartPad host/join rooms are not implemented yet."];
     }]];
   }
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Country…"
+      style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [weakSelf showCountrySettings];
+  }]];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Experimental Server Settings…"
       style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
     [weakSelf showPrivateServerSettings];
