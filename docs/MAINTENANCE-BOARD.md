@@ -20,9 +20,13 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 - **Add Driver… → Download a Driver…** lists and installs AdrenoTools packages
   from three GitHub sources; checked end to end on the emulator.
 - **Shake to Trick → Sensitivity** on Android and iPhone/iPad (#553). Android
-  checked on the emulator; iOS unit-tested only.
+  checked on the emulator; iOS unit-tested (the Simulator has no motion sensor).
 - iPhone/iPad report button renamed **Save Diagnostic Log…** to match Android.
 - Android health lines now include `battery_pct` (#339 request).
+- **iOS start-up flicker (#390):** found and fixed: VI black no longer covers the
+  game's own frames (wiicompiled #24, runtime pin bumped). Checked on the iPhone 18 Pro
+  Simulator with the full translated game: menus, Shake to Trick sheet, renamed
+  report button and a start-up recording without black frames.
 
 **Open issues by state**
 
