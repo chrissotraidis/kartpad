@@ -1,5 +1,53 @@
 # Maintenance work and test board
 
+## 8 November issue loop (after 0.8.8)
+
+All 26 open issues were re-read, new logs were analysed, and the changes below
+were tested on the arm64 Android emulator (`KartPad_088_Acceptance_20261107`,
+release-signed local build over 0.8.8 with its data kept). Nothing here is
+physical-device evidence. Branch: `codex/loop-20261108`.
+
+**Fixed on the branch**
+
+- **Custom GPU drivers never loaded (0.8.6–0.8.8).** `--wrap=dlopen` in libmain
+  redirected linkernsbypass's `&dlopen` to KartPad's wrapper, so adrenotools
+  stopped at `linkernsbypass_unavailable` on every device. Fixed with a
+  `dlsym` lookup; Stable Turnip v2 now reports `state=loaded` on Classic and on
+  the WiiCompiled 0.9 engine, then falls back as designed (no Adreno GPU).
+  Found from #554's Poco F6 log. Affects #104, #301, #472, #492, #552.
+- Driver status is visible: menu row, driver list, one-time message and
+  problem reports name a driver that didn't load and the failing step.
+- **Add Driver… → Download a Driver…** lists and installs AdrenoTools packages
+  from three GitHub sources; checked end to end on the emulator.
+- **Shake to Trick → Sensitivity** on Android and iPhone/iPad (#553). Android
+  checked on the emulator; iOS unit-tested only.
+- iPhone/iPad report button renamed **Save Diagnostic Log…** to match Android.
+- Android health lines now include `battery_pct` (#339 request).
+
+**Open issues by state**
+
+| Issue | State | Next step |
+| --- | --- | --- |
+| #104 #301 #472 #492 #552 Snapdragon characters | Lead reopened: drivers never loaded before | Ask reporters to try Turnip once the driver fix ships |
+| #554 Poco F6 Retro WFC | Restart fixed it; room screen still slow on one phone; Turnip never loaded | Retest with working drivers |
+| #339 performance | Pixel 10a 0.8.8: thermal status 2, ~3 GB used, 43–300 MiB free late in session; the stutter window isn't in the 256 KiB log | Ship the #550 memory fix; longer capture of course select |
+| #510 slow motion after cups | Draft #550 / wiicompiled #23 | Phone test, then release |
+| #390 iOS start-up flicker | 0.8.8 recording: same 1-in-9 frames during the safety-screen fade, now on a 120 Hz iPhone 18 Pro | Instrument VI-black vs XFB presents in a candidate |
+| #553 shake sensitivity | Done on branch | Ship |
+| #537 Retro WFC "disc error" kick | Waiting for a 0.8.8 log | — |
+| #539 LiveContainer import | Waiting for reporter | — |
+| #476 Mac Nunchuk | Waiting for a 0.8.7+ report | — |
+| #475 Mac PadMint certificate | Waiting; close around 14 November if silent | — |
+| #304 PowerVR | Waiting for a 0.8.8 log | — |
+| #295 Retro ghosts | Draft #375 | Replay coverage and iPhone check |
+| #534 #531 #449 #300 #234 #203 #127 #100 #91 #90 | Requests / backlog | No change this loop |
+
+**Menu parity.** Main menu, Controls, Display and Game Data & Saves match on
+Android and iPhone/iPad. Graphics & Performance stays Android-only: 30 FPS
+Races lives in the Android runtime (`frame_rate_lock.cpp`) and needs a port
+before iPhone can offer it.
+
+
 ## Current work (14 October)
 
 The [current goal loop](CURRENT-LOOP.md) sets the order of work after 0.8.1. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept

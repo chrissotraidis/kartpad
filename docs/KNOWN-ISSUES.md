@@ -84,9 +84,16 @@ the [archive](archive/known-issues-through-2026-09.md).
   heads on 0.8.3; its requested bone-index test has no result yet.
   In 0.8.6 the character options are under **⋯ → Graphics & Performance →
   Graphics Diagnostics…**. That page also offers **GPU Driver** on supported
-  Snapdragon devices. The S24 reporter
-  [tried Turnip and Adreno drivers without success](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324),
-  so custom drivers are not a confirmed fix either.
+  Snapdragon devices. **Custom drivers never actually loaded in 0.8.6–0.8.8:**
+  KartPad links its game library with a dlopen wrapper that broke the step
+  adrenotools uses to reach Android's linker, so every chosen driver fell back
+  to the phone's own one without saying so (a Poco F6 log shows
+  `state=fallback reason=open_failed`). The S24 reporter's
+  [earlier Turnip attempt](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324)
+  therefore didn't test Turnip. The fix is on main for the next version: on the
+  arm64 emulator a Turnip package now loads on both graphics engines, and the
+  menu, the driver list and problem reports say when a chosen driver didn't
+  load and why. Whether Turnip fixes the missing bodies is untested on a phone.
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
