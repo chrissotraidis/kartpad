@@ -35,7 +35,7 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 | #104 #301 #472 #492 #552 Snapdragon characters | Lead reopened: drivers never loaded before | Ask reporters to try Turnip once the driver fix ships |
 | #554 Poco F6 Retro WFC | Restart fixed it; room screen still slow on one phone; Turnip never loaded | Retest with working drivers |
 | #339 performance | Pixel 10a 0.8.8: thermal status 2, ~3 GB used, 43–300 MiB free late in session; the stutter window isn't in the 256 KiB log | Ship the #550 memory fix; longer capture of course select |
-| #510 slow motion after cups | Draft #550 / wiicompiled #23 | Phone test, then release |
+| #510 slow motion after cups | Cause found: two renderer caches kept every course until restart (textures, and shader modules: ~35 MiB per new course). Both bounded in wiicompiled #23 (Android, #550) and #24 (iOS, #555). Emulator: native growth over 8 rounds 104 → 20 MiB; textures flat | Phone test over several cups, then release |
 | #390 iOS start-up flicker | Cause found: VI-black presents interleaved with the game's own frames during the fade (Simulator counter: 44–52 game frames and 60 black presents a second). Fixed in wiicompiled #24; Simulator shows no black after the first game frame | Confirm on an affected iPhone |
 | #553 shake sensitivity | Done on branch | Ship |
 | #537 Retro WFC "disc error" kick | Waiting for a 0.8.8 log | — |
