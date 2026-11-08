@@ -144,7 +144,8 @@ for export and restore steps and what a save backup includes.
 
 ## Report a problem
 
-Open **••• → Report a Problem… → Save or Share Report…**. Review it before
+Open **••• → Report a Problem… → Save Diagnostic Log…** (called **Save or Share
+Report…** before 0.8.9). Review it before
 attaching; never attach game files, saves or keys. The
 [reporting guide](REPORTING.md) says what to include. Online play has its own
 [status page](ONLINE.md).

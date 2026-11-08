@@ -17,6 +17,12 @@ NSString *const kInvertedKey = @"KartPadMotionSteeringInverted";
 NSString *const kSensitivityKey = @"KartPadMotionSteeringSensitivity";
 NSString *const kShakeTricksEnabledKey = @"KartPadShakeTricksEnabled";
 NSString *const kShakeWithControllerKey = @"KartPadShakeWithController";
+NSString *const kShakeSensitivityKey = @"KartPadShakeSensitivity";
+constexpr NSInteger kDefaultShakeSensitivity = 1;
+
+NSInteger ClampedShakeSensitivity(NSInteger level) {
+  return std::clamp<NSInteger>(level, 0, KartPadShakeSensitivityLevels - 1);
+}
 
 double WrappedAngle(double value) {
   while (value > M_PI) value -= 2.0 * M_PI;
@@ -25,6 +31,17 @@ double WrappedAngle(double value) {
 }
 
 }  // namespace
+
+double KartPadShakeTriggerAcceleration(const NSInteger level) noexcept {
+  // Keep in step with KartPadShakeDetector.LEVELS on Android.
+  constexpr double kLevels[KartPadShakeSensitivityLevels] = {1.6, 1.35, 1.0, 0.75};
+  return kLevels[ClampedShakeSensitivity(level)];
+}
+
+NSString *KartPadShakeSensitivityName(const NSInteger level) {
+  NSArray<NSString *> *names = @[ @"Low", @"Standard", @"High", @"Very High" ];
+  return names[static_cast<NSUInteger>(ClampedShakeSensitivity(level))];
+}
 
 float KartPadMotionSteeringValue(const double angle, const double center,
                                  const float sensitivity,
@@ -44,19 +61,19 @@ float KartPadMotionSteeringValue(const double angle, const double center,
 
 KartPadShakeAction KartPadShakeActionForSample(
     const double accelerationMagnitude, const double timestamp,
-    const bool armed, const double lastTriggerTimestamp) noexcept {
+    const bool armed, const double lastTriggerTimestamp,
+    const double triggerAcceleration) noexcept {
   if (!std::isfinite(accelerationMagnitude) || accelerationMagnitude < 0.0 ||
       !std::isfinite(timestamp)) {
     return KartPadShakeAction::None;
   }
 
   constexpr double kRearmAcceleration = 0.35;
-  constexpr double kTriggerAcceleration = 1.35;
   constexpr double kCooldownSeconds = 0.45;
   if (accelerationMagnitude <= kRearmAcceleration) {
     return KartPadShakeAction::Rearm;
   }
-  if (!armed || accelerationMagnitude < kTriggerAcceleration) {
+  if (!armed || accelerationMagnitude < triggerAcceleration) {
     return KartPadShakeAction::None;
   }
   if (lastTriggerTimestamp >= 0.0 &&
@@ -79,6 +96,7 @@ KartPadShakeAction KartPadShakeActionForSample(
   std::atomic_bool _shakeArmed;
   std::atomic<double> _lastShakeTimestamp;
   std::atomic_bool _shakePending;
+  std::atomic<double> _shakeTrigger;
 }
 
 + (instancetype)sharedSteering {
@@ -109,6 +127,10 @@ KartPadShakeAction KartPadShakeActionForSample(
     _shakeArmed.store(false);
     _lastShakeTimestamp.store(-1.0);
     _shakePending.store(false);
+    const NSInteger level = [defaults objectForKey:kShakeSensitivityKey] == nil
+        ? kDefaultShakeSensitivity
+        : [defaults integerForKey:kShakeSensitivityKey];
+    _shakeTrigger.store(KartPadShakeTriggerAcceleration(level));
     if ([defaults objectForKey:kSensitivityKey] == nil) {
       [defaults setFloat:1.0f forKey:kSensitivityKey];
     }
@@ -168,6 +190,18 @@ KartPadShakeAction KartPadShakeActionForSample(
 
 - (void)setShakeWithController:(BOOL)value {
   [NSUserDefaults.standardUserDefaults setBool:value forKey:kShakeWithControllerKey];
+}
+
+- (NSInteger)shakeSensitivity {
+  NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  if ([defaults objectForKey:kShakeSensitivityKey] == nil) return kDefaultShakeSensitivity;
+  return ClampedShakeSensitivity([defaults integerForKey:kShakeSensitivityKey]);
+}
+
+- (void)setShakeSensitivity:(NSInteger)level {
+  const NSInteger clamped = ClampedShakeSensitivity(level);
+  [NSUserDefaults.standardUserDefaults setInteger:clamped forKey:kShakeSensitivityKey];
+  _shakeTrigger.store(KartPadShakeTriggerAcceleration(clamped), std::memory_order_relaxed);
 }
 
 - (void)setShakeTricksEnabled:(BOOL)enabled {
@@ -233,7 +267,8 @@ KartPadShakeAction KartPadShakeActionForSample(
       const KartPadShakeAction action = KartPadShakeActionForSample(
           magnitude, motion.timestamp,
           strongSelf->_shakeArmed.load(std::memory_order_relaxed),
-          strongSelf->_lastShakeTimestamp.load(std::memory_order_relaxed));
+          strongSelf->_lastShakeTimestamp.load(std::memory_order_relaxed),
+          strongSelf->_shakeTrigger.load(std::memory_order_relaxed));
       if (action == KartPadShakeAction::Rearm) {
         strongSelf->_shakeArmed.store(true, std::memory_order_relaxed);
       } else if (action == KartPadShakeAction::Disarm) {

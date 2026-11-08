@@ -1,5 +1,81 @@
 # Maintenance work and test board
 
+## 8 November issue loop (after 0.8.8)
+
+All 26 open issues were re-read, new logs were analysed, and the changes below
+were tested on the arm64 Android emulator (`KartPad_088_Acceptance_20261107`,
+release-signed local build over 0.8.8 with its data kept). Nothing here is
+physical-device evidence. Branch: `codex/loop-20261108`.
+
+**Fixed on the branch**
+
+- **Custom GPU drivers never loaded (0.8.6–0.8.8).** `--wrap=dlopen` in libmain
+  redirected linkernsbypass's `&dlopen` to KartPad's wrapper, so adrenotools
+  stopped at `linkernsbypass_unavailable` on every device. Fixed with a
+  `dlsym` lookup; Stable Turnip v2 now reports `state=loaded` on Classic and on
+  the WiiCompiled 0.9 engine, then falls back as designed (no Adreno GPU).
+  Found from #554's Poco F6 log. Affects #104, #301, #472, #492, #552.
+- Driver status is visible: menu row, driver list, one-time message and
+  problem reports name a driver that didn't load and the failing step.
+- **Add Driver… → Download a Driver…** lists and installs AdrenoTools packages
+  from three GitHub sources; checked end to end on the emulator.
+- **Shake to Trick → Sensitivity** on Android and iPhone/iPad (#553). Android
+  checked on the emulator; iOS unit-tested (the Simulator has no motion sensor).
+- iPhone/iPad report button renamed **Save Diagnostic Log…** to match Android.
+- Android health lines now include `battery_pct` (#339 request), plus
+  `thirty_fps_races` and `simpler_computer_karts` (also in the report header),
+  because #510's log9 couldn't show whether 30 FPS Races was on during the races.
+- **Mac:** the same flicker and memory fixes are in draft wiicompiled #25; the full
+  translated Mac app builds and passes the package audit, but hasn't been run yet.
+- **iOS start-up flicker (#390):** found and fixed: VI black no longer covers the
+  game's own frames (wiicompiled #24, runtime pin bumped). Checked on the iPhone 18 Pro
+  Simulator with the full translated game: menus, Shake to Trick sheet, renamed
+  report button and a start-up recording without black frames.
+
+**Open issues by state**
+
+| Issue | State | Next step |
+| --- | --- | --- |
+| #104 #301 #472 #492 #552 Snapdragon characters | Lead reopened: drivers never loaded before | Ask reporters to try Turnip once the driver fix ships |
+| #554 Poco F6 Retro WFC | Restart fixed it; room screen still slow on one phone; Turnip never loaded | Retest with working drivers |
+| #339 performance | Pixel 10a 0.8.8: thermal status 2, ~3 GB used, 43–300 MiB free late in session; the stutter window isn't in the 256 KiB log | Ship the #550 memory fix; longer capture of course select |
+| #510 slow motion after cups | Cause found: two renderer caches kept every course until restart (textures, and shader modules: ~35 MiB per new course). Both bounded in wiicompiled #23 (Android, #550) and #24 (iOS, #555). Emulator: native growth over 8 rounds 104 → 20 MiB; textures flat. 0.8.8 log9 (S10 Lite, 2 cups at 60): main-thread CPU per frame 14 → 19–23 ms, PSS 650 MiB → 1.1 GiB, thermal headroom 0.40 → 0.90, so heat is likely a second cause. 30 FPS Races confirmed working on the 0.8.9 candidate on both engines (emulator GP race at 30.0 FPS) | Phone test over several cups on 0.8.9; if it still slows, recommend 30 FPS Races |
+| #390 iOS start-up flicker | Cause found: VI-black presents interleaved with the game's own frames during the fade (Simulator counter: 44–52 game frames and 60 black presents a second). Fixed in wiicompiled #24 (iOS) and #23 (Android, which had the same overlap: ~120 black presents at start-up, now 3); no black after the first game frame | Confirm on an affected iPhone |
+| #553 shake sensitivity | Done on branch | Ship |
+| #537 Retro WFC "disc error" kick | Waiting for a 0.8.8 log | — |
+| #539 LiveContainer import | Waiting for reporter | — |
+| #476 Mac Nunchuk | Waiting for a 0.8.7+ report | — |
+| #475 Mac PadMint certificate | Waiting; close around 14 November if silent | — |
+| #304 PowerVR | Waiting for a 0.8.8 log | — |
+| #295 Retro ghosts | Draft #375 | Replay coverage and iPhone check |
+| #534 #531 #449 #300 #234 #203 #127 #100 #91 #90 | Requests / backlog | No change this loop |
+
+**Menu parity.** Main menu, Multiplayer, Controls, Display, Graphics &
+Performance, Sound and Game Data & Saves now match on Android and iPhone/iPad,
+row for row and in order (checked from the emulator's UI tree and the
+Simulator's accessibility tree). iPhone/iPad gained **Multiplayer → Country…**
+and Android's Local Split-Screen / Controller Setup rows; Disable Bloom and 30
+FPS Races read the same on both. 30 FPS Races and Simpler
+Computer Karts were ported to the iOS runtime (wiicompiled #24) and checked on
+the iPhone 18 Pro Simulator: races run at 30 FPS with the option on, and all 11
+computer karts load the split-screen models. Graphics Engine, GPU Driver and
+Graphics Diagnostics stay Android-only (no iPhone/iPad equivalent).
+
+**Driving the game in the iOS Simulator.** `axe key` reaches the game as Wii
+Remote 1's keyboard: arrows are the D-pad, Return is A and Backspace is B, but
+each key must be held for about 0.3 s (`axe key 40 --duration 0.3`); shorter
+presses are missed by the per-frame poll. Touch A also works with a 0.45 s hold.
+On Retro Rewind's course screen each Right moves a whole page of cups, so
+reaching one named course this way is slow. Replaying #375's imported 3DS
+Bowser's Castle ghost is still not done.
+
+**30 FPS Races and Retro Rewind menus.** The option also put Retro Rewind's
+title screen and menus at 30, because Retro Rewind's frame-rate routine runs
+for every scene. It now changes only race scenes (scene kind 2); menus stay at
+60. Checked on the Android emulator and the iPhone 18 Pro Simulator, with one
+`[KartPadFrameRate] scene …` log line per scene change.
+
+
 ## Current work (14 October)
 
 The [current goal loop](CURRENT-LOOP.md) sets the order of work after 0.8.1. [STATUS.md](STATUS.md) and [KNOWN-ISSUES.md](KNOWN-ISSUES.md) are kept

@@ -1,5 +1,9 @@
 # Current goal loop: after 0.8.1
 
+> **Superseded for current work.** The [8 November issue loop](MAINTENANCE-BOARD.md#8-november-issue-loop-after-088)
+> has the current state of every open issue; rows below are an October snapshot
+> (for example, #390's flicker is now fixed for 0.8.9).
+
 Written 10 October 2026 and updated 15 October. It replaces the
 [5 October loop](archive/current-loop-2026-10-05.md), whose setup, sound,
 file-check and WiiCompiled-sync work shipped in 0.7.11 to 0.7.15 or is merged

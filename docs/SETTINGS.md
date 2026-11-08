@@ -1,16 +1,17 @@
 # Mobile settings
 
-Android and iPhone/iPad use the same hierarchy for shared controls. The table describes 0.8.7. Open **•••** (top right) while a game is running.
+Android and iPhone/iPad use the same hierarchy for shared controls. The table describes 0.8.9. Open **•••** (top right) while a game is running.
 
 | Menu | Options, in order |
 | --- | --- |
-| Main | Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance (Android); Sound; Game Data & Saves; Report a Problem |
+| Main | Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance; Sound; Game Data & Saves; Report a Problem |
+| Multiplayer | Local Split-Screen; Controller Setup; Retro WFC Friend Rooms (Retro Rewind only); Country; Experimental Server Settings |
 | Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
 | Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; Disable Bloom; App Icon |
-| Graphics & Performance (Android) | Graphics Engine; 30 FPS Races; Simpler Computer Karts; GPU Driver (Snapdragon); Graphics Diagnostics |
-| Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Import or Reimport Wii Disc Image; Import from Extracted Folder; Remove Stored Game Data |
+| Graphics & Performance | Graphics Engine (Android); 30 FPS Races; Simpler Computer Karts; GPU Driver (Android, Snapdragon); Graphics Diagnostics (Android) |
+| Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Retro Rewind Music; Import from Extracted Folder; Import or Reimport Wii Disc Image; Remove Stored Game Data |
 
-On Android, on/off settings show a switch and a one-line description, and tapping one flips it without leaving the menu; settings with choices show the current choice under their name. Graphics & Performance holds Android-only options. The Mac has its own layout: the menu bar and **KartPad → Settings…** (Graphics, Audio, Controllers, Game & Data, Advanced). It has no touch, motion or Android-only options, and it has no in-app save backup, ghost transfer or soundtrack import. On Mac, **Data → Show KartPad Data** opens `~/Library/Application Support/KartPad`, where settings and Original saves live, and soundtrack files go in Retro Rewind's `MyStuff` folder (see below and the [Mac install guide](INSTALL_MACOS.md)). Native file pickers and Retro Rewind installation workflows differ between platforms.
+On Android, on/off settings show a switch and a one-line description, and tapping one flips it without leaving the menu; settings with choices show the current choice under their name. From 0.8.9 iPhone and iPad have Graphics & Performance too, with 30 FPS Races and Simpler Computer Karts; the graphics engine choice, GPU Driver and Graphics Diagnostics stay Android-only because they have no iPhone/iPad equivalent. The Mac has its own layout: the menu bar and **KartPad → Settings…** (Graphics, Audio, Controllers, Game & Data, Advanced). It has no touch, motion or Android-only options, and it has no in-app save backup, ghost transfer or soundtrack import. On Mac, **Data → Show KartPad Data** opens `~/Library/Application Support/KartPad`, where settings and Original saves live, and soundtrack files go in Retro Rewind's `MyStuff` folder (see below and the [Mac install guide](INSTALL_MACOS.md)). Native file pickers and Retro Rewind installation workflows differ between platforms.
 
 ## Time Trial Ghosts
 
@@ -39,7 +40,7 @@ Controller Button Mapping supports D-pad directions and triggers, optional share
 
 **Touch item hold** (Android and iPhone/iPad) is beside it and off by default. With it on, holding touch L for 0.67 seconds keeps the item held behind your kart after you lift your finger, so you can steer and drift while trailing a shell or banana; L turns blue. Press L again to let go. Opening the menu or leaving the game lets go too. [#473](https://github.com/chrissotraidis/kartpad/issues/473)
 
-Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. With a controller connected, shaking does nothing unless **Shake with a Controller** is on (from 0.8.8, off by default); it then still presses D-pad Up, for clip-on controllers without motion sensors, while tilt steering stays off. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
+Motion steering supports calibration and sensitivity. **Controls → Shake to Trick…** is a separate option on Android and iPhone/iPad, off by default. From 0.8.9 it has **Sensitivity**: Low, Standard (the default, unchanged from before), High and Very High; a higher setting counts a lighter shake as a trick, with the same levels on both platforms ([#553](https://github.com/chrissotraidis/kartpad/issues/553)). It sends D-pad Up for tricks in the air and wheelies on bikes; tilt steering can stay off. With a controller connected, shaking does nothing unless **Shake with a Controller** is on (from 0.8.8, off by default); it then still presses D-pad Up, for clip-on controllers without motion sensors, while tilt steering stays off. If the device has no supported motion sensor, the option explains that D-pad Up is still available. Mac and Apple TV do not offer handset shake input.
 
 FPS Counter Size offers Small, Medium and Large on both platforms. Render Resolution can reduce GPU workload; it does not fix a CPU bottleneck or guarantee a faster race. Start with 1x Native on Android.
 
@@ -50,3 +51,7 @@ FPS Counter Size offers Small, Medium and Large on both platforms. Render Resolu
 Player Identity contains license rename and Mii selection/repair. Save restore validates size/checksums, stages changes and preserves backups. Export first before destructive data management. Keep the existing app and signing identity when updating.
 
 Report a Problem offers a reviewable diagnostic flow. The iPhone/iPad form scrolls and adapts to the keyboard. Android private diagnostic ZIPs may include bounded retained system crash/ANR traces; these are excluded from public issue metadata. Apple reports add lifecycle, thermal, memory and display context. More diagnostics help investigations; they do not establish that a crash or performance problem is fixed.
+
+## GPU Driver (Android, Snapdragon)
+
+**⋯ → Graphics & Performance → GPU Driver** chooses the Vulkan driver the game uses. **Add Driver… → Download a Driver…** lists recent AdrenoTools packages from three public sources (K11MCH1's Turnip and Qualcomm builds, whitebelyash's Mainline and Stable Turnip, and Weab-chan's Turnip CI); **Install from a .zip File…** takes a package you downloaded yourself. Choose it, tap **Save**, then **Restart to Selector**. From 0.8.9, if the chosen driver doesn't load, the GPU Driver row reads *Phone's driver (… didn't load)* and the driver list shows the reason; if the game can't start graphics with it, the next start goes back to the phone's driver by itself. Before 0.8.9 a chosen driver never loaded (see [known issues](KNOWN-ISSUES.md)).

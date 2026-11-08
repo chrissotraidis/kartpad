@@ -57,9 +57,11 @@ object Log { fun i(tag: String, msg: String)=0; fun d(tag: String, msg: String)=
 import android.content.Context
 object BuildConfig { const val DEBUG=true }
 object KartPadTouchSettings {
- var tilt=false;var shake=false;var invert=false;var scale=1f
+ var tilt=false;var shake=false;var invert=false;var scale=1f;var shakeLevel=1
  fun motionEnabled(c: Context)=tilt
  fun shakeTricksEnabled(c: Context)=shake
+ fun shakeSensitivity(c: Context)=shakeLevel
+ fun setShakeSensitivity(c: Context,v: Int){shakeLevel=v}
  fun motionInverted(c: Context)=invert
  fun motionSensitivity(c: Context)=scale
  fun setMotionEnabled(c: Context,v: Boolean){tilt=v}
@@ -82,6 +84,11 @@ fun main() {
  d.reset();check(!d.sample(Double.NaN,3.0));check(!d.sample(2.0,3.1))
  check(!d.sample(0.0,3.2));check(!d.sample(2.0,Double.POSITIVE_INFINITY))
  check(d.sample(2.0,3.3))
+ // Shake Sensitivity: Standard is the original 1.35 g; Very High takes a light shake
+ check(KartPadShakeDetector.LEVELS[KartPadShakeDetector.DEFAULT_LEVEL]==1.35)
+ val light=KartPadShakeDetector();check(!light.sample(0.1,0.0));check(!light.sample(0.9,0.1))
+ light.triggerAcceleration=KartPadShakeDetector.LEVELS[3]
+ check(!light.sample(0.1,1.0));check(light.sample(0.9,1.1))
  val manager=SensorManager();val context=Context(manager)
  var tricks=0;var steering=0f
  val motion=KartPadMotionSteering(context,{tricks++},{steering=it})
@@ -90,6 +97,9 @@ fun main() {
  motion.start();check(manager.registered.isEmpty()) // both options default off
  motion.setShakeTricksEnabled(true);check(manager.registered==setOf(10))
  acceleration(0f,4.0);acceleration(1.5f,4.1);check(tricks==1&&steering==0f)
+ motion.setShakeSensitivity(3);acceleration(0f,4.7);acceleration(0.9f,4.8);check(tricks==2)
+ motion.setShakeSensitivity(1);acceleration(0f,5.4);acceleration(0.9f,5.5);check(tricks==2)
+ tricks=1
  motion.setEnabled(true);check(manager.registered==setOf(9,10))
  motion.onSensorChanged(SensorEvent(Sensor(9),floatArrayOf(0f,9.8f,0f),5_000_000_000))
  motion.onSensorChanged(SensorEvent(Sensor(9),floatArrayOf(-4f,9f,0f),5_100_000_000))

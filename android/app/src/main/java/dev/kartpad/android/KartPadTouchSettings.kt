@@ -31,6 +31,7 @@ internal object KartPadTouchSettings {
     private const val RESOLUTION_SCALE = "resolution_scale"
     private const val SHAKE_TRICKS = "shake_tricks_enabled"
     private const val SHAKE_WITH_CONTROLLER = "shake_tricks_with_controller"
+    private const val SHAKE_SENSITIVITY = "shake_tricks_sensitivity"
     private const val MOTION_ENABLED = "motion_steering_enabled"
     private const val MOTION_INVERTED = "motion_steering_inverted"
     private const val MOTION_SENSITIVITY = "motion_steering_sensitivity"
@@ -168,6 +169,16 @@ internal object KartPadTouchSettings {
 
     fun setShakeWithController(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(SHAKE_WITH_CONTROLLER, value).apply()
+    }
+
+    /** Index into KartPadShakeDetector.LEVELS; Standard by default. */
+    fun shakeSensitivity(context: Context): Int = preferences(context)
+        .getInt(SHAKE_SENSITIVITY, KartPadShakeDetector.DEFAULT_LEVEL)
+        .coerceIn(0, KartPadShakeDetector.LEVELS.size - 1)
+
+    fun setShakeSensitivity(context: Context, value: Int) {
+        preferences(context).edit()
+            .putInt(SHAKE_SENSITIVITY, value.coerceIn(0, KartPadShakeDetector.LEVELS.size - 1)).apply()
     }
 
     fun motionEnabled(context: Context): Boolean = preferences(context)

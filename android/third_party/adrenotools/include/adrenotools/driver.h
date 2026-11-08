@@ -31,6 +31,11 @@ extern "C" {
 void *adrenotools_open_libvulkan(int dlopenMode, int featureFlags, const char *tmpLibDir, const char *hookLibDir, const char *customDriverDir, const char *customDriverName, const char *fileRedirectDir, void **userMappingHandle);
 
 /**
+ * @brief KartPad addition: the step (and dlerror text, if any) at which the last adrenotools_open_libvulkan call on this thread failed
+ */
+const char *adrenotools_last_error(void);
+
+/**
  * @brief Imports the given CPU mapped memory range into the GSL allocator. This should then be followed by a call to vkAllocateMemory with a matching size which will return a VkDeviceMemory view over the input region
  * @param handle Mapping handle that was returned by adrenotools_open_libvulkan
  * @param hostPtr The host pointer to import

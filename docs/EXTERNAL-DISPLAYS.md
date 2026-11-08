@@ -27,6 +27,18 @@ TV/monitor, adapter/cable or receiver, which screen fails, and whether the
 handheld, audio and game menu keep responding. A short clip of both displays
 is useful; hide notifications and do not include personal identifiers.
 
+## Android emulator check, 8 November (0.8.9 candidate `d60a79da…`)
+
+With Original running on the arm64 emulator, a simulated 1920×1080 external
+display (`settings put global overlay_display_devices 1920x1080/320`) was
+connected during the title/demo loop. The second display mirrored the game
+live, and was still showing current frames 40 seconds later, captured from
+that display directly. The phone kept rendering at 60 FPS. After the display
+was removed, the game kept running in the same process and kept rendering on
+the phone. This covers Android system mirroring on an emulator only; it says
+nothing about a real USB-C or wireless receiver, or about iPhone/iPad (#100),
+which still needs a device or the Simulator's I/O → External Displays.
+
 ## Source findings and next implementation boundary
 
 The Apple game build uses `apple/ios/RuntimeInfo.plist` and SDL's UIKit scene

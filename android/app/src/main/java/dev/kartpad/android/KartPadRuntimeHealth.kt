@@ -87,10 +87,17 @@ internal object KartPadRuntimeHealth {
             .put("thermal_status", if (Build.VERSION.SDK_INT >= 29) power.currentThermalStatus else JSONObject.NULL)
             .put("thermal_headroom", headroom ?: JSONObject.NULL)
             .put("battery_c", temp ?: JSONObject.NULL)
+            .put("battery_pct", battery?.let { intent ->
+                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                if (level >= 0 && scale > 0) level * 100 / scale else null
+            } ?: JSONObject.NULL)
             .put("plugged", battery?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: JSONObject.NULL)
             .put("power_save", power.isPowerSaveMode)
             .put("resolution_scale", KartPadTouchSettings.resolutionScale(context))
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
+            .put("thirty_fps_races", KartPadTouchSettings.thirtyFpsRaces(context))
+            .put("simpler_computer_karts", KartPadTouchSettings.simplerComputerKarts(context))
             .toString()
         KartPadHealthJournal(File(context.filesDir, "KartPad/Logs/android-health.log")).append(line)
     }

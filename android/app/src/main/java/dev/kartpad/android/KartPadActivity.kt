@@ -160,6 +160,15 @@ class KartPadActivity : SDLActivity() {
                 KartPadNativeRuntime.markStarted(filesDir)
                 KartPadGpuDriverSettings.markStarted(this)
             }, KartPadNativeRuntime.HEALTHY_RUN_MS)
+        // The runtime decides within seconds whether the chosen GPU driver loaded; say so if it didn't.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                if (!isFinishing && KartPadGpuDriverSettings.loadProblem(this) != null) {
+                    android.widget.Toast.makeText(this,
+                        "The GPU driver you chose didn't load, so this game uses the phone's driver. " +
+                            "Graphics & Performance → GPU Driver shows why.", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }, 8_000)
         nativeEnableActivityRecreation()
         inputManager = getSystemService(InputManager::class.java)
         runDebugRetroRewindExtractionFixture()
@@ -787,7 +796,7 @@ class KartPadActivity : SDLActivity() {
             } else null,
             MenuRow("30 FPS Races", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.thirtyFpsRaces(this),
-                detail = "Races at normal speed, drawn at 30 FPS. For phones that slow down. From the next race.") {
+                detail = "Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race.") {
                 KartPadTouchSettings.setThirtyFpsRaces(this, !KartPadTouchSettings.thirtyFpsRaces(this))
                 applyDisplaySettings()
                 showGraphicsMenu()
@@ -801,7 +810,7 @@ class KartPadActivity : SDLActivity() {
             },
             if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null) {
                 MenuRow("GPU Driver", R.drawable.ic_kartpad_display, submenu = true,
-                    detail = KartPadGpuDriverSettings.selectedName(this) ?: "Phone's driver") {
+                    detail = KartPadGpuDriverSettings.menuDetail(this)) {
                     closeKartPadMenu(::showGpuDriverSettings)
                 }
             } else null,
@@ -1499,7 +1508,7 @@ class KartPadActivity : SDLActivity() {
             addView(settingsLabel(if (motionSteering.shakeSensorAvailable) {
                 "Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. " +
                     "Works without tilt steering. With a controller connected, shaking does " +
-                    "nothing unless Shake with a Controller is on."
+                    "nothing unless Shake with a Controller is on. A higher sensitivity needs a lighter shake."
             } else {
                 "Shake input is unavailable on this device. You can still use D-pad Up."
             }))
@@ -1520,6 +1529,18 @@ class KartPadActivity : SDLActivity() {
                 isEnabled = motionSteering.shakeSensorAvailable
                 setOnCheckedChangeListener { _, checked ->
                     KartPadTouchSettings.setShakeWithController(this@KartPadActivity, checked)
+                }
+            })
+            // Same four steps as iPhone/iPad; a higher sensitivity needs a lighter shake.
+            addView(Button(this@KartPadActivity).apply {
+                fun label() = "Sensitivity: ${KartPadShakeDetector.NAMES[motionSteering.shakeSensitivity]}"
+                text = label()
+                isEnabled = motionSteering.shakeSensorAvailable
+                setOnClickListener {
+                    motionSteering.setShakeSensitivity(
+                        (motionSteering.shakeSensitivity + 1) % KartPadShakeDetector.LEVELS.size,
+                    )
+                    text = label()
                 }
             })
         }

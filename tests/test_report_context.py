@@ -90,10 +90,12 @@ object RetroRewindRelease { const val ROOT = "RetroRewind6"; const val VERSION =
 object KartPadTouchSettings {
  fun resolutionScale(context: android.content.Context) = 1
  fun aspectMode(context: android.content.Context) = 0
+ fun thirtyFpsRaces(context: android.content.Context) = true
+ fun simplerComputerKarts(context: android.content.Context) = false
 }
 object KartPadRendererDiagnostics { fun enabled(context: android.content.Context) = true }
 object KartPadNativeRuntime { fun engine(filesDir: java.io.File) = "classic" }
-object KartPadGpuDriverSettings { fun selectedName(context: android.content.Context): String? = null }
+object KartPadGpuDriverSettings { fun reportState(context: android.content.Context): String = "system" }
 ''',
             "Test.kt": r'''package dev.kartpad.android
 import java.nio.file.Files
@@ -136,6 +138,8 @@ fun main() {
   check(exported.isNull("renderer_validation"))
   check(exported.getBoolean("renderer_validation_configured"))
   check(exported.getString("gpu_driver") == "system")
+  check(exported.getBoolean("thirty_fps_races"))
+  check(!exported.getBoolean("simpler_computer_karts"))
   val inGame = KartPadReportContext.snapshot(context, "base", false)
   check(!inGame.getBoolean("renderer_validation"))
   check(inGame.getBoolean("renderer_validation_configured"))

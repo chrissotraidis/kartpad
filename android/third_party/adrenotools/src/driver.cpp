@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 // Copyright © 2021 Billy Laws
 
+#include <cstdio>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
@@ -16,10 +17,25 @@
 #include <adrenotools/driver.h>
 #include <unistd.h>
 
+// KartPad: remember which step failed so the game's log can say why a driver didn't load.
+namespace {
+thread_local char lastError[320];
+
+void *Fail(const char *step) {
+    const char *detail{dlerror()};
+    snprintf(lastError, sizeof(lastError), "%s%s%s", step, detail ? ": " : "", detail ? detail : "");
+    return nullptr;
+}
+} // namespace
+
+const char *adrenotools_last_error() {
+    return lastError;
+}
+
 void *adrenotools_open_libvulkan(int dlopenFlags, int featureFlags, const char *tmpLibDir, const char *hookLibDir, const char *customDriverDir, const char *customDriverName, const char *fileRedirectDir, void **userMappingHandle) {
     // Bail out if linkernsbypass failed to load, this probably means we're on api < 28
     if (!linkernsbypass_load_status())
-        return nullptr;
+        return Fail("linkernsbypass_unavailable");
 
     // Always use memfd on Q+ since it's guaranteed to work
     if (android_get_device_api_level() >= 29)
@@ -27,50 +43,52 @@ void *adrenotools_open_libvulkan(int dlopenFlags, int featureFlags, const char *
 
     // Verify that params for specific features are only passed if they are enabled
     if (!(featureFlags & ADRENOTOOLS_DRIVER_FILE_REDIRECT) && fileRedirectDir)
-        return nullptr;
+        return Fail("bad_params");
 
     if (!(featureFlags & ADRENOTOOLS_DRIVER_CUSTOM) && (customDriverDir || customDriverName))
-        return nullptr;
+        return Fail("bad_params");
 
     if (!(featureFlags & ADRENOTOOLS_DRIVER_GPU_MAPPING_IMPORT) && userMappingHandle)
-        return nullptr;
+        return Fail("bad_params");
 
     // Verify that params for enabled features are correct
     struct stat buf{};
 
     if (featureFlags & ADRENOTOOLS_DRIVER_CUSTOM) {
         if (!customDriverName || !customDriverDir)
-            return nullptr;
+            return Fail("bad_params");
 
         if (stat((std::string(customDriverDir) + customDriverName).c_str(), &buf) != 0)
-            return nullptr;
+            return Fail("driver_stat");
     }
 
     // Verify that params for enabled features are correct
     if (featureFlags & ADRENOTOOLS_DRIVER_FILE_REDIRECT) {
         if (!fileRedirectDir)
-            return nullptr;
+            return Fail("bad_params");
 
         if (stat(fileRedirectDir, &buf) != 0)
-            return nullptr;
+            return Fail("redirect_stat");
     }
 
     // Create a namespace that can isolate our hook from the classloader namespace
     auto hookNs{android_create_namespace("adrenotools-libvulkan", hookLibDir, nullptr, ANDROID_NAMESPACE_TYPE_SHARED, nullptr, nullptr)};
 
     // Link it to the default namespace so the hook can use libandroid etc
+    if (!hookNs)
+        return Fail("create_namespace");
     if (!linkernsbypass_link_namespace_to_default_all_libs(hookNs))
-        return nullptr;
+        return Fail("link_namespace");
 
     // Preload the hook implementation, otherwise we get a weird issue where despite being in NEEDED of the hook lib the hook's symbols will overwrite ours and cause an infinite loop
     auto hookImpl{linkernsbypass_namespace_dlopen("libhook_impl.so", RTLD_NOW, hookNs)};
     if (!hookImpl)
-        return nullptr;
+        return Fail("load_hook_impl");
 
     // Pass parameters to the hook implementation
     auto initHookParam{reinterpret_cast<void (*)(const void *)>(dlsym(hookImpl, "init_hook_param"))};
     if (!initHookParam)
-        return nullptr;
+        return Fail("init_hook_param");
 
 
     auto importMapping{[&]() -> adrenotools_gpu_mapping * {
@@ -88,9 +106,12 @@ void *adrenotools_open_libvulkan(int dlopenFlags, int featureFlags, const char *
 
     // Load the libvulkan hook into the isolated namespace
     if (!linkernsbypass_namespace_dlopen("libmain_hook.so", RTLD_GLOBAL, hookNs))
-        return nullptr;
+        return Fail("load_main_hook");
 
-    return linkernsbypass_namespace_dlopen_unique("/system/lib64/libvulkan.so", tmpLibDir, dlopenFlags, hookNs);
+    void *vulkan{linkernsbypass_namespace_dlopen_unique("/system/lib64/libvulkan.so", tmpLibDir, dlopenFlags, hookNs)};
+    if (!vulkan)
+        return Fail("load_system_libvulkan");
+    return vulkan;
 }
 
 bool adrenotools_import_user_mem(void *handle, void *hostPtr, uint64_t size) {

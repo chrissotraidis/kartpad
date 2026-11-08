@@ -221,7 +221,8 @@ crash traces Android kept, and a README. Open it yourself and attach the
 `console.log` or the relevant part, not the whole ZIP.
 
 **iPhone/iPad:** open **••• → Report a Problem…**, describe it, then choose
-**Save or Share Report…** to save the report file, or **Review & Continue to
+**Save Diagnostic Log…** to save the report and log file (the same name as on
+Android from 0.8.9; older builds call it **Save or Share Report…**), or **Review & Continue to
 GitHub…** to open a draft. If the app crashed, reopen it first; the report
 includes the previous session's log.
 
