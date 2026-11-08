@@ -175,11 +175,11 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.8** (build 273) updates Retro Rewind to **6.13.5**, so Retro
-Rewind installs and signs in to Retro WFC again (error 22010, "Invalid pack
-version"). It also adds **Shake with a Controller** on Android, iPhone and
-iPad, for clip-on controllers without motion sensors.
-See the [release notes](docs/releases/v0.8.8.md).
+**KartPad 0.8.9** (build 274) makes custom GPU drivers (Turnip) actually load
+on Snapdragon phones and can download them, fixes the start-up flicker on
+iPhone and iPad, stops memory building up over several cups, adds shake
+sensitivity, and gives iPhone and iPad the same Graphics & Performance page as
+Android. See the [release notes](docs/releases/v0.8.9.md).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
