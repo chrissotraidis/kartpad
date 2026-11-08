@@ -125,9 +125,13 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Graphics (Apple)
 
-- **iPhone 16 and iPad Air 4th gen:** the screen flickers while the game
-  starts, then plays normally. Possibly linked to 60 Hz screens; not seen on a
-  120 Hz iPad Pro. [#390](https://github.com/chrissotraidis/kartpad/issues/390)
+- **iPhone 16, iPhone 18 Pro and iPad Air 4th gen:** the screen flickers while
+  the Wii safety screen fades out, then plays normally. Cause found: the game
+  draws that screen while the Wii's "VI black" is still on, and KartPad showed
+  a black frame between the game's own frames; which one reached the screen was
+  down to timing, so it wasn't about 60 Hz screens. Fixed for the next version
+  (black no longer covers the game's frames); confirmed on the iPhone 18 Pro
+  Simulator, not yet on an affected iPhone. [#390](https://github.com/chrissotraidis/kartpad/issues/390)
 - **Mac, two players:** characters drawn outside their karts. [#127](https://github.com/chrissotraidis/kartpad/issues/127)
 
 ## Performance

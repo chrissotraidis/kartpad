@@ -36,7 +36,7 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 | #554 Poco F6 Retro WFC | Restart fixed it; room screen still slow on one phone; Turnip never loaded | Retest with working drivers |
 | #339 performance | Pixel 10a 0.8.8: thermal status 2, ~3 GB used, 43–300 MiB free late in session; the stutter window isn't in the 256 KiB log | Ship the #550 memory fix; longer capture of course select |
 | #510 slow motion after cups | Draft #550 / wiicompiled #23 | Phone test, then release |
-| #390 iOS start-up flicker | 0.8.8 recording: same 1-in-9 frames during the safety-screen fade, now on a 120 Hz iPhone 18 Pro | Instrument VI-black vs XFB presents in a candidate |
+| #390 iOS start-up flicker | Cause found: VI-black presents interleaved with the game's own frames during the fade (Simulator counter: 44–52 game frames and 60 black presents a second). Fixed in wiicompiled #24; Simulator shows no black after the first game frame | Confirm on an affected iPhone |
 | #553 shake sensitivity | Done on branch | Ship |
 | #537 Retro WFC "disc error" kick | Waiting for a 0.8.8 log | — |
 | #539 LiveContainer import | Waiting for reporter | — |
