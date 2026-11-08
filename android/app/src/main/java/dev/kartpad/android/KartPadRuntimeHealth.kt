@@ -96,6 +96,8 @@ internal object KartPadRuntimeHealth {
             .put("power_save", power.isPowerSaveMode)
             .put("resolution_scale", KartPadTouchSettings.resolutionScale(context))
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
+            .put("thirty_fps_races", KartPadTouchSettings.thirtyFpsRaces(context))
+            .put("simpler_computer_karts", KartPadTouchSettings.simplerComputerKarts(context))
             .toString()
         KartPadHealthJournal(File(context.filesDir, "KartPad/Logs/android-health.log")).append(line)
     }

@@ -22,7 +22,9 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 - **Shake to Trick → Sensitivity** on Android and iPhone/iPad (#553). Android
   checked on the emulator; iOS unit-tested (the Simulator has no motion sensor).
 - iPhone/iPad report button renamed **Save Diagnostic Log…** to match Android.
-- Android health lines now include `battery_pct` (#339 request).
+- Android health lines now include `battery_pct` (#339 request), plus
+  `thirty_fps_races` and `simpler_computer_karts` (also in the report header),
+  because #510's log9 couldn't show whether 30 FPS Races was on during the races.
 - **Mac:** the same flicker and memory fixes are in draft wiicompiled #25; the full
   translated Mac app builds and passes the package audit, but hasn't been run yet.
 - **iOS start-up flicker (#390):** found and fixed: VI black no longer covers the
@@ -37,7 +39,7 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 | #104 #301 #472 #492 #552 Snapdragon characters | Lead reopened: drivers never loaded before | Ask reporters to try Turnip once the driver fix ships |
 | #554 Poco F6 Retro WFC | Restart fixed it; room screen still slow on one phone; Turnip never loaded | Retest with working drivers |
 | #339 performance | Pixel 10a 0.8.8: thermal status 2, ~3 GB used, 43–300 MiB free late in session; the stutter window isn't in the 256 KiB log | Ship the #550 memory fix; longer capture of course select |
-| #510 slow motion after cups | Cause found: two renderer caches kept every course until restart (textures, and shader modules: ~35 MiB per new course). Both bounded in wiicompiled #23 (Android, #550) and #24 (iOS, #555). Emulator: native growth over 8 rounds 104 → 20 MiB; textures flat | Phone test over several cups, then release |
+| #510 slow motion after cups | Cause found: two renderer caches kept every course until restart (textures, and shader modules: ~35 MiB per new course). Both bounded in wiicompiled #23 (Android, #550) and #24 (iOS, #555). Emulator: native growth over 8 rounds 104 → 20 MiB; textures flat. 0.8.8 log9 (S10 Lite, 2 cups at 60): main-thread CPU per frame 14 → 19–23 ms, PSS 650 MiB → 1.1 GiB, thermal headroom 0.40 → 0.90, so heat is likely a second cause. 30 FPS Races confirmed working on the 0.8.9 candidate on both engines (emulator GP race at 30.0 FPS) | Phone test over several cups on 0.8.9; if it still slows, recommend 30 FPS Races |
 | #390 iOS start-up flicker | Cause found: VI-black presents interleaved with the game's own frames during the fade (Simulator counter: 44–52 game frames and 60 black presents a second). Fixed in wiicompiled #24 (iOS) and #23 (Android, which had the same overlap: ~120 black presents at start-up, now 3); no black after the first game frame | Confirm on an affected iPhone |
 | #553 shake sensitivity | Done on branch | Ship |
 | #537 Retro WFC "disc error" kick | Waiting for a 0.8.8 log | — |
