@@ -93,7 +93,7 @@ object KartPadTouchSettings {
 }
 object KartPadRendererDiagnostics { fun enabled(context: android.content.Context) = true }
 object KartPadNativeRuntime { fun engine(filesDir: java.io.File) = "classic" }
-object KartPadGpuDriverSettings { fun selectedName(context: android.content.Context): String? = null }
+object KartPadGpuDriverSettings { fun reportState(context: android.content.Context): String = "system" }
 ''',
             "Test.kt": r'''package dev.kartpad.android
 import java.nio.file.Files

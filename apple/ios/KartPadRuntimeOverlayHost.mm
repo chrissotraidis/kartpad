@@ -2132,7 +2132,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   NSArray *labels=@[@"What went wrong?",@"Course or menu, and what you were doing",@"How often does it happen?"];
   for(NSString *title in labels){ UILabel *label=[UILabel new];label.text=title;label.numberOfLines=0;label.font=[UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];[stack addArrangedSubview:label]; UITextField *field=[UITextField new];field.borderStyle=UITextBorderStyleRoundedRect;field.placeholder=title;field.accessibilityLabel=title;field.font=[UIFont preferredFontForTextStyle:UIFontTextStyleBody];field.adjustsFontForContentSizeCategory=YES;[field.heightAnchor constraintGreaterThanOrEqualToConstant:44].active=YES;[stack addArrangedSubview:field];[fields addObject:field]; }
   self.fields=fields;
-  NSArray *buttons=@[@"Save or Share Report…",@"Review & Continue to GitHub…",@"Reporting Guide"];
+  NSArray *buttons=@[@"Save Diagnostic Log…",@"Review & Continue to GitHub…",@"Reporting Guide"];
   SEL selectors[]={@selector(share),@selector(github),@selector(guide)};
   for(NSUInteger i=0;i<buttons.count;++i){UIButton *button=[UIButton buttonWithType:UIButtonTypeSystem];UIButtonConfiguration *config=i==1?UIButtonConfiguration.filledButtonConfiguration:UIButtonConfiguration.tintedButtonConfiguration;config.title=buttons[i];button.configuration=config;button.titleLabel.numberOfLines=0;[button.heightAnchor constraintGreaterThanOrEqualToConstant:48].active=YES;[button addTarget:self action:selectors[i] forControlEvents:UIControlEventTouchUpInside];[stack addArrangedSubview:button];}
   UILayoutGuide *safe=self.view.safeAreaLayoutGuide;
@@ -2183,7 +2183,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   self.reviewButton.accessibilityValue = @"Unchecked";
   [self.reviewButton addTarget:self action:@selector(toggleReview) forControlEvents:UIControlEventTouchUpInside];
   UIButton *share = [UIButton buttonWithType:UIButtonTypeSystem];
-  [share setTitle:@"Save or Share Log…" forState:UIControlStateNormal];
+  [share setTitle:@"Save Diagnostic Log…" forState:UIControlStateNormal];
   share.enabled = self.reportURL != nil;
   [share addTarget:self action:@selector(shareLog:) forControlEvents:UIControlEventTouchUpInside];
   self.continueButton = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -3495,13 +3495,12 @@ static void KartPadApplySoundLevels(BOOL persist) {
 
 - (void)showShakeTricks {
   [[SunPadInputMixer sharedMixer] clearInputFromTouch:YES];
-  UIViewController *controller = KartPadVisibleViewController(_window);
-  if (controller == nil) return;
   KartPadMotionSteering *motion = [KartPadMotionSteering sharedSteering];
   NSString *message = motion.sensorAvailable
-      ? [NSString stringWithFormat:@"Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. Works without tilt steering. With a controller connected, shaking does nothing unless Shake with a Controller is on.\n\nShake to Trick: %@. Shake with a Controller: %@.",
+      ? [NSString stringWithFormat:@"Shake the device to press D-pad Up: tricks in the air and wheelies on bikes. Works without tilt steering. With a controller connected, shaking does nothing unless Shake with a Controller is on. A higher sensitivity needs a lighter shake.\n\nShake to Trick: %@. Shake with a Controller: %@. Sensitivity: %@.",
                                    motion.shakeTricksEnabled ? @"On" : @"Off",
-                                   motion.shakeWithController ? @"On" : @"Off"]
+                                   motion.shakeWithController ? @"On" : @"Off",
+                                   KartPadShakeSensitivityName(motion.shakeSensitivity)]
       : @"Shake input is unavailable on this device. You can still use D-pad Up.";
   UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"Shake to Trick"
       message:message preferredStyle:UIAlertControllerStyleActionSheet];
@@ -3518,13 +3517,17 @@ static void KartPadApplySoundLevels(BOOL persist) {
       (void)action;
       motion.shakeWithController = !motion.shakeWithController;
     }]];
+    __weak KartPadRuntimeOverlayHost *weakSelf = self;
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Cycle Sensitivity"
+        style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+      (void)action;
+      motion.shakeSensitivity = (motion.shakeSensitivity + 1) % KartPadShakeSensitivityLevels;
+      [weakSelf showShakeTricks];
+    }]];
   }
   [sheet addAction:[UIAlertAction actionWithTitle:@"Continue Playing"
       style:UIAlertActionStyleCancel handler:nil]];
-  sheet.popoverPresentationController.sourceView = _overlay;
-  sheet.popoverPresentationController.sourceRect = CGRectMake(
-      CGRectGetMidX(_overlay.bounds), CGRectGetMidY(_overlay.bounds), 1.0, 1.0);
-  [controller presentViewController:sheet animated:YES completion:nil];
+  [self presentOverlayAlert:sheet];
 }
 
 - (void)showMotionSteering {

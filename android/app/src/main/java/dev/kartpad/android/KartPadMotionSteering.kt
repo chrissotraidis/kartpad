@@ -41,6 +41,13 @@ internal class KartPadMotionSteering(
         stop()
         start()
     }
+
+    val shakeSensitivity: Int get() = KartPadTouchSettings.shakeSensitivity(applicationContext)
+
+    fun setShakeSensitivity(level: Int) {
+        KartPadTouchSettings.setShakeSensitivity(applicationContext, level)
+        shakeDetector.triggerAcceleration = KartPadShakeDetector.LEVELS[shakeSensitivity]
+    }
     val enabled: Boolean get() = KartPadTouchSettings.motionEnabled(applicationContext)
     val inverted: Boolean get() = KartPadTouchSettings.motionInverted(applicationContext)
     val sensitivity: Float get() = KartPadTouchSettings.motionSensitivity(applicationContext)
@@ -65,6 +72,7 @@ internal class KartPadMotionSteering(
     fun start() {
         if (shakeTricksEnabled && !shakeRegistered && shakeSensor != null) {
             shakeDetector.reset()
+            shakeDetector.triggerAcceleration = KartPadShakeDetector.LEVELS[shakeSensitivity]
             shakeRegistered = sensorManager.registerListener(
                 this, shakeSensor, SensorManager.SENSOR_DELAY_GAME,
             )

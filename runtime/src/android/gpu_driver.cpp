@@ -55,6 +55,14 @@ void Report(const char* state, const char* reason, const char* lib, const char* 
     KartPadAndroidLogMetric("KartPadGpuDriver", "state=%s reason=%s lib=%s api=%d detail=%s", state, reason,
                             lib != nullptr ? lib : "-", android_get_device_api_level(),
                             detail != nullptr ? detail : "-");
+    // The app shows this in Graphics & Performance → GPU Driver, so a driver that didn't load is
+    // never mistaken for the one running (KartPadGpuDriverSettings.kt).
+    if (const char* statusPath = Env("KARTPAD_GPU_DRIVER_STATUS")) {
+        if (std::FILE* file = std::fopen(statusPath, "w")) {
+            std::fprintf(file, "%s\n%s\n%s\n", state, reason, detail != nullptr ? detail : "");
+            std::fclose(file);
+        }
+    }
 }
 
 bool IsVulkanLoaderName(const char* filename) {
@@ -103,8 +111,8 @@ extern "C" void KartPadLoadCustomGpuDriver() {
     void* handle = adrenotools_open_libvulkan(RTLD_NOW, ADRENOTOOLS_DRIVER_CUSTOM, tmp.empty() ? nullptr : tmp.c_str(),
                                               hookDir.c_str(), dir.c_str(), driverLib, nullptr, nullptr);
     if (handle == nullptr) {
-        const char* error = dlerror();
-        Report("fallback", "open_failed", driverLib, error);
+        const char* error = adrenotools_last_error();
+        Report("fallback", "open_failed", driverLib, error != nullptr && error[0] != 0 ? error : nullptr);
         return;
     }
     if (dlsym(handle, "vkGetInstanceProcAddr") == nullptr) {

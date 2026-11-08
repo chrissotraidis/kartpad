@@ -20,6 +20,15 @@ static loader_android_create_namespace_t loader_android_create_namespace;
 
 static bool lib_loaded;
 
+// KartPad: libmain.so is linked with -Wl,--wrap=dlopen (runtime/src/android/gpu_driver.cpp), which
+// silently turns every "dlopen" in this statically linked file into KartPad's __wrap_dlopen. The
+// tricks below need bionic's own dlopen: they walk its code to find __loader_dlopen and pass its
+// address as the caller. dlsym is not wrapped, so ask the linker for the real one.
+static void *real_dlopen_address() {
+    static void *address{dlsym(RTLD_DEFAULT, "dlopen")};
+    return address;
+}
+
 
 /* Public API */
 bool linkernsbypass_load_status() {
@@ -43,7 +52,7 @@ struct android_namespace_t *android_create_namespace_escape(const char *name,
                                                             uint64_t type,
                                                             const char *permitted_when_isolated_path,
                                                             android_namespace_t *parent_namespace) {
-    auto caller{reinterpret_cast<void *>(&dlopen)};
+    auto caller{real_dlopen_address()};
     return loader_android_create_namespace(name, ld_library_path, default_library_path, type,
                                            permitted_when_isolated_path, parent_namespace, caller);
 }
@@ -131,6 +140,8 @@ __attribute__((constructor)) static void resolve_linker_symbols() {
 
     if (android_get_device_api_level() < 28)
         return;
+    if (!real_dlopen_address())
+        return;
 
     // ARM64 specific function walking to locate the internal dlopen handler
     auto loader_dlopen{[]() {
@@ -149,10 +160,10 @@ __attribute__((constructor)) static void resolve_linker_symbols() {
         static_assert(sizeof(BranchLinked) == 4, "BranchLinked is wrong size");
 
         // Some devices ship with --X mapping for exexecutables so work around that
-        mprotect(align_ptr(reinterpret_cast<void *>(&dlopen)), getpagesize(), PROT_WRITE | PROT_READ | PROT_EXEC);
+        mprotect(align_ptr(real_dlopen_address()), getpagesize(), PROT_WRITE | PROT_READ | PROT_EXEC);
 
         // dlopen is just a wrapper for __loader_dlopen that passes the return address as the third arg hence we can just walk it to find __loader_dlopen
-        auto blInstr{reinterpret_cast<BranchLinked *>(&dlopen)};
+        auto blInstr{reinterpret_cast<BranchLinked *>(real_dlopen_address())};
         while (!blInstr->Verify())
             blInstr++;
 
@@ -163,7 +174,7 @@ __attribute__((constructor)) static void resolve_linker_symbols() {
     mprotect(align_ptr(reinterpret_cast<void *>(&loader_dlopen)), getpagesize(), PROT_WRITE | PROT_READ | PROT_EXEC);
 
     // Passing dlopen as a caller address tricks the linker into using the internal unrestricted namespace letting us access libraries that are normally forbidden in the classloader namespace imposed on apps
-    auto ldHandle{loader_dlopen("ld-android.so", RTLD_LAZY, reinterpret_cast<void *>(&dlopen))};
+    auto ldHandle{loader_dlopen("ld-android.so", RTLD_LAZY, real_dlopen_address())};
     if (!ldHandle)
         return;
 
@@ -175,7 +186,7 @@ __attribute__((constructor)) static void resolve_linker_symbols() {
     if (!android_link_namespaces)
         return;
 
-    auto libdlAndroidHandle{loader_dlopen("libdl_android.so", RTLD_LAZY, reinterpret_cast<void *>(&dlopen))};
+    auto libdlAndroidHandle{loader_dlopen("libdl_android.so", RTLD_LAZY, real_dlopen_address())};
     if (!libdlAndroidHandle)
         return;
 

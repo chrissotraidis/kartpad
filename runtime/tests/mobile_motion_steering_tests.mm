@@ -65,6 +65,29 @@ void TestShakeDetection() {
   Require(KartPadShakeActionForSample(NAN, 2.0, true, neverTriggered) ==
               KartPadShakeAction::None,
           "invalid acceleration changed detector state");
+  // Shake Sensitivity: Standard keeps the original threshold; Very High
+  // accepts a lighter shake and Low needs a harder one.
+  Require(KartPadShakeTriggerAcceleration(1) == 1.35,
+          "Standard sensitivity changed the original threshold");
+  Require(KartPadShakeActionForSample(0.8, 1.0, true, neverTriggered,
+                                      KartPadShakeTriggerAcceleration(3)) ==
+              KartPadShakeAction::Trigger,
+          "Very High sensitivity ignored a light shake");
+  Require(KartPadShakeActionForSample(1.5, 1.0, true, neverTriggered,
+                                      KartPadShakeTriggerAcceleration(0)) ==
+              KartPadShakeAction::None,
+          "Low sensitivity accepted a moderate shake");
+  Require(KartPadShakeActionForSample(0.3, 1.0, true, neverTriggered,
+                                      KartPadShakeTriggerAcceleration(3)) ==
+              KartPadShakeAction::Rearm,
+          "settled motion must still rearm at the highest sensitivity");
+  Require(KartPadShakeTriggerAcceleration(99) ==
+                  KartPadShakeTriggerAcceleration(3) &&
+              KartPadShakeTriggerAcceleration(-1) ==
+                  KartPadShakeTriggerAcceleration(0),
+          "out-of-range sensitivity was not clamped");
+  Require([KartPadShakeSensitivityName(1) isEqualToString:@"Standard"],
+          "sensitivity names changed");
 }
 
 }  // namespace
