@@ -50,12 +50,22 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 | #295 Retro ghosts | Draft #375 | Replay coverage and iPhone check |
 | #534 #531 #449 #300 #234 #203 #127 #100 #91 #90 | Requests / backlog | No change this loop |
 
-**Menu parity.** Main menu, Controls, Display, Graphics & Performance and Game
-Data & Saves now match on Android and iPhone/iPad. 30 FPS Races and Simpler
+**Menu parity.** Main menu, Multiplayer, Controls, Display, Graphics &
+Performance, Sound and Game Data & Saves now match on Android and iPhone/iPad,
+row for row and in order (checked from the emulator's UI tree and the
+Simulator's accessibility tree). iPhone/iPad gained **Multiplayer → Country…**
+and Android's Local Split-Screen / Controller Setup rows; Disable Bloom and 30
+FPS Races read the same on both. 30 FPS Races and Simpler
 Computer Karts were ported to the iOS runtime (wiicompiled #24) and checked on
 the iPhone 18 Pro Simulator: races run at 30 FPS with the option on, and all 11
 computer karts load the split-screen models. Graphics Engine, GPU Driver and
 Graphics Diagnostics stay Android-only (no iPhone/iPad equivalent).
+
+**30 FPS Races and Retro Rewind menus.** The option also put Retro Rewind's
+title screen and menus at 30, because Retro Rewind's frame-rate routine runs
+for every scene. It now changes only race scenes (scene kind 2); menus stay at
+60. Checked on the Android emulator and the iPhone 18 Pro Simulator, with one
+`[KartPadFrameRate] scene …` log line per scene change.
 
 
 ## Current work (14 October)
