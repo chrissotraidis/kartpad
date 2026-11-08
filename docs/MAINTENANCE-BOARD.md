@@ -61,6 +61,14 @@ the iPhone 18 Pro Simulator: races run at 30 FPS with the option on, and all 11
 computer karts load the split-screen models. Graphics Engine, GPU Driver and
 Graphics Diagnostics stay Android-only (no iPhone/iPad equivalent).
 
+**Driving the game in the iOS Simulator.** `axe key` reaches the game as Wii
+Remote 1's keyboard: arrows are the D-pad, Return is A and Backspace is B, but
+each key must be held for about 0.3 s (`axe key 40 --duration 0.3`); shorter
+presses are missed by the per-frame poll. Touch A also works with a 0.45 s hold.
+On Retro Rewind's course screen each Right moves a whole page of cups, so
+reaching one named course this way is slow. Replaying #375's imported 3DS
+Bowser's Castle ghost is still not done.
+
 **30 FPS Races and Retro Rewind menus.** The option also put Retro Rewind's
 title screen and menus at 30, because Retro Rewind's frame-rate routine runs
 for every scene. It now changes only race scenes (scene kind 2); menus stay at
