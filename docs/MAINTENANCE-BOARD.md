@@ -23,6 +23,8 @@ physical-device evidence. Branch: `codex/loop-20261108`.
   checked on the emulator; iOS unit-tested (the Simulator has no motion sensor).
 - iPhone/iPad report button renamed **Save Diagnostic Log…** to match Android.
 - Android health lines now include `battery_pct` (#339 request).
+- **Mac:** the same flicker and memory fixes are in draft wiicompiled #25; the full
+  translated Mac app builds and passes the package audit, but hasn't been run yet.
 - **iOS start-up flicker (#390):** found and fixed: VI black no longer covers the
   game's own frames (wiicompiled #24, runtime pin bumped). Checked on the iPhone 18 Pro
   Simulator with the full translated game: menus, Shake to Trick sheet, renamed
