@@ -40,6 +40,19 @@
 
 extern "C" int g_gxFrameCount;
 #include <atomic>
+
+// Graphics & Performance options shared with Android (runtime/src/hle/frame_rate_lock.cpp and
+// low_detail_karts.cpp in the runtime). Both take effect from the next race.
+extern "C" void RuntimeSetThirtyFpsRaces(bool enabled) noexcept;
+extern "C" void RuntimeSetLowDetailComputerKarts(bool enabled) noexcept;
+static NSString *const kKartPadThirtyFpsRacesKey = @"KartPadThirtyFpsRaces";
+static NSString *const kKartPadSimplerComputerKartsKey = @"KartPadSimplerComputerKarts";
+
+static void KartPadApplyPerformanceSettings() {
+  NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+  RuntimeSetThirtyFpsRaces([defaults boolForKey:kKartPadThirtyFpsRacesKey]);
+  RuntimeSetLowDetailComputerKarts([defaults boolForKey:kKartPadSimplerComputerKartsKey]);
+}
 static NSString *const kKartPadAutoAccelerateKey = @"KartPadAutoAccelerate";
 // Touch L latch for trailing items (#473); off by default, as on Android.
 static NSString *const kKartPadItemHoldKey = @"KartPadItemHold";
@@ -2898,7 +2911,37 @@ static void KartPadApplySoundLevels(BOOL persist) {
                       image:[UIImage systemImageNamed:@"display"]
                  identifier:@"dev.kartpad.display"
                     options:0
-                   children:displayItems];
+                    children:displayItems];
+  // Same page, order and wording as Android's Graphics & Performance. The graphics engine choice,
+  // GPU driver and Graphics Diagnostics stay Android-only: they have no iPhone/iPad equivalent.
+  NSArray<NSArray<NSString *> *> *performanceOptions = @[
+    @[ @"30 FPS Races", kKartPadThirtyFpsRacesKey,
+       @"Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race." ],
+    @[ @"Simpler Computer Karts", kKartPadSimplerComputerKartsKey,
+       @"Computer karts use split-screen models. Saves CPU. From the next race." ],
+  ];
+  NSMutableArray<UIMenuElement *> *performanceItems = [NSMutableArray array];
+  for (NSArray<NSString *> *option in performanceOptions) {
+    NSString *key = option[1];
+    UIAction *toggle = [UIAction actionWithTitle:option[0]
+        image:[UIImage systemImageNamed:@"speedometer"] identifier:nil
+        handler:^(__kindof UIAction *action) {
+      (void)action;
+      NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+      [defaults setBool:![defaults boolForKey:key] forKey:key];
+      KartPadApplyPerformanceSettings();
+      [weakSelf refreshMenuButton];
+    }];
+    toggle.subtitle = option[2];
+    toggle.state = [NSUserDefaults.standardUserDefaults boolForKey:key] ? UIMenuElementStateOn
+                                                                       : UIMenuElementStateOff;
+    [performanceItems addObject:toggle];
+  }
+  UIMenu *performance = [UIMenu menuWithTitle:@"Graphics & Performance"
+                                        image:[UIImage systemImageNamed:@"speedometer"]
+                                   identifier:@"dev.kartpad.performance"
+                                      options:0
+                                     children:performanceItems];
 
   NSMutableArray<UIMenuElement *> *children = [NSMutableArray array];
   [children addObject:[UIAction actionWithTitle:@"Return to KartPad Menu"
@@ -2909,6 +2952,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
   [children addObject:multiplayer];
   [children addObject:controls];
   [children addObject:display];
+  [children addObject:performance];
   [children addObject:[UIAction actionWithTitle:@"Sound…"
       image:[UIImage systemImageNamed:@"speaker.wave.2"] identifier:@"dev.kartpad.sound"
       handler:^(__kindof UIAction *action) {
@@ -3378,6 +3422,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
 
   NSInteger fpsSize=[NSUserDefaults.standardUserDefaults integerForKey:@"KartPadFPSCounterSize"];
   gKartPadFpsScale.store(fpsSize==0?1.0f:fpsSize==1?1.5f:2.0f,std::memory_order_relaxed);
+  KartPadApplyPerformanceSettings();
   _sdlWindow = window;
   SDL_PropertiesID properties = SDL_GetWindowProperties(window);
   UIWindow *uiWindow = (__bridge UIWindow *)SDL_GetPointerProperty(

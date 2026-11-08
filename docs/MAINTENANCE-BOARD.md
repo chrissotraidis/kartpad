@@ -46,10 +46,12 @@ physical-device evidence. Branch: `codex/loop-20261108`.
 | #295 Retro ghosts | Draft #375 | Replay coverage and iPhone check |
 | #534 #531 #449 #300 #234 #203 #127 #100 #91 #90 | Requests / backlog | No change this loop |
 
-**Menu parity.** Main menu, Controls, Display and Game Data & Saves match on
-Android and iPhone/iPad. Graphics & Performance stays Android-only: 30 FPS
-Races lives in the Android runtime (`frame_rate_lock.cpp`) and needs a port
-before iPhone can offer it.
+**Menu parity.** Main menu, Controls, Display, Graphics & Performance and Game
+Data & Saves now match on Android and iPhone/iPad. 30 FPS Races and Simpler
+Computer Karts were ported to the iOS runtime (wiicompiled #24) and checked on
+the iPhone 18 Pro Simulator: races run at 30 FPS with the option on, and all 11
+computer karts load the split-screen models. Graphics Engine, GPU Driver and
+Graphics Diagnostics stay Android-only (no iPhone/iPad equivalent).
 
 
 ## Current work (14 October)
