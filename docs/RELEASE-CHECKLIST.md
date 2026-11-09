@@ -92,6 +92,10 @@ and rerun only checks 3 and 12 on the final files. If anything differs, rerun
 every check on the final build. A check passed on an older build with different
 code doesn't count.
 
+Measure frame rates and memory only while the Mac is otherwise quiet: check
+`uptime` first and wait if another build is running. During 0.8.9's checks a
+busy Mac made a menu read 25 FPS that ran at 60 once the load dropped.
+
 ### Record the results
 
 Every release's notes end with this table, filled in for the final build.
