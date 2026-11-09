@@ -69,7 +69,7 @@ Downloads and `adb pull` it. Lines marked *logcat* come from `adb logcat`.
 
 | # | Check | How | Pass |
 | --- | --- | --- | --- |
-| 1 | Full test suite | `python3 -B -m pytest -q tests` on the release branch, with the JDK in `.android-bootstrap`. CI runs only part of the suite. | No failures. |
+| 1 | Full test suite | CI runs it on every pull request (*Full test suite* workflow). Also run `python3 -B -m pytest -q tests` locally with the JDK in `.android-bootstrap`, because CI skips the Kotlin tests that need it. | No failures. |
 | 2 | Fresh install | New emulator: install the APK, import an extracted folder, start Original, reach a race. | Race starts at 60 FPS. |
 | 3 | Update | New emulator: install the **previous published** APK, import, race once; install the new APK over it without uninstalling. | Game card still says Ready to play, no first-run setup, race starts. |
 | 4 | Every new or changed feature | Use the feature for what it's for, not just its menu or its fallback. | The main path works, or the release notes say exactly why it couldn't be tested. |
@@ -81,6 +81,65 @@ Downloads and `adb pull` it. Lines marked *logcat* come from `adb logcat`.
 | 10 | Menus match | Open every ⋯ submenu on the Android emulator and in the Simulator. | Rows and order match [SETTINGS.md](SETTINGS.md) on both. An option added on one platform is either added on the other or listed there as platform-only. |
 | 11 | Diagnostic log | Save a diagnostic log on Android and in the Simulator. | The log opens; on Android its header has `gpu_driver`, `thirty_fps_races` and `simpler_computer_karts`, and its health lines have the last two. |
 | 12 | Player checks | From PadMint's current `main`: `scripts/player-check.sh kartpad ios <disc> <checkout> <ios-for-padmint.ipa>`, `… macos <disc> <checkout>` and `… android <disc> <checkout> <android.apk>` before tagging, and each without the checkout after publishing. Android and iPhone need the release app as the last argument. | All three pass. |
+
+### When to run them
+
+Run the checks on the release candidate, before merging the release PR, so a
+failure can still be fixed in that PR. After the merge, compare
+`git rev-parse <merge>^{tree}` with the tested candidate's tree. If they are
+the same (gitlinks included), the results carry over: rebuild for provenance
+and rerun only checks 3 and 12 on the final files. If anything differs, rerun
+every check on the final build. A check passed on an older build with different
+code doesn't count.
+
+### Record the results
+
+Every release's notes end with this table, filled in for the final build.
+Don't publish with an empty row: write *not run* and the reason instead.
+
+```
+| Check | Build | Result |
+| --- | --- | --- |
+| 1 Full test suite | <commit> | 391 passed |
+| ... | | |
+```
+
+### Extra checks for what changed
+
+Add these to the twelve when a release touches the area:
+
+| Area changed | Also check |
+| --- | --- |
+| Rendering, frame presentation, renderer caches | Screenshots of a race on both Android engines and in the Simulator; checks 6 and 7 against the previous release. |
+| Frame timing or frame-rate options | FPS overlay during menus and races with each option on and off. |
+| Controls or input | Touch, a controller and the keyboard reach a race; settings survive a restart. |
+| GPU drivers | Check 5, then the fallback after a failed start, then switching back to the phone's driver. |
+| Saves, game data, import | Check 3 with a save that has progress; backup export and restore. |
+| Retro Rewind pack or code | Install from the card, reach a race, sign in to Retro WFC. |
+| Menus or settings | Check 10; the setting still works after a restart. |
+| Mac app or Mac runtime | The [Mac player flow](#mac-player-flow). |
+
+### Fixes for hardware we don't have
+
+When a fix targets hardware no one on the project can test (a Snapdragon GPU,
+a particular iPhone, a TV), the emulator or Simulator can only show part of it.
+Then:
+
+- Make the fix observable (next section) and check that part on the emulator
+  or Simulator.
+- List the rest under **Not checked** in the release notes.
+- After publishing, ask the reporter on their issue to try it, with the exact
+  steps and the log line to look for. Keep the issue open until they confirm.
+- If the change could break play for everyone if it's wrong, publish it as a
+  prerelease for the reporters first.
+
+### Make every new feature show up in the log
+
+A feature that fails silently looks like it works. Every new option or
+fallback must write a line to the diagnostic log saying what actually happened
+(`KartPadGpuDriver state=loaded`, `[KartPadFrameRate] scene … result=30_forced`),
+and the problem report must show the active value, not just the chosen one.
+Check 4 includes finding that line.
 
 ## How bugs got past earlier releases
 
@@ -103,7 +162,11 @@ reaches players that a release check could have caught.
 - **Menus drifted apart.** Options were added on Android without a rule for
   iPhone/iPad, so the platforms differed until 0.8.9. Check 10.
 - **A test broke unnoticed (0.8.9 candidate).** A new report field broke a test
-  that CI doesn't run; a local full run caught it before merge. Check 1.
+  that CI doesn't run; a local full run caught it before merge. CI now runs
+  the whole suite on every pull request. Check 1.
+- **Checks run on an older build (0.8.9).** Several checks passed on earlier
+  candidates whose code later changed, and were never repeated on the final
+  build. *When to run them* now says when results carry over.
 - **Wrong player-check call (0.8.9 candidate).** The Android check stops with
   "published app does not exist" without the APK. Check 12 gives the exact calls.
 

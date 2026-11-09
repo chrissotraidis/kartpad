@@ -1,0 +1,28 @@
+name: Full test suite
+# Every pull request runs the whole Python test suite. The other workflows run
+# chosen files only, so a test outside their lists could break unnoticed (a
+# 0.8.9 candidate did). See docs/RELEASE-CHECKLIST.md, behaviour check 1.
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: full-tests-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pytest:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install --quiet pytest
+      - run: brew list ripgrep >/dev/null 2>&1 || brew install ripgrep
+      - name: Tests
+        run: python3 -B -m pytest -q -rs tests
