@@ -62,8 +62,15 @@ int main() {
             cpp = pathlib.Path(temp) / "test.cpp"
             exe = pathlib.Path(temp) / "test"
             cpp.write_text(source)
+            # Some Mac C++ libraries include Android NDK headers when __ANDROID__
+            # is defined. Tiny stand-ins keep this host test independent of Xcode.
+            stub = pathlib.Path(temp) / "stub" / "android"
+            stub.mkdir(parents=True)
+            (stub / "api-level.h").write_text("#pragma once\n#ifndef __ANDROID_API__\n#define __ANDROID_API__ 26\n#endif\n")
+            (stub / "ndk-version.h").write_text("#pragma once\n#define __NDK_MAJOR__ 27\n#define __NDK_MINOR__ 0\n")
             subprocess.run([compiler, "-std=c++17", "-D__ANDROID__", "-Wall", "-Wextra", "-Werror",
-                            "-pthread", "-I", str(ROOT / "runtime/include"), str(cpp), "-o", str(exe)], check=True)
+                            "-pthread", "-I", str(ROOT / "runtime/include"), "-idirafter", str(stub.parent),
+                            str(cpp), "-o", str(exe)], check=True)
             subprocess.run([str(exe)], check=True, timeout=15)
 
 

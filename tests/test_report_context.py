@@ -75,7 +75,10 @@ int main() { @autoreleasepool {
             self.skipTest("Set KARTPAD_TEST_JDK to the installed JDK")
         cache = Path.home() / ".gradle/caches/modules-2/files-2.1"
         def jar(package):
-            return str(next((cache / package).rglob("*.jar")))
+            found = next((cache / package).rglob("*.jar"), None)
+            if found is None:
+                self.skipTest(f"Jar missing from the Gradle cache: {package} (build the Android app once)")
+            return str(found)
         stdlib = jar("org.jetbrains.kotlin/kotlin-stdlib/2.2.21")
         json = jar("org.json/json/20240303")
         compiler_cp = os.pathsep.join([stdlib, jar("org.jetbrains.kotlin/kotlin-compiler-embeddable/2.2.21"),

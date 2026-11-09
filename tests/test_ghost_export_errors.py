@@ -8,6 +8,8 @@ ROOT=Path(__file__).resolve().parents[1]
 JDK=Path(os.environ.get('KARTPAD_TEST_JDK',str(ROOT/'.android-bootstrap/jdk-17.0.20.1+1/Contents/Home')))
 class GhostExportErrors(unittest.TestCase):
  def test_jni_preserves_validation_reason_and_save(self):
+  if not (JDK/'include/jni.h').exists():
+   self.skipTest('Set KARTPAD_TEST_JDK to an installed JDK 17')
   text=(ROOT/'android/app/src/main/cpp/kartpad_runtime_settings_jni.cpp').read_text()
   function=text[text.index('#include "kartpad/ghost/rkg.h"'):]
   with tempfile.TemporaryDirectory() as d:

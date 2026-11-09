@@ -11,7 +11,10 @@ JAVA = Path(os.environ.get('KARTPAD_TEST_JDK', str(ROOT / '.android-bootstrap/jd
 CACHE = Path.home() / '.gradle/caches/modules-2/files-2.1'
 
 def jar(path):
-    return next(p for p in (CACHE/path).rglob('*.jar') if not p.name.endswith(('-sources.jar','-javadoc.jar')))
+    found = next((p for p in (CACHE/path).rglob('*.jar') if not p.name.endswith(('-sources.jar','-javadoc.jar'))), None)
+    if found is None:
+        raise unittest.SkipTest(f'Kotlin compiler jar missing from the Gradle cache: {path} (build the Android app once)')
+    return found
 
 def method(source, name):
     match = re.search(r'(?:private )?fun '+name+r'\([^\n]*\) \{',source)
@@ -73,6 +76,8 @@ class Overlay {
 '''
 
 def run_probe(test, source, names, main):
+    if not JAVA.exists():
+        test.skipTest('Set KARTPAD_TEST_JDK to an installed JDK 17')
     methods='\n'.join(method(source,n) for n in names)
     kotlin=FAKES + methods + '\n}\n' + main
     paths=[jar(p) for p in ('org.jetbrains.kotlin/kotlin-compiler-embeddable/2.2.21','org.jetbrains.kotlin/kotlin-stdlib/2.2.21','org.jetbrains/annotations/13.0','org.jetbrains.kotlin/kotlin-reflect/2.2.0','org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.8.0')]
