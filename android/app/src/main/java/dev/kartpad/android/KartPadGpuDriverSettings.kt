@@ -34,6 +34,7 @@ import org.json.JSONObject
 internal object KartPadGpuDriverSettings {
     const val REQUEST_PICK_ZIP = 0x4b50
     private const val FAILED_STARTS_BEFORE_SYSTEM = 2
+    private const val RUNS_NOW_NOTICE = "runs_now_notice_shown"
     private val hookLibraries =
         listOf("libmain_hook.so", "libhook_impl.so", "libfile_redirect_hook.so", "libgsl_alloc_hook.so")
     private val environment =
@@ -171,6 +172,34 @@ internal object KartPadGpuDriverSettings {
         startsFile(context).delete()
     }
 
+    /**
+     * Until 0.8.9 a chosen driver never loaded (the phone's always ran), so after updating it ran
+     * for the first time with no warning, and on some phones that meant a broken picture or a
+     * renderer error right away. Tell the player once, with a one-tap way back. Returns true when
+     * the notice is shown, so the launcher doesn't start a game underneath it.
+     */
+    fun showRunsNowNotice(activity: Activity): Boolean {
+        val preferences = preferences(activity)
+        if (preferences.getBoolean(RUNS_NOW_NOTICE, false)) return false
+        val driver = selected(activity)
+        preferences.edit().putBoolean(RUNS_NOW_NOTICE, true).apply()
+        if (driver == null) return false
+        AlertDialog.Builder(activity)
+            .setTitle("Your GPU driver now runs")
+            .setMessage("You chose ${driver.name} as your GPU driver. Before KartPad 0.8.9, a bug meant chosen " +
+                "drivers never loaded and the game always used the phone's driver. Now ${driver.name} really runs.\n\n" +
+                "If characters, tracks or the whole picture look wrong, or the game stops with a renderer error, " +
+                "use the phone's driver. You can change this anytime in ⋯ → Graphics & Performance → GPU Driver.")
+            .setPositiveButton("Use Phone's Driver") { _, _ ->
+                if (!select(activity, null)) {
+                    Toast.makeText(activity, "The driver choice could not be saved.", Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton("Keep ${driver.name}", null)
+            .show()
+        return true
+    }
+
     private fun select(context: Context, driver: Driver?): Boolean =
         runCatching {
             if (driver != null) refreshHookLibraries(context)
@@ -178,6 +207,8 @@ internal object KartPadGpuDriverSettings {
             statusFile(context).delete()
             val edit = preferences(context).edit()
             if (driver == null) edit.remove("driver") else edit.putString("driver", driver.dir.name)
+            // Chosen now, so the player knows it runs.
+            edit.putBoolean(RUNS_NOW_NOTICE, true)
             check(edit.commit())
             // Dawn's saved Vulkan pipeline data belongs to the previous driver. Drivers should
             // reject another driver's data, but old Adreno drivers are the ones this is for.

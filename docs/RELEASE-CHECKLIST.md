@@ -5,6 +5,32 @@ in [STATUS.md](STATUS.md) and the [maintenance board](MAINTENANCE-BOARD.md).
 Completed [release checkpoints through 0.4.11](archive/release-checkpoints-through-0.4.11.md)
 are historical evidence, not a checklist for the next build.
 
+## Go or no-go: answer these before publishing
+
+Answer each one in writing in the release PR. A *yes* means doing what it says
+before the release becomes Latest; there are no exceptions for small fixes or
+hotfixes.
+
+1. **Does a change touch hardware we couldn't run it on?** (A Snapdragon GPU, a
+   custom driver, a real iPhone or iPad, a TV.) Then publish as a
+   **prerelease**, not Latest. The in-app update check and PadMint only offer
+   Latest, so a prerelease reaches only players who choose it. Post it in the
+   Discord with what to try, and make it Latest after at least one player with
+   that hardware confirms it works and nothing new has broken for a day.
+2. **Does a change make an existing setting start doing something, or change
+   what a saved setting does?** Then players who chose that setting in an
+   earlier version get the new behaviour the moment they update, without
+   having asked for it. Run check 3 with that setting already chosen in the
+   previous release, tell those players once after updating, and give them a
+   one-tap way back.
+3. **Does a change add a new way for graphics or the game to fail** (a driver,
+   an engine, a renderer path)? Then it falls back on its own when it fails,
+   both at start-up and **during play**, and the error message says which
+   choice was in use and how to undo it.
+4. **Is every row in *Results by check* filled in for the final build?** A row
+   that says *not run* is a no-go unless the reason is written down and the
+   release is a prerelease.
+
 ## Android APK and PadMint inputs (from 0.7.14)
 
 [AGENTS.md](../AGENTS.md) lists the current six-file delivery set. Android
@@ -71,7 +97,7 @@ Downloads and `adb pull` it. Lines marked *logcat* come from `adb logcat`.
 | --- | --- | --- | --- |
 | 1 | Full test suite | CI runs it on every pull request (*Full test suite* workflow, with a JDK and the Kotlin compiler). Locally: `python3 -B -m pytest -q -rs tests`. Tests that need the JDK or the Gradle cache skip with a reason instead of failing, so read the skip list. | No failures. Locally, no skips except ones the reason explains (for example, no JDK on that Mac). |
 | 2 | Fresh install | New emulator: install the APK, import an extracted folder, start Original, reach a race. | Race starts at 60 FPS. |
-| 3 | Update | New emulator: install the **previous published** APK, import, race once; install the new APK over it without uninstalling. | Game card still says Ready to play, no first-run setup, race starts. |
+| 3 | Update | New emulator: install the **previous published** APK, import, race once; install the new APK over it without uninstalling. Then repeat with the previous release's non-default choices set before updating: a custom GPU driver, the WiiCompiled 0.9 (Beta) engine, Retro Rewind on launch, 30 FPS Races. | Game card still says Ready to play, no first-run setup, race starts, and every carried-over choice behaves as the release notes say. |
 | 4 | Every new or changed feature | Use the feature for what it's for, not just its menu or its fallback. | The main path works, or the release notes say exactly why it couldn't be tested. |
 | 5 | Custom GPU driver loads | Android: **GPU Driver → Add Driver… → Download a Driver…**, install a Turnip release, start the game. The **GPU Driver** row only shows on Adreno (Snapdragon) phones or once a driver is set, so the emulator and Pixel phones don't show it. If no Adreno phone is at hand and the driver code didn't change since the last release that passed this, record it as carried over (see *When to run them*). | *logcat* `KartPadGpuDriver state=loaded` on the first start. Without an Adreno GPU, graphics then fail and the next start falls back with a "didn't load" message, which is expected. |
 | 6 | Memory across courses | `scripts/android-course-memory-loop.sh <dir> 8`, the same way on the previous release and the candidate. Start test emulators with `-no-audio`. | Compare round 2 with round 8: round 1 is measured before the shared race files load, so it always reads low. Native heap grows no more than on the previous release, and less than about 40 MB; live textures stay flat. |
@@ -173,6 +199,16 @@ reaches players that a release check could have caught.
   build. *When to run them* now says when results carry over.
 - **Wrong player-check call (0.8.9 candidate).** The Android check stops with
   "published app does not exist" without the APK. Check 12 gives the exact calls.
+- **Drivers chosen in 0.8.6–0.8.8 switched on by themselves (0.8.9).** The fix
+  that made custom drivers load also made every driver players had chosen in
+  earlier versions run for the first time, the moment they updated. On a
+  Snapdragon 8 Elite that showed as a striped screen and "Device lost:
+  vkMapMemory failed", and a crash during play didn't fall back to the phone's
+  driver or say a driver was in use. The update check was run with default
+  settings only, the release went straight to Latest even though our own rule
+  said "prerelease" for hardware we can't test, and nobody had run the change
+  on a real Snapdragon. Go/no-go questions 1–3, and check 3 with carried-over
+  choices.
 
 ## Source and scope
 

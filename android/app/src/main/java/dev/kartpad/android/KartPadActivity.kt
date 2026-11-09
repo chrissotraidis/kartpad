@@ -151,7 +151,7 @@ class KartPadActivity : SDLActivity() {
         }
         if (KartPadGpuDriverSettings.fellBackToSystem) {
             android.widget.Toast.makeText(this,
-                "The GPU driver you chose didn't start the game, so KartPad is using the phone's driver. " +
+                "The GPU driver you chose stopped the game, so KartPad is using the phone's driver. " +
                     "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
         // A minute of play means this start worked; see KartPadNativeRuntime.

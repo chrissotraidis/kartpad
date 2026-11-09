@@ -175,11 +175,12 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.9** (build 274) makes custom GPU drivers (Turnip) actually load
-on Snapdragon phones and can download them, fixes the start-up flicker on
-iPhone and iPad, stops memory building up over several cups, adds shake
-sensitivity, and gives iPhone and iPad the same Graphics & Performance page as
-Android. See the [release notes](docs/releases/v0.8.9.md).
+**KartPad 0.8.10** (build 275) fixes custom GPU drivers on Android after
+0.8.9: a driver chosen in an earlier version no longer switches on without
+warning, and a driver that fails during play falls back to the phone's own.
+See the [release notes](docs/releases/v0.8.10.md). 0.8.9 made custom drivers
+load, fixed the start-up flicker on iPhone and iPad, and stopped memory
+building up over several cups ([0.8.9 notes](docs/releases/v0.8.9.md)).
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained

@@ -42,7 +42,7 @@ while building, but doesn't put a separate `KartPad game data` folder in
 Downloads. You can copy those prepared files into a local folder you will keep:
 
 1. In Finder, choose **Go → Go to Folder…** and enter
-   `~/.padmint/games/kartpad-v0.8.9/`. Use the version folder matching the app
+   `~/.padmint/games/kartpad-v0.8.10/`. Use the version folder matching the app
    you built. This is PadMint's usual location; if you set `PADMINT_HOME`, use
    that folder instead of `~/.padmint`.
 2. Copy `private/self-build/disc` to your chosen location. When KartPad asks

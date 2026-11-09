@@ -61,5 +61,9 @@ int main(){
     runtime=(root/'runtime/src/main.cpp').read_text()
     check=runtime.index('if (auroraInfo.initializationStatus != AURORA_INITIALIZATION_SUCCESS)')
     self.assertLess(check,runtime.index('aurora_set_frame_worker_wait_callback',check))
-    self.assertIn('ShutdownProcessTranscript();\n            return 1;',runtime[check:check+1000])
+    failure=runtime[check:check+1800]
+    self.assertIn('ShutdownProcessTranscript();\n            return 1;',failure)
+    if platform=='android':
+     # Android ends the process after the message, so the next Play starts fresh.
+     self.assertIn('RuntimeCrash::RuntimeTerminate(1, "graphics startup rejected");',failure)
 if __name__=='__main__':unittest.main()
