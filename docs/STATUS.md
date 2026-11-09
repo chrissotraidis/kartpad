@@ -17,7 +17,7 @@ do not establish a fix on affected devices.
 
 ## Current status: 8 November 2026
 
-**0.8.10 (build 275):** Android fix after 0.8.9. A GPU driver chosen in 0.8.6–0.8.8 started running the moment players updated to 0.8.9, and on a Snapdragon 8 Elite gave a striped screen and "Device lost: vkMapMemory failed". 0.8.10 tells those players once and offers the phone's driver, falls back after a graphics failure during play with a custom driver, and ends the game process after "Graphics Unavailable" so the next start is clean. See [release notes](releases/v0.8.10.md).
+**0.8.10 (build 275), candidate, not published:** Android fix after 0.8.9. A GPU driver chosen in 0.8.6–0.8.8 started running the moment players updated to 0.8.9, and on a Snapdragon 8 Elite gave a striped screen and "Device lost: vkMapMemory failed". 0.8.10 tells those players once and offers the phone's driver, falls back after a graphics failure during play with a custom driver, and ends the game process after "Graphics Unavailable" so the next start is clean. See [release notes](releases/v0.8.10.md).
 
 **0.8.9 (build 274), 9 November:** custom GPU drivers load again (they never did in 0.8.6–0.8.8) and can be downloaded; start-up flicker fixed on iPhone/iPad and Android (#390); textures and shader modules from earlier courses released (#510); shake sensitivity (#553); Graphics & Performance on iPhone/iPad. See [release notes](releases/v0.8.9.md).
 

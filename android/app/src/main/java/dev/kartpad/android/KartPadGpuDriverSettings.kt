@@ -196,6 +196,8 @@ internal object KartPadGpuDriverSettings {
                 }
             }
             .setNegativeButton("Keep ${driver.name}", null)
+            // A choice is required: dismissing it shouldn't silently keep a driver never seen working.
+            .setCancelable(false)
             .show()
         return true
     }
