@@ -45,6 +45,9 @@ Normal users should follow [installation](INSTALL_ANDROID.md) or
    verify APK metadata and alignment, and repeat derivation to check identical
    bytes. Use a disposable emulator for fresh public-signature install/chooser/
    import checks. Do not uninstall a user's preview for a release-signature test.
+   Then run the [behaviour checks](RELEASE-CHECKLIST.md#behaviour-checks-every-release)
+   on that emulator, including a custom GPU driver reaching `state=loaded` and
+   `scripts/android-course-memory-loop.sh` against the previous release.
 6. On a clean source tree, collect the companion notices/provenance. The Dawn
    release identifies source `13abc3bc8ea2d3c2050f9e77a12d012108ceee24`; fetch only
    its public license and let the packager verify the pinned license hash:
