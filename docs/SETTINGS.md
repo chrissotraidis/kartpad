@@ -1,6 +1,6 @@
 # Mobile settings
 
-Android and iPhone/iPad use the same hierarchy for shared controls. The table describes 0.8.9. Open **•••** (top right) while a game is running.
+Android and iPhone/iPad use the same hierarchy for shared controls. The table describes 0.8.9. When an option is added to one platform, add it to the other in the same release or mark it here as platform-only, with the reason; the release checklist compares both menus against this table. Open **•••** (top right) while a game is running.
 
 | Menu | Options, in order |
 | --- | --- |
