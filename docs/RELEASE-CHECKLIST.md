@@ -10,6 +10,9 @@ are historical evidence, not a checklist for the next build.
 Answer each one in writing in the release PR. A *yes* means doing what it says
 before the release becomes Latest; there are no exceptions for small fixes or
 hotfixes.
+The *Release gate* workflow enforces this: a pull request that changes
+`version.json` fails until its description has a "Go or no-go" section with
+answers 1–4 and `docs/releases/v<version>.md` exists.
 
 1. **Does a change touch hardware we couldn't run it on?** (A Snapdragon GPU, a
    custom driver, a real iPhone or iPad, a TV.) Then publish as a

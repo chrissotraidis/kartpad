@@ -1,0 +1,22 @@
+name: Release gate
+# A pull request that changes version.json is a release. It can't merge until its
+# description answers the go-or-no-go questions in docs/RELEASE-CHECKLIST.md and the
+# version has release notes. 0.8.9 shipped a driver change for hardware nobody had
+# tested, straight to Latest; the checklist already said "prerelease".
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check the release answers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/check-release-gate.py "$BASE_SHA"
