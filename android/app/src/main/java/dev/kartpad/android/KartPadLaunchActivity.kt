@@ -81,8 +81,11 @@ open class KartPadChooserActivity : Activity() {
         )
         KartPadExitDiagnostics.mark(this, pausedProfile() ?: "chooser")
         KartPadGamePack.removeImportedPack(this)
-        // A fatal game error is shown once here; don't start the game straight into it again.
-        if (savedInstanceState == null && showLastFatal()) preferredLaunch.consumed = true
+        // A fatal game error, or the one-time GPU driver notice, is shown here; don't start the
+        // game straight over it.
+        if (savedInstanceState == null && (showLastFatal() || KartPadGpuDriverSettings.showRunsNowNotice(this))) {
+            preferredLaunch.consumed = true
+        }
         rebuildContent()
         if (pausedProfile() == null) checkForUpdate()
     }
