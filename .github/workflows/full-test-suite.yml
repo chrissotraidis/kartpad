@@ -37,7 +37,8 @@ jobs:
             org.jetbrains.kotlin:kotlin-stdlib:2.2.21 \
             org.jetbrains:annotations:13.0 \
             org.jetbrains.kotlin:kotlin-reflect:2.2.0 \
-            org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0; do
+            org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0 \
+            org.json:json:20240303; do
             IFS=: read -r group artifact version <<< "$coordinate"
             dir="$cache/$group/$artifact/$version/ci"
             mkdir -p "$dir"
