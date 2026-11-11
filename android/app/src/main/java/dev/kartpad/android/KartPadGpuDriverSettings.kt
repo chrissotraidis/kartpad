@@ -107,7 +107,9 @@ internal object KartPadGpuDriverSettings {
 
     /** The GPU Driver row in Graphics & Performance. */
     fun menuDetail(context: Context): String {
-        val name = selected(context)?.name ?: return "Phone's driver"
+        // Missing characters on Qualcomm's 512.762 drivers have only been fixed by a custom driver (#104).
+        val name = selected(context)?.name
+            ?: return "Phone's driver. Add Turnip here if characters are missing."
         return if (loadProblem(context) != null) "Phone's driver ($name didn't load)" else name
     }
 

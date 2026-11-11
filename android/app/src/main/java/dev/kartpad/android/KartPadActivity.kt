@@ -815,7 +815,10 @@ class KartPadActivity : SDLActivity() {
                 }
             } else null,
             MenuRow("Graphics Diagnostics…", R.drawable.ic_kartpad_display,
-                detail = "Character fixes for Snapdragon phones") {
+                // Where the GPU Driver row is shown, it is the fix to try before these tests (#104).
+                detail = if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null)
+                    "Character tests for Snapdragon phones. Try GPU Driver first."
+                else "Character fixes for Snapdragon phones") {
                 closeKartPadMenu { KartPadCharacterGraphicsTestDialog.show(this) }
             },
         ), showBack = true,
