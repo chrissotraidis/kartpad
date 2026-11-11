@@ -120,9 +120,12 @@ Multiplayer and **Report a Problem…**. The full menu is in
   tricks and bike wheelies; physical controllers take priority.
 - **Render resolution:** start at **Display → Render Resolution → 1×** and
   raise it if your phone keeps up.
-- **Character graphics:** if characters or tracks look broken, open **Help →
-  Character Graphics Test…** on the game chooser. **Automatic** is right for
-  most phones; the other options are workarounds for specific Snapdragon GPUs.
+- **Character graphics:** if characters are missing or white on a Snapdragon
+  phone, try a Turnip driver first: in a game, **⋯ → Graphics & Performance →
+  GPU Driver → Add Driver…**. It fixed the Galaxy S24 Ultra and Moto G85; see
+  [known issues](KNOWN-ISSUES.md#graphics-android). **Help → Character
+  Graphics Test…** on the game chooser has older workarounds for specific
+  Snapdragon GPUs; **Automatic** is right for most phones.
 - **On launch:** on the chooser, choose whether KartPad asks every time or
   opens Original or Retro Rewind directly.
 

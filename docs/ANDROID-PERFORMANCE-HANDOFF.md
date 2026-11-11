@@ -1,10 +1,110 @@
 # Android performance: where we stand
 
-Updated 31 October 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 11 November 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 11 November: a background game thread could hold up every frame
+
+**Found and fixed on the emulator; no phone has run the fix.** Runtime branch
+`codex/thp-decode-preemption` ([wiicompiled#27](https://github.com/chrissotraidis/wiicompiled/pull/27)).
+
+KartPad runs the game's threads as fibers on one host thread. A game thread
+keeps the processor until it blocks; nothing stops it when the next retrace
+arrives. On the console, a retrace or timer interrupt stops a low-priority
+thread the moment the main thread becomes ready.
+
+Mario Kart Wii's movie player depends on that. The video thumbnails on the
+main menu and the movie behind the single-player menus are decoded on a thread
+below the main thread, and one movie frame is several milliseconds of
+translated code. On a slower phone that is more than the main thread has left
+before its next retrace. The sequence that fits the measurements:
+
+1. The main thread finishes its frame and sleeps until the next retrace.
+2. The decoder starts a movie frame and runs past that retrace.
+3. The main thread starts late and misses a display period.
+4. More movie frames are now due, and the decoder works through them back to
+   back before the main thread runs again.
+
+The menu then stays slow until the scene changes; one emulator window sat at
+four display periods per frame (15 FPS, p50 65 ms). Anything that makes one
+frame late can start it: a notification, the volume panel, coming back from
+the background. Steps 1 to 3 follow from the scheduler; step 4 is inferred
+from the frame times, not traced.
+
+**Evidence**
+
+- Emulator profile of the Retro Rewind main menu on released 0.8.9, Classic
+  engine: translated game code is 43–53% of the game thread's samples, and
+  the THP decoder's block of it (Huffman decode, inverse DCT, row functions)
+  22–29%. The same block is 0.0% of a profile of the Retro WFC start page.
+- The same build at that menu runs at 60 FPS with 5–7 ms of game-thread CPU
+  per frame, then drops to windows of 15–28 FPS (p50 65 ms in one) after the
+  notification shade or a trip to the home screen.
+- [#554](https://github.com/chrissotraidis/kartpad/issues/554)'s Poco F4 logs
+  (Snapdragon 870): races hold 60 FPS at 13–15 ms per frame, while the menu
+  scene between online races runs at p50 65–69 ms with 50–100 ms of
+  game-thread CPU per presented frame. That scene starts the movie player
+  (each entry logs the THP library banner), so it may be this fault. It isn't
+  proven: the lobby shows the same frame times without a movie player.
+
+**Fix.** The game pack calls a preemption point at the start of each THP
+macroblock row (`ApplyRuntimeCallOptions` in the runtime's `abi_bridge.h`;
+`runtime/src/hle/os/os_preemption.cpp`). At most four times a millisecond it
+delivers due sleep timers, alarms, audio DMA and the VI retrace on a private
+register file, then lets the scheduler switch to a higher-priority thread
+that became ready. The decoder carries on when the main thread next sleeps.
+The pack interface fingerprint changes, so app and pack must be built
+together, as the Android APK always is.
+
+**Measurement.** One perf build of the 0.8.10 source (no PGO), preemption
+switched with `adb shell setprop debug.kartpad.guest_preemption 0` (or `1`)
+before each start. Retro Rewind main menu, Classic engine: idle for 80 s, then
+the home screen for 8 s and back for 50 s. "Shared core" pins the game thread
+to one emulator core beside a busy shell loop that takes about half of it, to
+stand in for a slower phone. Windows are the 300-frame `KartPadPerf` samples.
+
+| Core | Preemption | Idle: average FPS | Slowest window | Windows under 55 FPS | Worst window p50 | CPU per frame (median) | After returning: slowest window |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Free | off | 56.4 | 35.9 | 1 of 15 | 24.6 ms | 8.5 ms | 33.9 |
+| Free | on | 58.7 | 42.9 | 2 of 16 | 20.0 ms | 7.1 ms | 52.1 |
+| Shared | off, run 1 | 27.1 | 8.0 | 5 of 7 | 101.7 ms | 14.8 ms | 37.1 |
+| Shared | off, run 2 | 43.2 | 25.0 | 3 of 12 | 40.4 ms | 6.2 ms | 57.9 |
+| Shared | on, run 1 | 59.9 | 59.3 | 0 of 16 | 16.7 ms | 4.8 ms | 49.8 |
+| Shared | on, run 2 | 59.5 | 56.0 | 0 of 16 | 16.7 ms | 4.9 ms | 59.8 |
+
+With preemption off the menu is unstable: one shared-core run averaged 27 FPS
+and the other 43. With it on, both held 60. The thumbnails still play, the
+single-player menu's background movie plays, and a Retro Rewind Grand Prix
+race started from that menu and returned to it without a fault.
+
+**Not checked:** any phone; the WiiCompiled 0.9 (Beta) engine in play (its
+runtime builds and links with the change); Original Mario Kart Wii's menus
+(same game code, not run separately); iPhone and iPad, whose runtime doesn't
+have the change yet. More than two runs per row would be needed to put a
+number on the gain.
+
+**What this does not explain.** #554's slow Retro WFC lobby is the globe
+scene, which has no movie player. On the emulator the Retro WFC start page
+costs 5–9 ms of game-thread CPU per frame against 2–3 ms for the title
+screen. By call chain (measured on the build with the fix), 64% of that is
+the main thread, 26% the game's sound thread (`nw4r::snd` `SoundThreadFunc`),
+about 3% the AX audio callback and under 1% network processing
+(`DWC_ProcessFriendsMatch`); about 6% has a broken call chain. Sound work
+follows real time, so its share of each frame grows when frames get longer.
+On the Poco F4 the same scene costs 9–15 ms per frame while it holds 60 FPS,
+so it is close to the limit there, but that doesn't account for 40–100 ms per
+frame.
+
+Online, the main loop also sleeps for about 0.5 ms twice a frame
+(`RKSystem::Run`) so lower-priority threads can run, and KartPad lets
+whichever thread takes over run until it blocks. A network thread that is
+busy in a full room would then delay every frame the way the movie decoder
+did. That is the first thing to check with a profile from a phone in a room,
+or with a second client on the local WFC service. Other long computations on
+low-priority game threads have the same exposure and can take the same hook.
 
 ## 31 October: the Android beta engine ran on one core
 
