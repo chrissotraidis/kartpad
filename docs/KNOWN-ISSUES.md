@@ -1,6 +1,6 @@
 # KartPad known issues
 
-Current for **KartPad 0.8.8** (7 November 2026). Each item links its GitHub
+Current for **KartPad 0.8.10** (9 November 2026). Each item links its GitHub
 issue, where updates appear first. If your problem isn't here, see the
 [reporting guide](REPORTING.md). The September evidence register is kept in
 the [archive](archive/known-issues-through-2026-09.md).
@@ -46,54 +46,46 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Graphics (Android)
 
-- **Snapdragon 8 Gen 3 and older Adreno GPUs** (Adreno 6xx and 7xx, for example
-  Galaxy S24 Ultra and Moto G85): characters missing, white or washed out while
-  tracks look fine. **Help → Character Graphics Test…** has workarounds that
-  help on some phones; there's no working automatic fix yet. [#104](https://github.com/chrissotraidis/kartpad/issues/104), [#301](https://github.com/chrissotraidis/kartpad/issues/301)
-  From 0.7.12, **Report a Problem** logs include a one-line draw self-check
-  that tells us whether this phone draws characters differently from the
-  CPU path, without changing anything on screen. On the Galaxy S24 Ultra it
-  showed that the vertex path isn't the cause, and 0.7.13 showed the bone
-  matrix lookup alone isn't either: on these GPUs only both workarounds
-  together draw bodies, and then white. A real fix needs a renderer change;
-  you don't need to send more logs for this.
-  0.8.0 tried one: on these GPUs **Automatic** reads the game's matrices the
-  standard way instead of through Dawn's integer rewrite, together with the
-  character fix. On the Galaxy S24 Ultra (Adreno 750) the characters are still
-  invisible with it; the rest of the race draws normally at 60 FPS. On some
-  Adreno phones that drew characters before, it hid them, so 0.8.1
-  returns **Automatic** to 0.7.15's behaviour; the native-uniforms path stays
-  a Character Graphics Test option. 0.8.1 also adds **Help → Character Graphics Test → Experimental: matrix rows
-  like Dolphin**, which reads the bone matrices as plain rows, the way Dolphin
-  does. On the Galaxy S24 Ultra it doesn't: 0.8.1's log shows it active and
-  the riders still invisible (13 October). A 0.8.1 log from the Moto G85
-  ([#301](https://github.com/chrissotraidis/kartpad/issues/301)) still has
-  missing bodies with that option off, so it doesn't test matrix rows on that
-  phone. A OnePlus tablet (OPD2403, Android 16, 0.8.1) shows faces with the
-  bodies missing after the in-app graphics options were tried
-  ([#472](https://github.com/chrissotraidis/kartpad/issues/472)); whether that
-  is the same failure as the S24 isn't known yet. **Experimental: bone index
-  per vertex** shipped in 0.8.4 and passes each vertex's bone index to the GPU
-  directly. It drew characters on the Android emulator, but the
-  [S24 report](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6292522198)
-  and [OnePlus test](https://github.com/chrissotraidis/kartpad/issues/472#issuecomment-6294375665)
-  still show missing bodies. On the OnePlus, distant bodies appear and vanish
-  as they approach; that is a lead for the model-drawing investigation, not
-  proof of a shared cause. A Honor 400 Smart (Snapdragon 6s Gen 3,
-  [#492](https://github.com/chrissotraidis/kartpad/issues/492)) shows only floating
-  heads on 0.8.3; its requested bone-index test has no result yet.
-  In 0.8.6 the character options are under **⋯ → Graphics & Performance →
-  Graphics Diagnostics…**. That page also offers **GPU Driver** on supported
-  Snapdragon devices. **Custom drivers never actually loaded in 0.8.6–0.8.8:**
-  KartPad links its game library with a dlopen wrapper that broke the step
-  adrenotools uses to reach Android's linker, so every chosen driver fell back
-  to the phone's own one without saying so (a Poco F6 log shows
-  `state=fallback reason=open_failed`). The S24 reporter's
-  [earlier Turnip attempt](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324)
-  therefore didn't test Turnip. The fix is on main for the next version: on the
-  arm64 emulator a Turnip package now loads on both graphics engines, and the
-  menu, the driver list and problem reports say when a chosen driver didn't
-  load and why. Whether Turnip fixes the missing bodies is untested on a phone.
+- **Characters missing, white or washed out on Snapdragon phones**, while
+  tracks look fine; often only a face, eyes or a moustache draws. Every
+  affected phone that has sent a log uses Qualcomm's own graphics driver from
+  the **512.762** series: the Galaxy S24 and S24 Ultra and a OnePlus tablet
+  (OPD2403), all Adreno 750, and the Moto G85 (Adreno 619). The two phones
+  seen on the older 512.502 driver (Adreno 640 and 650) don't have the
+  problem, and Adreno 8xx draws characters with **Automatic**.
+  **A Turnip driver fixes it on both phones that have tried one.** The Galaxy
+  S24 Ultra draws every character on both graphics engines with Turnip v30
+  (Mr. Purple's PurpleVK build), and the Moto G85 does on Classic with an
+  AdrenoTools driver. Custom drivers really load from 0.8.9 (0.8.6 to 0.8.8
+  quietly used the phone's driver whatever you chose), and from 0.8.10 a
+  driver that freezes the game or breaks the picture is switched off at the
+  next start, so trying one is safe:
+  1. **⋯ → Graphics & Performance → GPU Driver → Add Driver…**, then
+     **Download a Driver…** for a recent Turnip release, or **Install from a
+     .zip File…** for a package you downloaded yourself.
+  2. Restart the game. The **GPU Driver** row says whether the driver loaded.
+
+  Not every Turnip build works on every phone. On the S24 Ultra, Mainline
+  Turnip v32 froze the game twice and KartPad went back to the phone's driver.
+  On the Moto G85 the WiiCompiled 0.9 (Beta) engine shows black screens with
+  either driver, so stay on **Classic** there. Turnip can also be slower than
+  the phone's driver (a Poco F4 lost frame rate with it). The Galaxy S24,
+  OnePlus tablet and Honor 400 Smart reports haven't said yet whether a
+  driver helps.
+
+  The **Character Graphics Test** options under **Graphics Diagnostics…** don't
+  fix this on the phone's own driver. The S24 Ultra tried each of them between
+  0.7.3 and 0.8.4 (repacked vertices, native uniform buffers, matrix rows like
+  Dolphin, a bone index per vertex); the history is in
+  [#104](https://github.com/chrissotraidis/kartpad/issues/104). A different
+  driver draws the same frames correctly, so the fault is in how the 512.762
+  driver runs KartPad's character shaders. What exactly it trips on isn't
+  known, and finding it needs one of these phones.
+  [#104](https://github.com/chrissotraidis/kartpad/issues/104),
+  [#301](https://github.com/chrissotraidis/kartpad/issues/301),
+  [#472](https://github.com/chrissotraidis/kartpad/issues/472),
+  [#492](https://github.com/chrissotraidis/kartpad/issues/492),
+  [#552](https://github.com/chrissotraidis/kartpad/issues/552)
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
@@ -153,14 +145,28 @@ the [archive](archive/known-issues-through-2026-09.md).
   the phone raises its CPU speed when frames run long; on the same Pixel the
   race then held 60 FPS at 3×. On 0.8.6, use **⋯ → Graphics & Performance →
   Graphics Engine → Classic**.
-- **Android: slow motion after several cups in a row, gone after restarting
-  KartPad.** KartPad keeps memory from each new course it loads and only gives
-  it back when the app restarts. A Galaxy S10 Lite log on 0.8.7 went from about
-  630 MB to 1.8 GB over three cups, rising at each new course, and Android had
-  closed KartPad for low memory in earlier sessions. Replaying the same course
-  doesn't add more. Which cache holds it is still being narrowed down. Until
-  it's fixed, close and reopen KartPad every two or three cups.
-  [#510](https://github.com/chrissotraidis/kartpad/issues/510)
+- **Android: slow motion after several cups in a row.** Partly fixed in
+  0.8.9. KartPad kept the textures and shaders of every course until it was
+  restarted (a Galaxy S10 Lite grew from about 650 MB to 1.1 GB over two
+  cups); it now releases them. On 0.8.10 the same phone played four cups in a
+  row cleanly, then slowed again after one cup was restarted several times,
+  with memory still at 650 MB. Its log shows the game's one busy thread
+  working 88–95% of the time even while it holds 60 FPS (about 15.6 ms of
+  each 16.7 ms frame), so anything extra, such as the phone warming up, drops
+  it below 60 FPS and the race runs in slow motion. On a phone this close to the
+  limit, **⋯ → Graphics & Performance → 30 FPS Races** keeps races at normal
+  speed. [#510](https://github.com/chrissotraidis/kartpad/issues/510)
+- **Android: menus drop to 15–30 FPS, often after something interrupts the
+  game** (a notification, the volume panel, switching apps), and stay slow
+  until the next race. Cause found for the menus that play video thumbnails
+  (the main menu and the single-player menus): the game decodes those videos
+  on a background thread, and KartPad let that thread finish a whole video
+  frame before the game's own frame could start. Once one game frame started
+  late, the video fell behind and kept the following frames late too. A fix
+  exists in draft [#564](https://github.com/chrissotraidis/kartpad/pull/564);
+  it isn't in any release and has been measured on the Android emulator only. The slow Retro WFC lobby in
+  [#554](https://github.com/chrissotraidis/kartpad/issues/554) plays no video
+  and isn't explained yet. Races aren't affected.
 - **Honor Magic 8 Lite (Snapdragon 6 Gen 4):** much slower since the latest
   update. 0.8.3 cuts the CPU time of the vertex repack both logs show busy
   (27–34% less in large test cases, same output), but there's no phone
