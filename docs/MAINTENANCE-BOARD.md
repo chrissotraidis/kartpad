@@ -1,5 +1,98 @@
 # Maintenance work and test board
 
+## 11 November focus pass (after 0.8.10)
+
+All 24 open issues were re-read and the logs attached to #104, #301, #472,
+#510, #552 and #554 were analysed again. Profiling and the fix below ran on
+the arm64 Android emulator (`KartPad_088_Acceptance_20261107`, started
+read-only, so that AVD is unchanged). Nothing here is phone evidence.
+Branches: `codex/focus-pass-20261111` here and `codex/thp-decode-preemption`
+in the Android runtime.
+
+**Findings**
+
+- **Snapdragon characters are a Qualcomm 512.762 driver fault.** Every affected
+  log is on that driver series: S24 Ultra (512.762.41, then 512.762.1 after an
+  Android update), S24 (512.762.1), OnePlus OPD2403 (512.762.41) and Moto G85
+  (512.762.45). The Poco F4 and S10 Lite, on 512.502.0, have no character
+  problem. Turnip draws every character on the S24 Ultra on both engines and
+  on the Moto G85 on Classic. The driver is the fault, and a custom driver is
+  the fix players can use today. [KNOWN-ISSUES](KNOWN-ISSUES.md#graphics-android)
+  now leads with those steps, and on Snapdragon phones the GPU Driver and
+  Graphics Diagnostics menu rows point to them.
+- **A low-priority game thread could hold up every frame.** Game threads are
+  fibers on one host thread and were never preempted, so the movie decoder
+  behind the main and single-player menus ran past the main thread's retrace.
+  On the emulator the main menu fell to 15–28 FPS after any hitch and held 60
+  with a preemption point in the decoder
+  ([measurements](ANDROID-PERFORMANCE-HANDOFF.md#11-november-a-background-game-thread-could-hold-up-every-frame)).
+- **#554 is narrowed, not solved.** Every slow sample is in an online menu
+  scene; races on the same phone hold 60 FPS at 13–15 ms of game-thread CPU.
+  Slow windows sit at four display periods per frame (p50 65–69 ms) with
+  40–100 ms of game-thread CPU per frame, in both the Retro WFC lobby (the
+  globe scene) and the menu between races. The menu between races starts the
+  movie player, so the finding above may cover it; the lobby has no movie
+  player and isn't explained. On the emulator the Retro WFC start page costs
+  5–9 ms per frame: 64% the main thread, about 30% the game's sound thread and
+  audio callbacks, under 1% network processing. The reporter's trigger (a
+  notification, the volume panel, KartPad's own menu) is a pause and resume
+  of the game. Their accounts differ on whether restarting KartPad is enough
+  or only a reboot helps.
+- **#510's phone has no headroom.** In the 0.8.10 log the game thread is
+  88–95% busy at 15.6 ms per frame while it still holds 60 FPS, and memory
+  stays near 650 MB, so 0.8.9's cache fix worked and what remains is CPU
+  headroom. 30 FPS Races is the setting for that phone today.
+
+**Changed on the branches**
+
+- Runtime: a preemption point at each THP macroblock row
+  ([wiicompiled#27](https://github.com/chrissotraidis/wiicompiled/pull/27)).
+  The pack interface fingerprint changes. Both Android runtimes build and
+  export the new entry point. KartPad's gitlink points at the pull request's
+  head until it merges.
+- App: on Snapdragon phones the GPU Driver row reads "Phone's driver. Add
+  Turnip here if characters are missing." and the Graphics Diagnostics row
+  reads "Character tests for Snapdragon phones. Try GPU Driver first." Other
+  phones keep the old Graphics Diagnostics text.
+- Docs: known issues brought up to 0.8.10; the performance handoff has the
+  profile, the fix and its limits.
+
+**Open issues by state**
+
+Confidence is the chance the next step closes the issue without a device in
+hand.
+
+| Issue | State | Next step | Confidence |
+| --- | --- | --- | --- |
+| #104 #301 #472 #492 #552 Snapdragon characters | Workaround confirmed on two phones (Turnip). Cause is the 512.762 driver | Ask #552, #472 and #492 for a Turnip result. A real fix needs a 512.762 phone or a captured failing draw | High for the workaround; low for a renderer fix (six blind attempts failed) |
+| #554 slow online menus | Narrowed to online menu scenes. The preemption fix may cover the menu between races; the lobby is unexplained | Ship the fix, then ask for one log. For the lobby, profile a phone in a room or a second local client | Low to medium until a phone runs the fix |
+| #510 slow motion after cups | Memory fixed in 0.8.9. Phone is CPU-bound with no headroom | Recommend 30 FPS Races; game-thread speed work in #339 | Medium: 30 FPS Races should hold; 60 FPS needs the #339 work |
+| #339 performance | Game thread is the limit. New: no preemption of background game threads. The Pixel 10a reporter's online course-select stutter (8 November) is in the same menu scene; untested | Phone check of the preemption fix; then GX off the game thread | Medium |
+| #537 Retro WFC "disc error" kick | Waiting for a 0.8.8+ log since 29 October | Close if silent | Unknown without the log |
+| #539 iPhone folder import inside LiveContainer | Waiting for the reporter since 30 October | Close if silent; LiveContainer isn't a supported way to run KartPad | Low |
+| #476 Mac Wii Remote extensions | Runtime correction unreleased and untested on a controller | Needs a physical Wii Remote on a Mac | Low |
+| #475 Mac PadMint certificate | Waiting; planned to close around 14 November | Close if silent | n/a |
+| #304 PowerVR | Waiting for a 0.8.8+ log | Close if silent | Low |
+| #127 Mac two-player rendering | Fix shipped in 0.4.17, never confirmed; no report since September | Run two players on a current Mac build and close or reopen with evidence | High that it is already fixed |
+| #234 identity transfer | Design work, not started | Backlog | n/a |
+| #295 Retro ghosts | Draft #375 | Replay coverage and iPhone check | Medium |
+| #534 #531 #449 #300 #203 #100 #91 #90 | Requests | No change | n/a |
+
+**Not done**
+
+- No phone has run the preemption fix. Sharik7's Poco F4 (#554) is the test.
+- The iPhone and iPad runtime has the same scheduler and doesn't have the
+  change. Those devices are faster, so nobody has reported it there.
+- The Retro WFC lobby wasn't profiled in a room: joining public rooms from a
+  test client isn't something to do on the live service, and the local WFC
+  service needs a second client.
+- `scripts/ios_release.py` still reads the 0.5.3 build record, so the
+  repository's IPA audit fails on current builds while PadMint's passes. It
+  needs moving to the PadMint release layout or deleting.
+- The primary checkout at `/Users/chrissotraidis/GitHub/kartpad` is on
+  `codex/candidate-cpu-handoff-record`, about 1,100 commits behind main, with
+  103 modified or untracked files from September. It wasn't touched.
+
 ## 8 November issue loop (after 0.8.8)
 
 All 26 open issues were re-read, new logs were analysed, and the changes below
