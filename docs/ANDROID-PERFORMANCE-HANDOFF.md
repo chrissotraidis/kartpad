@@ -8,8 +8,12 @@ The September Pixel experiments are in the
 
 ## 11 November: a background game thread could hold up every frame
 
-**Found and fixed on the emulator; no phone has run the fix.** Runtime branch
-`codex/thp-decode-preemption` ([wiicompiled#27](https://github.com/chrissotraidis/wiicompiled/pull/27)).
+**Found and fixed on the emulator; no phone has run the fix, and it isn't
+merged.** Runtime branch `codex/thp-decode-preemption`
+([wiicompiled#27](https://github.com/chrissotraidis/wiicompiled/pull/27));
+KartPad's pin is in draft [#564](https://github.com/chrissotraidis/kartpad/pull/564).
+The work is paused; the [maintenance board](MAINTENANCE-BOARD.md#picking-this-up)
+says how to pick it up.
 
 KartPad runs the game's threads as fibers on one host thread. A game thread
 keeps the processor until it blocks; nothing stops it when the next retrace
