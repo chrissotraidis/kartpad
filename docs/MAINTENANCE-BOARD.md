@@ -6,8 +6,14 @@ All 24 open issues were re-read and the logs attached to #104, #301, #472,
 #510, #552 and #554 were analysed again. Profiling and the fix below ran on
 the arm64 Android emulator (`KartPad_088_Acceptance_20261107`, started
 read-only, so that AVD is unchanged). Nothing here is phone evidence.
-Branches: `codex/focus-pass-20261111` here and `codex/thp-decode-preemption`
-in the Android runtime.
+
+**Status: paused on 11 November.** The documentation from this pass is on
+main. The code is not: the runtime change is open as
+[wiicompiled#27](https://github.com/chrissotraidis/wiicompiled/pull/27)
+(branch `codex/thp-decode-preemption`) and the pin and menu text are in draft
+[#564](https://github.com/chrissotraidis/kartpad/pull/564) (branch
+`codex/focus-pass-20261111`). [Picking this up](#picking-this-up) has the
+order of work and the commands.
 
 **Findings**
 
@@ -18,8 +24,8 @@ in the Android runtime.
   problem. Turnip draws every character on the S24 Ultra on both engines and
   on the Moto G85 on Classic. The driver is the fault, and a custom driver is
   the fix players can use today. [KNOWN-ISSUES](KNOWN-ISSUES.md#graphics-android)
-  now leads with those steps, and on Snapdragon phones the GPU Driver and
-  Graphics Diagnostics menu rows point to them.
+  now leads with those steps. Menu text that points Snapdragon players to
+  the GPU Driver row is in #564.
 - **A low-priority game thread could hold up every frame.** Game threads are
   fibers on one host thread and were never preempted, so the movie decoder
   behind the main and single-player menus ran past the main thread's retrace.
@@ -43,7 +49,7 @@ in the Android runtime.
   stays near 650 MB, so 0.8.9's cache fix worked and what remains is CPU
   headroom. 30 FPS Races is the setting for that phone today.
 
-**Changed on the branches**
+**Changed on the branches (not merged)**
 
 - Runtime: a preemption point at each THP macroblock row
   ([wiicompiled#27](https://github.com/chrissotraidis/wiicompiled/pull/27)).
@@ -54,8 +60,8 @@ in the Android runtime.
   Turnip here if characters are missing." and the Graphics Diagnostics row
   reads "Character tests for Snapdragon phones. Try GPU Driver first." Other
   phones keep the old Graphics Diagnostics text.
-- Docs: known issues brought up to 0.8.10; the performance handoff has the
-  profile, the fix and its limits.
+- Docs (merged): known issues brought up to 0.8.10; the performance handoff
+  has the profile, the fix and its limits.
 
 **Open issues by state**
 
@@ -92,6 +98,79 @@ hand.
 - The primary checkout at `/Users/chrissotraidis/GitHub/kartpad` is on
   `codex/candidate-cpu-handoff-record`, about 1,100 commits behind main, with
   103 modified or untracked files from September. It wasn't touched.
+
+### Picking this up
+
+In this order. Each step stands alone, so stop after any of them.
+
+1. **Run the fix on a phone.** The owner's Pixel was attached over adb during
+   this pass and was left alone. Build a release-signed APK from #564 with
+   its own game pack (the pack interface fingerprint changed, so the 0.8.10
+   pack won't load), install it over the existing app so data is kept, and
+   compare with `adb shell setprop debug.kartpad.guest_preemption 0` against
+   `1`, set before each start. Sit on the Retro Rewind main menu for a minute,
+   pull down the notification shade, and read the `KartPadPerf` and
+   `KartPadCPU` lines. A fast phone may not show the fault; the Poco F4 in
+   #554 is the phone that does.
+2. **Merge.** Merge wiicompiled#27, move #564's gitlink from the pull
+   request's head (`7e5d308`) to the merge commit, then merge #564. Neither
+   needs a release by itself.
+3. **Ask the reporters once.** After a release has the fix: #554 for one log
+   from the menu between online races. Now, without waiting: #552, #472 and
+   #492 for a Turnip result. Nothing was posted on any issue in this pass.
+4. **#554's lobby.** Profile the game thread in a full room. The first
+   suspect is the network thread running past the main thread's 0.5 ms
+   sleeps, the same exposure the movie decoder had. A phone in a room, or a
+   second client on the local WFC service
+   (`scripts/test-android-local-wfc-server.sh`), is needed; a lone client
+   on the Retro WFC start page doesn't show it.
+5. **iPhone and iPad.** Carry the preemption point to `vendor/runtimes/ios`
+   once the Android change has run on a phone.
+6. **Housekeeping.** Check #127 with two players on a current Mac build and
+   close it; close #475, #537, #539 and #304 if still silent; fix or delete
+   `scripts/ios_release.py`; decide what to do with the stale primary
+   checkout.
+
+**Rebuilding the test build.** In a worktree of #564 with submodules
+initialised and `.android-bootstrap` linked from a checkout that has it:
+
+```sh
+export KARTPAD_DISCIO_JNI_ROOT=<a built dolphin-android-discio-jni>
+export KP_TRANSLATION=<private/self-build/retro-rewind/translation>
+tools/android-perf/build-variant.sh preempt   # about 15 minutes
+```
+
+The build refuses to start unless KartPad's gitlink matches the runtime
+submodule's HEAD, so stage the gitlink after any runtime commit. The perf app
+is debug-signed: on an emulator, move `files` and `shared_prefs` aside as
+root, uninstall, install, move them back and `chown` them, then push the
+pack as `tools/android-perf/deploy.sh` does. Start the acceptance AVD with
+`-read-only` so it stays as it was.
+
+**Repeating the measurement.** Start Retro Rewind, press A twice to reach the
+main menu, clear logcat and wait 80 s. To stand in for a slower phone, find
+the game thread (the thread that logs `KartPadPerf`) and make it share a
+core:
+
+```sh
+adb shell "taskset -p 8 <tid>"
+adb shell "taskset 8 sh -c 'while :; do :; done' &"
+```
+
+Without the fix the result varies a lot between runs (27 and 43 FPS in two
+tries), so take several. To profile:
+`simpleperf record -t <tid> -e cpu-clock -f 2000 --duration 15 --call-graph fp`,
+with the unstripped pack from `build/perf/v-preempt/pack-work/*/build/` and
+`libmain.unstripped.so` in the symfs
+([profiling notes](../tools/android-perf/README.md#profiling-a-running-race)).
+The THP decoder is `func_801B3BAC` and the functions it calls up to
+`func_801B6858`; the video decode thread's loop is `func_805529A8`.
+
+**Scratch that won't survive.** Reporter logs, emulator screenshots and
+profiles from this pass were in `/tmp/kartpad-focus`; the logs can be
+downloaded again from the issues. The worktree
+`/Users/chrissotraidis/.codex/worktrees/kartpad-focus-1111` holds #564's
+branch and about 7 GB of ignored build output, including the test build.
 
 ## 8 November issue loop (after 0.8.8)
 

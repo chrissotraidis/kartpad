@@ -163,8 +163,8 @@ the [archive](archive/known-issues-through-2026-09.md).
   on a background thread, and KartPad let that thread finish a whole video
   frame before the game's own frame could start. Once one game frame started
   late, the video fell behind and kept the following frames late too. A fix
-  is prepared for the next version; it has been measured on the Android
-  emulator only. The slow Retro WFC lobby in
+  exists in draft [#564](https://github.com/chrissotraidis/kartpad/pull/564);
+  it isn't in any release and has been measured on the Android emulator only. The slow Retro WFC lobby in
   [#554](https://github.com/chrissotraidis/kartpad/issues/554) plays no video
   and isn't explained yet. Races aren't affected.
 - **Honor Magic 8 Lite (Snapdragon 6 Gen 4):** much slower since the latest
