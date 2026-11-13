@@ -4,12 +4,14 @@ Android and iPhone/iPad use the same hierarchy for shared controls. The table de
 
 | Menu | Options, in order |
 | --- | --- |
-| Main | Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance; Sound; Game Data & Saves; Report a Problem |
+| Main | Show Touch Controls (iPhone/iPad, only while a controller has hidden them); Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance; Sound; Game Data & Saves; Report a Problem |
 | Multiplayer | Local Split-Screen; Controller Setup; Retro WFC Friend Rooms (Retro Rewind only); Country; Experimental Server Settings |
-| Controls | Controller Button Mapping; Touch Control Settings; Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
+| Controls | Controller Button Mapping; Touch Control Settings; Auto-hide Touch Controls with Controller (iPhone/iPad); Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
 | Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; Disable Bloom; App Icon |
 | Graphics & Performance | Graphics Engine (Android); 30 FPS Races; Simpler Computer Karts; GPU Driver (Android, Snapdragon); Graphics Diagnostics (Android) |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Retro Rewind Music; Import from Extracted Folder; Import or Reimport Wii Disc Image; Remove Stored Game Data |
+
+On iPhone and iPad the touch controls hide while a controller is Player 1, whom touch shares; a controller on Player 2–4 does not hide them. **Show Touch Controls** brings them back with the controller still connected and turns **Auto-hide Touch Controls with Controller** off until it is turned on again; that setting is the same one as the **Hide on controller** switch in Touch Control Settings. Android keeps only its own switch for now.
 
 On Android, on/off settings show a switch and a one-line description, and tapping one flips it without leaving the menu; settings with choices show the current choice under their name. From 0.8.9 iPhone and iPad have Graphics & Performance too, with 30 FPS Races and Simpler Computer Karts; the graphics engine choice, GPU Driver and Graphics Diagnostics stay Android-only because they have no iPhone/iPad equivalent. The Mac has its own layout: the menu bar and **KartPad → Settings…** (Graphics, Audio, Controllers, Game & Data, Advanced). It has no touch, motion or Android-only options, and it has no in-app save backup, ghost transfer or soundtrack import. On Mac, **Data → Show KartPad Data** opens `~/Library/Application Support/KartPad`, where settings and Original saves live, and soundtrack files go in Retro Rewind's `MyStuff` folder (see below and the [Mac install guide](INSTALL_MACOS.md)). Native file pickers and Retro Rewind installation workflows differ between platforms.
 

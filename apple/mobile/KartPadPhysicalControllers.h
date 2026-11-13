@@ -7,6 +7,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// Posted on the main thread after a reconcile changes which controller holds a
+// player slot.
+extern NSNotificationName const KartPadPhysicalControllersDidChangeNotification;
+
 struct KartPadPhysicalControllerSample {
   SunPadPhysicalControllerButton faceButtons =
       static_cast<SunPadPhysicalControllerButton>(0);
@@ -39,6 +43,9 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
 - (BOOL)isPlayerConnected:(NSUInteger)player;
 - (NSArray<NSString *> *)playerDescriptions;
 - (NSUInteger)connectedControllerCount;
+// Whether player 1, whom the touch controls share, has a controller. A pad in
+// a later slot does not count. Main thread.
+- (BOOL)touchPlayerHasController;
 
 @end
 

@@ -123,6 +123,9 @@ void ClearControllerHandlers(GCController *controller) {
 
 }  // namespace
 
+NSNotificationName const KartPadPhysicalControllersDidChangeNotification =
+    @"KartPadPhysicalControllersDidChangeNotification";
+
 SunPadInputState KartPadAdaptPhysicalControllerSample(
     const KartPadPhysicalControllerSample& sample,
     const SunPadControllerButtonMapping mapping) noexcept {
@@ -333,6 +336,12 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
                 controller.vendorName != nil ? controller.vendorName : @"unknown");
     }
   }
+
+  if (!result.removed.empty() || !result.assigned.empty()) {
+    [NSNotificationCenter.defaultCenter
+        postNotificationName:KartPadPhysicalControllersDidChangeNotification
+                      object:self];
+  }
 }
 
 - (BOOL)consumePlayer:(NSUInteger)player state:(SunPadInputState *)state {
@@ -371,6 +380,10 @@ SunPadInputState KartPadAdaptPhysicalControllerSample(
     if (state.connected != 0) ++count;
   }
   return count;
+}
+
+- (BOOL)touchPlayerHasController {
+  return _slots.InstanceAt(0) != 0;
 }
 
 @end

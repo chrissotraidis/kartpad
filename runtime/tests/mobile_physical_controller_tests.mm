@@ -94,6 +94,42 @@ void TestMicroProfileController() {
   [bridge reconcileControllerList:@[]];
 }
 
+// Touch controls share player 1, so only a controller in player 1's slot makes
+// them give way, and the bridge announces each slot change.
+void TestTouchPlayerOwnership() {
+  KartPadPhysicalControllers *bridge = [KartPadPhysicalControllers new];
+  __block unsigned changes = 0;
+  id observer = [NSNotificationCenter.defaultCenter
+      addObserverForName:KartPadPhysicalControllersDidChangeNotification
+                  object:bridge
+                   queue:nil
+              usingBlock:^(NSNotification *note) { (void)note; ++changes; }];
+  GCController *first = [GCController controllerWithExtendedGamepad];
+  GCController *second = [GCController controllerWithExtendedGamepad];
+  Require(![bridge touchPlayerHasController], "no controller should leave touch visible");
+  [bridge reconcileControllerList:@[first]];
+  Require([bridge touchPlayerHasController] && changes == 1,
+          "a connected controller must take player 1 and announce it");
+  [bridge reconcileControllerList:@[first]];
+  Require(changes == 1, "an unchanged reconcile must not announce a change");
+  [bridge reconcileControllerList:@[first, second]];
+  [bridge reconcileControllerList:@[first]];
+  Require([bridge touchPlayerHasController] && changes == 3,
+          "removing player 2 must keep player 1's controller");
+  [bridge reconcileControllerList:@[first, second]];
+  [bridge reconcileControllerList:@[second]];
+  Require(![bridge touchPlayerHasController],
+          "a controller left on player 2 must not take the touch player's place");
+  [bridge reconcileControllerList:@[]];
+  GCController *joyCon = [GCController controllerWithMicroGamepad];
+  [bridge reconcileControllerList:@[joyCon]];
+  Require([bridge touchPlayerHasController],
+          "a sideways Joy-Con on player 1 is a complete controller");
+  [bridge reconcileControllerList:@[]];
+  Require(![bridge touchPlayerHasController], "disconnect must give touch back");
+  [NSNotificationCenter.defaultCenter removeObserver:observer];
+}
+
 void TestSharedAndTriggerMapping() {
   auto defaults=SunPadDefaultControllerButtonMapping();
   auto shared=SunPadControllerButtonMappingBySharing(defaults, SunPadPhysicalControllerButtonRightShoulder, SunPadButtonDpadUp);
@@ -167,6 +203,7 @@ int main() {
       TestSharedAndTriggerMapping();
       TestRegistrationAndReconnect();
       TestMicroProfileController();
+      TestTouchPlayerOwnership();
       std::cout << "KartPad mobile physical-controller bridge passed\n";
       return EXIT_SUCCESS;
     } catch (const std::exception& error) {
