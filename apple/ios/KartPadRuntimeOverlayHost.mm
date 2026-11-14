@@ -113,6 +113,8 @@ extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std
 @property(nonatomic, assign) BOOL kartPadEditorUITestStarted;
 @property(nonatomic, weak) UIButton *kartPadVisibilityButton;
 @property(nonatomic, copy) NSString *kartPadSelectedControlIdentifier;
+// What -setTouchControlsHidden:animated: last applied; SunPad's flag is private.
+@property(nonatomic, assign) BOOL kartPadTouchControlsHidden;
 - (void)resetKartPadControlAppearance;
 @end
 
@@ -124,6 +126,7 @@ extern "C" float KartPadMobileFpsOverlayScale(){return gKartPadFpsScale.load(std
 - (void)stickChanged:(SunPadStickView *)stick x:(float)x y:(float)y;
 - (void)rPressureChanged:(uint8_t)pressure fullPress:(BOOL)fullPress;
 - (void)clearTouchInput;
+- (void)applyControllerVisibility;
 - (void)buttonDown:(UIButton *)button;
 - (void)buttonUp:(UIButton *)button;
 - (UIView *)settingsRowWithTitle:(NSString *)title control:(UIView *)control;
@@ -2260,7 +2263,17 @@ static void KartPadApplySoundLevels(BOOL persist) {
 - (instancetype)initWithFrame:(CGRect)frame {
   // Seed untouched layouts only; custom arrangements remain user-owned.
   KartPadSeedTouchLayoutDefaults(NO);
-  return [super initWithFrame:frame];
+  if ((self = [super initWithFrame:frame])) {
+    // The controller bridge reconciles on the same GameController
+    // notifications SunPad's overlay observes, in no fixed order, so auto-hide
+    // is decided again once the bridge's slots are current. SunPad's -dealloc
+    // removes every observer of self.
+    [NSNotificationCenter.defaultCenter addObserver:self
+        selector:@selector(applyControllerVisibility)
+            name:KartPadPhysicalControllersDidChangeNotification
+          object:nil];
+  }
+  return self;
 }
 
 - (SunPadStickView *)makeStick {
@@ -2443,6 +2456,8 @@ static void KartPadApplySoundLevels(BOOL persist) {
   [self clearTouchInput];
   [self resetKartPadControlAppearance];
   [super toggleSettingsPanel];
+  // The panel's auto-hide switch changes the setting the menu shows.
+  [self refreshMenuButton];
 }
 
 - (void)setTouchControlsHidden:(BOOL)hidden animated:(BOOL)animated {
@@ -2450,7 +2465,54 @@ static void KartPadApplySoundLevels(BOOL persist) {
     [self clearTouchInput];
     [self resetKartPadControlAppearance];
   }
+  const BOOL changed = hidden != self.kartPadTouchControlsHidden;
+  self.kartPadTouchControlsHidden = hidden;
   [super setTouchControlsHidden:hidden animated:animated];
+  if (changed) [self refreshMenuButton];
+}
+
+// Auto-hide follows the controller bridge: only a controller holding player 1,
+// whom touch shares, hides the touch controls. The editor always shows them.
+- (void)applyControllerVisibility {
+#if TARGET_OS_SIMULATOR
+  // As in SunPad: the Simulator can report virtual controllers.
+  const BOOL touchPlayerHasController = NO;
+#else
+  const BOOL touchPlayerHasController =
+      [[KartPadPhysicalControllers sharedControllers] touchPlayerHasController];
+#endif
+  UIView *done = KartPadSubviewWithAccessibilityLabel(
+      self, @"Finish moving touch controls", UIButton.class);
+  const BOOL editing = done != nil && !KartPadViewIsEffectivelyHidden(done);
+  [self setTouchControlsHidden:!editing && touchPlayerHasController &&
+      [SunPadSettings sharedSettings].hideTouchControlsWhenControllerConnected
+                      animated:YES];
+}
+
+// The saved "Auto-hide Touch Controls with Controller" choice, shared with the
+// touch settings switch. Off shows the controls at once; on applies the
+// current controller at once. Show Touch Controls turns it off, so the
+// controls stay up with the controller connected until it is turned on again.
+- (void)kartPadSetAutoHideTouchControls:(BOOL)autoHide {
+  SunPadSettings *settings = [SunPadSettings sharedSettings];
+  settings.hideTouchControlsWhenControllerConnected = autoHide;
+  [settings synchronize];
+  UISwitch *panelSwitch = (UISwitch *)KartPadSubviewWithAccessibilityLabel(
+      self, @"Hide touch controls when controller connected", UISwitch.class);
+  panelSwitch.on = autoHide;
+  [self applyControllerVisibility];
+  [self refreshMenuButton];
+}
+
+// A touch that began before the controls hid presses nothing.
+- (void)stickChanged:(SunPadStickView *)stick x:(float)x y:(float)y {
+  if (self.kartPadTouchControlsHidden) return;
+  [super stickChanged:stick x:x y:y];
+}
+
+- (void)buttonDown:(UIButton *)button {
+  if (self.kartPadTouchControlsHidden) return;
+  [super buttonDown:button];
 }
 
 - (void)refreshMenuButton {
@@ -2840,6 +2902,18 @@ static void KartPadApplySoundLevels(BOOL persist) {
   NSMutableArray<UIMenuElement *> *controlItems = [NSMutableArray array];
   if (controllerMapping != nil) [controlItems addObject:controllerMapping];
   if (touchControlSettings != nil) [controlItems addObject:touchControlSettings];
+  UIAction *autoHideTouch = [UIAction
+      actionWithTitle:@"Auto-hide Touch Controls with Controller"
+                image:[UIImage systemImageNamed:@"eye.slash"]
+           identifier:@"dev.kartpad.auto-hide-touch"
+              handler:^(__kindof UIAction *action) {
+    (void)action;
+    [weakSelf kartPadSetAutoHideTouchControls:
+        ![SunPadSettings sharedSettings].hideTouchControlsWhenControllerConnected];
+  }];
+  autoHideTouch.state = [SunPadSettings sharedSettings].hideTouchControlsWhenControllerConnected
+      ? UIMenuElementStateOn : UIMenuElementStateOff;
+  [controlItems addObject:autoHideTouch];
   [controlItems addObject:[UIAction actionWithTitle:@"Controller Player Setup…" image:[UIImage systemImageNamed:@"gamecontroller"] identifier:nil handler:^(__kindof UIAction *action) { [weakSelf.delegate gameOverlayRequestsControllerMapping:weakSelf]; }]];
   [controlItems addObject:shakeTricks];
   [controlItems addObject:motionSteering];
@@ -2944,6 +3018,14 @@ static void KartPadApplySoundLevels(BOOL persist) {
                                      children:performanceItems];
 
   NSMutableArray<UIMenuElement *> *children = [NSMutableArray array];
+  if (self.kartPadTouchControlsHidden) {
+    [children addObject:[UIAction actionWithTitle:@"Show Touch Controls"
+        image:[UIImage systemImageNamed:@"hand.tap"] identifier:@"dev.kartpad.show-touch"
+        handler:^(__kindof UIAction *action) {
+      (void)action;
+      [weakSelf kartPadSetAutoHideTouchControls:NO];
+    }]];
+  }
   [children addObject:[UIAction actionWithTitle:@"Return to KartPad Menu"
       image:[UIImage systemImageNamed:@"house"] identifier:@"dev.kartpad.main-menu"
       handler:^(__kindof UIAction *action) {
@@ -3217,6 +3299,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
 
 - (void)rPressureChanged:(uint8_t)pressure fullPress:(BOOL)fullPress {
   (void)fullPress;
+  if (self.kartPadTouchControlsHidden) return;
   const BOOL pressed = pressure > 0;
   [super rPressureChanged:pressed ? 255 : 0 fullPress:pressed];
 }
