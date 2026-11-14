@@ -8,14 +8,14 @@ earlier diagnosis was reused. Tests ran on the arm64 Android emulator
 (`KartPad_088_Acceptance_20261107`, started read-only). **Nothing here is phone
 evidence.** Nothing was posted on any issue, and #570 was not touched.
 
-**Changed (all unmerged)**
+**Changed (merged on 14 November; in no release)**
 
 | Change | Where | Checked on the emulator | Not checked |
 | --- | --- | --- | --- |
 | A game thread whose entry function returns now exits through `OSExitThread` and the scheduler picks the next thread | [wiicompiled#30](https://github.com/chrissotraidis/wiicompiled/pull/30) | The old hand-off logs `failed to switch away while parking` after the first Retro WFC sign-in; with the change, ten sign-ins (41 thread exits) log nothing. Menus, sign-in and an Original Grand Prix race work | Any phone; rooms and online races; the beta engine in play |
 | The idle scheduler wakes at the next `OSSleepTicks` deadline instead of a 1 ms slice later | [wiicompiled#31](https://github.com/chrissotraidis/wiicompiled/pull/31) | The main loop's 0.5 ms online sleep takes 0.76 ms instead of 1.6–1.7 ms per frame at the Retro WFC menu | Whether a phone near its limit gains frame rate |
 | A `KartPadSched` line after each `KartPadCPU` line: time per game thread, idle time, main-thread sleeps and blocking network waits | [wiicompiled#32](https://github.com/chrissotraidis/wiicompiled/pull/32) (stacked on #30) | Names the movie decoder at the main menu and the sound thread online; appears in the saved diagnostic log | A log from a slow lobby, which is what it is for |
-| KartPad's Android pin for the three changes | Draft [#571](https://github.com/chrissotraidis/kartpad/pull/571) | The app builds; the pack interface fingerprint is unchanged (`63fd43a8…`) | — |
+| KartPad's Android pin for the three changes | [#571](https://github.com/chrissotraidis/kartpad/pull/571) | The app builds; the pack interface fingerprint is unchanged (`63fd43a8…`) | — |
 
 **Findings**
 
@@ -115,7 +115,7 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 | Issue | State after this pass | Next step |
 | --- | --- | --- |
 | #104 #301 #472 #492 #552 Snapdragon characters | Turnip works on two phones. Bodies are lost as geometry in all three self-check copies | Build the geometry self-check below; ask #552, #472, #492 once for a Turnip result. #301's reporter calls Classic fixed with a custom driver; the issue stays open only for his Classic frame rate |
-| #554 slow Retro WFC lobby | Two scheduler faults fixed in PRs; the 40–100 ms frames are unexplained | Merge #30–#32, ship, ask for one lobby log with `KartPadSched` lines |
+| #554 slow Retro WFC lobby | Two scheduler faults fixed on main; the 40–100 ms frames are unexplained | Ship, then ask for one lobby log with `KartPadSched` lines |
 | #510 slow motion after cups | Heat with no CPU headroom; memory fixed | Reply: 30 FPS Races, or try the beta engine at 60 |
 | #339 performance | Beta engine measured a quarter lighter on the game thread (emulator) | Phone measurement of Classic against beta; then decide whether Classic needs its own off-thread GX |
 | #566 frame rate drops after an hour (S25) | Analysed, heat | Reply; check the beta engine's caches |
@@ -155,10 +155,11 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 
 ### Picking this up (14 November)
 
-1. **Merge the runtime PRs** in this order: wiicompiled#30, #32 (retarget to
-   `kartpad-android` once #30 is in), #31. Then move KartPad's pin from the
-   test stack (`codex/longstanding-stack`, `e0663e4`) to the merged
-   `kartpad-android` head. No header changed, so the 0.8.11 game pack
+1. **Done on 14 November.** wiicompiled#30, #32 and #31 are merged and #571
+   pins `kartpad-android` at `1b283d6`, whose tree is the one that was
+   tested. The 0.8.11 candidate in #570 was built from the runtime before
+   these changes; a release that includes them needs a new build and its
+   checks. No header changed, so a game pack with fingerprint `63fd43a8…`
    still loads.
 2. **After a release has them, ask #554 for one log** saved in the slow lobby.
    Read the `KartPadSched` lines: a large `other_threads_ms` names the
