@@ -1,0 +1,83 @@
+diff --git a/aurora-main/lib/gx/command_processor.cpp b/aurora-main/lib/gx/command_processor.cpp
+index 8b1c10b..f0a7a93 100644
+--- a/aurora-main/lib/gx/command_processor.cpp
++++ b/aurora-main/lib/gx/command_processor.cpp
+@@ -26,6 +26,8 @@
+ #include <cstring>
+ #include <mutex>
+ #include <optional>
++#include <string>
++#include <unordered_map>
+ #include <vector>
+ 
+ namespace aurora::gx::fifo {
+@@ -2318,6 +2320,61 @@ bool submit_raw_draw(GXPrimitive prim, GXVtxFmt fmt, const uint8_t* vertices, ui
+ 
+ // Draw self-check: one large skinned draw per session stays out of merging so the whole model is
+ // compared (see kartpad_selfcheck.hpp). One atomic load per draw once the check has finished.
++// LOCAL DIAGNOSTIC (not for merging): the material state of every skinned draw, once per distinct
++// state, and once a second the set of states drawn, so a character on screen can be matched to them.
++static void kartpad_dump_character_draw(u16 vtxCount) {
++  static std::unordered_map<std::string, int> ids;
++  static std::vector<int> seen;
++  static std::vector<int> lastPrinted;
++  static auto windowStart = std::chrono::steady_clock::now();
++  std::string key;
++  const char* names[4] = {"c0", "c1", "a0", "a1"};
++  for (int i = 0; i < 4; ++i) {
++    const auto& c = g_gxState.colorChannelConfig[i];
++    const auto& s = g_gxState.colorChannelState[i];
++    key += fmt::format("{}[en={} mat={} amb={} diff={} attn={} mask={:02x} matC=({:.2f},{:.2f},{:.2f},{:.2f}) ambC=({:.2f},{:.2f},{:.2f},{:.2f})] ",
++                       names[i], int(c.lightingEnabled), int(c.matSrc), int(c.ambSrc), int(c.diffFn), int(c.attnFn),
++                       static_cast<unsigned>(s.lightMask.to_ulong()), s.matColor[0], s.matColor[1], s.matColor[2],
++                       s.matColor[3], s.ambColor[0], s.ambColor[1], s.ambColor[2], s.ambColor[3]);
++  }
++  const auto& ac = g_gxState.alphaCompare;
++  key += fmt::format("chans={} tev={} texgens={} acmp[{},{},{},{},{}] blend[{},{},{}] z[{},{},{}] cull={} dstA={:x} colorUpd={} alphaUpd={}",
++                     g_gxState.numChans, g_gxState.numTevStages, g_gxState.numTexGens, int(ac.comp0), ac.ref0, int(ac.op),
++                     int(ac.comp1), ac.ref1, int(g_gxState.blendMode), int(g_gxState.blendFacSrc), int(g_gxState.blendFacDst),
++                     int(g_gxState.depthCompare), int(g_gxState.depthFunc), int(g_gxState.depthUpdate),
++                     int(g_gxState.cullMode), g_gxState.dstAlpha, int(g_gxState.colorUpdate), int(g_gxState.alphaUpdate));
++  auto it = ids.find(key);
++  if (it == ids.end()) {
++    if (ids.size() >= 400) return;
++    it = ids.emplace(key, static_cast<int>(ids.size()) + 1).first;
++    Log.info("KartPadCharDraw id={} verts={} {}", it->second, vtxCount, key);
++    unsigned mask = 0;
++    for (int i = 0; i < 4; ++i) {
++      if (g_gxState.colorChannelConfig[i].lightingEnabled) mask |= static_cast<unsigned>(g_gxState.colorChannelState[i].lightMask.to_ulong());
++    }
++    for (int l = 0; l < 8; ++l) {
++      if ((mask & (1u << l)) == 0) continue;
++      const auto& L = g_gxState.lights[l];
++      Log.info("KartPadCharLight id={} light={} color=({:.3f},{:.3f},{:.3f},{:.3f}) pos=({:g},{:g},{:g}) dir=({:g},{:g},{:g}) cos=({:g},{:g},{:g}) dist=({:g},{:g},{:g})",
++               it->second, l, L.color[0], L.color[1], L.color[2], L.color[3], L.pos[0], L.pos[1], L.pos[2], L.dir[0], L.dir[1],
++               L.dir[2], L.cosAtt[0], L.cosAtt[1], L.cosAtt[2], L.distAtt[0], L.distAtt[1], L.distAtt[2]);
++    }
++  }
++  if (std::find(seen.begin(), seen.end(), it->second) == seen.end()) seen.push_back(it->second);
++  const auto now = std::chrono::steady_clock::now();
++  if (now - windowStart >= std::chrono::seconds(1)) {
++    std::sort(seen.begin(), seen.end());
++    if (seen != lastPrinted) {
++      std::string list;
++      for (int id : seen) list += fmt::format("{} ", id);
++      Log.info("KartPadCharSet ids={}", list);
++      lastPrinted = seen;
++    }
++    seen.clear();
++    windowStart = now;
++  }
++}
++
+ static inline bool selfcheck_keeps_whole(u16 vtxCount) noexcept {
+   return vtxCount >= gfx::kartpad_selfcheck::MinVertices && g_gxState.vtxDesc[GX_VA_PNMTXIDX] == GX_DIRECT &&
+          gfx::kartpad_selfcheck::wanted();
+@@ -2593,6 +2650,7 @@ static void handle_draw_unmerged(GXPrimitive prim, GXVtxFmt fmt, u16 vtxCount,
+   };
+   gfx::push_draw_command(draw);
+   g_gxState.stateDirty = false;
++  if (g_gxState.vtxDesc[GX_VA_PNMTXIDX] == GX_DIRECT && vtxCount >= 12) kartpad_dump_character_draw(vtxCount);
+   if (rawVertices != nullptr && vtxCount >= gfx::kartpad_selfcheck::MinVertices &&
+       g_gxState.vtxDesc[GX_VA_PNMTXIDX] == GX_DIRECT && instanceCount == 1 && !draw.expandedPrimitive &&
+       gfx::kartpad_selfcheck::wanted()) UNLIKELY {

@@ -93,4 +93,5 @@ These are experiments, not adopted (results in the handoff):
 | `android-runtime-explicit-fp-context.patch` | The FP adapters take the generated function's `ctx` (with `noinline` adapters) |
 | `semantics-normal-fp-fast-path.patch` | Exact fast path for normal FP results |
 | `android-runtime-flat-memory-locals.patch` | Flat-memory base and check flag read once per function |
+| `android-runtime-skinned-draw-state-dump.patch` | Diagnostic only (#104 family): logs each distinct lighting, alpha, blend, depth and cull state of skinned draws, their lights, and once a second which states are on screen. Read it from the session's `console.log` |
 

@@ -74,8 +74,10 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
   alpha paths. It would also fit what players see, if the parts that survive
   (eyes, a moustache) are drawn with a single matrix and the far models that
   still draw (#472) use fewer bones; neither was checked. Bowser alone draws
-  on the beta engine (#104), and his skinned parts use the same state as
-  Mario's on Classic, so the difference is not in the material.
+  on the beta engine (#104), and his skinned parts use the same lighting,
+  alpha, blend, depth and cull state as Mario's on Classic, so the difference
+  is not there. The dump is
+  `tools/android-perf/patches/android-runtime-skinned-draw-state-dump.patch`.
   Renderer Validation, which turns Dawn's validation and buffer robustness
   back on, did not change the picture on the S24 Ultra in September (0.4.12).
   What skinned draws have that the working ones lack is the per-vertex
