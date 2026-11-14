@@ -71,10 +71,11 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
   light about 1e10 units away). Nothing in that state can discard a pixel, so
   a body that covers nothing was lost before the fragment shader: bad
   positions, clipping, culling or depth. That rules out the lighting and
-  alpha paths. It also fits what players see: parts drawn with one matrix
-  (eyes, a moustache) survive, bodies draw far away and vanish up close
-  (#472, fewer bones in the far model), and Bowser alone draws on the beta
-  engine (#104).
+  alpha paths. It would also fit what players see, if the parts that survive
+  (eyes, a moustache) are drawn with a single matrix and the far models that
+  still draw (#472) use fewer bones; neither was checked. Bowser alone draws
+  on the beta engine (#104), and his skinned parts use the same state as
+  Mario's on Classic, so the difference is not in the material.
   Renderer Validation, which turns Dawn's validation and buffer robustness
   back on, did not change the picture on the S24 Ultra in September (0.4.12).
   What skinned draws have that the working ones lack is the per-vertex
