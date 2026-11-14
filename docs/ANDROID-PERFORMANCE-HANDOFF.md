@@ -1,10 +1,52 @@
 # Android performance: where we stand
 
-Updated 11 November 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 14 November 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 14 November: the scheduler online, and the beta engine's game thread
+
+**Emulator only; three runtime PRs open, none merged.** The
+[maintenance board](MAINTENANCE-BOARD.md#14-november-long-standing-issues-pass-0810-released-0811-pending-in-570)
+has the evidence and the commands.
+
+- **A game thread that returned from its entry function resumed the main
+  thread wrongly** ([wiicompiled#30](https://github.com/chrissotraidis/wiicompiled/pull/30)).
+  The runtime switched to the main thread's fiber whether or not the main
+  thread was runnable, with the running-thread pointer cleared. Online, where
+  sign-in threads come and go, this cut the main thread's sleep short and
+  left its sleeps and mutex calls doing nothing until it next blocked. Seven
+  of #554's eight logs have the trace. What it costs on a phone isn't
+  measured.
+- **The main loop's online sleep took three times what it asked for**
+  ([wiicompiled#31](https://github.com/chrissotraidis/wiicompiled/pull/31)).
+  Online the game sleeps 0.5 ms once per frame (`main_sleeps=1.00` in the
+  new telemetry; the 11 November note below says twice). The idle scheduler
+  slept in 1 ms slices, so the sleep took 1.6–1.7 ms; it now takes 0.76 ms.
+  That is about a millisecond of each 16.7 ms frame back for a phone that
+  uses 13–15 ms online, such as #554's Poco F4.
+- **`KartPadSched` telemetry**
+  ([wiicompiled#32](https://github.com/chrissotraidis/wiicompiled/pull/32))
+  splits each telemetry interval into main thread, other game threads (naming
+  the busiest), idle time, main-thread sleeps and blocking network waits. Use
+  it before guessing which thread to give a preemption point.
+- **The beta engine's game thread is about a quarter lighter than Classic's.**
+  Released 0.8.9, Luigi Circuit Grand Prix, the bench's 30 s window, 30 FPS
+  Races on (so times are per 33 ms frame):
+
+  | Engine | Game-thread CPU per presented frame | Other threads |
+  | --- | --- | --- |
+  | Classic | 11.04, 9.58, 10.97, 9.73 ms (mean 10.3) | frame worker 8–9% of a core |
+  | WiiCompiled 0.9 (Beta) | 7.92, 7.94, 7.41 ms (mean 7.8) | FIFO thread 4.6–4.9%, render worker about 20% (mostly emulator graphics transport) |
+
+  The Mac's load average was 4–6 and the emulator wasn't cold-booted between
+  runs, so read this as "clearly lighter", not as a percentage. It means step 3
+  of the plan below, moving GX off the game thread, already exists in the beta
+  engine. The work for slow phones is to measure the beta on one, fix what it
+  still draws wrong (#301's Moto G85 shows black screens), and make it the
+  default, instead of building a second off-thread GX path into Classic.
 
 ## 11 November: a background game thread could hold up every frame
 
@@ -102,7 +144,8 @@ On the Poco F4 the same scene costs 9–15 ms per frame while it holds 60 FPS,
 so it is close to the limit there, but that doesn't account for 40–100 ms per
 frame.
 
-Online, the main loop also sleeps for about 0.5 ms twice a frame
+Online, the main loop also sleeps for about 0.5 ms each frame (once, by the
+14 November telemetry; this note first said twice)
 (`RKSystem::Run`) so lower-priority threads can run, and KartPad lets
 whichever thread takes over run until it blocks. A network thread that is
 busy in a full room would then delay every frame the way the movie decoder
@@ -398,7 +441,9 @@ Rules learned the hard way:
    - **Runtimes:** define the locals in the Android and iOS runtimes, both of
      which use a launch-time base. Other runtimes define the macro empty.
    - **Upstream:** offer it to WiiCompiled through patchzyy (#339).
-3. **Move GX FIFO decode off the game thread** (the 21%). Design first:
+3. **Move GX FIFO decode off the game thread** (the 21%). The beta engine
+   already does this (14 November section above); measure it on a phone before
+   doing any of the following in Classic. Design first:
    - which GX calls must stay synchronous (draw sync, EFB/texture copies the CPU
      reads, peeks);
    - guest memory lifetime: display lists and vertex arrays live in guest RAM,

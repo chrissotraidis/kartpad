@@ -1,5 +1,188 @@
 # Maintenance work and test board
 
+## 14 November long-standing issues pass (0.8.10 released, 0.8.11 pending in #570)
+
+All 25 open issues were re-read with their comments, and every attached log was
+downloaded again and analysed from the files. Code was checked before any
+earlier diagnosis was reused. Tests ran on the arm64 Android emulator
+(`KartPad_088_Acceptance_20261107`, started read-only). **Nothing here is phone
+evidence.** Nothing was posted on any issue, and #570 was not touched.
+
+**Changed (all unmerged)**
+
+| Change | Where | Checked on the emulator | Not checked |
+| --- | --- | --- | --- |
+| A game thread whose entry function returns now exits through `OSExitThread` and the scheduler picks the next thread | [wiicompiled#30](https://github.com/chrissotraidis/wiicompiled/pull/30) | The old hand-off logs `failed to switch away while parking` after the first Retro WFC sign-in; with the change, ten sign-ins (41 thread exits) log nothing. Menus, sign-in and an Original Grand Prix race work | Any phone; rooms and online races; the beta engine in play |
+| The idle scheduler wakes at the next `OSSleepTicks` deadline instead of a 1 ms slice later | [wiicompiled#31](https://github.com/chrissotraidis/wiicompiled/pull/31) | The main loop's 0.5 ms online sleep takes 0.76 ms instead of 1.6–1.7 ms per frame at the Retro WFC menu | Whether a phone near its limit gains frame rate |
+| A `KartPadSched` line after each `KartPadCPU` line: time per game thread, idle time, main-thread sleeps and blocking network waits | [wiicompiled#32](https://github.com/chrissotraidis/wiicompiled/pull/32) (stacked on #30) | Names the movie decoder at the main menu and the sound thread online; appears in the saved diagnostic log | A log from a slow lobby, which is what it is for |
+| KartPad's Android pin for the three changes | Draft [#571](https://github.com/chrissotraidis/kartpad/pull/571) | The app builds; the pack interface fingerprint is unchanged (`63fd43a8…`) | — |
+
+**Findings**
+
+- **#554, slow Retro WFC lobby: two runtime faults found, cause of the big
+  slowdown still not shown.**
+  - *Thread exit.* A game thread that ended by returning from its entry
+    function switched straight to the main thread's fiber with the
+    running-thread pointer cleared. If the main thread was asleep it carried
+    on early, and until it next blocked its `OSSleepTicks` calls returned at
+    once, its mutex calls did nothing and a blocking network call would fail
+    with −101. Seven of the eight logs in #554 have the trace
+    (`OSSleepTicks: thread 0x80347498 failed to switch away while parking`,
+    logged once per session, right after the NAS sign-in), and no log from any
+    other issue has it.
+  - *Idle slices.* Online, the game's main loop sleeps 0.5 ms once per frame
+    (not twice, as the 11 November note said). With nothing else runnable
+    that sleep lasted 1.6–1.7 ms.
+  - *What the logs say about the slowdown.* `elapsed_ms` in these logs is
+    device uptime, so each log's distance from a reboot is known. The 0.8.10
+    stock-driver log is slow in the lobby from the start of a process that
+    began 12 minutes after boot, with no pause in that process (host thread
+    69–77% busy, 80–102 ms of CPU per presented frame, first-visit shader
+    compiles in the same window). The fresh-reboot Turnip log slows from 54
+    to 33 FPS in the lobby with no pause either. So a pause is one trigger,
+    not a requirement. In the 0.8.9 before/after pair the picture is
+    different: after the pause the host thread is only 37–47% busy while
+    frames take 65–100 ms, so more than half of each frame is waiting. The
+    graphics present phases stay near 3 ms throughout. In two logs the long
+    gaps (0.75–1.3 s without a present) follow GameSpy host-name lookups,
+    which block the main thread.
+  - *Ruled out by reading the code:* Android's timer slack and process
+    groups (on Android 14 the notification shade and volume panel do not
+    change them, and the process-level change is symmetric); an alarm or
+    audio backlog after the pause (periodic alarms skip missed periods, audio
+    catch-up is capped at 100 ms).
+  - *Not reproduced:* a Home-screen trip at the Retro Rewind main menu on
+    released 0.8.9 left the emulator at 60 FPS (4 ms of CPU per frame; the
+    host is too fast to show it).
+- **Snapdragon characters (#104, #301, #472, #492, #552): no renderer change;
+  the evidence points away from the matrix lookup.** In the S24 Ultra's
+  0.8.8 and 0.8.9 logs the draw self-check reports
+  `drawn_game=0 drawn_other=0 drawn_constant=0` on Qualcomm 512.762.1 for
+  every body draw it tried (117 to 177 vertices), and `688/688/688 result=match`
+  on the same phone with Turnip. All three copies differ only in how vertices
+  and bone matrices reach the shader, and all three draw nothing, so the
+  fault is in what they share: the rest of the vertex shader (lighting is
+  computed there, in integer vectors), the fragment shader's alpha test, or
+  pipeline state. All six failed attempts changed the matrix or vertex path.
+  Two further clues fit a material-level fault: Bowser draws correctly on the
+  beta engine while no other character does (#104), and bodies draw far away
+  and vanish up close (#472). The self-check counts a pixel as drawn only if
+  it is non-zero, so a body written as transparent black also reads as 0.
+  Light uniforms are already sanitised on the CPU (`prepare_shader_light`),
+  so a plain division by zero in attenuation is not the cause.
+- **#510: the remaining slow motion is heat on a phone with no headroom.**
+  In log11 (0.8.10) memory is 645 MB, Android reports thermal status 1 with
+  headroom 0.82 (0.76 at most in the clean four-cup log10), battery 15%, and
+  the game thread needs 17–23 ms per frame where it needed 15.6 ms. The
+  restarted cup isn't shown to matter.
+- **The beta engine already does the "GX off the game thread" step.**
+  Released 0.8.9 on the emulator, Luigi Circuit Grand Prix, same 30 s window
+  (30 FPS Races was on in this AVD): Classic's game thread used 11.04, 9.58,
+  10.97 and 9.73 ms per presented frame; the beta's used 7.92, 7.94 and
+  7.41 ms, about a quarter less, with its FIFO thread at 4.6–4.9% of a core.
+  The Mac's load average was 4–6, so this is a rough figure.
+- **#566 (new, Galaxy S25, Adreno 830, 0.8.10, Retro Rewind at 1×):** the log
+  agrees with the report. Game-thread CPU per frame goes from 8–10 ms to
+  13–18 ms late in the session and windows fall to 47–59 FPS, while Android
+  still reports thermal status 0 (headroom 0.77–0.83, battery 37–39 °C).
+  The session is on the beta engine (`renderer=aurora-wiicompiled`). Memory is
+  2.0–2.4 GB in every sample and flat across the log's window, with 4,760
+  pipelines created since the start. 0.8.9's cache fix was measured on
+  Classic; whether the beta engine releases a course's shaders and textures
+  wasn't checked.
+- **#476:** the reporter's 12 November report on 0.8.10 (remote unassigned
+  until set to Player 1; an extension attached after launch drops the remote)
+  is the behaviour #569 changes; it is waiting for 0.8.11.
+- **#537:** the game's disc-error screen needs a failed file read, and KartPad
+  logs `ERROR: DVD read failed` with the file when that happens. Online,
+  before a race, the likely read is the voted course from the Retro Rewind
+  pack. Unproven without the log.
+
+**Open issues by state**
+
+| Issue | State after this pass | Next step |
+| --- | --- | --- |
+| #104 #301 #472 #492 #552 Snapdragon characters | Turnip works on two phones. Fault is shared by all three self-check copies, so not the matrix path | Build the self-check extension below; ask #552, #472, #492 once for a Turnip result. #301's reporter calls Classic fixed with a custom driver; the issue stays open only for his Classic frame rate |
+| #554 slow Retro WFC lobby | Two scheduler faults fixed in PRs; the 40–100 ms frames are unexplained | Merge #30–#32, ship, ask for one lobby log with `KartPadSched` lines |
+| #510 slow motion after cups | Heat with no CPU headroom; memory fixed | Reply: 30 FPS Races, or try the beta engine at 60 |
+| #339 performance | Beta engine measured a quarter lighter on the game thread (emulator) | Phone measurement of Classic against beta; then decide whether Classic needs its own off-thread GX |
+| #566 frame rate drops after an hour (S25) | Analysed, heat | Reply; check the beta engine's caches |
+| #537 Retro WFC disc-error kick | Waiting since 29 October | Leave open until 0.8.11 is out, then close if silent |
+| #304 PowerVR | Waiting since 12 October | Same; the stage self-check would also serve this GPU |
+| #127 Mac two-player rendering | Not run | Needs a Mac build with game data and two controllers |
+| #539 LiveContainer import | Waiting since 30 October | Close if silent |
+| #475 Mac certificate | Waiting since 31 October; the reply said about two weeks | Close |
+| #476 Mac Wii Remote | Fix in 0.8.11 (#569), untested on hardware | Ask the reporter to build 0.8.11 |
+| #295 Retro ghosts | Draft #375 | See the table below |
+| #534 #531 #449 #300 #234 #203 #100 #91 #90 | Requests | See the table below |
+
+**Requests: feasibility and next step**
+
+| Issue | Judgement | Concrete next step |
+| --- | --- | --- |
+| #234 identity transfer | Feasible, medium. Online identity is more than the save: console ID, MAC address, serial and the NAND files beside `rksys.dat` | Write the list of files and values that make up the identity, then one export and import on Android, proved by two emulator installs signing in to the local WFC server (`scripts/test-android-local-wfc-server.sh`) as the same profile |
+| #295 Retro ghosts | Close to done; draft #375 passes its transfer tests | Replay coverage: one imported ghost per course slot kind (original, retro, custom) on the emulator, then the iPhone picker |
+| #300 older iOS and macOS | Unknown until built | Build the iOS app with the deployment target at 15.0 and list what fails (SDL 3, Dawn, UIKit calls). No device here runs iOS 15, so a pass would still be untested |
+| #100 external displays | Partly addressed by #567 and #568 in 0.8.11, which have not run on a device | Device check of 0.8.11 over USB-C; [plan](EXTERNAL-DISPLAYS.md) |
+| #91 DSU controllers | Feasible, large; scope is written in [FUTURE-FEATURES](FUTURE-FEATURES.md#dsu--cemuhook-motion-controllers-on-apple-tv) | Not started. First piece: a DSU packet parser with tests, no UI |
+| #90 Wiimmfi | Not feasible as asked: Wiimmfi's patches change game code and its rules bind a console identity | Decline Wiimmfi; evaluate WiiLink WFC for Original Mario Kart Wii, which uses the same payload mechanism KartPad already pins for Retro WFC |
+| #449 LAN play | Feasible in two parts. The server exists (the pinned `wfc-server` the local test uses) | An advanced "WFC server address" setting, and a page on running the server on a computer on the same network. Hosting on a phone is a separate, larger job |
+| #203 RMCE01, NAND, cheats | Large. The Android runtime has 586 hooks keyed to PAL addresses | Check that a published PAL-to-NTSC-U address map covers all 586 before promising anything. NAND transfer is #234. Cheats are unscheduled |
+| #534 Item Fever | Needs the mod's code changes compiled in | No change |
+| #531 Android WBFS extraction | Proposal | No change |
+
+**Not done**
+
+- No phone ran anything. The Poco F4 in #554 is still the test for all three
+  runtime changes.
+- No room was joined. The Retro WFC lobby in a room is still unprofiled.
+- The stage self-check for Snapdragon characters is described, not built.
+- #127 was not run.
+- The iOS, macOS and tvOS runtimes have the same scheduler code and none of
+  these changes.
+
+### Picking this up (14 November)
+
+1. **Merge the runtime PRs** in this order: wiicompiled#30, #32 (retarget to
+   `kartpad-android` once #30 is in), #31. Then move KartPad's pin from the
+   test stack (`codex/longstanding-stack`, `e0663e4`) to the merged
+   `kartpad-android` head. No header changed, so the 0.8.11 game pack
+   still loads.
+2. **After a release has them, ask #554 for one log** saved in the slow lobby.
+   Read the `KartPadSched` lines: a large `other_threads_ms` names the
+   thread to give a preemption point (as the movie decoder got); a large
+   `idle_ms` with `net_wait_ms` says the main thread is blocked on the
+   network; a large `main_ms` puts it in the main thread itself.
+3. **Stage self-check for Snapdragon characters.** In
+   `aurora-main/lib/gfx/kartpad_selfcheck.cpp`, when all copies of a body
+   draw cover nothing, replay it three more times off screen and log the
+   covered pixels of each: with the alpha test and blending off, with depth
+   test and culling off, and with a flat colour written by the fragment
+   shader. Count any written pixel (clear to a sentinel colour, not zero).
+   One log from a 512.762 phone then says which stage loses the body.
+   Before that, on the emulator, dump the generated WGSL for Bowser's body
+   and Mario's and compare their lighting and alpha paths.
+4. **#510 and #339.** Measure Classic against the beta on a phone, same race.
+5. **Housekeeping.** Close #475; close #539, #537 and #304 if still silent
+   after 0.8.11; run #127.
+
+**Reproducing the emulator checks.** Build the app only (no header changes,
+so an existing pack with fingerprint `63fd43a8…` loads), install it the
+way the [11 November notes](#picking-this-up) describe, then:
+
+```sh
+adb shell setprop debug.kartpad.thread_exit_reschedule 0   # old hand-off; 1 or unset = fixed
+adb shell setprop debug.kartpad.idle_sleep_to_timer 0      # 1 ms idle slices; 1 or unset = fixed
+```
+
+Set them before each start. Sign in to Retro WFC, stay on its menu, and read
+`sleep_took_ms` in the `KartPadSched` lines. The `failed to switch away`
+line is in the session's `console.log` under
+`files/KartPad/Logs`, not in logcat. Signing out and in again from the Retro
+WFC menu (B, Yes, A) repeats the thread exits; do not press A on the menu
+itself, which starts a search on the live service.
+
+
 ## 11 November focus pass (after 0.8.10)
 
 All 24 open issues were re-read and the logs attached to #104, #301, #472,
