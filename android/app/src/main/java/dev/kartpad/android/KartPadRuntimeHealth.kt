@@ -57,6 +57,12 @@ internal object KartPadRuntimeHealth {
         val elapsed = SystemClock.elapsedRealtime()
         val power = context.getSystemService(PowerManager::class.java)
         val battery = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        // Remaining charge in µAh. The percentage barely moves over a few races; this shows the
+        // power draw (#339). Some phones don't report it (MIN_VALUE or 0).
+        val chargeUah = runCatching {
+            context.getSystemService(BatteryManager::class.java)
+                ?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+        }.getOrNull()?.takeIf { it > 0 }
         val headroom = if (Build.VERSION.SDK_INT >= 30 && elapsed - lastHeadroomMs >= 10_000) {
             lastHeadroomMs = elapsed
             runCatching { power.getThermalHeadroom(0) }.getOrNull()?.takeIf { it.isFinite() }
@@ -92,6 +98,7 @@ internal object KartPadRuntimeHealth {
                 val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
                 if (level >= 0 && scale > 0) level * 100 / scale else null
             } ?: JSONObject.NULL)
+            .put("battery_charge_uah", chargeUah ?: JSONObject.NULL)
             .put("plugged", battery?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: JSONObject.NULL)
             .put("power_save", power.isPowerSaveMode)
             .put("resolution_scale", KartPadTouchSettings.resolutionScale(context))
