@@ -155,7 +155,11 @@ the [archive](archive/known-issues-through-2026-09.md).
   each 16.7 ms frame), so anything extra, such as the phone warming up, drops
   it below 60 FPS and the race runs in slow motion. On a phone this close to the
   limit, **⋯ → Graphics & Performance → 30 FPS Races** keeps races at normal
-  speed. [#510](https://github.com/chrissotraidis/kartpad/issues/510)
+  speed. The **WiiCompiled 0.9 (Beta)** graphics engine is also worth a try at
+  60 FPS: on the Android emulator its game thread does about a quarter less
+  work per frame than Classic's. That hasn't been measured on a phone, and the
+  beta still draws wrong on some (see Graphics above).
+  [#510](https://github.com/chrissotraidis/kartpad/issues/510)
 - **Android: menus drop to 15–30 FPS, often after something interrupts the
   game** (a notification, the volume panel, switching apps), and stay slow
   until the next race. Cause found for the menus that play video thumbnails
