@@ -55,21 +55,30 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
     released 0.8.9 left the emulator at 60 FPS (4 ms of CPU per frame; the
     host is too fast to show it).
 - **Snapdragon characters (#104, #301, #472, #492, #552): no renderer change;
-  the evidence points away from the matrix lookup.** In the S24 Ultra's
-  0.8.8 and 0.8.9 logs the draw self-check reports
-  `drawn_game=0 drawn_other=0 drawn_constant=0` on Qualcomm 512.762.1 for
-  every body draw it tried (117 to 177 vertices), and `688/688/688 result=match`
-  on the same phone with Turnip. All three copies differ only in how vertices
-  and bone matrices reach the shader, and all three draw nothing, so the
-  fault is in what they share: the rest of the vertex shader (lighting is
-  computed there, in integer vectors), the fragment shader's alpha test, or
-  pipeline state. All six failed attempts changed the matrix or vertex path.
-  Two further clues fit a material-level fault: Bowser draws correctly on the
-  beta engine while no other character does (#104), and bodies draw far away
-  and vanish up close (#472). The self-check counts a pixel as drawn only if
-  it is non-zero, so a body written as transparent black also reads as 0.
-  Light uniforms are already sanitised on the CPU (`prepare_shader_light`),
-  so a plain division by zero in attenuation is not the cause.
+  the bodies are lost as geometry, whichever way the bone matrices are
+  fetched.** In the S24 Ultra's 0.8.8 and 0.8.9 logs the draw self-check
+  reports `drawn_game=0 drawn_other=0 drawn_constant=0` on Qualcomm 512.762.1
+  for every body draw it tried (117 to 177 vertices), and
+  `688/688/688 result=match` on the same phone with Turnip. The three copies
+  differ only in how vertices and bone matrices reach the shader, and all
+  three cover nothing, so no single fetch method is at fault; the six failed
+  attempts each changed one.
+  A state dump of the real draws (a local diagnostic build on the emulator,
+  Original game, character select, Mario and Bowser) shows what every
+  skinned part is drawn with: no alpha test, no blending, depth test
+  less-or-equal with depth writes, back-face culling, and one directional
+  light on both colour and alpha (spot attenuation with constant terms, the
+  light about 1e10 units away). Nothing in that state can discard a pixel, so
+  a body that covers nothing was lost before the fragment shader: bad
+  positions, clipping, culling or depth. That rules out the lighting and
+  alpha paths. It also fits what players see: parts drawn with one matrix
+  (eyes, a moustache) survive, bodies draw far away and vanish up close
+  (#472, fewer bones in the far model), and Bowser alone draws on the beta
+  engine (#104).
+  Renderer Validation, which turns Dawn's validation and buffer robustness
+  back on, did not change the picture on the S24 Ultra in September (0.4.12).
+  What skinned draws have that the working ones lack is the per-vertex
+  matrix choice and the 20-matrix (plus 10 normal-matrix) uniform block.
 - **#510: the remaining slow motion is heat on a phone with no headroom.**
   In log11 (0.8.10) memory is 645 MB, Android reports thermal status 1 with
   headroom 0.82 (0.76 at most in the clean four-cup log10), battery 15%, and
@@ -102,13 +111,13 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 
 | Issue | State after this pass | Next step |
 | --- | --- | --- |
-| #104 #301 #472 #492 #552 Snapdragon characters | Turnip works on two phones. Fault is shared by all three self-check copies, so not the matrix path | Build the self-check extension below; ask #552, #472, #492 once for a Turnip result. #301's reporter calls Classic fixed with a custom driver; the issue stays open only for his Classic frame rate |
+| #104 #301 #472 #492 #552 Snapdragon characters | Turnip works on two phones. Bodies are lost as geometry in all three self-check copies | Build the geometry self-check below; ask #552, #472, #492 once for a Turnip result. #301's reporter calls Classic fixed with a custom driver; the issue stays open only for his Classic frame rate |
 | #554 slow Retro WFC lobby | Two scheduler faults fixed in PRs; the 40–100 ms frames are unexplained | Merge #30–#32, ship, ask for one lobby log with `KartPadSched` lines |
 | #510 slow motion after cups | Heat with no CPU headroom; memory fixed | Reply: 30 FPS Races, or try the beta engine at 60 |
 | #339 performance | Beta engine measured a quarter lighter on the game thread (emulator) | Phone measurement of Classic against beta; then decide whether Classic needs its own off-thread GX |
 | #566 frame rate drops after an hour (S25) | Analysed, heat | Reply; check the beta engine's caches |
 | #537 Retro WFC disc-error kick | Waiting since 29 October | Leave open until 0.8.11 is out, then close if silent |
-| #304 PowerVR | Waiting since 12 October | Same; the stage self-check would also serve this GPU |
+| #304 PowerVR | Waiting since 12 October | Same; the geometry self-check would also serve this GPU |
 | #127 Mac two-player rendering | Not run | Needs a Mac build with game data and two controllers |
 | #539 LiveContainer import | Waiting since 30 October | Close if silent |
 | #475 Mac certificate | Waiting since 31 October; the reply said about two weeks | Close |
@@ -136,7 +145,7 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 - No phone ran anything. The Poco F4 in #554 is still the test for all three
   runtime changes.
 - No room was joined. The Retro WFC lobby in a room is still unprofiled.
-- The stage self-check for Snapdragon characters is described, not built.
+- The geometry self-check for Snapdragon characters is described, not built.
 - #127 was not run.
 - The iOS, macOS and tvOS runtimes have the same scheduler code and none of
   these changes.
@@ -153,15 +162,17 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
    thread to give a preemption point (as the movie decoder got); a large
    `idle_ms` with `net_wait_ms` says the main thread is blocked on the
    network; a large `main_ms` puts it in the main thread itself.
-3. **Stage self-check for Snapdragon characters.** In
+3. **Geometry self-check for Snapdragon characters.** In
    `aurora-main/lib/gfx/kartpad_selfcheck.cpp`, when all copies of a body
    draw cover nothing, replay it three more times off screen and log the
-   covered pixels of each: with the alpha test and blending off, with depth
-   test and culling off, and with a flat colour written by the fragment
-   shader. Count any written pixel (clear to a sentinel colour, not zero).
-   One log from a 512.762 phone then says which stage loses the body.
-   Before that, on the emulator, dump the generated WGSL for Bowser's body
-   and Mario's and compare their lighting and alpha paths.
+   covered pixels of each: with culling off and the depth test set to
+   always; with every vertex forced to the draw's first bone matrix; and
+   with the bone matrices read from a small uniform block that holds only
+   the ones the draw uses. Also log the draw's clip-space bounds computed on
+   the CPU from the same vertices and matrices, so the log says where the
+   body should have been. Count any written pixel (clear to a sentinel
+   colour, not zero). One log from a 512.762 phone then says whether the
+   positions, the per-vertex choice or the large block loses the body.
 4. **#510 and #339.** Measure Classic against the beta on a phone, same race.
 5. **Housekeeping.** Close #475; close #539, #537 and #304 if still silent
    after 0.8.11; run #127.
