@@ -188,10 +188,14 @@ the [archive](archive/known-issues-through-2026-09.md).
   Wii Remote Plus (`RVL-CNT-01-TR`) did not connect, and an original remote
   left Controller Settings when a Nunchuk or Classic Controller was attached
   ([#476](https://github.com/chrissotraidis/kartpad/issues/476)). Both are the
-  same Mac Wii Remote path. The unreleased runtime corrects the Classic
-  Controller D-pad mapping, which was reading a hat the controller never
-  reports, and keeps a saved player slot when an extension changes the
-  remote's device ID. Neither has been checked on a physical controller yet.
+  same Mac Wii Remote path. Up to 0.8.10, Mac builds left out KartPad's
+  Wii Remote fixes to SDL, so attaching an extension dropped the remote until
+  KartPad restarted and the Classic Controller D-pad never worked. A remote
+  could also come up Unassigned because it no longer matched the slot saved
+  for it on an earlier connection. The next version applies those fixes and
+  lets an unmatched controller drive Player 1 when Player 1's saved
+  controller isn't connected. Neither has been checked on a physical
+  controller yet.
 
 ## Online
 
