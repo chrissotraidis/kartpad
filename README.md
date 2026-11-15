@@ -181,6 +181,11 @@ warning, and a driver that fails, even during a race, falls back to the
 phone's own. See the [release notes](docs/releases/v0.8.10.md). 0.8.9 made
 custom drivers load, fixed the start-up flicker on iPhone and iPad, and
 stopped memory building up over several cups ([0.8.9 notes](docs/releases/v0.8.9.md)).
+**KartPad 0.8.11** (build 276) is a prerelease for testing: Android menus with
+movie thumbnails keep up, two online timing faults on Android are fixed, and
+Wii Remote extensions and the Wii Remote player slot work on Mac
+([notes](docs/releases/v0.8.11.md)). KartPad's update check and PadMint keep
+offering 0.8.10 until 0.8.11 becomes the latest release.
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
