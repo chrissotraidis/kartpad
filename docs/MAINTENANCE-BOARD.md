@@ -1,5 +1,22 @@
 # Maintenance work and test board
 
+## 15 November: 0.8.11 ready as a prerelease
+
+#570 is merged (`efb292d`). Every release file is built from the merge and
+audited, check 3 and the before-tagging player checks ran on the final files,
+and the other checks carry over from the candidate with the same source tree
+(results in the [release notes](releases/v0.8.11.md)). It includes the three
+runtime changes below. Everything is emulator evidence; no phone ran 0.8.11.
+
+- **While it is a prerelease, PadMint builds 0.8.10.** `padmint make` and the
+  after-publish player check follow `/releases/latest`. iPhone, iPad and Mac
+  testers (#476's Mac Wii Remote, #100's external display) get 0.8.11 through
+  PadMint only once it is Latest. The after-publish player checks for 0.8.11
+  belong to that step.
+- **Next:** ask #554 for one lobby log with `KartPadSched` lines and #476 to try
+  0.8.11; make it Latest after a player with the target hardware confirms it
+  and nothing new has broken for a day (go/no-go question 1).
+
 ## 14 November long-standing issues pass (0.8.10 released, 0.8.11 pending in #570)
 
 All 25 open issues were re-read with their comments, and every attached log was
@@ -8,7 +25,7 @@ earlier diagnosis was reused. Tests ran on the arm64 Android emulator
 (`KartPad_088_Acceptance_20261107`, started read-only). **Nothing here is phone
 evidence.** Nothing was posted on any issue, and #570 was not touched.
 
-**Changed (merged on 14 November; in no release)**
+**Changed (merged on 14 November; in the 0.8.11 prerelease)**
 
 | Change | Where | Checked on the emulator | Not checked |
 | --- | --- | --- | --- |
@@ -115,7 +132,7 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 | Issue | State after this pass | Next step |
 | --- | --- | --- |
 | #104 #301 #472 #492 #552 Snapdragon characters | Turnip works on two phones. Bodies are lost as geometry in all three self-check copies | Build the geometry self-check below; ask #552, #472, #492 once for a Turnip result. #301's reporter calls Classic fixed with a custom driver; the issue stays open only for his Classic frame rate |
-| #554 slow Retro WFC lobby | Two scheduler faults fixed on main; the 40–100 ms frames are unexplained | Ship, then ask for one lobby log with `KartPadSched` lines |
+| #554 slow Retro WFC lobby | Two scheduler faults fixed in 0.8.11; the 40–100 ms frames are unexplained | Ask for one lobby log from 0.8.11 with `KartPadSched` lines |
 | #510 slow motion after cups | Heat with no CPU headroom; memory fixed | Reply: 30 FPS Races, or try the beta engine at 60 |
 | #339 performance | Beta engine measured a quarter lighter on the game thread (emulator) | Phone measurement of Classic against beta; then decide whether Classic needs its own off-thread GX |
 | #566 frame rate drops after an hour (S25) | Analysed, heat | Reply; check the beta engine's caches |
@@ -124,7 +141,7 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 | #127 Mac two-player rendering | Not run | Needs a Mac build with game data and two controllers |
 | #539 LiveContainer import | Waiting since 30 October | Close if silent |
 | #475 Mac certificate | Waiting since 31 October; the reply said about two weeks | Close |
-| #476 Mac Wii Remote | Fix in 0.8.11 (#569), untested on hardware | Ask the reporter to build 0.8.11 |
+| #476 Mac Wii Remote | Fix in 0.8.11 (#569), untested on hardware | Ask the reporter to build 0.8.11 once it is Latest (PadMint builds only Latest) |
 | #295 Retro ghosts | Draft #375 | See the table below |
 | #534 #531 #449 #300 #234 #203 #100 #91 #90 | Requests | See the table below |
 
@@ -157,10 +174,9 @@ evidence.** Nothing was posted on any issue, and #570 was not touched.
 
 1. **Done on 14 November.** wiicompiled#30, #32 and #31 are merged and #571
    pins `kartpad-android` at `1b283d6`, whose tree is the one that was
-   tested. The 0.8.11 candidate in #570 was built from the runtime before
-   these changes; a release that includes them needs a new build and its
-   checks. No header changed, so a game pack with fingerprint `63fd43a8…`
-   still loads.
+   tested. **Done on 15 November:** 0.8.11 (merge `efb292d`) was rebuilt with
+   them and its checks rerun. No header changed, so a game pack with
+   fingerprint `63fd43a8…` still loads.
 2. **After a release has them, ask #554 for one log** saved in the slow lobby.
    Read the `KartPadSched` lines: a large `other_threads_ms` names the
    thread to give a preemption point (as the movie decoder got); a large

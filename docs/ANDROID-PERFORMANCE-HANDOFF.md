@@ -8,7 +8,7 @@ The September Pixel experiments are in the
 
 ## 14 November: the scheduler online, and the beta engine's game thread
 
-**Emulator only. The three runtime changes are merged and pinned (#571); they are in no release.** The
+**Emulator only. The three runtime changes are merged and pinned (#571) and ship in the 0.8.11 prerelease; no phone has run them.** The
 [maintenance board](MAINTENANCE-BOARD.md#14-november-long-standing-issues-pass-0810-released-0811-pending-in-570)
 has the evidence and the commands.
 
