@@ -1,21 +1,19 @@
 # Maintenance work and test board
 
-## 15 November: 0.8.11 ready as a prerelease
+## 15 November: 0.8.11 release checks (released 16 November)
 
 #570 is merged (`efb292d`). Every release file is built from the merge and
 audited, check 3 and the before-tagging player checks ran on the final files,
 and the other checks carry over from the candidate with the same source tree
 (results in the [release notes](releases/v0.8.11.md)). It includes the three
-runtime changes below. Everything is emulator evidence; no phone ran 0.8.11.
+runtime changes below. Runtime evidence is from the Android emulator; PadMint
+builds also passed. No phone, iPhone/iPad or real Wii Remote ran 0.8.11.
 
-- **While it is a prerelease, PadMint builds 0.8.10.** `padmint make` and the
-  after-publish player check follow `/releases/latest`. iPhone, iPad and Mac
-  testers (#476's Mac Wii Remote, #100's external display) get 0.8.11 through
-  PadMint only once it is Latest. The after-publish player checks for 0.8.11
-  belong to that step.
+- **0.8.11 is Latest:** KartPad's update check and PadMint now offer it.
+  The after-publish player checks follow `/releases/latest`; their successful
+  completion is required before merging this published-state update.
 - **Next:** ask #554 for one lobby log with `KartPadSched` lines and #476 to try
-  0.8.11; make it Latest after a player with the target hardware confirms it
-  and nothing new has broken for a day (go/no-go question 1).
+  the Mac extension and Player 1 fixes. Real-device confirmation remains open.
 
 ## 14 November long-standing issues pass (0.8.10 released, 0.8.11 pending in #570)
 
@@ -25,7 +23,7 @@ earlier diagnosis was reused. Tests ran on the arm64 Android emulator
 (`KartPad_088_Acceptance_20261107`, started read-only). **Nothing here is phone
 evidence.** Nothing was posted on any issue, and #570 was not touched.
 
-**Changed (merged on 14 November; in the 0.8.11 prerelease)**
+**Changed (merged on 14 November; in 0.8.11)**
 
 | Change | Where | Checked on the emulator | Not checked |
 | --- | --- | --- | --- |

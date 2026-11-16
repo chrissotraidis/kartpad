@@ -15,9 +15,9 @@ restart. Missing characters and phone slowdown remain unresolved; local tests
 do not establish a fix on affected devices.
 0.8.7 was published on 1 November from this work.
 
-## Current status: 8 November 2026
+## Current status: 16 November 2026
 
-**0.8.11 (build 276), prerelease, 15 November:** Android menus with movie thumbnails keep up (#554, #339); a finished game thread no longer wakes the main thread while it sleeps, and the online per-frame sleep no longer overruns (#554); diagnostic logs gain a `KartPadSched` line and the battery charge counter; Wii Remote extensions and the Player 1 slot on Mac (#476); touch controls and screen geometry on iPhone/iPad (#567, #568). Checked on the Android emulator only. See [release notes](releases/v0.8.11.md).
+**0.8.11 (build 276), released, 16 November:** Android menus with movie thumbnails keep up (#554, #339); a finished game thread no longer wakes the main thread while it sleeps, and the online per-frame sleep no longer overruns (#554); diagnostic logs gain a `KartPadSched` line and the battery charge counter; Wii Remote extensions and the Player 1 slot on Mac (#476); touch controls and screen geometry on iPhone/iPad (#567, #568). Runtime checks used the Android emulator; fresh PadMint builds passed for all three targets. No phone, iPhone/iPad or real Wii Remote ran these changes. See [release notes](releases/v0.8.11.md).
 
 **0.8.10 (build 275), 9 November:** Android fix after 0.8.9. A GPU driver chosen in 0.8.6–0.8.8 started running the moment players updated to 0.8.9, and on a Snapdragon 8 Elite gave a striped screen and "Device lost: vkMapMemory failed". 0.8.10 tells those players once and offers the phone's driver, falls back after a graphics failure during play with a custom driver, and ends the game process after "Graphics Unavailable" so the next start is clean. See [release notes](releases/v0.8.10.md).
 

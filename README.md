@@ -175,17 +175,17 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.10** (build 275) fixes custom GPU drivers on Android after
-0.8.9: a driver chosen in an earlier version no longer switches on without
-warning, and a driver that fails, even during a race, falls back to the
-phone's own. See the [release notes](docs/releases/v0.8.10.md). 0.8.9 made
-custom drivers load, fixed the start-up flicker on iPhone and iPad, and
-stopped memory building up over several cups ([0.8.9 notes](docs/releases/v0.8.9.md)).
-**KartPad 0.8.11** (build 276) is a prerelease for testing: Android menus with
-movie thumbnails keep up, two online timing faults on Android are fixed, and
-Wii Remote extensions and the Wii Remote player slot work on Mac
-([notes](docs/releases/v0.8.11.md)). KartPad's update check and PadMint keep
-offering 0.8.10 until 0.8.11 becomes the latest release.
+**KartPad 0.8.11** (build 276) fixes Android menus with movie thumbnails and
+two online timing faults, includes the Mac Wii Remote extension and Player 1
+fixes, and updates touch controls, rotation and external display mirroring on
+iPhone and iPad ([release notes](docs/releases/v0.8.11.md)). Runtime checks
+used an Android emulator; the Mac controller and iPhone/iPad changes still
+need device testing.
+
+**Earlier: KartPad 0.8.10** (build 275) fixes custom GPU drivers on Android:
+warning before an earlier driver choice switches on and falling back to the
+phone's driver after a failure ([release notes](docs/releases/v0.8.10.md)).
+
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
 [known issues](docs/KNOWN-ISSUES.md). The earlier move onto maintained
