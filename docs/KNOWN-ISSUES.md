@@ -89,6 +89,13 @@ the [archive](archive/known-issues-through-2026-09.md).
 - **Snapdragon 8 Elite / Adreno 8xx:** fixed by **Automatic** in 0.7.10
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
+  **Automatic** only applies this fix to Qualcomm's own driver. From the
+  release after 0.8.11 it stays off with a custom driver such as Turnip or
+  PurpleVK (a repackaged Qualcomm driver keeps it), which saves the cost of
+  repacking every draw; no Adreno 8xx phone has confirmed how a custom driver
+  draws without it. If meshes or textures stretch with one, choose
+  **Experimental: fix characters and track textures** in
+  **Graphics Diagnostics… → Character Graphics Test**.
 - **PowerVR GPUs** (for example Moto G54): the 3D scene breaks up. The cause is
   not found yet; 0.7.10's log ruled out the GPU's shader limit. [#304](https://github.com/chrissotraidis/kartpad/issues/304)
 - **Moto G75:** crashes while loading the game; we need a diagnostic log.
