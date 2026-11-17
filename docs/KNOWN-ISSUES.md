@@ -90,9 +90,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   (confirmed on the OnePlus 15). If karts or item boxes go missing in Retro
   Rewind, choose **Experimental: fix broken characters** instead.
   **Automatic** only applies this fix to Qualcomm's own driver. From the
-  release after 0.8.11 it stays off with a Turnip driver, which saves the cost
-  of repacking every draw; no Adreno 8xx phone has confirmed how Turnip draws
-  without it. If meshes or textures stretch with Turnip, choose
+  release after 0.8.11 it stays off with a custom driver such as Turnip or
+  PurpleVK (a repackaged Qualcomm driver keeps it), which saves the cost of
+  repacking every draw; no Adreno 8xx phone has confirmed how a custom driver
+  draws without it. If meshes or textures stretch with one, choose
   **Experimental: fix characters and track textures** in
   **Graphics Diagnostics… → Character Graphics Test**.
 - **PowerVR GPUs** (for example Moto G54): the 3D scene breaks up. The cause is
