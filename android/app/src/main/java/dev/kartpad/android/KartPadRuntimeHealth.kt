@@ -15,6 +15,7 @@ import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import org.json.JSONArray
 import org.json.JSONObject
 
 /** Local-only health context for the existing explicit diagnostic export. */
@@ -27,6 +28,12 @@ internal object KartPadRuntimeHealth {
     private external fun nativeSampleNetworkWaits()
     // Accessed only on the worker, including across brief activity pauses.
     private var lastHeadroomMs = -10_000L
+
+    // Touch state for the health line, written by KartPadOverlayView on the UI thread (#554: races
+    // slow down while touch auto-accelerate holds A with no finger on the screen).
+    @Volatile var lastTouchUptimeMs = -1L
+    @Volatile var touchGasLocked = false
+    @Volatile var touchPointers = 0
 
     fun start(context: Context, profile: String) {
         stop()
@@ -106,9 +113,29 @@ internal object KartPadRuntimeHealth {
             .put("thirty_fps_races", KartPadTouchSettings.thirtyFpsRaces(context))
             .put("simpler_computer_karts", KartPadTouchSettings.simplerComputerKarts(context))
             .put("frame_interpolation_fps", KartPadTouchSettings.frameInterpolationFps(context))
+            .put("touch_idle_ms", lastTouchUptimeMs.takeIf { it >= 0 }
+                ?.let { SystemClock.uptimeMillis() - it } ?: JSONObject.NULL)
+            .put("touch_pointers", touchPointers)
+            .put("gas_locked", touchGasLocked)
+            .put("cpu_mhz", cpuMhz())
             .toString()
         KartPadHealthJournal(File(context.filesDir, "KartPad/Logs/android-health.log")).append(line)
     }
+
+    /**
+     * Current clock of each CPU in MHz (null for an offline core), or null where the phone hides
+     * cpufreq from apps. Compared with touch_idle_ms, it shows whether clocks drop once no finger
+     * is on the screen and the phone's touch boost ends (#554).
+     */
+    private fun cpuMhz(): Any = runCatching {
+        val cpus = File("/sys/devices/system/cpu").listFiles { file -> file.name.matches(Regex("cpu\\d+")) }
+            ?.sortedBy { it.name.removePrefix("cpu").toInt() }
+            ?: return@runCatching JSONObject.NULL
+        val values = cpus.map { cpu ->
+            runCatching { File(cpu, "cpufreq/scaling_cur_freq").readText().trim().toLong() / 1000 }.getOrNull()
+        }
+        if (values.all { it == null }) JSONObject.NULL else JSONArray(values.map { it ?: JSONObject.NULL })
+    }.getOrDefault(JSONObject.NULL)
 
     /** Transport class only (wifi, cellular, vpn, ...); never addresses, SSIDs or carriers. */
     private fun networkKind(context: Context): String = runCatching {
