@@ -1,5 +1,43 @@
 # Current goal loop: after 0.8.1
 
+## Outstanding work (18 November 2026) — start here
+
+Paused by Chris; nothing below is published. Ask "what are we left working on?" and this is the list.
+
+1. **0.8.12 release, held (planned for Friday).** Files and scripts in
+   `private/release-0.8.12/` of the `kartpad-weekend-0811` worktree were cut from `1caca7d` and
+   passed every check. `main` has since gained the Mac black-frame and memory fixes (#580), so
+   **re-cut 0.8.12 from current `main`** (rebuild, rerun update and player checks) before
+   publishing as a prerelease. Publishing needs Chris's go-ahead.
+2. **#554 auto-accelerate slowdown.** Hypothesis: the phone drops CPU clocks when no finger is on the
+   screen. Diagnostics PR [#579](https://github.com/chrissotraidis/kartpad/pull/579) (CI green,
+   unmerged) logs touch idle time and CPU clocks. A reply to Sharik7 is drafted in
+   [reply drafts](artifacts/2026-11-18/reply-drafts.md), not posted.
+3. **Mods and 120 FPS experiments** (Discord request from Terry; reply drafted in
+   [reply drafts](artifacts/2026-11-18/reply-drafts.md), not posted). Results and the
+   exact next steps: [mods and 120 FPS experiments](artifacts/2026-11-18/mods-and-120fps-experiments.md).
+   Draft PR [#581](https://github.com/chrissotraidis/kartpad/pull/581) (120 FPS toggle). Item Fever
+   translated and compiled into a private Mac build but not yet run.
+4. **Menu consistency audit (18 November), not started:** one name for the controller setup screen
+   (mobile "Controller Player Setup"/"Controller Setup", Mac "Controller Settings"); iPhone/iPad
+   button mapping closes after every change (#575); Mac has no Country, 30 FPS Races, Simpler
+   Computer Karts, FPS size or aspect options; Mac duplicates and renamed items (Data menu vs
+   Settings → Game & Data, "Private Wii Server" vs "Experimental Server Settings", "Save Diagnostics
+   Report" vs "Save Diagnostic Log"); Character Graphics Test buried under "Graphics Diagnostics";
+   iOS menu rebuilt by matching SunPad's English titles; SETTINGS.md still says 0.8.9 and omits the Mac.
+5. **Issue cleanup (needs Chris's OK, it notifies people):** reply to #510, #566, #575; close #539
+   (LiveContainer "Fix File Picker" — add to KNOWN-ISSUES) and likely #475; fold #301/#472/#492/#552
+   into #104 (Qualcomm 512.762 driver); decide or close #90, #91, #100, #203, #300, #449, #534, #295,
+   #127, #531; finish or close draft #375.
+6. **Repo cleanup:** ~498 remote branches already merged into `main`; 371 local branches; ~47
+   `kartpad*` worktrees. Local-only branch `codex/primary-snapshot-2026-11-18` holds the primary
+   checkout's old September uncommitted work. Worktree `kartpad-turnip-workarounds` needs
+   `git worktree remove --force` (submodules block a normal remove; contents are all on GitHub).
+7. **Mac config:** `~/Library/Application Support/KartPad/Config.toml` points `dvd_root` at
+   `kartpad/private/self-build/disc`, which no longer exists, so the Mac app asks for game data.
+
+## Older loop notes (October)
+
 > **Superseded for current work.** The [11 November focus pass](MAINTENANCE-BOARD.md#11-november-focus-pass-after-0810)
 > has the current state of every open issue; rows below are an October snapshot
 > (for example, #390's flicker was fixed in 0.8.9).
