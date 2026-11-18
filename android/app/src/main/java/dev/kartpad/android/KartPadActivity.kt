@@ -813,6 +813,14 @@ class KartPadActivity : SDLActivity() {
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
+            MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
+                switchOn = KartPadTouchSettings.frameInterpolationFps(this) == 120,
+                detail = "Adds in-between frames in races, for 120 Hz screens. Uses more power; may show glitches.") {
+                val on = KartPadTouchSettings.frameInterpolationFps(this) == 120
+                KartPadTouchSettings.setFrameInterpolationFps(this, if (on) 0 else 120)
+                applyDisplaySettings()
+                showGraphicsMenu()
+            },
             if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null) {
                 MenuRow("GPU Driver", R.drawable.ic_kartpad_display, submenu = true,
                     detail = KartPadGpuDriverSettings.menuDetail(this)) {
@@ -1122,6 +1130,7 @@ class KartPadActivity : SDLActivity() {
         )
         if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
         if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
+        if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.frameInterpolationFps(this))
     }
 
     private fun showAspectRatioSettings() {
@@ -2949,6 +2958,7 @@ class KartPadActivity : SDLActivity() {
 
     private external fun nativeApplySoundLevels(music: Float, sounds: Float)
     private external fun nativeIsBloomDisabled(): Boolean
+    private external fun nativeApplyFrameInterpolation(fps: Int)
     private external fun nativeSetBloomDisabled(disabled: Boolean): Boolean
     private external fun nativeApplyThirtyFpsRaces(enabled: Boolean)
     private external fun nativeApplySimplerComputerKarts(enabled: Boolean)

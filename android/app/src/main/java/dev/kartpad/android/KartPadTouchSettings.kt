@@ -26,6 +26,7 @@ internal object KartPadTouchSettings {
     private const val SHOW_FPS = "show_fps"
     private const val THIRTY_FPS_RACES = "thirty_fps_races"
     private const val SIMPLER_COMPUTER_KARTS = "simpler_computer_karts"
+    private const val FRAME_INTERPOLATION_FPS = "frame_interpolation_fps"
     private const val FPS_SIZE = "fps_size"
     private const val ASPECT_MODE = "aspect_mode"
     private const val RESOLUTION_SCALE = "resolution_scale"
@@ -131,6 +132,14 @@ internal object KartPadTouchSettings {
 
     fun setSimplerComputerKarts(context: Context, value: Boolean) {
         preferences(context).edit().putBoolean(SIMPLER_COMPUTER_KARTS, value).apply()
+    }
+
+    /** Races drawn at 120 FPS by interpolating between the game's 60 FPS frames. 0 is off. */
+    fun frameInterpolationFps(context: Context): Int = preferences(context)
+        .getInt(FRAME_INTERPOLATION_FPS, 0).takeIf { it == 120 } ?: 0
+
+    fun setFrameInterpolationFps(context: Context, value: Int) {
+        preferences(context).edit().putInt(FRAME_INTERPOLATION_FPS, if (value == 120) 120 else 0).apply()
     }
 
     fun fpsSize(context: Context): Int = preferences(context)
