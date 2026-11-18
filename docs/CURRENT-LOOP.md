@@ -6,7 +6,7 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
 
 1. **0.8.12 release, held (planned for Friday).** Files and scripts in
    `private/release-0.8.12/` of the `kartpad-weekend-0811` worktree were cut from `1caca7d` and
-   passed every check. `main` has since gained the Mac black-frame and memory fixes (#580), so
+   passed every check; re-cut steps are in that folder's `HANDOFF.md`. `main` has since gained the Mac black-frame and memory fixes (#580), so
    **re-cut 0.8.12 from current `main`** (rebuild, rerun update and player checks) before
    publishing as a prerelease. Publishing needs Chris's go-ahead.
 2. **#554 auto-accelerate slowdown.** Hypothesis: the phone drops CPU clocks when no finger is on the
@@ -17,7 +17,8 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    [reply drafts](artifacts/2026-11-18/reply-drafts.md), not posted). Results and the
    exact next steps: [mods and 120 FPS experiments](artifacts/2026-11-18/mods-and-120fps-experiments.md).
    Draft PR [#581](https://github.com/chrissotraidis/kartpad/pull/581) (120 FPS toggle). Item Fever
-   translated and compiled into a private Mac build but not yet run.
+   translated and compiled into a private Mac build but not yet run; resume steps in
+   `private/experiments-1118/HANDOFF.md` of the `kartpad-weekend-0811` worktree.
 4. **Menu consistency audit (18 November), not started:** one name for the controller setup screen
    (mobile "Controller Player Setup"/"Controller Setup", Mac "Controller Settings"); iPhone/iPad
    button mapping closes after every change (#575); Mac has no Country, 30 FPS Races, Simpler
