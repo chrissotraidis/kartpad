@@ -9,6 +9,9 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    passed every check; re-cut steps are in that folder's `HANDOFF.md`. `main` has since gained the Mac black-frame and memory fixes (#580), so
    **re-cut 0.8.12 from current `main`** (rebuild, rerun update and player checks) before
    publishing as a prerelease. Publishing needs Chris's go-ahead.
+   **Chris said on Discord (19 November) that the next build will have the experimental 120 FPS
+   toggle for Android**, so finish draft #581 (off by default, labelled experimental) and include it
+   in the re-cut.
 2. **#554 auto-accelerate slowdown.** Hypothesis: the phone drops CPU clocks when no finger is on the
    screen. Diagnostics PR [#579](https://github.com/chrissotraidis/kartpad/pull/579) (CI green,
    unmerged) logs touch idle time and CPU clocks. A reply to Sharik7 is drafted in
@@ -19,6 +22,8 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    Draft PR [#581](https://github.com/chrissotraidis/kartpad/pull/581) (120 FPS toggle). Item Fever
    translated and compiled into a private Mac build but not yet run; resume steps in
    `private/experiments-1118/HANDOFF.md` of the `kartpad-weekend-0811` worktree.
+   #584 (Galaxy A15 / Helio G99, menu stutter with shaders still compiling, "every launch"):
+   replied 19 November asking whether the shader cache sticks between launches; waiting on a log.
 4. **Menu consistency audit (18 November), not started:** one name for the controller setup screen
    (mobile "Controller Player Setup"/"Controller Setup", Mac "Controller Settings"); iPhone/iPad
    button mapping closes after every change (#575); Mac has no Country, 30 FPS Races, Simpler
