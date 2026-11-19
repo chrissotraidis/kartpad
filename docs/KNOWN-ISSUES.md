@@ -115,7 +115,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   Simulator passes and device confirmation is still open. Two things to rule
   out first: a folder still stored in the cloud that has not finished
   downloading, and an app installed inside a sandboxing loader such as
-  LiveContainer, which is not a verified way to run KartPad. Workaround: put
+  LiveContainer, which is not a verified way to run KartPad. In LiveContainer,
+  long-press KartPad, open its **Settings** and turn on **Fix File Picker**; a
+  player confirmed that makes Open work (#539). Otherwise, put
   the folder (with `sys` and `files` directly inside) in **On My iPhone/iPad →
   KartPad**, then import it from there. The `ios-for-padmint.ipa` alone cannot
   play the game; importing DATA does not supply the translated game code.
