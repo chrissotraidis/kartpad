@@ -4,14 +4,15 @@
 
 Paused by Chris; nothing below is published. Ask "what are we left working on?" and this is the list.
 
-1. **0.8.12 release, held (planned for Friday).** Files and scripts in
-   `private/release-0.8.12/` of the `kartpad-weekend-0811` worktree were cut from `1caca7d` and
-   passed every check; re-cut steps are in that folder's `HANDOFF.md`. `main` has since gained the Mac black-frame and memory fixes (#580), so
-   **re-cut 0.8.12 from current `main`** (rebuild, rerun update and player checks) before
-   publishing as a prerelease. Publishing needs Chris's go-ahead.
-   **Chris said on Discord (19 November) that the next build will have the experimental 120 FPS
-   toggle for Android**, so finish draft #581 (off by default, labelled experimental) and include it
-   in the re-cut.
+1. **0.8.12 (build 278) is a GitHub draft, waiting for Chris to publish (planned for Friday).**
+   Re-cut 19 November from merge `f99e9ca` (#589). It includes #580 (Mac fixes), #586 (iPhone/iPad
+   controller mapping), #587 (Recommended for This Phone) and #581 (120 FPS Races, experimental, off by
+   default). Audits, update checks (over 0.8.11 and over the unpublished build 277) and all three player
+   checks passed; results and **Not checked** are in the draft's notes. Files, logs and `publish.sh` (it
+   flips the draft to a prerelease) are in `private/release-0.8.12-recut/` of the `kartpad-weekend-0811`
+   worktree, with a `HANDOFF.md`. After publishing: player checks without the checkout, then the
+   README/STATUS docs PR. Needs a phone before Latest: a 512.762 Snapdragon (Turnip advice), a 120 Hz
+   phone (120 FPS on both engines; the Beta engine only adds frames on a display faster than 60 Hz).
 2. **#554 auto-accelerate slowdown.** Hypothesis: the phone drops CPU clocks when no finger is on the
    screen. Diagnostics PR [#579](https://github.com/chrissotraidis/kartpad/pull/579) (CI green,
    unmerged) logs touch idle time and CPU clocks. A reply to Sharik7 is drafted in
@@ -26,8 +27,8 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    replied 19 November asking whether the shader cache sticks between launches; waiting on a log.
 4. **Menu consistency audit (18 November), not started:** one name for the controller setup screen
    (mobile "Controller Player Setup"/"Controller Setup", Mac "Controller Settings"); iPhone/iPad
-   button mapping closes after every change (#575, fixed in PR
-   [#586](https://github.com/chrissotraidis/kartpad/pull/586), unmerged); Mac has no Country, 30 FPS Races, Simpler
+   button mapping closes after every change (#575, fixed in
+   [#586](https://github.com/chrissotraidis/kartpad/pull/586), in the 0.8.12 draft); Mac has no Country, 30 FPS Races, Simpler
    Computer Karts, FPS size or aspect options; Mac duplicates and renamed items (Data menu vs
    Settings → Game & Data, "Private Wii Server" vs "Experimental Server Settings", "Save Diagnostics
    Report" vs "Save Diagnostic Log"); Character Graphics Test buried under "Graphics Diagnostics";
@@ -42,11 +43,10 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    `git worktree remove --force` (submodules block a normal remove; contents are all on GitHub).
 7. **Mac config:** `~/Library/Application Support/KartPad/Config.toml` points `dvd_root` at
    `kartpad/private/self-build/disc`, which no longer exists, so the Mac app asks for game data.
-8. **Driver advice like DriftDroid's.** PR [#587](https://github.com/chrissotraidis/kartpad/pull/587)
-   (unmerged) adds Android **Graphics & Performance → Recommended for This Phone**: names the GPU and
-   Qualcomm driver build, and recommends Turnip on the 512.762 driver behind the missing-characters
-   fault. Checked on the emulator's non-Snapdragon path only; the Turnip path needs a 512.762 phone
-   (S24, S24 Ultra, Moto G85) before release. Candidate for the 0.8.12 re-cut if Chris approves.
+8. **Driver advice like DriftDroid's.** Merged in #587 and in the 0.8.12 draft: Android **Graphics &
+   Performance → Recommended for This Phone** names the GPU and Qualcomm driver build, and recommends
+   Turnip on the 512.762 driver behind the missing-characters fault. The Turnip path still needs a
+   512.762 phone (S24, S24 Ultra, Moto G85).
 
 ## Older loop notes (October)
 
