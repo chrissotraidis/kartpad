@@ -158,6 +158,34 @@ the game before backing it up. On Apple TV, use
 For iPhone/iPad, follow the [iOS save-transfer steps](#iphone-and-ipad-save-transfer)
 above; Android's rating-restore action is not available there.
 
+## Time Trial ghosts (.rkg)
+
+**Game Data & Saves → Time Trial Ghosts (.rkg)…** manages ghosts without
+touching either save. Original and Retro Rewind keep separate collections, so
+pick the game first.
+
+- **Original** lists the licenses in your Original save, then offers **Export a
+  Ghost…** for one of that license's recorded ghosts, or **Import Comparison
+  Ghost…**.
+- **Retro Rewind** needs the supported Retro Rewind pack installed. Choose
+  track, variant and mode, then import one ghost.
+
+An import is staged and applied on the next cold launch rather than
+immediately. Wait for **Restart Now**, then fully close KartPad if it asks you
+to. A pending Retro import can be cancelled from the same menu until it is
+applied.
+
+The two games behave differently on an existing ghost, so read the dialog.
+**Original** replaces the downloaded comparison ghost for the course named in
+the `.rkg` and backs up your save first; personal-best records are untouched.
+**Retro** adds a new comparison file and refuses instead of overwriting: a
+ghost already in the selected folder, or one identical to that course's bundled
+expert, is rejected rather than replaced.
+
+Ghost transfer moves a recording between installations. It does not convert a
+ghost between games or modes, and Original and Retro collections stay
+separate. Your licenses, records and saves are left alone.
+
 ## Display and performance
 
 **Mac VSync:** the Mac app's graphics settings have an experimental
