@@ -4803,17 +4803,22 @@ static void KartPadApplySoundLevels(BOOL persist) {
           handler:^(UIAlertAction *selected) {
         [SunPadControllerMappingStore setMapping:SunPadControllerButtonMappingByAssigning(
             [SunPadControllerMappingStore mapping], physical, gameButton)];
+        [weakSelf showControllerButtonMapping];
       }]];
       [choice addAction:[UIAlertAction actionWithTitle:@"Keep Both Actions" style:UIAlertActionStyleDefault
           handler:^(UIAlertAction *selected) {
         [SunPadControllerMappingStore setMapping:SunPadControllerButtonMappingBySharing(
             [SunPadControllerMappingStore mapping], physical, gameButton)];
+        [weakSelf showControllerButtonMapping];
       }]];
-      [choice addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+      [choice addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel
+          handler:^(UIAlertAction *selected) { [weakSelf showControllerButtonMapping]; }]];
       [weakSelf presentOverlayAlert:choice];
     }]];
   }
-  [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+  // Back to the list after every step, so several buttons can be changed in one go (#575).
+  [sheet addAction:[UIAlertAction actionWithTitle:@"Back" style:UIAlertActionStyleCancel
+      handler:^(UIAlertAction *action) { [weakSelf showControllerButtonMapping]; }]];
   [self presentOverlayAlert:sheet];
 }
 
@@ -4845,6 +4850,7 @@ static void KartPadApplySoundLevels(BOOL persist) {
       handler:^(UIAlertAction *action) {
     [SunPadControllerMappingStore setMapping:SunPadControllerButtonMappingByAssigning(
         [SunPadControllerMappingStore mapping], SunPadPhysicalControllerButtonLeftShoulder, SunPadButtonL)];
+    [weakSelf showControllerButtonMapping];
   }]];
   [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Controller Mapping"
       style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
