@@ -142,6 +142,7 @@ class KartPadActivity : SDLActivity() {
         }
         KartPadJoystickHandler.install()
         super.onCreate(savedInstanceState)
+        KartPadPhoneAdviceDialog.warmUp()
         KartPadExitDiagnostics.mark(this, runtimeProfile)
         if (mBrokenLibraries) return
         if (KartPadNativeRuntime.fellBackToClassic) {
@@ -790,6 +791,10 @@ class KartPadActivity : SDLActivity() {
     // Android-only graphics and speed options, kept out of Display.
     private fun showGraphicsMenu(): Unit = showKartPadMenuPage(
         "Graphics & Performance", listOfNotNull(
+            MenuRow("Recommended for This Phone", R.drawable.ic_kartpad_display,
+                detail = KartPadPhoneAdviceDialog.menuDetail(this)) {
+                closeKartPadMenu { KartPadPhoneAdviceDialog.show(this) { showGpuDriverSettings() } }
+            },
             if (KartPadNativeRuntime.isAvailable()) MenuRow("Graphics Engine", R.drawable.ic_kartpad_display,
                 submenu = true, detail = KartPadNativeRuntime.label(filesDir)) {
                 closeKartPadMenu(::showGraphicsEngineSettings)
