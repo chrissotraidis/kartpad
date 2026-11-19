@@ -20,7 +20,7 @@ static void KartPadRequestLandscapeGeometry(UIWindow *window) {
         return;
     UIWindowSceneGeometryPreferencesIOS *preferences =
         [[UIWindowSceneGeometryPreferencesIOS alloc]
-            initWithInterfaceOrientations:UIInterfaceOrientationMaskLandscape];
+            initWithInterfaceOrientations:(UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskLandscape)];
     [windowScene requestGeometryUpdateWithPreferences:preferences
                                          errorHandler:^(NSError *error) {
         NSLog(@"[KartPad] landscape geometry request failed: %@", error);
@@ -33,7 +33,7 @@ static void KartPadRequestLandscapeGeometry(UIWindow *window) {
     supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     (void)application;
     (void)window;
-    return UIInterfaceOrientationMaskLandscape;
+    return UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskLandscape;
 }
 
 - (BOOL)application:(UIApplication *)application

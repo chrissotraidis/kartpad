@@ -17,6 +17,10 @@
 #import "SunPadInputMixer.h"
 #import "SunPadSettings.h"
 #include "KartPadUpdateCheck.inc.mm"
+
+extern "C" bool KartPadDeviceIsIPad() {
+  return UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad;
+}
 #include "audio_backend.h"
 #include "music_attenuation.h"
 #include "runtime_config.h"
@@ -1276,7 +1280,7 @@ static NSString *const kKartPadPreferredGameKey = @"KartPadPreferredGame";
 }
 
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-  return UIInterfaceOrientationMaskLandscape;
+  return UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskLandscape;
 }
 @end
 
