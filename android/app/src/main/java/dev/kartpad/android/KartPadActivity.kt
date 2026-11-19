@@ -155,6 +155,13 @@ class KartPadActivity : SDLActivity() {
                 "The GPU driver you chose stopped the game, so KartPad is using the phone's driver. " +
                     "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
+        // 120 FPS Races is experimental: if the game crashed last time with it on, turn it off.
+        if (KartPadTouchSettings.frameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
+            KartPadTouchSettings.setFrameInterpolationFps(this, 0)
+            android.widget.Toast.makeText(this,
+                "KartPad closed unexpectedly with 120 FPS Races on, so it's off now. " +
+                    "You can turn it on again in Graphics & Performance.", android.widget.Toast.LENGTH_LONG).show()
+        }
         // A minute of play means this start worked; see KartPadNativeRuntime.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
             {

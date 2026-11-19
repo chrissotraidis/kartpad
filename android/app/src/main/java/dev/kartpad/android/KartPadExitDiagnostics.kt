@@ -10,7 +10,25 @@ import org.json.JSONObject
 /** Bounded metadata for this app only. Never reads system traces or descriptions. */
 internal object KartPadExitDiagnostics {
     private var lastState: String? = null
+    private var previousRunChecked = false
     private val statePattern = Regex("kp1:([1-9][0-9]{0,8}):(chooser|base|retro_rewind)")
+
+    /**
+     * True, once per process, when this game process's previous run ended in a crash or
+     * "not responding". Android 11 and later; false elsewhere or when the API is unavailable.
+     */
+    fun previousRunCrashed(context: Context): Boolean {
+        if (previousRunChecked || Build.VERSION.SDK_INT < 30) return false
+        previousRunChecked = true
+        return runCatching {
+            val process = android.app.Application.getProcessName()
+            context.getSystemService(ActivityManager::class.java)
+                ?.getHistoricalProcessExitReasons(context.packageName, 0, 8)
+                ?.firstOrNull { it.processName == process }?.reason in setOf(
+                    ApplicationExitInfo.REASON_CRASH, ApplicationExitInfo.REASON_CRASH_NATIVE,
+                    ApplicationExitInfo.REASON_ANR)
+        }.getOrDefault(false)
+    }
 
     fun mark(context: Context, profile: String) {
         if (Build.VERSION.SDK_INT < 30) return
