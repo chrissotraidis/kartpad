@@ -155,6 +155,13 @@ class KartPadActivity : SDLActivity() {
                 "The GPU driver you chose stopped the game, so KartPad is using the phone's driver. " +
                     "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
+        // 120 FPS Races is experimental: if the game crashed last time with it on, turn it off.
+        if (KartPadTouchSettings.frameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
+            KartPadTouchSettings.setFrameInterpolationFps(this, 0)
+            android.widget.Toast.makeText(this,
+                "KartPad closed unexpectedly with 120 FPS Races on, so it's off now. " +
+                    "You can turn it on again in Graphics & Performance.", android.widget.Toast.LENGTH_LONG).show()
+        }
         // A minute of play means this start worked; see KartPadNativeRuntime.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
             {
@@ -802,7 +809,10 @@ class KartPadActivity : SDLActivity() {
             MenuRow("30 FPS Races", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.thirtyFpsRaces(this),
                 detail = "Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race.") {
-                KartPadTouchSettings.setThirtyFpsRaces(this, !KartPadTouchSettings.thirtyFpsRaces(this))
+                val on = !KartPadTouchSettings.thirtyFpsRaces(this)
+                KartPadTouchSettings.setThirtyFpsRaces(this, on)
+                // In-between frames assume 60 FPS races, so the two switches exclude each other.
+                if (on) KartPadTouchSettings.setFrameInterpolationFps(this, 0)
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
@@ -810,6 +820,15 @@ class KartPadActivity : SDLActivity() {
                 switchOn = KartPadTouchSettings.simplerComputerKarts(this),
                 detail = "Computer karts use split-screen models. Saves CPU. From the next race.") {
                 KartPadTouchSettings.setSimplerComputerKarts(this, !KartPadTouchSettings.simplerComputerKarts(this))
+                applyDisplaySettings()
+                showGraphicsMenu()
+            },
+            MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
+                switchOn = KartPadTouchSettings.frameInterpolationFps(this) == 120,
+                detail = "Adds in-between frames in races, for fast phones with 120 Hz screens. Uses more power; may show glitches.") {
+                val on = KartPadTouchSettings.frameInterpolationFps(this) != 120
+                KartPadTouchSettings.setFrameInterpolationFps(this, if (on) 120 else 0)
+                if (on) KartPadTouchSettings.setThirtyFpsRaces(this, false)
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
@@ -1122,6 +1141,7 @@ class KartPadActivity : SDLActivity() {
         )
         if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
         if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
+        if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.frameInterpolationFps(this))
     }
 
     private fun showAspectRatioSettings() {
@@ -2949,6 +2969,7 @@ class KartPadActivity : SDLActivity() {
 
     private external fun nativeApplySoundLevels(music: Float, sounds: Float)
     private external fun nativeIsBloomDisabled(): Boolean
+    private external fun nativeApplyFrameInterpolation(fps: Int)
     private external fun nativeSetBloomDisabled(disabled: Boolean): Boolean
     private external fun nativeApplyThirtyFpsRaces(enabled: Boolean)
     private external fun nativeApplySimplerComputerKarts(enabled: Boolean)

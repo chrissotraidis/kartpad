@@ -95,6 +95,7 @@ object KartPadTouchSettings {
  fun aspectMode(context: android.content.Context) = 0
  fun thirtyFpsRaces(context: android.content.Context) = true
  fun simplerComputerKarts(context: android.content.Context) = false
+ fun frameInterpolationFps(context: android.content.Context) = 0
 }
 object KartPadRendererDiagnostics { fun enabled(context: android.content.Context) = true }
 object KartPadNativeRuntime { fun engine(filesDir: java.io.File) = "classic" }
@@ -143,6 +144,7 @@ fun main() {
   check(exported.getString("gpu_driver") == "system")
   check(exported.getBoolean("thirty_fps_races"))
   check(!exported.getBoolean("simpler_computer_karts"))
+  check(exported.getInt("frame_interpolation_fps") == 0)
   val inGame = KartPadReportContext.snapshot(context, "base", false)
   check(!inGame.getBoolean("renderer_validation"))
   check(inGame.getBoolean("renderer_validation_configured"))

@@ -8,7 +8,7 @@ Android and iPhone/iPad use the same hierarchy for shared controls. The table de
 | Multiplayer | Local Split-Screen; Controller Setup; Retro WFC Friend Rooms (Retro Rewind only); Country; Experimental Server Settings |
 | Controls | Controller Button Mapping; Touch Control Settings; Auto-hide Touch Controls with Controller (iPhone/iPad); Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
 | Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; Disable Bloom; App Icon |
-| Graphics & Performance | Graphics Engine (Android); 30 FPS Races; Simpler Computer Karts; GPU Driver (Android, Snapdragon); Graphics Diagnostics (Android) |
+| Graphics & Performance | Recommended for This Phone (Android); Graphics Engine (Android); 30 FPS Races; Simpler Computer Karts; 120 FPS Races (Experimental, Android); GPU Driver (Android, Snapdragon); Graphics Diagnostics (Android) |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Retro Rewind Music; Import from Extracted Folder; Import or Reimport Wii Disc Image; Remove Stored Game Data |
 
 On iPhone and iPad the touch controls hide while a controller is Player 1, whom touch shares; a controller on Player 2–4 does not hide them. **Show Touch Controls** brings them back with the controller still connected and turns **Auto-hide Touch Controls with Controller** off until it is turned on again; that setting is the same one as the **Hide on controller** switch in Touch Control Settings. Android keeps only its own switch for now.
@@ -54,6 +54,12 @@ Player Identity contains license rename and Mii selection/repair. Save restore v
 
 Report a Problem offers a reviewable diagnostic flow. The iPhone/iPad form scrolls and adapts to the keyboard. Android private diagnostic ZIPs may include bounded retained system crash/ANR traces; these are excluded from public issue metadata. Apple reports add lifecycle, thermal, memory and display context. More diagnostics help investigations; they do not establish that a crash or performance problem is fixed.
 
+## 120 FPS Races (Android, experimental)
+
+**120 FPS Races (Experimental)** (Android, from 0.8.12, off by default) draws an in-between frame after each of the game's frames during races, for phones with 120 Hz screens. The game itself still runs at 60. It roughly doubles the work of drawing each frame, so it's for fast phones only; when the phone can't keep up, KartPad drops the extra frames. Turning it on turns off 30 FPS Races, and the other way round.
+
 ## GPU Driver (Android, Snapdragon)
+
+From 0.8.12, **⋯ → Graphics & Performance → Recommended for This Phone** names the phone's GPU (and, on Snapdragon, Qualcomm's driver build) and says what to use. On the Qualcomm 512.762 driver behind missing or white characters on Adreno 6xx/7xx it recommends Turnip, and **Get a Driver…** opens GPU Driver. Elsewhere it recommends the phone's driver, plus 30 FPS Races and Simpler Computer Karts if races slow down. It can't tell how fast a particular phone is; it only reads the GPU and driver.
 
 **⋯ → Graphics & Performance → GPU Driver** chooses the Vulkan driver the game uses. **Add Driver… → Download a Driver…** lists recent AdrenoTools packages from three public sources (K11MCH1's Turnip and Qualcomm builds, whitebelyash's Mainline and Stable Turnip, and Weab-chan's Turnip CI); **Install from a .zip File…** takes a package you downloaded yourself. Choose it, tap **Save**, then **Restart to Selector**. From 0.8.9, if the chosen driver doesn't load, the GPU Driver row reads *Phone's driver (… didn't load)* and the driver list shows the reason; if the game can't start graphics with it, the next start goes back to the phone's driver by itself. Before 0.8.9 a chosen driver never loaded (see [known issues](KNOWN-ISSUES.md)).
