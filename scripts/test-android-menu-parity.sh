@@ -216,7 +216,8 @@ start_menu
 tap_label "Graphics & Performance"
 sleep 1
 dump_tree
-assert_labels "30 FPS Races" "Simpler Computer Karts" "Graphics Diagnostics…"
+assert_labels "Recommended for This Phone" "30 FPS Races" "Simpler Computer Karts"
+scroll_to_labels "120 FPS Races (Experimental)" "Graphics Diagnostics…"
 
 start_menu
 tap_label "Game Data & Saves"

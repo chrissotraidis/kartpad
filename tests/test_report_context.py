@@ -143,6 +143,7 @@ fun main() {
   check(exported.getString("gpu_driver") == "system")
   check(exported.getBoolean("thirty_fps_races"))
   check(!exported.getBoolean("simpler_computer_karts"))
+  check(exported.getInt("frame_interpolation_fps") == 0)
   val inGame = KartPadReportContext.snapshot(context, "base", false)
   check(!inGame.getBoolean("renderer_validation"))
   check(inGame.getBoolean("renderer_validation_configured"))

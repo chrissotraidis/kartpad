@@ -802,7 +802,10 @@ class KartPadActivity : SDLActivity() {
             MenuRow("30 FPS Races", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.thirtyFpsRaces(this),
                 detail = "Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race.") {
-                KartPadTouchSettings.setThirtyFpsRaces(this, !KartPadTouchSettings.thirtyFpsRaces(this))
+                val on = !KartPadTouchSettings.thirtyFpsRaces(this)
+                KartPadTouchSettings.setThirtyFpsRaces(this, on)
+                // In-between frames assume 60 FPS races, so the two switches exclude each other.
+                if (on) KartPadTouchSettings.setFrameInterpolationFps(this, 0)
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
@@ -815,9 +818,10 @@ class KartPadActivity : SDLActivity() {
             },
             MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.frameInterpolationFps(this) == 120,
-                detail = "Adds in-between frames in races, for 120 Hz screens. Uses more power; may show glitches.") {
-                val on = KartPadTouchSettings.frameInterpolationFps(this) == 120
-                KartPadTouchSettings.setFrameInterpolationFps(this, if (on) 0 else 120)
+                detail = "Adds in-between frames in races, for fast phones with 120 Hz screens. Uses more power; may show glitches.") {
+                val on = KartPadTouchSettings.frameInterpolationFps(this) != 120
+                KartPadTouchSettings.setFrameInterpolationFps(this, if (on) 120 else 0)
+                if (on) KartPadTouchSettings.setThirtyFpsRaces(this, false)
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
