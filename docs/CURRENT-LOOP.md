@@ -1,6 +1,6 @@
 # Current goal loop: after 0.8.1
 
-## Outstanding work (18 November 2026) — start here
+## Outstanding work (18–19 November 2026) — start here
 
 Paused by Chris; nothing below is published. Ask "what are we left working on?" and this is the list.
 
@@ -26,13 +26,14 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    replied 19 November asking whether the shader cache sticks between launches; waiting on a log.
 4. **Menu consistency audit (18 November), not started:** one name for the controller setup screen
    (mobile "Controller Player Setup"/"Controller Setup", Mac "Controller Settings"); iPhone/iPad
-   button mapping closes after every change (#575); Mac has no Country, 30 FPS Races, Simpler
+   button mapping closes after every change (#575, fixed in PR
+   [#586](https://github.com/chrissotraidis/kartpad/pull/586), unmerged); Mac has no Country, 30 FPS Races, Simpler
    Computer Karts, FPS size or aspect options; Mac duplicates and renamed items (Data menu vs
    Settings → Game & Data, "Private Wii Server" vs "Experimental Server Settings", "Save Diagnostics
    Report" vs "Save Diagnostic Log"); Character Graphics Test buried under "Graphics Diagnostics";
    iOS menu rebuilt by matching SunPad's English titles; SETTINGS.md still says 0.8.9 and omits the Mac.
 5. **Issue cleanup (needs Chris's OK, it notifies people):** reply to #510, #566, #575; close #539
-   (LiveContainer "Fix File Picker" — add to KNOWN-ISSUES) and likely #475; fold #301/#472/#492/#552
+   (LiveContainer "Fix File Picker", added to KNOWN-ISSUES in #586) and likely #475; fold #301/#472/#492/#552
    into #104 (Qualcomm 512.762 driver); decide or close #90, #91, #100, #203, #300, #449, #534, #295,
    #127, #531; finish or close draft #375.
 6. **Repo cleanup:** ~498 remote branches already merged into `main`; 371 local branches; ~47
@@ -41,6 +42,11 @@ Paused by Chris; nothing below is published. Ask "what are we left working on?" 
    `git worktree remove --force` (submodules block a normal remove; contents are all on GitHub).
 7. **Mac config:** `~/Library/Application Support/KartPad/Config.toml` points `dvd_root` at
    `kartpad/private/self-build/disc`, which no longer exists, so the Mac app asks for game data.
+8. **Driver advice like DriftDroid's.** PR [#587](https://github.com/chrissotraidis/kartpad/pull/587)
+   (unmerged) adds Android **Graphics & Performance → Recommended for This Phone**: names the GPU and
+   Qualcomm driver build, and recommends Turnip on the 512.762 driver behind the missing-characters
+   fault. Checked on the emulator's non-Snapdragon path only; the Turnip path needs a 512.762 phone
+   (S24, S24 Ultra, Moto G85) before release. Candidate for the 0.8.12 re-cut if Chris approves.
 
 ## Older loop notes (October)
 
