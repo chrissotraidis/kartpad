@@ -3,7 +3,27 @@
 This document records credible product opportunities that are not part of the
 current release priority. An entry here is not a shipping promise and should
 not be presented as supported until its implementation and acceptance gates
-pass.
+pass. Work already planned for the next build is in
+[to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
+
+## Ideas for slow Android phones, after the next build
+
+These build on the performance check and settings offer in the to-do. None
+needs new hardware.
+
+- **Performance profiles.** One choice, **Smooth**, **Balanced** or **Best
+  Looking**, that sets 30 FPS Races, Simpler Computer Karts, render resolution
+  and bloom together, picked automatically from the performance check.
+- **Anonymous speed table from player results.** Players paste their check
+  result into a GitHub discussion; the README's
+  [What to expect](../README.md#what-to-expect-on-your-phone) table grows from
+  real phones instead of three measured ones.
+- **Heat warning.** When Android reports thermal throttling during a race, show
+  a small note that the phone is hot and racing will slow down, so players
+  don't read it as a bug.
+- **Remote device labs** for the Snapdragon character fault: Samsung's Remote
+  Test Lab may offer a Galaxy S24 to reproduce the 512.762 fault without
+  buying one. Availability isn't checked.
 
 ## Android D-pad and shoulder remapping
 
@@ -150,6 +170,10 @@ commit it to the next build or establish hardware support.
 ## Android custom Vulkan driver comparison
 
 **Status:** Driver import and selection shipped in [0.8.6](releases/v0.8.6.md).
+From [0.8.12](releases/v0.8.12.md), **Recommended for This Phone** detects
+Qualcomm's 512.762 driver and recommends Turnip, which drew every character on
+both phones that tried it (Galaxy S24 Ultra, Moto G85); see
+[known issues](KNOWN-ISSUES.md#graphics-android).
 On supported Snapdragon devices, **⋯ → Graphics & Performance → GPU Driver**
 accepts AdrenoTools driver packages (`.zip`), including compatible
 [Mesa Turnip](https://docs.mesa3d.org/drivers/freedreno.html) packages. Select the
@@ -157,9 +181,10 @@ installed driver, save, and restart through the app's prompt. KartPad retains
 the phone's driver as the default and falls back if the selected driver cannot
 start graphics.
 
-This is a comparison option, not a confirmed fix for missing characters.
-The S24 reporter [tried Turnip and Adreno drivers without success](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324);
-that report does not include a log identifying which driver actually loaded.
+The S24 reporter's [first attempt](https://github.com/chrissotraidis/kartpad/issues/104#issuecomment-6400448324)
+failed because 0.8.6 to 0.8.8 never actually loaded a chosen driver; from
+0.8.9 Turnip loads and fixes the characters, so Turnip is a working workaround,
+not a fix for Qualcomm's driver.
 A useful comparison needs the same failing scene and the active driver from
 its diagnostic log. Keep the actual-draw investigation in
 [#104](https://github.com/chrissotraidis/kartpad/issues/104) open; neither a failed

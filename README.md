@@ -175,16 +175,22 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.11** (build 276) fixes Android menus with movie thumbnails and
-two online timing faults, includes the Mac Wii Remote extension and Player 1
-fixes, and updates touch controls, rotation and external display mirroring on
-iPhone and iPad ([release notes](docs/releases/v0.8.11.md)). Runtime checks
-used an Android emulator; the Mac controller and iPhone/iPad changes still
-need device testing.
+**KartPad 0.8.12** (build 278), a prerelease from 20 November, adds
+**Recommended for This Phone** on Android, which names your phone's graphics
+chip and says which driver and speed settings to use (Turnip on the Snapdragon
+driver that leaves characters missing). It adds an experimental **120 FPS
+Races** switch for 120 Hz Android phones, off by default and meant for the
+WiiCompiled 0.9 (Beta) engine, keeps the iPhone/iPad controller mapping open
+between changes, and brings the start-up black-frame and memory fixes to the
+Mac ([release notes](docs/releases/v0.8.12.md)). It was tested on the Android
+emulator, with fresh PadMint builds for all three platforms and on a Pixel 9
+Pro XL. A prerelease isn't offered by the in-app updater; install the APK by
+hand, or rebuild with PadMint.
 
-**Earlier: KartPad 0.8.10** (build 275) fixes custom GPU drivers on Android:
-warning before an earlier driver choice switches on and falling back to the
-phone's driver after a failure ([release notes](docs/releases/v0.8.10.md)).
+**Latest: KartPad 0.8.11** (build 276) fixes Android menus with movie
+thumbnails and two online timing faults, and includes the Mac Wii Remote
+fixes ([release notes](docs/releases/v0.8.11.md)). It stays the version the
+in-app updater offers until 0.8.12 is confirmed on more phones.
 
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
@@ -222,8 +228,29 @@ reconnect behavior. Native private-room hosting and Wiimmfi support for
 Original remain unfinished. [Online status](docs/ONLINE.md) records the limits.
 
 Startup shader compilation, track-dependent dips and warm slowdown remain
-known issues. Android's suggested starting point is **1x Native**. Sustained
-60 FPS and external-display output are not generally verified.
+known issues. Android's suggested starting point is **1x Native**.
+External-display output is not generally verified. See what to expect on your
+phone below.
+
+## What to expect on your phone
+
+KartPad runs the game on one processor core, so how fast it runs depends
+mostly on how fast that one core is. Render resolution and the graphics chip
+matter much less. These are typical results in races with twelve racers:
+
+| Your device | Typical races | What to turn on |
+|---|---|---|
+| Recent flagship Android phones (for example Pixel 9, Galaxy S24) | 60 FPS | Nothing. On a 120 Hz screen you can try **120 FPS Races** with the Beta engine |
+| Mid-range Android (for example Dimensity 7300, Snapdragon 6 Gen 4) | 30–60 FPS | **30 FPS Races**, then **Simpler Computer Karts** |
+| Budget Android (for example Helio G85, G99) | 20–30 FPS | **30 FPS Races** and **Simpler Computer Karts**; a steady 30 is the realistic goal |
+| Recent iPhones and iPads, Apple Silicon Mac | 60 FPS (older iPhones aren't measured) | Nothing |
+
+On Android, **⋯ → Graphics & Performance → Recommended for This Phone** (from
+0.8.12) names your graphics chip and says what to use. Both speed settings
+keep races at normal speed: when a phone can't keep up, the race otherwise
+runs in slow motion. If characters are missing or white on a Snapdragon phone,
+that row points you to a Turnip driver. [Known issues](docs/KNOWN-ISSUES.md#performance)
+has the details for each device family.
 
 ## Frequently asked questions
 
@@ -452,7 +479,9 @@ No. PowerPC code is translated ahead of time and compiled into the app. The iPho
 <details>
 <summary>Why is it slow or freezing, and are distorted graphics fixed?</summary>
 
-The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**. Broken characters on Android depend on the GPU: Snapdragon 8 Elite (Adreno 8xx) is fixed by **Automatic** in 0.7.10. 0.8.0's automatic change for older Adreno GPUs hid characters on some phones, so 0.8.1 puts Automatic back. Snapdragon phones on Qualcomm's 512.762 graphics driver (Galaxy S24 and S24 Ultra, Moto G85 and others) still draw characters with invisible bodies; a Turnip driver from **⋯ → Graphics & Performance → GPU Driver** fixed that on the two phones that have tried one. PowerVR is still open. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
+**Slow:** the game runs on one processor core, so mid-range and budget Android phones can't always hold 60 FPS, and a race that can't keep up runs in slow motion. Turn on **⋯ → Graphics & Performance → 30 FPS Races** and **Simpler Computer Karts**; see [what to expect on your phone](#what-to-expect-on-your-phone). The first time a menu or course appears, KartPad prepares its graphics, which causes short pauses; heat and higher render resolutions make things slower. Start at **1×**.
+
+**Broken characters** on Android depend on the GPU, and from 0.8.12 **⋯ → Graphics & Performance → Recommended for This Phone** tells you what to do on yours: Snapdragon 8 Elite (Adreno 8xx) is fixed by **Automatic** in 0.7.10. 0.8.0's automatic change for older Adreno GPUs hid characters on some phones, so 0.8.1 puts Automatic back. Snapdragon phones on Qualcomm's 512.762 graphics driver (Galaxy S24 and S24 Ultra, Moto G85 and others) still draw characters with invisible bodies; a Turnip driver from **⋯ → Graphics & Performance → GPU Driver** fixed that on the two phones that have tried one. PowerVR is still open. [Known issues](docs/KNOWN-ISSUES.md) lists what's open for each device family.
 
 </details>
 
