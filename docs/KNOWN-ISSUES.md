@@ -59,7 +59,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   AdrenoTools driver. Custom drivers really load from 0.8.9 (0.8.6 to 0.8.8
   quietly used the phone's driver whatever you chose), and from 0.8.10 a
   driver that freezes the game or breaks the picture is switched off at the
-  next start, so trying one is safe:
+  next start, so trying one is safe. From 0.8.12, **⋯ → Graphics &
+  Performance → Recommended for This Phone** tells you whether your phone is
+  on the 512.762 driver, and its **Get a Driver…** button opens step 1:
   1. **⋯ → Graphics & Performance → GPU Driver → Add Driver…**, then
      **Download a Driver…** for a recent Turnip release, or **Install from a
      .zip File…** for a package you downloaded yourself.
@@ -140,9 +142,19 @@ the [archive](archive/known-issues-through-2026-09.md).
 - **Short pauses** the first time a menu or course appears, while KartPad
   prepares its graphics. They get rarer the more you play.
 - **Slow on mid-range and older phones.** The game runs on one processor core,
-  so its speed follows that core's speed. Lowering the render resolution
-  usually helps little; resolutions above 1× still cost GPU time, so start at
-  **1×**. The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339).
+  so its speed follows that core's speed. A race frame takes about 14.5 ms on
+  a Pixel 9 Pro XL, about 29 ms on a Dimensity 7300 and about 45 ms on a Helio
+  G85; 60 FPS needs 16.7 ms. Lowering the render resolution usually helps
+  little; resolutions above 1× still cost GPU time, so start at **1×**. Turn on
+  **30 FPS Races** and **Simpler Computer Karts**, and see
+  [what to expect on your phone](../README.md#what-to-expect-on-your-phone).
+  The speed work is tracked in [#339](https://github.com/chrissotraidis/kartpad/issues/339);
+  what's planned next is in [to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
+- **Android, 120 FPS Races (Experimental, 0.8.12) on the Classic engine:**
+  on a Pixel 9 Pro XL, Classic races dropped to 47–57 FPS with stutter with
+  the switch on, against 59 FPS with it off. On the WiiCompiled 0.9 (Beta)
+  engine the same phone held a steady 120 FPS. Use it with Beta, or leave it
+  off. The Beta engine only adds frames on a screen faster than 60 Hz.
 - **Android, WiiCompiled 0.9 (Beta) engine: much slower than Classic on many
   phones, in menus and races (fixed in 0.8.7).** The beta locked its
   game, graphics-command and render threads onto a single CPU core. On a Pixel
@@ -175,9 +187,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   (the main menu and the single-player menus): the game decodes those videos
   on a background thread, and KartPad let that thread finish a whole video
   frame before the game's own frame could start. Once one game frame started
-  late, the video fell behind and kept the following frames late too. A fix
-  exists in draft [#564](https://github.com/chrissotraidis/kartpad/pull/564);
-  it isn't in any release and has been measured on the Android emulator only. The slow Retro WFC lobby in
+  late, the video fell behind and kept the following frames late too. Fixed in
+  0.8.11 ([#564](https://github.com/chrissotraidis/kartpad/pull/564)), measured
+  on the Android emulator only. The slow Retro WFC lobby in
   [#554](https://github.com/chrissotraidis/kartpad/issues/554) plays no video
   and isn't explained yet. Races aren't affected.
 - **Honor Magic 8 Lite (Snapdragon 6 Gen 4):** much slower since the latest

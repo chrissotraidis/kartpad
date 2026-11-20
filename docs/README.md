@@ -1,6 +1,7 @@
 # KartPad documentation
 
-**[To-do: things we decided to do later](TODO.md)**
+**[To-do: things we decided to do later](TODO.md)**, starting with the
+[next build's plan for slow Android phones](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
 
 [Coordinator runbook and implementation plan](MAINTENANCE-AUTOMATION.md) ·
 [Canonical active queue](MAINTENANCE-BOARD.md).

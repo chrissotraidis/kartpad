@@ -1,10 +1,13 @@
 # Current goal loop: after 0.8.1
 
-## Outstanding work (18–19 November 2026) — start here
+## Outstanding work (18–20 November 2026) — start here
 
-Paused by Chris; nothing below is published. Ask "what are we left working on?" and this is the list.
+Ask "what are we left working on?" and this is the list. **Next build:** the slow-phone plan in
+[to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
 
-1. **0.8.12 (build 278) is a GitHub draft, waiting for Chris to publish (planned for Friday).**
+1. **0.8.12 (build 278) was published as a prerelease on 20 November; make it Latest once a phone with
+   the untested hardware confirms it.** Then run the three player checks without the checkout (they
+   build Latest) and update README and STATUS. History of the cut:
    Re-cut 19 November from merge `f99e9ca` (#589). It includes #580 (Mac fixes), #586 (iPhone/iPad
    controller mapping), #587 (Recommended for This Phone) and #581 (120 FPS Races, experimental, off by
    default). Audits, update checks (over 0.8.11 and over the unpublished build 277) and all three player
