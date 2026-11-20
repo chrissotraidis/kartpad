@@ -175,7 +175,7 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.12** (build 278), a prerelease from 20 November, adds
+**KartPad 0.8.12** (build 278), released 20 November, adds
 **Recommended for This Phone** on Android, which names your phone's graphics
 chip and says which driver and speed settings to use (Turnip on the Snapdragon
 driver that leaves characters missing). It adds an experimental **120 FPS
@@ -184,13 +184,12 @@ WiiCompiled 0.9 (Beta) engine, keeps the iPhone/iPad controller mapping open
 between changes, and brings the start-up black-frame and memory fixes to the
 Mac ([release notes](docs/releases/v0.8.12.md)). It was tested on the Android
 emulator, with fresh PadMint builds for all three platforms and on a Pixel 9
-Pro XL. A prerelease isn't offered by the in-app updater; install the APK by
-hand, or rebuild with PadMint.
+Pro XL. A Snapdragon phone on the 512.762 driver and an iPad with a controller
+haven't tried it yet.
 
-**Latest: KartPad 0.8.11** (build 276) fixes Android menus with movie
+**Earlier: KartPad 0.8.11** (build 276) fixes Android menus with movie
 thumbnails and two online timing faults, and includes the Mac Wii Remote
-fixes ([release notes](docs/releases/v0.8.11.md)). It stays the version the
-in-app updater offers until 0.8.12 is confirmed on more phones.
+fixes ([release notes](docs/releases/v0.8.11.md)).
 
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and
