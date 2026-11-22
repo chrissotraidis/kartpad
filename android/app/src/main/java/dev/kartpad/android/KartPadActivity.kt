@@ -156,7 +156,7 @@ class KartPadActivity : SDLActivity() {
                     "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
         // 120 FPS Races is experimental: if the game crashed last time with it on, turn it off.
-        if (KartPadTouchSettings.frameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
+        if (KartPadTouchSettings.activeFrameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
             KartPadTouchSettings.setFrameInterpolationFps(this, 0)
             android.widget.Toast.makeText(this,
                 "KartPad closed unexpectedly with 120 FPS Races on, so it's off now. " +
@@ -823,7 +823,7 @@ class KartPadActivity : SDLActivity() {
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
-            MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
+            if (KartPadNativeRuntime.runningBeta()) MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.frameInterpolationFps(this) == 120,
                 detail = "Adds in-between frames in races, for fast phones with 120 Hz screens. Uses more power; may show glitches.") {
                 val on = KartPadTouchSettings.frameInterpolationFps(this) != 120
@@ -831,7 +831,7 @@ class KartPadActivity : SDLActivity() {
                 if (on) KartPadTouchSettings.setThirtyFpsRaces(this, false)
                 applyDisplaySettings()
                 showGraphicsMenu()
-            },
+            } else null,
             if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null) {
                 MenuRow("GPU Driver", R.drawable.ic_kartpad_display, submenu = true,
                     detail = KartPadGpuDriverSettings.menuDetail(this)) {
@@ -1141,7 +1141,7 @@ class KartPadActivity : SDLActivity() {
         )
         if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
         if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
-        if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.frameInterpolationFps(this))
+        if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.activeFrameInterpolationFps(this))
     }
 
     private fun showAspectRatioSettings() {

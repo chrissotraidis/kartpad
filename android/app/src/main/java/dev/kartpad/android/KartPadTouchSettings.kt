@@ -142,6 +142,13 @@ internal object KartPadTouchSettings {
         preferences(context).edit().putInt(FRAME_INTERPOLATION_FPS, if (value == 120) 120 else 0).apply()
     }
 
+    /**
+     * What the running game uses. The in-between frames only run on the Beta engine: on Classic
+     * they made races stutter (47–57 FPS on a Pixel 9 Pro XL), so the saved choice waits for Beta.
+     */
+    fun activeFrameInterpolationFps(context: Context): Int =
+        if (KartPadNativeRuntime.runningBeta()) frameInterpolationFps(context) else 0
+
     fun fpsSize(context: Context): Int = preferences(context)
         .getInt(FPS_SIZE, 0).coerceIn(0, 2)
 

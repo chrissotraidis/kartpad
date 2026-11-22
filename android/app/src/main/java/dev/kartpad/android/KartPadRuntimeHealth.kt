@@ -105,7 +105,7 @@ internal object KartPadRuntimeHealth {
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
             .put("thirty_fps_races", KartPadTouchSettings.thirtyFpsRaces(context))
             .put("simpler_computer_karts", KartPadTouchSettings.simplerComputerKarts(context))
-            .put("frame_interpolation_fps", KartPadTouchSettings.frameInterpolationFps(context))
+            .put("frame_interpolation_fps", KartPadTouchSettings.activeFrameInterpolationFps(context))
             .toString()
         KartPadHealthJournal(File(context.filesDir, "KartPad/Logs/android-health.log")).append(line)
     }

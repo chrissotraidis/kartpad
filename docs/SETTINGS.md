@@ -56,7 +56,7 @@ Report a Problem offers a reviewable diagnostic flow. The iPhone/iPad form scrol
 
 ## 120 FPS Races (Android, experimental)
 
-**120 FPS Races (Experimental)** (Android, from 0.8.12, off by default) draws an in-between frame after each of the game's frames during races, for phones with 120 Hz screens. The game itself still runs at 60. It roughly doubles the work of drawing each frame, so it's for fast phones only; when the phone can't keep up, KartPad drops the extra frames. Turning it on turns off 30 FPS Races, and the other way round.
+**120 FPS Races (Experimental)** (Android, from 0.8.12, off by default) draws an in-between frame after each of the game's frames during races, for phones with 120 Hz screens. The game itself still runs at 60. It roughly doubles the work of drawing each frame, so it's for fast phones only; when the phone can't keep up, KartPad drops the extra frames. Turning it on turns off 30 FPS Races, and the other way round. From the next version the switch appears only with the WiiCompiled 0.9 (Beta) engine: on Classic the extra frames made races stutter (47–57 FPS on a Pixel 9 Pro XL), so Classic leaves them off and keeps your choice for when you switch to Beta.
 
 ## GPU Driver (Android, Snapdragon)
 
