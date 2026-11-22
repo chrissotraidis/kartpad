@@ -51,7 +51,12 @@ internal object KartPadPhoneAdvice {
             adreno != null && adreno >= 600 && build == 762 -> Advice(label,
                 "Install Turnip. This Qualcomm driver (512.762) is the one that leaves characters missing, white or washed out, and Turnip fixed it on both phones that have tried one.",
                 custom + listOf(
-                    "Get a Driver opens GPU Driver: tap Add Driver…, then Download a Driver…, and pick a recent Turnip release.",
+                    "Get a Driver opens GPU Driver: tap Add Driver…, then Download a Driver…, and pick a Turnip release.",
+                    if (adreno >= 700) {
+                        "Start with Mr. Purple's Turnip T30: it draws every character on a Galaxy S24 Ultra (Adreno 750) with both graphics engines. Mainline Turnip v32 froze the game on that phone."
+                    } else {
+                        "On a Moto G85 (Adreno 619), a Turnip driver from K11MCH1 drew every character with Classic graphics."
+                    },
                     "Not every Turnip build works on every phone. If one freezes or breaks the picture, KartPad goes back to the phone's driver at the next start; try another build.",
                     "If the screen goes black with the WiiCompiled graphics beta, switch back to Classic graphics.",
                 ) + speedTips, Action.GET_DRIVER)
