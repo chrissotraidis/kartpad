@@ -58,6 +58,16 @@ class KartPadActivity : SDLActivity() {
     private var touchSettingsDialog: AlertDialog? = null
     private var resetTouchLayoutDialog: AlertDialog? = null
     private var kartPadMenu: PopupWindow? = null
+    private val slowRaceOffer = KartPadSlowRaceOffer()
+    private val slowRaceCheck = object : Runnable {
+        override fun run() {
+            if (isFinishing || KartPadTouchSettings.thirtyFpsRaces(this@KartPadActivity) ||
+                KartPadSlowRaceOffer.offered(this@KartPadActivity)) return
+            val slowRaceFps = slowRaceOffer.sample(nativeRaceFramesPerSecond())
+            if (slowRaceFps != null) offerThirtyFpsRaces(slowRaceFps)
+            else window.decorView.postDelayed(this, KartPadSlowRaceOffer.POLL_MS)
+        }
+    }
     private var routedControllerButtons = 0
     // #402: with a controller connected and "hide touch controls" on, the ⋯ button
     // fades out too; any touch or mouse click brings it back for a few seconds.
@@ -437,6 +447,7 @@ class KartPadActivity : SDLActivity() {
         KartPadDeviceRumble.setPaused(false)
         if (::motionSteering.isInitialized) motionSteering.start()
         if (BuildConfig.GAME_RUNTIME) KartPadRuntimeHealth.start(this, runtimeProfile)
+        if (BuildConfig.GAME_RUNTIME) window.decorView.postDelayed(slowRaceCheck, KartPadSlowRaceOffer.POLL_MS)
         hideGameSystemBars()
     }
 
@@ -444,6 +455,7 @@ class KartPadActivity : SDLActivity() {
         routedControllerButtons = 0
         KartPadDeviceRumble.setPaused(true)
         KartPadRuntimeHealth.stop()
+        window.decorView.removeCallbacks(slowRaceCheck)
         kartPadMenu?.dismiss()
         if (::editorBar.isInitialized && editorBar.visibility == View.VISIBLE) {
             finishLayoutEditing(returnToSettings = false)
@@ -1142,6 +1154,24 @@ class KartPadActivity : SDLActivity() {
         if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
         if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
         if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.frameInterpolationFps(this))
+    }
+
+    /** Shown once, after a race that ran mostly below 50 FPS; see KartPadSlowRaceOffer. */
+    private fun offerThirtyFpsRaces(averageFps: Float) {
+        KartPadSlowRaceOffer.markOffered(this)
+        AlertDialog.Builder(this)
+            .setTitle("Races Are Running Slow")
+            .setMessage("That race averaged about ${averageFps.toInt()} FPS, so it played in slow motion. " +
+                "30 FPS Races keeps races at full speed by drawing half as many frames, and Simpler Computer Karts " +
+                "saves more processor time. Turn both on? You can change them in Graphics & Performance.")
+            .setPositiveButton("Turn On") { _, _ ->
+                KartPadTouchSettings.setThirtyFpsRaces(this, true)
+                KartPadTouchSettings.setFrameInterpolationFps(this, 0)
+                KartPadTouchSettings.setSimplerComputerKarts(this, true)
+                applyDisplaySettings()
+            }
+            .setNegativeButton("Not Now", null)
+            .show()
     }
 
     private fun showAspectRatioSettings() {
@@ -2973,6 +3003,7 @@ class KartPadActivity : SDLActivity() {
     private external fun nativeSetBloomDisabled(disabled: Boolean): Boolean
     private external fun nativeApplyThirtyFpsRaces(enabled: Boolean)
     private external fun nativeApplySimplerComputerKarts(enabled: Boolean)
+    private external fun nativeRaceFramesPerSecond(): Float
 
     private external fun nativeTestDiagnosticCrash()
     private external fun nativeEnableActivityRecreation()
