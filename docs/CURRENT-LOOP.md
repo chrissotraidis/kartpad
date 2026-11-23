@@ -1,5 +1,8 @@
 # Current goal loop: after 0.8.1
 
+**Android speed:** the [DriftDroid parity loop](DRIFTDROID-PARITY-LOOP.md) (from 23 November) decides what
+performance work comes next.
+
 ## Outstanding work (18–20 November 2026) — start here
 
 Ask "what are we left working on?" and this is the list. **Next build:** the slow-phone plan in
