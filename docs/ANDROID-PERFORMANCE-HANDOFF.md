@@ -25,7 +25,10 @@ thread's `KartPadSched` time per presented frame went from 1.16–1.26 ms to 0.6
 the main menu and from 3.98–4.22 ms to 2.00–2.71 ms at Select Cup (about −43%). The baseline
 was the released 0.8.12, and the native run was a perf build without PGO.
 
-**Not checked:** a phone, the Beta engine, Apple builds. The native decoder is still about
+On 23 November the menu movies also drew correctly on the Beta engine, with a pack rebuilt from
+the committed pins.
+
+**Not checked:** a phone, Apple builds. The native decoder is still about
 1.4× FFmpeg's time per frame, so a faster inverse DCT or Huffman decoder could save more.
 
 ## 14 November: the scheduler online, and the beta engine's game thread
