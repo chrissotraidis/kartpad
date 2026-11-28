@@ -508,9 +508,11 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         self.assertNotIn("shell pm clear dev.kartpad.android", runner)
         self.assertIn("expected_fps_value", runner)
         self.assertIn("top=8 controls=5 display=6 graphics=3 data=7 actions=18", runner)
-        self.assertIn("assert_icon_count 7", runner)
-        self.assertIn("assert_icon_count 5", runner)
-        self.assertIn("assert_icon_count 7", runner)
+        # The eight-row top and Game Data pages show 7 icons on a phone and 8 on a tablet.
+        self.assertIn('assert_icon_count "$long_page_icons"', runner)
+        self.assertIn("long_page_icons=7", runner)
+        self.assertIn("long_page_icons=8", runner)
+        self.assertIn("assert_icon_count 6", runner)
         for icon in ("hand", "gyroscope", "antenna", "refresh", "trash", "mii"):
             self.assertIn(f"R.drawable.ic_kartpad_{icon}", activity)
         self.assertIn('open_top_action "Multiplayer…"', runner)
