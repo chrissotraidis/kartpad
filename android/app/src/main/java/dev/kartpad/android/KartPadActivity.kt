@@ -168,6 +168,13 @@ class KartPadActivity : SDLActivity() {
                 KartPadNativeRuntime.markStarted(filesDir)
                 KartPadGpuDriverSettings.markStarted(this)
             }, KartPadNativeRuntime.HEALTHY_RUN_MS)
+        // On the driver behind missing characters, point to Turnip once, after the game is up.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                if (!isFinishing && !isDestroyed) {
+                    KartPadPhoneAdviceDialog.showOnceIfDriverNeeded(this) { showGpuDriverSettings() }
+                }
+            }, PHONE_ADVICE_DELAY_MS)
         // The runtime decides within seconds whether the chosen GPU driver loaded; say so if it didn't.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
             {
@@ -2994,6 +3001,7 @@ class KartPadActivity : SDLActivity() {
     companion object {
         private var identityStartupChecked = false
         private const val SELECTOR_RESTART_DELAY_MS = 250L
+        private const val PHONE_ADVICE_DELAY_MS = 8_000L
         private const val REQUEST_IMPORT_MII = 4_301
         private const val REQUEST_MANAGE_GAME_DATA = 4_302
         private const val REQUEST_EXPORT_GHOST = 4_320

@@ -78,4 +78,18 @@ internal object KartPadPhoneAdviceDialog {
         }
         dialog.show()
     }
+
+    /**
+     * Shows the advice once per install when it says to get a driver (Qualcomm's 512.762 driver,
+     * #104) and the player hasn't chosen one, so they don't have to find this page themselves.
+     */
+    fun showOnceIfDriverNeeded(activity: Activity, openGpuDriver: () -> Unit) {
+        val preferences = activity.getSharedPreferences("kartpad_phone_advice", Activity.MODE_PRIVATE)
+        if (preferences.getBoolean(OFFERED_DRIVER, false) || KartPadGpuDriverSettings.selectedName(activity) != null) return
+        if (advice(activity).action != KartPadPhoneAdvice.Action.GET_DRIVER) return
+        preferences.edit().putBoolean(OFFERED_DRIVER, true).apply()
+        show(activity, openGpuDriver)
+    }
+
+    private const val OFFERED_DRIVER = "offered_driver"
 }
