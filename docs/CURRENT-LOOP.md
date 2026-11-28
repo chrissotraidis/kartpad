@@ -7,6 +7,8 @@ performance work comes next.
 [0.8.13 release loop](RELEASE-0.8.13-LOOP.md); its journal says what passed and what wasn't checked.
 Publishing needs Chris. Issue replies are drafted in [reply drafts](artifacts/2026-11-28/reply-drafts.md).
 
+**Next week:** make the Mac menus match Android, iPhone and iPad ([to-do](TODO.md#next-week-mac-menus-match-android-iphone-and-ipad)). 0.8.13 left the Mac unchanged.
+
 ## PRs from 22–23 November 2026 (all merged for 0.8.13 on 28 November)
 
 From the 22 November issue review and the slow-phone plan in [to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).

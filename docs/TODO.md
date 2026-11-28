@@ -3,6 +3,16 @@
 Things we've decided to do later. Each item says why, what "done" looks like,
 and where the work lives.
 
+## Next week: Mac menus match Android, iPhone and iPad
+
+0.8.13 gave Android, iPhone and iPad one menu structure (Speed & Graphics with Speed, same page and row names, see [SETTINGS.md](SETTINGS.md)). The Mac wasn't changed and still has its own menu bar (KartPad, Game, Data, Controls, Help) and Settings tabs (Graphics, Audio, Controllers, Game & Data, Advanced). To match:
+
+1. Port 30 FPS Races and Simpler Computer Karts to the Mac runtime. `frame_rate_lock.cpp` and `low_detail_karts.cpp` exist only in the Android and iOS runtimes.
+2. Add Speed & Graphics with the Speed choice to the Mac Settings window.
+3. Rename and regroup the menu bar and Settings tabs to the shared names ("Controller Settings…", "Frame interpolation" and so on), and update SETTINGS.md.
+
+Check with a local Mac build, a race on each preset, and the Mac player check (release loop goal R7).
+
 ## Next build: help slow Android phones without new hardware
 
 *Added 20 November 2026, after 0.8.12.*

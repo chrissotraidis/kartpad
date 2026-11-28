@@ -250,6 +250,13 @@ Decided in the loop on 28 November, while building the candidate:
 
 Newest first: goal, what changed, which checks passed, PR, next step.
 
+- **28 November, night.** Pixel 9 Pro XL: build 279 (re-signed with the owner's test key) installed over
+  0.8.12 in place. No setup, both games ready, Beta engine and switches carried over (Speed read Best
+  Quality, 120 FPS Races still on). Smoothest gave a steady 30.0 FPS race at normal speed on Beta;
+  Retro Rewind menus 60, race 30 with characters drawn. 120 FPS Races not tested (battery saver caps
+  the screen at 60 Hz; Chris said it doesn't need testing). Owner's settings restored and checked after
+  a restart. Chris moved the Mac menu work (R7) to next week; the release notes say the Mac is unchanged.
+
 - **28 November, evening.** R10: #603 fast-forwarded onto `main` (`e4fbf135`), candidate built from
   that tree and left as a **draft prerelease** on GitHub (no tag; Latest is still 0.8.12). Release
   gate on the attached files: CI green, 396 tests locally; fresh install with the app's own import
