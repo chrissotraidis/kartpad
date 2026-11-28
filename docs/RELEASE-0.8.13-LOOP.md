@@ -229,10 +229,34 @@ candidate. These were decided then:
 4. **#131:** one day of reproduction. Without a fix by then, the release ships without it and says so.
 5. **The Pixel 9 Pro XL** (connected) is used for the release gate.
 
+Decided in the loop on 28 November, while building the candidate:
+
+6. **Presets set only the two speed switches.** Best Quality is both off at 1×, today's default, so
+   0.8.12 players and new installs see Best Quality with nothing changed, and Render Resolution
+   stays in Display. Recommended for This Phone reads only the GPU, so it can't pick a preset per
+   phone: it says Speed starts on Best Quality and to choose Smoothest if races slow down, and the
+   slow-race offer switches to Smoothest. Speed shows Custom only for 30 FPS Races on with Simpler
+   Computer Karts off.
+7. **No Help & Report page or Advanced page.** Report a Problem stays a top-level row, because a
+   one-row page adds a tap and iPhone/iPad have no in-game Help. The Android-only rows follow the
+   shared ones on the Speed & Graphics page instead of moving to a separate page, so GPU Driver
+   stays one tap from where 512.762 players are sent.
+8. **#131 is fixed in KartPad's runtime** with a narrow mapping of the award archives Retro Rewind
+   ships but its XML leaves out. The upstream report is drafted for Chris (rr-pulsar #204).
+9. **Mac (R7) and the interrupt-flag fix (R8) move to 0.8.14.** The Mac keeps its own Settings
+   window, documented in SETTINGS.md.
+
 ## Journal
 
 Newest first: goal, what changed, which checks passed, PR, next step.
 
+- **28 November, afternoon.** R1: #131 reproduced on the emulator only with Retro Rewind in Spanish;
+  cause found in Retro Rewind (`RenameAward` without XML mappings), runtime fix wiicompiled #40–#43,
+  both endings pass in Spanish. R2–R6: Speed & Graphics with Speed on Android and iPhone/iPad, map in
+  SETTINGS.md, presets checked in a running Android game (Custom, Balanced, Smoothest reaching
+  `result=30_forced` and low-detail karts). R3: every ready PR merged (#594, #597, #598, #600,
+  #579, #596, #601, #602, #595, #599). R9: docs, release notes and reply drafts. PR #603. Next: R10
+  candidate and release gate.
 - **28 November.** Loop written and revised (finish line, cut lines, presets, all menu surfaces,
   clean-device procedure, #131 harness). Nothing started. No new player reports since 26 November.
 
