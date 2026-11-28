@@ -242,7 +242,7 @@ Decided in the loop on 28 November, while building the candidate:
    shared ones on the Speed & Graphics page instead of moving to a separate page, so GPU Driver
    stays one tap from where 512.762 players are sent.
 8. **#131 is fixed in KartPad's runtime** with a narrow mapping of the award archives Retro Rewind
-   ships but its XML leaves out. The upstream report is drafted for Chris (rr-pulsar #204).
+   ships but its XML leaves out. An upstream report is drafted for Chris as a new rr-pulsar issue. rr-pulsar #204 is a different awards crash (an unmapped read in `Pages::AwardResults::OnInit`, Team VS); WiiCompiled #220 is the matching report.
 9. **Mac (R7) and the interrupt-flag fix (R8) move to 0.8.14.** The Mac keeps its own Settings
    window, documented in SETTINGS.md.
 
@@ -261,6 +261,9 @@ Newest first: goal, what changed, which checks passed, PR, next step.
   released between courses in a Retro Rewind cup). Not checked: any phone, the Pixel 9 Pro XL (not
   connected), the iPhone/iPad Simulator, Retro Rewind languages other than Spanish. Next: Chris
   publishes the draft, then the post-publication player checks and reply drafts.
+  The iOS pin is `25e015d` on `codex/rr-award-language-ios-0813`; `kartpad-ios` also carries
+  `515f901` (iPad portrait orientations for the unmerged TV-display work), which the next iOS repin
+  pulls in unless that work lands first.
 - **28 November, afternoon.** R1: #131 reproduced on the emulator only with Retro Rewind in Spanish;
   cause found in Retro Rewind (`RenameAward` without XML mappings), runtime fix wiicompiled #40–#43,
   both endings pass in Spanish. R2–R6: Speed & Graphics with Speed on Android and iPhone/iPad, map in

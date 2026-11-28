@@ -240,7 +240,7 @@ matter much less. These are typical results in races with twelve racers:
 | Your device | Typical races | Speed to choose |
 |---|---|---|
 | Recent flagship Android phones (for example Pixel 9, Galaxy S24) | 60 FPS | **Best Quality** (the default). On a 120 Hz screen you can try **120 FPS Races** with the Beta engine |
-| Mid-range Android (for example Dimensity 7300, Snapdragon 6 Gen 4) | 30–60 FPS | **Balanced**, or **Smoothest** if races still slow down |
+| Mid-range Android (for example Dimensity 7300, Snapdragon 6 Gen 4) | 30–60 FPS | **Smoothest** if races slow down. **Balanced** keeps 60 FPS and saves less processor time; neither is measured on these phones yet |
 | Budget Android (for example Helio G85, G99) | 20–30 FPS | **Smoothest**; a steady 30 is the realistic goal |
 | Recent iPhones and iPads, Apple Silicon Mac | 60 FPS (older iPhones aren't measured) | **Best Quality** |
 

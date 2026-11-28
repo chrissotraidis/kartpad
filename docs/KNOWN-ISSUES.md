@@ -247,8 +247,11 @@ the [archive](archive/known-issues-through-2026-09.md).
 
 ## Confirmations
 
-The crash after the last race of a cup ([#131](https://github.com/chrissotraidis/kartpad/issues/131)) did not happen in automated
-full cups on 0.7.10; it stays open for a player retest. Android updates itself
+The crash after the last race of a Retro Rewind cup ([#131](https://github.com/chrissotraidis/kartpad/issues/131),
+[#493](https://github.com/chrissotraidis/kartpad/issues/493)) happens only with Retro Rewind set to a language
+other than English: Retro Rewind's XML leaves out the language award archives its code asks for. 0.8.13 maps
+them; checked in Spanish on the emulator, both endings. It stays open until a player confirms. On 0.8.12,
+setting Retro Rewind to English avoids it. Android updates itself
 from 0.7.14, and iPhone, iPad and Mac show an update notice from 0.8.0
 ([#377](https://github.com/chrissotraidis/kartpad/issues/377)); those Apple
 platforms still install through PadMint. Hiding the ⋯ button with a controller
