@@ -37,13 +37,17 @@ since 31 October.
 prewarm only 128 pipelines at launch (`MaxPrewarmPipelineBuilds`, kept low for memory). Raising it
 needs a Mali phone to measure memory. #127 (Mac two-player) needs a PadMint Mac build and two controllers.
 
-**Emulator note.** `KartPad_088_Acceptance_20261107` holds released 0.8.12 with a fresh NAND and
-licence (23 November). Its 19 November save was lost when the emulator was killed without `sync`
+**Emulator note.** `KartPad_088_Acceptance_20261107` holds released 0.8.12 with its 23 November data
+(restored 28 November after the 0.8.13 tests). Its 19 November save was lost when the emulator was killed without `sync`
 (see #598). Its old empty NAND is in `/data/local/tmp/kp-broken-nand-1123`.
 
 ## Outstanding work (18–20 November 2026)
 
-Ask "what are we left working on?" and this is the list. **Next build:** the slow-phone plan in
+> **Superseded by the [after-0.8.13 loop](POST-0.8.13-LOOP.md) (28 November).** 0.8.12 and 0.8.13 shipped
+> items 1, 2, 4 (mobile menus; the Mac part is next week) and 8 below. Items 3, 5, 6 and 7 are history kept
+> for reference; anything still open from them is in the new loop or in [to-do](TODO.md).
+
+Ask "what are we left working on?" and this was the list. **Next build:** the slow-phone plan in
 [to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
 
 1. **0.8.12 (build 278) is released and Latest (20 November).** Still unconfirmed on a Snapdragon
