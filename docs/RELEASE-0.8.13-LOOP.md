@@ -250,6 +250,17 @@ Decided in the loop on 28 November, while building the candidate:
 
 Newest first: goal, what changed, which checks passed, PR, next step.
 
+- **28 November, evening.** R10: #603 fast-forwarded onto `main` (`e4fbf135`), candidate built from
+  that tree and left as a **draft prerelease** on GitHub (no tag; Latest is still 0.8.12). Release
+  gate on the attached files: CI green, 396 tests locally; fresh install with the app's own import
+  (race at 60 FPS); update over published 0.8.12 with Beta, Retro Rewind on launch and 30 FPS Races
+  kept (Speed reads Custom); 30 FPS Races on both engines in Original and on Beta in Retro Rewind;
+  diagnostic log; menu parity on phone and tablet emulators; PadMint player checks for iPhone/iPad,
+  Mac and Android from PadMint `main` (`cea6b43`); audits with only the accepted findings.
+  Not completed: the eight-course memory loop (its taps lost sync three times; textures were
+  released between courses in a Retro Rewind cup). Not checked: any phone, the Pixel 9 Pro XL (not
+  connected), the iPhone/iPad Simulator, Retro Rewind languages other than Spanish. Next: Chris
+  publishes the draft, then the post-publication player checks and reply drafts.
 - **28 November, afternoon.** R1: #131 reproduced on the emulator only with Retro Rewind in Spanish;
   cause found in Retro Rewind (`RenameAward` without XML mappings), runtime fix wiicompiled #40–#43,
   both endings pass in Spanish. R2–R6: Speed & Graphics with Speed on Android and iPhone/iPad, map in

@@ -8,8 +8,9 @@ sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
 adb="$sdk_root/platform-tools/adb"
 lane="${1:-phone}"
 case "$lane" in
-  phone) user_rotation=1; expected_width=2400; expected_height=1080 ;;
-  tablet) user_rotation=0; expected_width=2560; expected_height=1600 ;;
+  # long_page_icons: rows with icons that fit on screen in the eight-row top and Game Data pages.
+  phone) user_rotation=1; expected_width=2400; expected_height=1080; long_page_icons=7 ;;
+  tablet) user_rotation=0; expected_width=2560; expected_height=1600; long_page_icons=8 ;;
   *) echo "ERROR: lane must be phone or tablet" >&2; exit 64 ;;
 esac
 
@@ -106,11 +107,16 @@ scroll_to_labels() {
   for _ in {1..8}; do
     if assert_labels "$@" 2>/dev/null; then return 0; fi
     "$adb" shell input swipe \
-      "$((expected_width / 2))" "$((expected_height * 3 / 4))" \
-      "$((expected_width / 2))" "$((expected_height / 4))" 300
+      "${scroll_x:-$((expected_width / 2))}" "$((expected_height * 3 / 4))" \
+      "${scroll_x:-$((expected_width / 2))}" "$((expected_height / 4))" 300
     dump_tree
   done
   assert_labels "$@"
+}
+
+# The in-game menu is a card at the right edge; a swipe over the game closes it.
+menu_scroll_to_labels() {
+  scroll_x=$((expected_width - 400)) scroll_to_labels "$@"
 }
 
 assert_icon_count() {
@@ -156,6 +162,7 @@ PY
 
 open_top_action() {
   start_menu
+  menu_scroll_to_labels "$1"
   tap_label "$1"
   sleep 1
   dump_tree
@@ -166,6 +173,7 @@ open_submenu_action() {
   tap_label "$1"
   sleep 1
   dump_tree
+  menu_scroll_to_labels "$2"
   tap_label "$2"
   sleep 1
   dump_tree
@@ -179,12 +187,13 @@ top=(
   "Speed & Graphics"
   "Display"
   "Game Data & Saves"
-  "Report a Problem…"
 )
 
 start_menu
 assert_labels "${top[@]}"
-assert_icon_count 7
+assert_icon_count "$long_page_icons"
+# Sound… pushed the last row below the fold on a 2400x1080 phone.
+menu_scroll_to_labels "Report a Problem…"
 
 start_menu
 tap_label "Controls"
@@ -194,23 +203,24 @@ assert_labels \
   "Controller Player Setup…" \
   "Controller Button Mapping…" \
   "Touch Control Settings…" \
+  "Shake to Trick…" \
   "Motion Steering…" \
   "Experimental Wii Remote + Nunchuk…"
-assert_icon_count 5
+assert_icon_count 6
 
 start_menu
 tap_label "Display"
 sleep 1
 dump_tree
 assert_labels "Show FPS Counter" "FPS Counter Size" "Aspect Ratio" "Render Resolution"
-scroll_to_labels "Disable Bloom"
+menu_scroll_to_labels "Disable Bloom"
 tap_label "Disable Bloom"
 dump_tree
 grep -Fq 'content-desc="Disable Bloom, on"' "$tree"
 tap_label "Disable Bloom"
 dump_tree
 grep -Fq 'content-desc="Disable Bloom, off"' "$tree"
-scroll_to_labels "App Icon"
+menu_scroll_to_labels "App Icon"
 
 start_menu
 tap_label "Speed & Graphics"
@@ -240,7 +250,8 @@ dump_tree
 grep -Fq 'content-desc="Speed, Best Quality"' "$tree"
 grep -Fq 'content-desc="30 FPS Races, off"' "$tree"
 grep -Fq 'content-desc="Simpler Computer Karts, off"' "$tree"
-scroll_to_labels "120 FPS Races (Experimental)" "Graphics Diagnostics…"
+# 120 FPS Races shows only while the Beta engine runs, which the fixture doesn't.
+menu_scroll_to_labels "Graphics Diagnostics…"
 
 start_menu
 tap_label "Game Data & Saves"
@@ -249,11 +260,11 @@ dump_tree
 assert_labels \
   "Import or Reimport Wii Disc Image…" \
   "Import from Extracted Folder…" \
-  "Remove Stored Game Data…" \
   "Manage Retro Rewind…" \
   "Manage Saves…" \
   "Player Identity…"
-assert_icon_count 7
+assert_icon_count "$long_page_icons"
+menu_scroll_to_labels "Remove Stored Game Data…"
 
 open_top_action "Return to KartPad Menu"
 assert_labels "Mario Kart Wii" "Paused" "Resume Game  →" "Retro Rewind" "Next launch" "Use on Next Launch  →"
@@ -291,22 +302,25 @@ grep -Eq "<boolean name=\"show_fps\" value=\"$expected_fps_value\"[[:space:]]*/>
 }
 
 open_submenu_action "Controls" "Controller Button Mapping…"
-assert_labels "Controller Button Mapping" "A — ACCELERATE / CONFIRM — A" "ZR — REAR VIEW — LEFT SHOULDER"
+assert_labels "Controller Button Mapping" "A — ACCELERATE / CONFIRM — A"
+scroll_to_labels "ZR — REAR VIEW — LEFT SHOULDER"
 scroll_to_labels "RESET TO DEFAULT" "DONE"
 
 open_submenu_action "Controls" "Touch Control Settings…"
-assert_labels "Touch Control Settings" "Auto-accelerate"
+assert_labels "Touch Control Settings" "Touch auto-accelerate"
 auto_accelerate_before="$(python3 - "$tree" <<'PY'
 import sys, xml.etree.ElementTree as ET
-print(next(n.attrib['checked'] for n in ET.parse(sys.argv[1]).iter('node') if n.attrib.get('text') == 'Auto-accelerate'))
+print(next(n.attrib['checked'] for n in ET.parse(sys.argv[1]).iter('node') if n.attrib.get('text') == 'Touch auto-accelerate'))
 PY
 )"
-if [[ "$auto_accelerate_before" == true ]]; then tap_label "Auto-accelerate"; fi
+if [[ "$auto_accelerate_before" == true ]]; then tap_label "Touch auto-accelerate"; fi
+# The switch saves with SharedPreferences.apply(); let it reach disk before the force-stop.
+sleep 2
 open_submenu_action "Controls" "Touch Control Settings…"
-assert_checked_label "Auto-accelerate" false
+assert_checked_label "Touch auto-accelerate" false
 "$adb" exec-out run-as dev.kartpad.android cat shared_prefs/kartpad_touch_controls.xml |
   grep -Eq '<boolean name="auto_accelerate" value="false"[[:space:]]*/>'
-if [[ "$auto_accelerate_before" == true ]]; then tap_label "Auto-accelerate"; fi
+if [[ "$auto_accelerate_before" == true ]]; then tap_label "Touch auto-accelerate"; fi
 scroll_to_labels "MOVE CONTROLS" "RESET THIS DEVICE LAYOUT"
 
 open_submenu_action "Controls" "Motion Steering…"
@@ -426,8 +440,10 @@ def bounds(node):
     return tuple(map(int, re.findall(r"\d+", node.attrib["bounds"])))
 
 heading = next(node for node in nodes if node.attrib.get("content-desc") == "KartPad")
-final_row = next(node for node in nodes if node.attrib.get("text") == "Report a Problem…")
 left, top, right, _ = bounds(heading)
+# The menu scrolls, so measure the lowest row the card shows.
+final_row = max((node for node in nodes if node.attrib.get("text") and bounds(node)[0] >= left),
+                key=lambda node: bounds(node)[3])
 _, _, _, bottom = bounds(final_row)
 window = open(insets_path, encoding="utf-8").read()
 cutout = re.search(
