@@ -20,7 +20,9 @@ Not posted. Post each one when 0.8.13 is published, and close an issue only when
 >
 > Chris
 
-## Retro Rewind upstream (rr-pulsar #204), for Chris to post if he wants to
+## Retro Rewind upstream (a new rr-pulsar issue), for Chris to post if he wants to
+
+rr-pulsar #204 is a different awards crash (an unmapped read in `Pages::AwardResults::OnInit`, narrowed to Team VS), so this should be its own issue. The matching reports are WiiCompiled #220, #249 and #106, which patchzyy closed as Retro Rewind bugs.
 
 > The awards crash (`ARCInitHandle: bad archive format` after the last race of a GP) reproduces whenever the Pulsar language setting is anything but English. `RenameAward()` in `PulsarEngine/Languages.cpp` renames `/Scene/UI/Award` to `/Ucene/UI/Award` (Spanish US), `/Fcene/…` (French) and so on, but `RetroRewind6.xml` only maps the per-language `Race` and `Common` archives. `/?cene/UI/Award.szs` and `/?cene/UI/Award_E.szs` then don't exist, the awards scene's UI holder keeps two empty slots, and `AttachLayoutResources` passes their null archive to `ARCInitHandle`. Adding `<file disc="/Ucene/UI/Award.szs" external="/RetroRewind6/UI/Award.szs"/>` and `Award_E/_J/_U` → `Language/SPA(NTSC)/UI/Award_AS.szs` (and the same for each language, as for Race) should fix it. KartPad 0.8.13 adds those mappings in its runtime as a workaround.
 
