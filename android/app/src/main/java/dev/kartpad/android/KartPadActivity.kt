@@ -166,7 +166,7 @@ class KartPadActivity : SDLActivity() {
                     "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
         // 120 FPS Races is experimental: if the game crashed last time with it on, turn it off.
-        if (KartPadTouchSettings.frameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
+        if (KartPadTouchSettings.activeFrameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
             KartPadTouchSettings.setFrameInterpolationFps(this, 0)
             android.widget.Toast.makeText(this,
                 "KartPad closed unexpectedly with 120 FPS Races on, so it's off now. " +
@@ -178,6 +178,13 @@ class KartPadActivity : SDLActivity() {
                 KartPadNativeRuntime.markStarted(filesDir)
                 KartPadGpuDriverSettings.markStarted(this)
             }, KartPadNativeRuntime.HEALTHY_RUN_MS)
+        // On the driver behind missing characters, point to Turnip once, after the game is up.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                if (!isFinishing && !isDestroyed) {
+                    KartPadPhoneAdviceDialog.showOnceIfDriverNeeded(this) { showGpuDriverSettings() }
+                }
+            }, PHONE_ADVICE_DELAY_MS)
         // The runtime decides within seconds whether the chosen GPU driver loaded; say so if it didn't.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
             {
@@ -835,7 +842,7 @@ class KartPadActivity : SDLActivity() {
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
-            MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
+            if (KartPadNativeRuntime.runningBeta()) MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.frameInterpolationFps(this) == 120,
                 detail = "Adds in-between frames in races, for fast phones with 120 Hz screens. Uses more power; may show glitches.") {
                 val on = KartPadTouchSettings.frameInterpolationFps(this) != 120
@@ -843,7 +850,7 @@ class KartPadActivity : SDLActivity() {
                 if (on) KartPadTouchSettings.setThirtyFpsRaces(this, false)
                 applyDisplaySettings()
                 showGraphicsMenu()
-            },
+            } else null,
             if (KartPadNativeRuntime.isLikelyAdreno() || KartPadGpuDriverSettings.selectedName(this) != null) {
                 MenuRow("GPU Driver", R.drawable.ic_kartpad_display, submenu = true,
                     detail = KartPadGpuDriverSettings.menuDetail(this)) {
@@ -1153,7 +1160,7 @@ class KartPadActivity : SDLActivity() {
         )
         if (BuildConfig.GAME_RUNTIME) nativeApplyThirtyFpsRaces(KartPadTouchSettings.thirtyFpsRaces(this))
         if (BuildConfig.GAME_RUNTIME) nativeApplySimplerComputerKarts(KartPadTouchSettings.simplerComputerKarts(this))
-        if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.frameInterpolationFps(this))
+        if (BuildConfig.GAME_RUNTIME) nativeApplyFrameInterpolation(KartPadTouchSettings.activeFrameInterpolationFps(this))
     }
 
     /** Shown once, after a race that ran mostly below 50 FPS; see KartPadSlowRaceOffer. */
@@ -3025,6 +3032,7 @@ class KartPadActivity : SDLActivity() {
     companion object {
         private var identityStartupChecked = false
         private const val SELECTOR_RESTART_DELAY_MS = 250L
+        private const val PHONE_ADVICE_DELAY_MS = 8_000L
         private const val REQUEST_IMPORT_MII = 4_301
         private const val REQUEST_MANAGE_GAME_DATA = 4_302
         private const val REQUEST_EXPORT_GHOST = 4_320

@@ -1,10 +1,35 @@
 # Android performance: where we stand
 
-Updated 14 November 2026. **Start here** for #339 and slow-phone reports. Evidence
+Updated 22 November 2026. **Start here** for #339 and slow-phone reports. Evidence
 behind every number is in the
 [10 October investigation](artifacts/2026-10-10/android-cpu-investigation.md).
 The September Pixel experiments are in the
 [archived handoff](archive/android-performance-handoff-2026-09-23.md).
+
+## 22 November: menu movies decoded natively (#584)
+
+**Emulator only, draft.** Runtime PRs
+[wiicompiled#34](https://github.com/chrissotraidis/wiicompiled/pull/34) (Android; #35–#38 carry the
+same commit to iOS, Mac, tvOS and the translator). The #584 Helio G99 log on 0.8.11 still
+had a 16 FPS menu window with the menu video thread (`THP::VideoDecoder`, `0x805529a8`) at
+23 ms per frame, after the 11 November preemption fix. The shader cache was working
+(299/299 Dawn cache hits on the second launch).
+
+**Change.** A native `THPVideoDecode` (0x801B3BAC), adapted from aurora's THP decoder, replaces
+the translated SDK one. The translator then compiles one fewer base function (29064 → 29063 in
+the builder profile).
+
+**Evidence.** All 55,143 frames of the 27 THP files on the disc decode byte-identically to
+aurora's decoder and within 1 of FFmpeg's. On the KartPad_088_Acceptance AVD (Classic engine), the video
+thread's `KartPadSched` time per presented frame went from 1.16–1.26 ms to 0.69–0.71 ms at
+the main menu and from 3.98–4.22 ms to 2.00–2.71 ms at Select Cup (about −43%). The baseline
+was the released 0.8.12, and the native run was a perf build without PGO.
+
+On 23 November the menu movies also drew correctly on the Beta engine, with a pack rebuilt from
+the committed pins.
+
+**Not checked:** a phone, Apple builds. The native decoder is still about
+1.4× FFmpeg's time per frame, so a faster inverse DCT or Huffman decoder could save more.
 
 ## 14 November: the scheduler online, and the beta engine's game thread
 

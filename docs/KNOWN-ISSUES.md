@@ -63,8 +63,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   Performance → Recommended for This Phone** tells you whether your phone is
   on the 512.762 driver, and its **Get a Driver…** button opens step 1:
   1. **⋯ → Graphics & Performance → GPU Driver → Add Driver…**, then
-     **Download a Driver…** for a recent Turnip release, or **Install from a
-     .zip File…** for a package you downloaded yourself.
+     **Download a Driver…**. From the next version, **Mr. Purple's Turnip**
+     is in that list; on an Adreno 7xx phone such as the S24 Ultra, pick
+     T30. Or use **Install from a .zip File…** for a package you downloaded
+     yourself.
   2. Restart the game. The **GPU Driver** row says whether the driver loaded.
 
   Not every Turnip build works on every phone. On the S24 Ultra, Mainline
@@ -154,7 +156,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   on a Pixel 9 Pro XL, Classic races dropped to 47–57 FPS with stutter with
   the switch on, against 59 FPS with it off. On the WiiCompiled 0.9 (Beta)
   engine the same phone held a steady 120 FPS. Use it with Beta, or leave it
-  off. The Beta engine only adds frames on a screen faster than 60 Hz.
+  off. The Beta engine only adds frames on a screen faster than 60 Hz. From
+  the next version the switch is only shown with the Beta engine, and Classic
+  ignores a saved choice.
 - **Android, WiiCompiled 0.9 (Beta) engine: much slower than Classic on many
   phones, in menus and races (fixed in 0.8.7).** The beta locked its
   game, graphics-command and render threads onto a single CPU core. On a Pixel
