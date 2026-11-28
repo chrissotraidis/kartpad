@@ -97,7 +97,7 @@ internal object KartPadReportContext {
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
             .put("thirty_fps_races", KartPadTouchSettings.thirtyFpsRaces(context))
             .put("simpler_computer_karts", KartPadTouchSettings.simplerComputerKarts(context))
-            .put("frame_interpolation_fps", KartPadTouchSettings.frameInterpolationFps(context))
+            .put("frame_interpolation_fps", KartPadTouchSettings.activeFrameInterpolationFps(context))
             .put("graphics_engine", KartPadNativeRuntime.engine(context.filesDir))
             .put("gpu_driver", KartPadGpuDriverSettings.reportState(context))
             .put("renderer_validation", activeRendererValidation ?: JSONObject.NULL)

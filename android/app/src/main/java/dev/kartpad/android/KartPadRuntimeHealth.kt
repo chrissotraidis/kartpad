@@ -112,7 +112,7 @@ internal object KartPadRuntimeHealth {
             .put("aspect_mode", KartPadTouchSettings.aspectMode(context))
             .put("thirty_fps_races", KartPadTouchSettings.thirtyFpsRaces(context))
             .put("simpler_computer_karts", KartPadTouchSettings.simplerComputerKarts(context))
-            .put("frame_interpolation_fps", KartPadTouchSettings.frameInterpolationFps(context))
+            .put("frame_interpolation_fps", KartPadTouchSettings.activeFrameInterpolationFps(context))
             .put("touch_idle_ms", lastTouchUptimeMs.takeIf { it >= 0 }
                 ?.let { SystemClock.uptimeMillis() - it } ?: JSONObject.NULL)
             .put("touch_pointers", touchPointers)

@@ -100,6 +100,9 @@ object KartPadNativeRuntime {
         startsFile(filesDir).delete()
     }
 
+    /** True in a game process running the WiiCompiled 0.9 (Beta) engine. */
+    fun runningBeta(): Boolean = loadedLibrary == "main_wiicompiled"
+
     /** For code that needs the runtime's JNI functions outside the game Activity. */
     @JvmStatic
     fun ensureLoaded() {

@@ -156,7 +156,9 @@ the [archive](archive/known-issues-through-2026-09.md).
   on a Pixel 9 Pro XL, Classic races dropped to 47–57 FPS with stutter with
   the switch on, against 59 FPS with it off. On the WiiCompiled 0.9 (Beta)
   engine the same phone held a steady 120 FPS. Use it with Beta, or leave it
-  off. The Beta engine only adds frames on a screen faster than 60 Hz.
+  off. The Beta engine only adds frames on a screen faster than 60 Hz. From
+  the next version the switch is only shown with the Beta engine, and Classic
+  ignores a saved choice.
 - **Android, WiiCompiled 0.9 (Beta) engine: much slower than Classic on many
   phones, in menus and races (fixed in 0.8.7).** The beta locked its
   game, graphics-command and render threads onto a single CPU core. On a Pixel
