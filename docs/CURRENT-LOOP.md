@@ -2,7 +2,39 @@
 
 **Next release:** the [0.8.13 release loop](RELEASE-0.8.13-LOOP.md) (from 28 November) is the plan.
 
-## Outstanding work (18–20 November 2026) — start here
+## Open PRs (22–23 November 2026) — start here
+
+From the 22 November issue review and the slow-phone plan in [to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
+All CI is green unless noted. Emulator results are in each PR. **No phone has run any of them.**
+
+| PR | What | State |
+| --- | --- | --- |
+| [#594](https://github.com/chrissotraidis/kartpad/pull/594) | Mr. Purple's Turnip in Download a Driver; advice names T30 for Adreno 7xx (#104) | Ready |
+| [#597](https://github.com/chrissotraidis/kartpad/pull/597) | Turnip advice shown once at game start on the 512.762 driver | Ready |
+| [#599](https://github.com/chrissotraidis/kartpad/pull/599) | Offer 30 FPS Races and Simpler Computer Karts once after a slow race; needs [wiicompiled#39](https://github.com/chrissotraidis/wiicompiled/pull/39) | Ready, checked on emulator end to end |
+| [#596](https://github.com/chrissotraidis/kartpad/pull/596) | 120 FPS Races only with the Beta engine | Ready, checked on emulator |
+| [#579](https://github.com/chrissotraidis/kartpad/pull/579) | #554 diagnostics: touch idle time and CPU clocks | Ready |
+| [#595](https://github.com/chrissotraidis/kartpad/pull/595) | Native menu-movie decoding (#584), about −43% on the video thread; needs [wiicompiled#34–#38](https://github.com/chrissotraidis/wiicompiled/pull/34) | Draft; Classic and Beta checked on emulator |
+| [#598](https://github.com/chrissotraidis/kartpad/pull/598) | Perf tools sync the emulator before stopping it | Ready |
+
+**Merge order.** #579 and #596 edit the same line of `KartPadRuntimeHealth.kt`; the second needs a
+rebase that keeps both. #595 and #599 both move the Android runtime pin; merge the runtime PRs,
+then the second KartPad PR needs a runtime merge commit with both (the files don't overlap). #595's
+other four runtime PRs go in together, because the translator and every runtime must agree.
+
+**Issue replies** for #584, #576, the Snapdragon threads, #575, #539 and #593 are drafted in
+[reply drafts](artifacts/2026-11-23/reply-drafts.md), not posted. #475 has waited on its reporter
+since 31 October.
+
+**Findings without a change.** #584's track-confirm stall is pipeline creation: phones under 6 GB
+prewarm only 128 pipelines at launch (`MaxPrewarmPipelineBuilds`, kept low for memory). Raising it
+needs a Mali phone to measure memory. #127 (Mac two-player) needs a PadMint Mac build and two controllers.
+
+**Emulator note.** `KartPad_088_Acceptance_20261107` holds released 0.8.12 with a fresh NAND and
+licence (23 November). Its 19 November save was lost when the emulator was killed without `sync`
+(see #598). Its old empty NAND is in `/data/local/tmp/kp-broken-nand-1123`.
+
+## Outstanding work (18–20 November 2026)
 
 Ask "what are we left working on?" and this is the list. **Next build:** the slow-phone plan in
 [to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).

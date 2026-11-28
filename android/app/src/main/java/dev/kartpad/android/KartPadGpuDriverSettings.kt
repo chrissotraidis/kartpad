@@ -47,6 +47,7 @@ internal object KartPadGpuDriverSettings {
      */
     private data class Source(val title: String, val description: String, val repository: String)
     private val sources = listOf(
+        Source("Mr. Purple's Turnip", "Turnip T builds; T30 draws every character on a Galaxy S24 Ultra", "MrPurple666/purple-turnip"),
         Source("Turnip and Qualcomm (K11MCH1)", "Turnip builds plus newer Qualcomm drivers", "K11MCH1/AdrenoToolsDrivers"),
         Source("Mainline and Stable Turnip (whitebelyash)", "Recent Mesa Turnip, including older Adreno 6xx", "whitebelyash/freedreno_turnip-CI"),
         Source("Turnip CI (Weab-chan)", "Automatic Mesa Turnip builds", "Weab-chan/freedreno_turnip-CI"),
