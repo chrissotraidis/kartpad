@@ -45,11 +45,13 @@ Replies posted 28 November. None closed.
 | [#301](https://github.com/chrissotraidis/kartpad/issues/301) | PeriTheFrost | The same, and Smoothest for speed | — |
 | [#554](https://github.com/chrissotraidis/kartpad/issues/554) | Sharik7 | One online race with the gas latched, one holding A, then a log | — |
 | [#566](https://github.com/chrissotraidis/kartpad/issues/566) | motoharu-reiMa | A long session on 0.8.13 with Smoothest | — |
-| [#510](https://github.com/chrissotraidis/kartpad/issues/510) | Michele | The same | — |
+| [#510](https://github.com/chrissotraidis/kartpad/issues/510) | Michele | The same | 28 Nov: no lag over three cups on 0.8.13 (Galaxy S10 Lite, Smoothest); log shows steady 30 FPS, no throttling, texture memory flat. Asked for a log if it comes back. Also asked for Wiimmfi (#90) |
 
 ## Confirmed
 
-Nothing yet.
+| Issue | What the reporter saw | Date | Next |
+| --- | --- | --- | --- |
+| [#510](https://github.com/chrissotraidis/kartpad/issues/510) | Three cups on 0.8.13 with Smoothest, no lag (log: 30 FPS, no throttling, texture memory flat) | 28 Nov | Chris decides whether to close; one more long session would make it firmer |
 
 ## Remaining work
 
@@ -88,6 +90,10 @@ INSTALL_ANDROID, RELEASING_ANDROID, release notes. When touching a doc, check it
 ## Journal
 
 Newest first.
+
+- **28 November, evening.** Chris posted the Discord announcement. Michele (#510) reported no lag over
+  three cups on 0.8.13 with Smoothest; his log confirms it; replied, and pointed his Wiimmfi request to
+  #90. CURRENT-LOOP's 18–20 November list is marked superseded by this loop.
 
 - **28 November.** 0.8.13 published as Latest (Chris's decision; the release loop had planned a prerelease
   because no slow or Snapdragon phone ran it). Files downloaded anonymously and matched SHA256SUMS; the
