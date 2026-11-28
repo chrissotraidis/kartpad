@@ -134,6 +134,17 @@ internal object KartPadTouchSettings {
         preferences(context).edit().putBoolean(SIMPLER_COMPUTER_KARTS, value).apply()
     }
 
+    /** The Speed preset the two speed switches match, or null for Custom. */
+    fun speedPreset(context: Context): KartPadSpeedPreset? =
+        KartPadSpeedPreset.matching(thirtyFpsRaces(context), simplerComputerKarts(context))
+
+    fun setSpeedPreset(context: Context, preset: KartPadSpeedPreset) {
+        setThirtyFpsRaces(context, preset.thirtyFpsRaces)
+        setSimplerComputerKarts(context, preset.simplerComputerKarts)
+        // In-between frames assume 60 FPS races, so 30 FPS Races turns 120 FPS Races off.
+        if (preset.thirtyFpsRaces) setFrameInterpolationFps(context, 0)
+    }
+
     /** Races drawn at 120 FPS by interpolating between the game's 60 FPS frames. 0 is off. */
     fun frameInterpolationFps(context: Context): Int = preferences(context)
         .getInt(FRAME_INTERPOLATION_FPS, 0).takeIf { it == 120 } ?: 0

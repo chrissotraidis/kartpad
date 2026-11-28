@@ -59,11 +59,11 @@ the [archive](archive/known-issues-through-2026-09.md).
   AdrenoTools driver. Custom drivers really load from 0.8.9 (0.8.6 to 0.8.8
   quietly used the phone's driver whatever you chose), and from 0.8.10 a
   driver that freezes the game or breaks the picture is switched off at the
-  next start, so trying one is safe. From 0.8.12, **⋯ → Graphics &
-  Performance → Recommended for This Phone** tells you whether your phone is
+  next start, so trying one is safe. From 0.8.12, **⋯ → Speed &
+  Graphics → Recommended for This Phone** tells you whether your phone is
   on the 512.762 driver, and its **Get a Driver…** button opens step 1:
-  1. **⋯ → Graphics & Performance → GPU Driver → Add Driver…**, then
-     **Download a Driver…**. From the next version, **Mr. Purple's Turnip**
+  1. **⋯ → Speed & Graphics → GPU Driver → Add Driver…**, then
+     **Download a Driver…**. From 0.8.13, **Mr. Purple's Turnip**
      is in that list; on an Adreno 7xx phone such as the S24 Ultra, pick
      T30. Or use **Install from a .zip File…** for a package you downloaded
      yourself.
@@ -134,7 +134,7 @@ the [archive](archive/known-issues-through-2026-09.md).
   the Wii safety screen fades out, then plays normally. Cause found: the game
   draws that screen while the Wii's "VI black" is still on, and KartPad showed
   a black frame between the game's own frames; which one reached the screen was
-  down to timing, so it wasn't about 60 Hz screens. Fixed for the next version
+  down to timing, so it wasn't about 60 Hz screens. Fixed in 0.8.9
   (black no longer covers the game's frames); confirmed on the iPhone 18 Pro
   Simulator, not yet on an affected iPhone. [#390](https://github.com/chrissotraidis/kartpad/issues/390)
 - **Mac, two players:** characters drawn outside their karts. [#127](https://github.com/chrissotraidis/kartpad/issues/127)
@@ -157,7 +157,7 @@ the [archive](archive/known-issues-through-2026-09.md).
   the switch on, against 59 FPS with it off. On the WiiCompiled 0.9 (Beta)
   engine the same phone held a steady 120 FPS. Use it with Beta, or leave it
   off. The Beta engine only adds frames on a screen faster than 60 Hz. From
-  the next version the switch is only shown with the Beta engine, and Classic
+  0.8.13 the switch is only shown with the Beta engine, and Classic
   ignores a saved choice.
 - **Android, WiiCompiled 0.9 (Beta) engine: much slower than Classic on many
   phones, in menus and races (fixed in 0.8.7).** The beta locked its
@@ -179,8 +179,8 @@ the [archive](archive/known-issues-through-2026-09.md).
   working 88–95% of the time even while it holds 60 FPS (about 15.6 ms of
   each 16.7 ms frame), so anything extra, such as the phone warming up, drops
   it below 60 FPS and the race runs in slow motion. On a phone this close to the
-  limit, **⋯ → Graphics & Performance → 30 FPS Races** keeps races at normal
-  speed. The **WiiCompiled 0.9 (Beta)** graphics engine is also worth a try at
+  limit, **⋯ → Speed & Graphics → Speed → Smoothest** (30 FPS Races and Simpler
+  Computer Karts) keeps races at normal speed. The **WiiCompiled 0.9 (Beta)** graphics engine is also worth a try at
   60 FPS: on the Android emulator its game thread does about a quarter less
   work per frame than Classic's. That hasn't been measured on a phone, and the
   beta still draws wrong on some (see Graphics above).
@@ -221,7 +221,7 @@ the [archive](archive/known-issues-through-2026-09.md).
   Wii Remote fixes to SDL, so attaching an extension dropped the remote until
   KartPad restarted and the Classic Controller D-pad never worked. A remote
   could also come up Unassigned because it no longer matched the slot saved
-  for it on an earlier connection. The next version applies those fixes and
+  for it on an earlier connection. 0.8.11 applies those fixes and
   lets an unmatched controller drive Player 1 when Player 1's saved
   controller isn't connected. Neither has been checked on a physical
   controller yet.

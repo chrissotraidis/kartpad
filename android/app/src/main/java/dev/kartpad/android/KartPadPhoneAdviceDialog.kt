@@ -7,7 +7,7 @@ import android.opengl.EGLConfig
 import android.opengl.GLES20
 
 /**
- * Graphics & Performance → Recommended for This Phone. Reads the GPU name and the system driver's
+ * Speed & Graphics → Recommended for This Phone. Reads the GPU name and the system driver's
  * version through OpenGL ES (what the driver reports even while a custom Vulkan driver is chosen),
  * then shows KartPadPhoneAdvice for it.
  */

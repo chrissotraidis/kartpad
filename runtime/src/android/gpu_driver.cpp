@@ -55,7 +55,7 @@ void Report(const char* state, const char* reason, const char* lib, const char* 
     KartPadAndroidLogMetric("KartPadGpuDriver", "state=%s reason=%s lib=%s api=%d detail=%s", state, reason,
                             lib != nullptr ? lib : "-", android_get_device_api_level(),
                             detail != nullptr ? detail : "-");
-    // The app shows this in Graphics & Performance → GPU Driver, so a driver that didn't load is
+    // The app shows this in Speed & Graphics → GPU Driver, so a driver that didn't load is
     // never mistaken for the one running (KartPadGpuDriverSettings.kt).
     if (const char* statusPath = Env("KARTPAD_GPU_DRIVER_STATUS")) {
         if (std::FILE* file = std::fopen(statusPath, "w")) {
@@ -138,7 +138,7 @@ extern "C" const char* KartPadGpuDriverStartFailedNote() {
     }
     return "\n\nThis game used the GPU driver you chose, which is the likely cause. KartPad will use the "
            "phone's own driver the next time you start the game. You can choose a driver again in "
-           "Graphics & Performance \u2192 GPU Driver.";
+           "Speed & Graphics \u2192 GPU Driver.";
 }
 
 #else

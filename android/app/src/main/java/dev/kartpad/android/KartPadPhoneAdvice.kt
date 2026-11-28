@@ -15,7 +15,7 @@ internal object KartPadPhoneAdvice {
     data class Advice(val gpuLabel: String, val summary: String, val points: List<String>, val action: Action)
 
     private val speedTips = listOf(
-        "If races slow down: turn on 30 FPS Races and Simpler Computer Karts, and keep Render Resolution at 1×. Lower resolutions rarely help, because the game waits on the processor, not the GPU.",
+        "Speed starts on Best Quality. If races slow down, choose Speed → Smoothest (30 FPS Races and Simpler Computer Karts) and keep Render Resolution at 1×. Lower resolutions rarely help, because the game waits on the processor, not the GPU.",
     )
 
     /** "Adreno (TM) 650" -> 650; null for any other GPU. */

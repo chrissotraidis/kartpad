@@ -176,8 +176,8 @@ top=(
   "Return to KartPad Menu"
   "Multiplayer…"
   "Controls"
+  "Speed & Graphics"
   "Display"
-  "Graphics & Performance"
   "Game Data & Saves"
   "Report a Problem…"
 )
@@ -213,10 +213,33 @@ grep -Fq 'content-desc="Disable Bloom, off"' "$tree"
 scroll_to_labels "App Icon"
 
 start_menu
-tap_label "Graphics & Performance"
+tap_label "Speed & Graphics"
 sleep 1
 dump_tree
-assert_labels "Recommended for This Phone" "30 FPS Races" "Simpler Computer Karts"
+assert_labels "Speed" "Best Quality" "Recommended for This Phone" "30 FPS Races" "Simpler Computer Karts"
+# The Speed presets write the two switches, and Speed reads Custom when they match none.
+tap_label "Speed"
+sleep 1
+dump_tree
+tap_label $'Smoothest\n30 FPS races and simpler computer karts. For phones that slow down in races.'
+sleep 1
+dump_tree
+grep -Fq 'content-desc="Speed, Smoothest"' "$tree"
+grep -Fq 'content-desc="30 FPS Races, on"' "$tree"
+grep -Fq 'content-desc="Simpler Computer Karts, on"' "$tree"
+tap_label "Simpler Computer Karts"
+sleep 1
+dump_tree
+grep -Fq 'content-desc="Speed, Custom"' "$tree"
+tap_label "Speed"
+sleep 1
+dump_tree
+tap_label $'Best Quality\n60 FPS races with full-detail computer karts.'
+sleep 1
+dump_tree
+grep -Fq 'content-desc="Speed, Best Quality"' "$tree"
+grep -Fq 'content-desc="30 FPS Races, off"' "$tree"
+grep -Fq 'content-desc="Simpler Computer Karts, off"' "$tree"
 scroll_to_labels "120 FPS Races (Experimental)" "Graphics Diagnostics…"
 
 start_menu

@@ -311,7 +311,7 @@ class AndroidTouchOverlayContractTests(unittest.TestCase):
         native = (REPO / "android/app/src/main/cpp/kartpad_runtime_settings_jni.cpp").read_text()
         for title in (
             '"KartPad"', '"Return to KartPad Menu"', '"Multiplayer…"',
-            '"Show FPS Counter"', '"Controls"', '"Display"', '"Graphics & Performance"',
+            '"Show FPS Counter"', '"Controls"', '"Display"', '"Speed & Graphics"', '"Speed"',
             '"FPS Counter Size"', '"Small"', '"Medium"', '"Large"',
             '"Game Data & Saves"', '"Controller Player Setup…"',
             '"Controller Button Mapping…"',

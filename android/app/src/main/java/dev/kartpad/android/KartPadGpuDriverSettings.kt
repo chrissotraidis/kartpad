@@ -106,7 +106,7 @@ internal object KartPadGpuDriverSettings {
         return listOf(reason, detail).filter { it.isNotBlank() }.joinToString(": ").ifBlank { "unknown" }
     }
 
-    /** The GPU Driver row in Graphics & Performance. */
+    /** The GPU Driver row in Speed & Graphics. */
     fun menuDetail(context: Context): String {
         // Missing characters on Qualcomm's 512.762 drivers have only been fixed by a custom driver (#104).
         val name = selected(context)?.name
@@ -192,7 +192,7 @@ internal object KartPadGpuDriverSettings {
             .setMessage("You chose ${driver.name} as your GPU driver. Before KartPad 0.8.9, a bug meant chosen " +
                 "drivers never loaded and the game always used the phone's driver. Now ${driver.name} really runs.\n\n" +
                 "If characters, tracks or the whole picture look wrong, or the game stops with a renderer error, " +
-                "use the phone's driver. You can change this anytime in ⋯ → Graphics & Performance → GPU Driver.")
+                "use the phone's driver. You can change this anytime in ⋯ → Speed & Graphics → GPU Driver.")
             .setPositiveButton("Use Phone's Driver") { _, _ ->
                 if (!select(activity, null)) {
                     Toast.makeText(activity, "The driver choice could not be saved.", Toast.LENGTH_LONG).show()

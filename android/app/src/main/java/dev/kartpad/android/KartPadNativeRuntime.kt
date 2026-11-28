@@ -19,7 +19,7 @@ object KartPadNativeRuntime {
     const val CLASSIC = "classic"
     const val WIICOMPILED = "wiicompiled"
     val engines = arrayOf(CLASSIC, WIICOMPILED)
-    val labels = arrayOf("Classic", "WiiCompiled 0.9 (Beta)")
+    val labels = arrayOf("Classic (Vulkan)", "WiiCompiled 0.9 Beta (Vulkan)")
     // Starts of the beta engine that ended before it ran for a minute. After this many in a
     // row, the next start uses Classic, so a player is never stuck with an engine that crashes.
     private const val FAILED_STARTS_BEFORE_CLASSIC = 2

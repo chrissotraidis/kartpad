@@ -1,19 +1,45 @@
 # Mobile settings
 
-Android and iPhone/iPad use the same hierarchy for shared controls. The table describes 0.8.12. When an option is added to one platform, add it to the other in the same release or mark it here as platform-only, with the reason; the release checklist compares both menus against this table. Open **•••** (top right) while a game is running.
+Android and iPhone/iPad use the same hierarchy for shared controls. The table describes 0.8.13. When an option is added to one platform, add it to the other in the same release or mark it here as platform-only, with the reason; the release checklist compares both menus against this table. Open **•••** (top right) while a game is running.
 
 | Menu | Options, in order |
 | --- | --- |
-| Main | Show Touch Controls (iPhone/iPad, only while a controller has hidden them); Return to KartPad Menu; Multiplayer; Controls; Display; Graphics & Performance; Sound; Game Data & Saves; Report a Problem |
+| Main | Show Touch Controls (iPhone/iPad, only while a controller has hidden them); Return to KartPad Menu; Multiplayer; Controls; Speed & Graphics; Display; Sound; Game Data & Saves; Report a Problem; Test Native Crash (diagnostic builds only) |
 | Multiplayer | Local Split-Screen; Controller Setup; Retro WFC Friend Rooms (Retro Rewind only); Country; Experimental Server Settings |
 | Controls | Controller Button Mapping; Touch Control Settings; Auto-hide Touch Controls with Controller (iPhone/iPad); Controller Player Setup; Shake to Trick; Motion Steering; Experimental Wii Remote + Nunchuk |
+| Speed & Graphics | Speed; Recommended for This Phone (Android); 30 FPS Races; Simpler Computer Karts; Graphics Engine (Android); 120 FPS Races (Experimental, Android, Beta engine only); GPU Driver (Android, Snapdragon); Graphics Diagnostics (Android) |
 | Display | Show FPS Counter; FPS Counter Size; Aspect Ratio; Render Resolution; Disable Bloom; App Icon |
-| Graphics & Performance | Recommended for This Phone (Android); Graphics Engine (Android); 30 FPS Races; Simpler Computer Karts; 120 FPS Races (Experimental, Android); GPU Driver (Android, Snapdragon); Graphics Diagnostics (Android) |
 | Game Data & Saves | Player Identity; Time Trial Ghosts; Manage Saves; Manage Retro Rewind; Retro Rewind Music; Import from Extracted Folder; Import or Reimport Wii Disc Image; Remove Stored Game Data |
+
+## Speed
+
+From 0.8.13, **Speed** is the first row of **Speed & Graphics** on Android, iPhone and iPad. It sets the two speed switches below it in one choice:
+
+| Speed | 30 FPS Races | Simpler Computer Karts | For |
+| --- | --- | --- | --- |
+| Smoothest | On | On | Devices that slow down in races |
+| Balanced | Off | On | Devices that hold 60 FPS with a little help |
+| Best Quality (the default) | Off | Off | Fast phones, iPads and Macs |
+
+Speed stores nothing of its own. It shows the preset the two switches match, or **Custom** when 30 FPS Races is on and Simpler Computer Karts is off, so changing a switch by hand never loses anything. Players updating from 0.8.12 keep their switches and see the matching preset. Render Resolution, Disable Bloom and 120 FPS Races stay separate: these devices wait on the processor, so a lower resolution rarely helps. On Android, choosing Smoothest turns 120 FPS Races off, as turning on 30 FPS Races always has. After a race (not a Time Trial) that ran mostly below 50 FPS with 30 FPS Races off, Android offers once to switch to Smoothest. The diagnostic log and Report a Problem already record both switches, which identify the preset.
+
+Stored keys, unchanged since 0.8.9: `thirty_fps_races` and `simpler_computer_karts` in Android's touch-settings preferences, `KartPadThirtyFpsRaces` and `KartPadSimplerComputerKarts` in the iPhone/iPad user defaults.
+
+## Where things moved in 0.8.13
+
+| 0.8.12 | 0.8.13 |
+| --- | --- |
+| ⋯ → Graphics & Performance, after Display | ⋯ → **Speed & Graphics**, before Display |
+| — | **Speed** (Smoothest, Balanced, Best Quality), first in Speed & Graphics |
+| Graphics Engine, second in Graphics & Performance (Android) | After Simpler Computer Karts, with the other Android-only rows |
+| Graphics Engine choices *Classic* and *WiiCompiled 0.9 (Beta)* | *Classic (Vulkan)* and *WiiCompiled 0.9 Beta (Vulkan)*, on the in-game menu and the start screen |
+| Slow-race offer: **Turn On** (30 FPS Races and Simpler Computer Karts) | **Use Smoothest**, which sets the same two switches |
+
+The Mac keeps its own Settings window in 0.8.13 (see below). It has no 30 FPS Races, Simpler Computer Karts or Speed yet.
 
 On iPhone and iPad the touch controls hide while a controller is Player 1, whom touch shares; a controller on Player 2–4 does not hide them. **Show Touch Controls** brings them back with the controller still connected and turns **Auto-hide Touch Controls with Controller** off until it is turned on again; that setting is the same one as the **Hide on controller** switch in Touch Control Settings. Android keeps only its own switch for now.
 
-On Android, on/off settings show a switch and a one-line description, and tapping one flips it without leaving the menu; settings with choices show the current choice under their name. From 0.8.9 iPhone and iPad have Graphics & Performance too, with 30 FPS Races and Simpler Computer Karts; the graphics engine choice, GPU Driver and Graphics Diagnostics stay Android-only because they have no iPhone/iPad equivalent. The Mac has its own layout: the menu bar and **KartPad → Settings…** (Graphics, Audio, Controllers, Game & Data, Advanced). It has no touch, motion or Android-only options, and it has no in-app save backup, ghost transfer or soundtrack import. On Mac, **Data → Show KartPad Data** opens `~/Library/Application Support/KartPad`, where settings and Original saves live, and soundtrack files go in Retro Rewind's `MyStuff` folder (see below and the [Mac install guide](INSTALL_MACOS.md)). Native file pickers and Retro Rewind installation workflows differ between platforms.
+On Android, on/off settings show a switch and a one-line description, and tapping one flips it without leaving the menu; settings with choices show the current choice under their name. From 0.8.9 iPhone and iPad have this page too (called Graphics & Performance before 0.8.13), with Speed, 30 FPS Races and Simpler Computer Karts; Recommended for This Phone, the graphics engine choice, 120 FPS Races, GPU Driver and Graphics Diagnostics stay Android-only because they have no iPhone/iPad equivalent. The slow-race offer is Android-only too, because only the Android runtime reports race frame rates to the app so far. The Mac has its own layout: the menu bar and **KartPad → Settings…** (Graphics, Audio, Controllers, Game & Data, Advanced). It has no touch, motion or Android-only options, and it has no in-app save backup, ghost transfer or soundtrack import. On Mac, **Data → Show KartPad Data** opens `~/Library/Application Support/KartPad`, where settings and Original saves live, and soundtrack files go in Retro Rewind's `MyStuff` folder (see below and the [Mac install guide](INSTALL_MACOS.md)). Native file pickers and Retro Rewind installation workflows differ between platforms.
 
 ## Time Trial Ghosts
 
@@ -56,10 +82,10 @@ Report a Problem offers a reviewable diagnostic flow. The iPhone/iPad form scrol
 
 ## 120 FPS Races (Android, experimental)
 
-**120 FPS Races (Experimental)** (Android, from 0.8.12, off by default) draws an in-between frame after each of the game's frames during races, for phones with 120 Hz screens. The game itself still runs at 60. It roughly doubles the work of drawing each frame, so it's for fast phones only; when the phone can't keep up, KartPad drops the extra frames. Turning it on turns off 30 FPS Races, and the other way round. From the next version the switch appears only with the WiiCompiled 0.9 (Beta) engine: on Classic the extra frames made races stutter (47–57 FPS on a Pixel 9 Pro XL), so Classic leaves them off and keeps your choice for when you switch to Beta.
+**120 FPS Races (Experimental)** (Android, from 0.8.12, off by default) draws an in-between frame after each of the game's frames during races, for phones with 120 Hz screens. The game itself still runs at 60. It roughly doubles the work of drawing each frame, so it's for fast phones only; when the phone can't keep up, KartPad drops the extra frames. Turning it on turns off 30 FPS Races, and the other way round. From 0.8.13 the switch appears only with the WiiCompiled 0.9 (Beta) engine: on Classic the extra frames made races stutter (47–57 FPS on a Pixel 9 Pro XL), so Classic leaves them off and keeps your choice for when you switch to Beta.
 
 ## GPU Driver (Android, Snapdragon)
 
-From 0.8.12, **⋯ → Graphics & Performance → Recommended for This Phone** names the phone's GPU (and, on Snapdragon, Qualcomm's driver build) and says what to use. On the Qualcomm 512.762 driver behind missing or white characters on Adreno 6xx/7xx it recommends Turnip, and **Get a Driver…** opens GPU Driver. From the next version, on that driver KartPad also shows this advice once, a few seconds after the game first starts, unless a custom driver is already chosen. Elsewhere it recommends the phone's driver, plus 30 FPS Races and Simpler Computer Karts if races slow down. It can't tell how fast a particular phone is; it only reads the GPU and driver. From the next version, Android also watches races: after a race (not a Time Trial) that ran mostly below 50 FPS with 30 FPS Races off, it offers once to turn on 30 FPS Races and Simpler Computer Karts.
+From 0.8.12, **⋯ → Speed & Graphics → Recommended for This Phone** names the phone's GPU (and, on Snapdragon, Qualcomm's driver build) and says what to use. On the Qualcomm 512.762 driver behind missing or white characters on Adreno 6xx/7xx it recommends Turnip, and **Get a Driver…** opens GPU Driver. From 0.8.13, on that driver KartPad also shows this advice once, a few seconds after the game first starts, unless a custom driver is already chosen. Elsewhere it recommends the phone's driver, plus Speed → Smoothest if races slow down. It can't tell how fast a particular phone is; it only reads the GPU and driver. From 0.8.13, Android also watches races: after a race (not a Time Trial) that ran mostly below 50 FPS with 30 FPS Races off, it offers once to switch to Speed → Smoothest.
 
-**⋯ → Graphics & Performance → GPU Driver** chooses the Vulkan driver the game uses. **Add Driver… → Download a Driver…** lists recent AdrenoTools packages from four public sources (Mr. Purple's Turnip, K11MCH1's Turnip and Qualcomm builds, whitebelyash's Mainline and Stable Turnip, and Weab-chan's Turnip CI); **Install from a .zip File…** takes a package you downloaded yourself. On the 512.762 driver, Recommended for This Phone names the build players confirmed: Mr. Purple's Turnip T30 on Adreno 7xx (Galaxy S24 Ultra) and a K11MCH1 Turnip on Adreno 6xx (Moto G85). Choose it, tap **Save**, then **Restart to Selector**. From 0.8.9, if the chosen driver doesn't load, the GPU Driver row reads *Phone's driver (… didn't load)* and the driver list shows the reason; if the game can't start graphics with it, the next start goes back to the phone's driver by itself. Before 0.8.9 a chosen driver never loaded (see [known issues](KNOWN-ISSUES.md)).
+**⋯ → Speed & Graphics → GPU Driver** chooses the Vulkan driver the game uses. **Add Driver… → Download a Driver…** lists recent AdrenoTools packages from four public sources (Mr. Purple's Turnip, K11MCH1's Turnip and Qualcomm builds, whitebelyash's Mainline and Stable Turnip, and Weab-chan's Turnip CI); **Install from a .zip File…** takes a package you downloaded yourself. On the 512.762 driver, Recommended for This Phone names the build players confirmed: Mr. Purple's Turnip T30 on Adreno 7xx (Galaxy S24 Ultra) and a K11MCH1 Turnip on Adreno 6xx (Moto G85). Choose it, tap **Save**, then **Restart to Selector**. From 0.8.9, if the chosen driver doesn't load, the GPU Driver row reads *Phone's driver (… didn't load)* and the driver list shows the reason; if the game can't start graphics with it, the next start goes back to the phone's driver by itself. Before 0.8.9 a chosen driver never loaded (see [known issues](KNOWN-ISSUES.md)).

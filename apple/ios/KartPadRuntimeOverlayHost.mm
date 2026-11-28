@@ -41,7 +41,7 @@
 extern "C" int g_gxFrameCount;
 #include <atomic>
 
-// Graphics & Performance options shared with Android (runtime/src/hle/frame_rate_lock.cpp and
+// Speed & Graphics options shared with Android (runtime/src/hle/frame_rate_lock.cpp and
 // low_detail_karts.cpp in the runtime). Both take effect from the next race.
 extern "C" void RuntimeSetThirtyFpsRaces(bool enabled) noexcept;
 extern "C" void RuntimeSetLowDetailComputerKarts(bool enabled) noexcept;
@@ -2986,8 +2986,9 @@ static void KartPadApplySoundLevels(BOOL persist) {
                  identifier:@"dev.kartpad.display"
                     options:0
                     children:displayItems];
-  // Same page, order and wording as Android's Graphics & Performance. The graphics engine choice,
-  // GPU driver and Graphics Diagnostics stay Android-only: they have no iPhone/iPad equivalent.
+  // Same page, order and wording as Android's Speed & Graphics. Recommended for This Phone, the
+  // graphics engine choice, GPU driver, 120 FPS Races and Graphics Diagnostics stay Android-only:
+  // they have no iPhone/iPad equivalent.
   NSArray<NSArray<NSString *> *> *performanceOptions = @[
     @[ @"30 FPS Races", kKartPadThirtyFpsRacesKey,
        @"Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race." ],
@@ -3011,7 +3012,43 @@ static void KartPadApplySoundLevels(BOOL persist) {
                                                                        : UIMenuElementStateOff;
     [performanceItems addObject:toggle];
   }
-  UIMenu *performance = [UIMenu menuWithTitle:@"Graphics & Performance"
+  // The Speed presets, the same three as Android (KartPadSpeedPreset.kt). Each one sets the two
+  // switches, so Speed shows the preset they match, or Custom. Best Quality is the default.
+  NSArray<NSArray *> *speedPresets = @[
+    @[ @"Smoothest", @"30 FPS races and simpler computer karts. For devices that slow down in races.", @YES, @YES ],
+    @[ @"Balanced", @"60 FPS races with simpler computer karts.", @NO, @YES ],
+    @[ @"Best Quality", @"60 FPS races with full-detail computer karts.", @NO, @NO ],
+  ];
+  BOOL thirtyFpsRaces = [NSUserDefaults.standardUserDefaults boolForKey:kKartPadThirtyFpsRacesKey];
+  BOOL simplerComputerKarts = [NSUserDefaults.standardUserDefaults boolForKey:kKartPadSimplerComputerKartsKey];
+  NSString *currentPreset = @"Custom";
+  NSMutableArray<UIMenuElement *> *presetItems = [NSMutableArray array];
+  for (NSArray *preset in speedPresets) {
+    BOOL presetThirtyFpsRaces = [preset[2] boolValue];
+    BOOL presetSimplerComputerKarts = [preset[3] boolValue];
+    UIAction *choice = [UIAction actionWithTitle:preset[0] image:nil identifier:nil
+        handler:^(__kindof UIAction *action) {
+      (void)action;
+      NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+      [defaults setBool:presetThirtyFpsRaces forKey:kKartPadThirtyFpsRacesKey];
+      [defaults setBool:presetSimplerComputerKarts forKey:kKartPadSimplerComputerKartsKey];
+      KartPadApplyPerformanceSettings();
+      [weakSelf refreshMenuButton];
+    }];
+    choice.subtitle = preset[1];
+    BOOL matches = presetThirtyFpsRaces == thirtyFpsRaces && presetSimplerComputerKarts == simplerComputerKarts;
+    choice.state = matches ? UIMenuElementStateOn : UIMenuElementStateOff;
+    if (matches) currentPreset = preset[0];
+    [presetItems addObject:choice];
+  }
+  UIMenu *speed = [UIMenu menuWithTitle:@"Speed"
+                                  image:[UIImage systemImageNamed:@"speedometer"]
+                             identifier:@"dev.kartpad.speed"
+                                options:0
+                               children:presetItems];
+  speed.subtitle = currentPreset;
+  [performanceItems insertObject:speed atIndex:0];
+  UIMenu *performance = [UIMenu menuWithTitle:@"Speed & Graphics"
                                         image:[UIImage systemImageNamed:@"speedometer"]
                                    identifier:@"dev.kartpad.performance"
                                       options:0
@@ -3033,8 +3070,8 @@ static void KartPadApplySoundLevels(BOOL persist) {
   }]];
   [children addObject:multiplayer];
   [children addObject:controls];
-  [children addObject:display];
   [children addObject:performance];
+  [children addObject:display];
   [children addObject:[UIAction actionWithTitle:@"Sound…"
       image:[UIImage systemImageNamed:@"speaker.wave.2"] identifier:@"dev.kartpad.sound"
       handler:^(__kindof UIAction *action) {

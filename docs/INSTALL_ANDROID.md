@@ -121,7 +121,7 @@ Multiplayer and **Report a Problem…**. The full menu is in
 - **Render resolution:** start at **Display → Render Resolution → 1×** and
   raise it if your phone keeps up.
 - **Character graphics:** if characters are missing or white on a Snapdragon
-  phone, try a Turnip driver first: in a game, **⋯ → Graphics & Performance →
+  phone, try a Turnip driver first: in a game, **⋯ → Speed & Graphics →
   GPU Driver → Add Driver…**. It fixed the Galaxy S24 Ultra and Moto G85; see
   [known issues](KNOWN-ISSUES.md#graphics-android). **Help → Character
   Graphics Test…** on the game chooser has older workarounds for specific

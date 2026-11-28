@@ -158,19 +158,19 @@ class KartPadActivity : SDLActivity() {
         if (KartPadNativeRuntime.fellBackToClassic) {
             android.widget.Toast.makeText(this,
                 "The WiiCompiled graphics beta closed twice while starting, so KartPad is using Classic graphics. " +
-                    "You can try the beta again in Graphics & Performance → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
+                    "You can try the beta again in Speed & Graphics → Graphics Engine.", android.widget.Toast.LENGTH_LONG).show()
         }
         if (KartPadGpuDriverSettings.fellBackToSystem) {
             android.widget.Toast.makeText(this,
                 "The GPU driver you chose stopped the game, so KartPad is using the phone's driver. " +
-                    "You can choose a driver again in Graphics & Performance → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
+                    "You can choose a driver again in Speed & Graphics → GPU Driver.", android.widget.Toast.LENGTH_LONG).show()
         }
         // 120 FPS Races is experimental: if the game crashed last time with it on, turn it off.
         if (KartPadTouchSettings.activeFrameInterpolationFps(this) != 0 && KartPadExitDiagnostics.previousRunCrashed(this)) {
             KartPadTouchSettings.setFrameInterpolationFps(this, 0)
             android.widget.Toast.makeText(this,
                 "KartPad closed unexpectedly with 120 FPS Races on, so it's off now. " +
-                    "You can turn it on again in Graphics & Performance.", android.widget.Toast.LENGTH_LONG).show()
+                    "You can turn it on again in Speed & Graphics.", android.widget.Toast.LENGTH_LONG).show()
         }
         // A minute of play means this start worked; see KartPadNativeRuntime.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
@@ -191,7 +191,7 @@ class KartPadActivity : SDLActivity() {
                 if (!isFinishing && KartPadGpuDriverSettings.loadProblem(this) != null) {
                     android.widget.Toast.makeText(this,
                         "The GPU driver you chose didn't load, so this game uses the phone's driver. " +
-                            "Graphics & Performance → GPU Driver shows why.", android.widget.Toast.LENGTH_LONG).show()
+                            "Speed & Graphics → GPU Driver shows why.", android.widget.Toast.LENGTH_LONG).show()
                 }
             }, 8_000)
         nativeEnableActivityRecreation()
@@ -716,11 +716,11 @@ class KartPadActivity : SDLActivity() {
                 MenuRow("Controls", R.drawable.ic_kartpad_gamecontroller, submenu = true) {
                     showControlsMenu()
                 },
+                MenuRow("Speed & Graphics", R.drawable.ic_kartpad_speedometer, submenu = true) {
+                    showGraphicsMenu()
+                },
                 MenuRow("Display", R.drawable.ic_kartpad_display, submenu = true) {
                     showDisplayMenu()
-                },
-                MenuRow("Graphics & Performance", R.drawable.ic_kartpad_speedometer, submenu = true) {
-                    showGraphicsMenu()
                 },
                 MenuRow("Sound…", R.drawable.ic_kartpad_speaker) {
                     closeKartPadMenu(::showSoundSettings)
@@ -814,17 +814,17 @@ class KartPadActivity : SDLActivity() {
         ), showBack = true,
     )
 
-    // Android-only graphics and speed options, kept out of Display.
+    // The Speed choice and its two switches match iPhone and iPad; the rows after them are Android-only.
     private fun showGraphicsMenu(): Unit = showKartPadMenuPage(
-        "Graphics & Performance", listOfNotNull(
+        "Speed & Graphics", listOfNotNull(
+            MenuRow("Speed", R.drawable.ic_kartpad_speedometer, submenu = true,
+                detail = KartPadTouchSettings.speedPreset(this)?.label ?: KartPadSpeedPreset.CUSTOM_LABEL) {
+                closeKartPadMenu(::showSpeedPresetSettings)
+            },
             MenuRow("Recommended for This Phone", R.drawable.ic_kartpad_display,
                 detail = KartPadPhoneAdviceDialog.menuDetail(this)) {
                 closeKartPadMenu { KartPadPhoneAdviceDialog.show(this) { showGpuDriverSettings() } }
             },
-            if (KartPadNativeRuntime.isAvailable()) MenuRow("Graphics Engine", R.drawable.ic_kartpad_display,
-                submenu = true, detail = KartPadNativeRuntime.label(filesDir)) {
-                closeKartPadMenu(::showGraphicsEngineSettings)
-            } else null,
             MenuRow("30 FPS Races", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.thirtyFpsRaces(this),
                 detail = "Races at normal speed, drawn at 30 FPS. For devices that slow down. From the next race.") {
@@ -842,6 +842,10 @@ class KartPadActivity : SDLActivity() {
                 applyDisplaySettings()
                 showGraphicsMenu()
             },
+            if (KartPadNativeRuntime.isAvailable()) MenuRow("Graphics Engine", R.drawable.ic_kartpad_display,
+                submenu = true, detail = KartPadNativeRuntime.label(filesDir)) {
+                closeKartPadMenu(::showGraphicsEngineSettings)
+            } else null,
             if (KartPadNativeRuntime.runningBeta()) MenuRow("120 FPS Races (Experimental)", R.drawable.ic_kartpad_speedometer,
                 switchOn = KartPadTouchSettings.frameInterpolationFps(this) == 120,
                 detail = "Adds in-between frames in races, for fast phones with 120 Hz screens. Uses more power; may show glitches.") {
@@ -1169,15 +1173,30 @@ class KartPadActivity : SDLActivity() {
         AlertDialog.Builder(this)
             .setTitle("Races Are Running Slow")
             .setMessage("That race averaged about ${averageFps.toInt()} FPS, so it played in slow motion. " +
-                "30 FPS Races keeps races at full speed by drawing half as many frames, and Simpler Computer Karts " +
-                "saves more processor time. Turn both on? You can change them in Graphics & Performance.")
-            .setPositiveButton("Turn On") { _, _ ->
-                KartPadTouchSettings.setThirtyFpsRaces(this, true)
-                KartPadTouchSettings.setFrameInterpolationFps(this, 0)
-                KartPadTouchSettings.setSimplerComputerKarts(this, true)
+                "Speed: Smoothest keeps races at full speed by drawing half as many frames (30 FPS Races) " +
+                "and saves more processor time with Simpler Computer Karts. Switch to Smoothest? " +
+                "You can change it in Speed & Graphics.")
+            .setPositiveButton("Use Smoothest") { _, _ ->
+                KartPadTouchSettings.setSpeedPreset(this, KartPadSpeedPreset.SMOOTHEST)
                 applyDisplaySettings()
             }
             .setNegativeButton("Not Now", null)
+            .show()
+    }
+
+    private fun showSpeedPresetSettings() {
+        val presets = KartPadSpeedPreset.entries
+        val labels = presets.map { "${it.label}\n${it.description}" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Speed")
+            // No item is checked while the switches are Custom.
+            .setSingleChoiceItems(labels, presets.indexOf(KartPadTouchSettings.speedPreset(this))) { dialog, which ->
+                KartPadTouchSettings.setSpeedPreset(this, presets[which])
+                applyDisplaySettings()
+                dialog.dismiss()
+                showGraphicsMenu()
+            }
+            .setNegativeButton("Back") { _, _ -> showGraphicsMenu() }
             .show()
     }
 
