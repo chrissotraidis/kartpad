@@ -3,6 +3,11 @@
 **Android speed:** the [DriftDroid parity loop](DRIFTDROID-PARITY-LOOP.md) (from 23 November) decides what
 performance work comes next.
 
+
+**Next release:** the [0.8.13 release loop](RELEASE-0.8.13-LOOP.md) (from 28 November) is the plan.
+
+
+
 ## Open PRs (22–23 November 2026) — start here
 
 From the 22 November issue review and the slow-phone plan in [to-do](TODO.md#next-build-help-slow-android-phones-without-new-hardware).
