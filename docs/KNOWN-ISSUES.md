@@ -63,8 +63,10 @@ the [archive](archive/known-issues-through-2026-09.md).
   Performance → Recommended for This Phone** tells you whether your phone is
   on the 512.762 driver, and its **Get a Driver…** button opens step 1:
   1. **⋯ → Graphics & Performance → GPU Driver → Add Driver…**, then
-     **Download a Driver…** for a recent Turnip release, or **Install from a
-     .zip File…** for a package you downloaded yourself.
+     **Download a Driver…**. From the next version, **Mr. Purple's Turnip**
+     is in that list; on an Adreno 7xx phone such as the S24 Ultra, pick
+     T30. Or use **Install from a .zip File…** for a package you downloaded
+     yourself.
   2. Restart the game. The **GPU Driver** row says whether the driver loaded.
 
   Not every Turnip build works on every phone. On the S24 Ultra, Mainline

@@ -185,6 +185,7 @@ class KartPadOverlayView(context: Context) : View(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        KartPadRuntimeHealth.lastTouchUptimeMs = SystemClock.uptimeMillis()
         if (editingLayout) return onEditTouchEvent(event)
         val actionIndex = event.actionIndex
         when (event.actionMasked) {
@@ -1282,6 +1283,8 @@ class KartPadOverlayView(context: Context) : View(context) {
     }
 
     private fun publishState(connected: Boolean) {
+        KartPadRuntimeHealth.touchGasLocked = gasLocked
+        KartPadRuntimeHealth.touchPointers = pointerOwners.size
         var buttons = (if (gasLocked) BUTTON_A else 0) or (if (itemLocked) BUTTON_L else 0) or
             accessibilityButtons or controllerKeyButtons
         if (shakeTrickHeld) buttons = buttons or BUTTON_UP

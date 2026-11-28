@@ -22,6 +22,9 @@ Outputs go to `build/perf/` (ignored).
 - Stop the selected test emulator before `ab.sh`. It launches and stops only
   its own process on `KP_SERIAL` (default `emulator-5554`), refuses hardware
   serials or an already-running target, and cold-boots without snapshots.
+- Run `adb shell sync` before stopping an emulator by hand (`adb emu kill`).
+  Without it, files written just before, such as a pushed pack or restored app
+  data, can come back empty on the next boot. `ab.sh` and `deploy.sh` sync.
 
 ## Scripts
 
