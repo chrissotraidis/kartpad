@@ -18,6 +18,8 @@ if "${A[@]}" get-state >/dev/null 2>&1; then
 fi
 stop() {
   if [[ -n "$emulator_pid" ]]; then
+    # emu kill stops the guest without flushing; files written shortly before can be left empty.
+    "${A[@]}" shell sync >/dev/null 2>&1 || true
     "${A[@]}" emu kill >/dev/null 2>&1 || true
     wait "$emulator_pid" || true
     emulator_pid=
