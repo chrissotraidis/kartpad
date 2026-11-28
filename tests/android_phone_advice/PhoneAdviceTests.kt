@@ -15,7 +15,10 @@ fun main() {
     val s24 = advice.advise(Gpu("Adreno (TM) 750", "OpenGL ES 3.2 V@0762.36 (GIT@x)"), null)
     check(s24.action == Action.GET_DRIVER && "Turnip" in s24.summary)
     check(s24.gpuLabel == "Adreno 750 · Qualcomm driver 512.762")
-    check(advice.advise(Gpu("Adreno (TM) 619", "OpenGL ES 3.2 V@0762.31"), null).action == Action.GET_DRIVER)
+    // Each GPU family names the build confirmed on it (#104 S24 Ultra, #301 Moto G85).
+    check(s24.points.any { "T30" in it } && s24.points.none { "K11MCH1" in it })
+    val g85 = advice.advise(Gpu("Adreno (TM) 619", "OpenGL ES 3.2 V@0762.31"), null)
+    check(g85.action == Action.GET_DRIVER && g85.points.any { "K11MCH1" in it } && g85.points.none { "T30" in it })
 
     // Older 512.502 drivers have no reported faults: phone's driver.
     val poco = advice.advise(Gpu("Adreno (TM) 650", "OpenGL ES 3.2 V@0502.0"), null)
