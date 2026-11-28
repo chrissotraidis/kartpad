@@ -250,6 +250,12 @@ Decided in the loop on 28 November, while building the candidate:
 
 Newest first: goal, what changed, which checks passed, PR, next step.
 
+- **28 November, published.** Chris asked for a normal release, so 0.8.13 went out as **Latest**
+  (go/no-go item 1 had suggested a prerelease because no slow or Snapdragon phone ran it). Tag
+  `v0.8.13` at `e4fbf135`; the six files downloaded anonymously and matched SHA256SUMS; the update
+  API reports v0.8.13. Replies posted on #104, #131, #301, #493, #510, #554, #566, #576, #584; Discord
+  post and banner made. Post-publication player checks passed for Android, iPhone/iPad and Mac. Follow-up continues in the [after-0.8.13 loop](POST-0.8.13-LOOP.md).
+
 - **28 November, night.** Pixel 9 Pro XL: build 279 (re-signed with the owner's test key) installed over
   0.8.12 in place. No setup, both games ready, Beta engine and switches carried over (Speed read Best
   Quality, 120 FPS Races still on). Smoothest gave a steady 30.0 FPS race at normal speed on Beta;

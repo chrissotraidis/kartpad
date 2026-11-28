@@ -173,8 +173,9 @@ commit it to the next build or establish hardware support.
 From [0.8.12](releases/v0.8.12.md), **Recommended for This Phone** detects
 Qualcomm's 512.762 driver and recommends Turnip, which drew every character on
 both phones that tried it (Galaxy S24 Ultra, Moto G85); see
-[known issues](KNOWN-ISSUES.md#graphics-android).
-On supported Snapdragon devices, **⋯ → Graphics & Performance → GPU Driver**
+[known issues](KNOWN-ISSUES.md#graphics-android). From [0.8.13](releases/v0.8.13.md)
+it offers Turnip once at start on that driver, and Mr. Purple's Turnip is in the download list.
+On supported Snapdragon devices, **⋯ → Speed & Graphics → GPU Driver**
 accepts AdrenoTools driver packages (`.zip`), including compatible
 [Mesa Turnip](https://docs.mesa3d.org/drivers/freedreno.html) packages. Select the
 installed driver, save, and restart through the app's prompt. KartPad retains

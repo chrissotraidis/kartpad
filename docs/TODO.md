@@ -17,6 +17,10 @@ Check with a local Mac build, a race on each preset, and the Mac player check (r
 
 *Added 20 November 2026, after 0.8.12.*
 
+**Status after 0.8.13 (28 November):** items 1, 3 and 4 shipped in 0.8.13, plus a **Speed** choice
+(Smoothest, Balanced, Best Quality) that the slow-race offer switches to. Items 2, 5 and 6 are still open;
+the [after-0.8.13 loop](POST-0.8.13-LOOP.md) tracks them.
+
 **Why.** Almost every open issue is Android, and most are slow phones (#510,
 #554, #566, #576, #584, #339) or the Snapdragon 512.762 character fault (#104
 and its duplicates). The cause is known: the game runs on one CPU core, and a
@@ -32,7 +36,7 @@ of the phone they have, and turn "so laggy" reports into numbers we can use.
 1. **Merge the #554 diagnostics** ([#579](https://github.com/chrissotraidis/kartpad/pull/579)):
    touch idle time and CPU clocks in the log, so we can see whether a phone
    slows its CPU when no finger is on the screen.
-2. **A one-tap performance check (Android).** **⋯ → Graphics & Performance →
+2. **A one-tap performance check (Android).** **⋯ → Speed & Graphics →
    Check This Phone's Speed** runs about 30 seconds of the game's own attract
    demo and shows a plain result: game-thread milliseconds per frame, the
    expected frame rate, CPU clock range and thermal state, and what to turn on.

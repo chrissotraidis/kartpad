@@ -1,5 +1,13 @@
 # Maintenance work and test board
 
+## 28 November: 0.8.13 released (Latest)
+
+Built from `e4fbf135` (#603) and published on Chris's instruction as the normal Latest release. Results by
+check are in the [release notes on GitHub](https://github.com/chrissotraidis/kartpad/releases/tag/v0.8.13)
+and the [release loop](RELEASE-0.8.13-LOOP.md). #131 and #493 (Retro Rewind crash at the end of a cup) now
+have a cause and a fix, so they leave the `android-exits` group below and wait on the reporters. Follow-up,
+including the Mac menus and the iPhone/iPad Simulator check, is in the [after-0.8.13 loop](POST-0.8.13-LOOP.md).
+
 ## 15 November: 0.8.11 release checks (released 16 November)
 
 #570 is merged (`efb292d`). Every release file is built from the merge and
@@ -628,7 +636,7 @@ the next actions below supersede those dated assignments.
 | Priority / card | Issues / authors | Current decision and next actor |
 | --- | --- | --- |
 | 0 / `retro-save-loss` | #169 / 1 | `source-corrected-awaiting-reporter`: Android pack activation now preserves both Retro WFC save branches; see source finding and fixture (local record unavailable in this checkout) and the [public update](https://github.com/chrissotraidis/kartpad/issues/169#issuecomment-5644596717). The original build-21 report still needs its exact exit-versus-pack-replacement boundary and current-candidate data-preserving acceptance. Do not deliberately lose more data. |
-| 1 / `android-exits` | #143, #200, #205, #208, #235–236, #128, #131, #207, #215, #216 / 11 open cases | `awaiting-reporter`: one matching exit classification per distinct launch/cup/race subcase. Closed #209/#210/#224–232 remain historical duplicates under #208; #236 is canonical for closed #237. #235 and #236 remain separate Honor X7c and OPPO CPH2669 device subcases. Similar wording does not establish a common runtime defect. |
+| 1 / `android-exits` | #143, #200, #205, #208, #235–236, #128, #207, #215, #216 / 10 open cases | `awaiting-reporter`: one matching exit classification per distinct launch/cup/race subcase. Closed #209/#210/#224–232 remain historical duplicates under #208; #236 is canonical for closed #237. #235 and #236 remain separate Honor X7c and OPPO CPH2669 device subcases. Similar wording does not establish a common runtime defect. |
 | 1 / `ios27-startup` | #196 / 1 | `released-awaiting-device`: public v0.4.17-ios.1 (retired) is the corrected unsigned IPA, SHA-256 `d322484192dde92139ed8aac66c9abd7764b91f97895840995ef17f0ff49f9ff`. Anonymous audit and owner iPhone 14 / iOS 26.6.2 in-place data preservation passed. The matching iPhone 17 Pro Max/iOS 27 Original+Retro launch/race/relaunch gate remains open; see [platform handoff](artifacts/2026-09-13/platform-candidate-handoff.md). |
 | 2 / `android-online` | #206 / 1 | `awaiting-reporter`: await #206's already requested Wi-Fi endurance confirmation beyond the prior four/five-race window. #123 is closed upstream and remains historical evidence only; closure is not technical online acceptance. |
 | 3 / `adreno-geometry` | #102, #104, #120, #137, #166, #193, #211 / 7 | `awaiting-owner`: release operator and affected-device tester establish compatible signing/delivery for the retained dynamic/literal/dynamic character-draw comparison. Closed #233 is preserved as an SM-S928B/Retro subcase under #211, not a separate active case. The host has no release keystore; see Android signing preflight (local record unavailable in this checkout). No GPU-wide cause or correction is established. |

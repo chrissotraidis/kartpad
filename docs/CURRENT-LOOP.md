@@ -3,9 +3,9 @@
 **Android speed:** the [DriftDroid parity loop](DRIFTDROID-PARITY-LOOP.md) (from 23 November) decides what
 performance work comes next.
 
-**Next release:** 0.8.13 (build 279) is a draft on GitHub, built and checked through the
-[0.8.13 release loop](RELEASE-0.8.13-LOOP.md); its journal says what passed and what wasn't checked.
-Publishing needs Chris. Issue replies are drafted in [reply drafts](artifacts/2026-11-28/reply-drafts.md).
+**Now:** 0.8.13 (build 279) is published as Latest (28 November). The [after-0.8.13 loop](POST-0.8.13-LOOP.md)
+tracks what it fixed, which reporters we're waiting on and what's left. The release itself is in the
+[0.8.13 release loop](RELEASE-0.8.13-LOOP.md).
 
 **Next week:** make the Mac menus match Android, iPhone and iPad ([to-do](TODO.md#next-week-mac-menus-match-android-iphone-and-ipad)). 0.8.13 left the Mac unchanged.
 
