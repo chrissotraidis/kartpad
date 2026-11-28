@@ -175,21 +175,20 @@ Your saves and game data stay. See [why updates work this way](#automatic-update
 
 ### Current release
 
-**KartPad 0.8.12** (build 278), released 20 November, adds
-**Recommended for This Phone** on Android, which names your phone's graphics
-chip and says which driver and speed settings to use (Turnip on the Snapdragon
-driver that leaves characters missing). It adds an experimental **120 FPS
-Races** switch for 120 Hz Android phones, off by default and meant for the
-WiiCompiled 0.9 (Beta) engine, keeps the iPhone/iPad controller mapping open
-between changes, and brings the start-up black-frame and memory fixes to the
-Mac ([release notes](docs/releases/v0.8.12.md)). It was tested on the Android
-emulator, with fresh PadMint builds for all three platforms and on a Pixel 9
-Pro XL. A Snapdragon phone on the 512.762 driver and an iPad with a controller
-haven't tried it yet.
+**KartPad 0.8.13** (build 279), released 28 November, fixes the Retro Rewind
+crash at the end of a cup for players who use Retro Rewind in a language other
+than English. It puts the speed settings into one **Speed** choice
+(**⋯ → Speed & Graphics**) on Android, iPhone and iPad, offers it on Android
+after a slow race, decodes the menu videos natively, and on Snapdragon phones
+with the driver that leaves characters missing, offers a Turnip driver once at
+start ([release notes](docs/releases/v0.8.13.md)). It was tested on the Android
+emulator, on a Pixel 9 Pro XL and with fresh PadMint builds for all three
+platforms. A slow phone and a Snapdragon phone on the 512.762 driver haven't
+tried it yet. The Mac menus are unchanged in 0.8.13.
 
-**Earlier: KartPad 0.8.11** (build 276) fixes Android menus with movie
-thumbnails and two online timing faults, and includes the Mac Wii Remote
-fixes ([release notes](docs/releases/v0.8.11.md)).
+**Earlier: KartPad 0.8.12** (build 278) added **Recommended for This Phone** and
+experimental **120 FPS Races** on Android, and brought start-up and memory fixes
+to the Mac ([release notes](docs/releases/v0.8.12.md)).
 
 The latest published files are on the [releases page](https://github.com/chrissotraidis/kartpad/releases/latest).
 What changed and what remains open are in [status](docs/STATUS.md) and

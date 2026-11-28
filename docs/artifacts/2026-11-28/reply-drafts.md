@@ -1,6 +1,6 @@
 # Reply drafts for 0.8.13 (28 November 2026)
 
-Not posted. Post each one when 0.8.13 is published, and close an issue only when its reporter confirms or Chris decides to. Each draft names what the release changes and what still isn't checked.
+Posted on 28 November after 0.8.13 was published, with release links added, on #104, #131, #301, #493, #554, #576 and #584, plus short notes on #510 and #566. The Retro Rewind upstream note is for Chris to post. No issue was closed.
 
 ## #131 (iStraySh, Retro Rewind crash after a cup; Spanish)
 
