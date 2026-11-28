@@ -24,6 +24,8 @@ void SetVoicesVolume(float volume) noexcept;
 extern "C" void RuntimeSetThirtyFpsRaces(bool enabled) noexcept;
 // "Simpler computer karts" (runtime/src/hle/low_detail_karts.cpp, in this library).
 extern "C" void RuntimeSetLowDetailComputerKarts(bool enabled) noexcept;
+// Race frame rate, -1 outside races where 30 FPS Races applies (frame_rate_lock.cpp, in this library).
+extern "C" float RuntimeRaceFramesPerSecond() noexcept;
 // Frame interpolation in Aurora (both graphics engines link it into this library).
 extern "C" void aurora_set_frame_interpolation_fps(uint32_t targetFps);
 
@@ -87,6 +89,11 @@ Java_dev_kartpad_android_KartPadActivity_nativeApplySimplerComputerKarts(
   RuntimeSetLowDetailComputerKarts(enabled == JNI_TRUE);
   std::printf("[KartPadKarts] simpler_computer_karts=%s\n", enabled == JNI_TRUE ? "on" : "off");
   std::fflush(stdout);
+}
+
+extern "C" JNIEXPORT jfloat JNICALL
+Java_dev_kartpad_android_KartPadActivity_nativeRaceFramesPerSecond(JNIEnv*, jobject) {
+  return RuntimeRaceFramesPerSecond();
 }
 
 // 0 (off) or 120. Interpolated frames are drawn only in races; the game itself still runs at 60.
