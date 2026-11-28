@@ -152,8 +152,7 @@ the platform-only rows, and what moves where. Starting proposal:
   Speed row shows **Custom** whenever the switches don't match a preset. Existing players see the
   preset that matches their switches, or Custom. 120 FPS Races stays a separate Advanced switch.
 - **A "where things moved" table** for SETTINGS.md and the release notes.
-- *Done when* Chris approves the map, including the preset names and values and the default for
-  new installs. No menu code changes before that.
+- *Done when* the map is recorded in SETTINGS.md (decided in the loop, see Decisions).
 
 ### R3. Merge what is ready (Must)
 
@@ -218,14 +217,17 @@ a draft.
 At the end of each goal, a short update to Chris: what changed, which checks passed, numbers, the PR,
 what's next. At R2, R1's one-day limit and R10, stop and wait for him.
 
-## Decisions for Chris
+## Decisions
 
-1. **The settings map** (R2): structure, preset names and values, and the default for new installs.
-2. **Mac** in this release (R7), or 0.8.14.
-3. **#595**, native menu-video decoding. It changes every runtime and the translator, so the
-   release needs the full iPhone/iPad and Mac checks.
-4. **#131 deadline:** whether to hold the release past R1's one day.
-5. **The Pixel 9 Pro XL** for the release gate, if you can connect it.
+Chris asked on 28 November for the loop to run on best judgment through a finalized, unpublished
+candidate. These were decided then:
+
+1. **The settings map** (R2) is decided in the loop, using the proposal above, and recorded in
+   SETTINGS.md. New installs start on the preset Recommended for This Phone suggests.
+2. **Mac** is in if time allows (still Could).
+3. **#595** is in.
+4. **#131:** one day of reproduction. Without a fix by then, the release ships without it and says so.
+5. **The Pixel 9 Pro XL** (connected) is used for the release gate.
 
 ## Journal
 
