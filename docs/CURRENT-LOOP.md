@@ -1,5 +1,7 @@
 # Current goal loop: after 0.8.1
 
+**Next release:** the [0.8.13 release loop](RELEASE-0.8.13-LOOP.md) (from 28 November) is the plan.
+
 ## Outstanding work (18–20 November 2026) — start here
 
 Ask "what are we left working on?" and this is the list. **Next build:** the slow-phone plan in
